@@ -31,8 +31,11 @@
 
 /**
  * List of currently implemented test cases for the NSE with vanishing
- * boundary conditions.
+ * boundary conditions.\n
  * @ingroup nse
+ * fnft__nsev_testcases_SECH_FOCUSING - Test for focusing NSE (kappa = +1) with a sech potential.\n
+ * fnft__nsev_testcases_SECH_DEFOCUSING - Test for defocusing NSE (kappa = -1) with a sech potential.\n
+ * fnft__nsev_testcases_TRUNCATED_SOLITON - Test for focusing NSE (kappa = +1) with a truncated solitonic potential.\n
  */
 typedef enum {
     fnft__nsev_testcases_SECH_FOCUSING, 
@@ -41,12 +44,18 @@ typedef enum {
 } fnft__nsev_testcases_t;
 
 /**
- * This routine is used by the tests for \link fnft_nsev \endlink. It runs the
- * specified test case tc with the specificed number of samples D and the
- * options opts, and tests if several errors stay below the provided error
- * bounds in eb. If yes, the routine \link FNFT_SUCCESS \endlink. Otherwise,
- * it returns an error code (normally, \link FNFT_EC_TEST_FAILED \endlink).
+ * @brief Routine to run tests for \link fnft_nsev \endlink.\n
  * @ingroup nse
+ * 
+ * It runs the specified test case tc with the specificed number of samples D and the
+ * options opts, and tests if several errors stay below the provided error
+ * bounds in eb. 
+ * @param[in] tc Type of test case.
+ * @param[in] D Number of samples.
+ * @param[in] eb Real valued array with 6 elements corresponding to various error bounds.
+ * @param[in] opts \link fnft_nsev_opts_t \endlink options for the tests. 
+ * @return If all errors stay below bounds the routine \link FNFT_SUCCESS \endlink. Otherwise,
+ * it returns an error code (normally, \link FNFT_EC_TEST_FAILED \endlink).
  */
 FNFT_INT fnft__nsev_testcases_test_fnft(fnft__nsev_testcases_t tc, FNFT_UINT D,
 	const FNFT_REAL eb[6], fnft_nsev_opts_t * const opts);

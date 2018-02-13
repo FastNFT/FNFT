@@ -33,12 +33,14 @@
 
 /**
  * @brief Returns the length of vector to be allocated based on the number
- * of samples and discretization.
- * \n
- * This routine returns the length of vector to be allocated based on the number
- * of samples and discretization of type 
- * \link fnft_nse_discretization_t \endlink. 
+ * of samples and discretization.\n
  * @ingroup nse
+ * This routine returns the length 4*D*(nse_discretization_degree(discretization) + 1) 
+ * to be allocated based on the number
+ * of samples and discretization of type discretization.
+ * @param[in] D Number of samples.
+ * @param[in] discretization Type of discretization from \link fnft_nse_discretization_t \endlink.
+ * @returns Returns the length to be allocated. Returns 0 for unknown discretizations.
  */
 FNFT_UINT fnft__nse_fscatter_length(FNFT_UINT D,
     fnft_nse_discretization_t discretization);
@@ -54,21 +56,21 @@ FNFT_UINT fnft__nse_fscatter_length(FNFT_UINT D,
  * The main reference is Wahls and Poor
  * (<a href="http://dx.doi.org/10.1109/ICASSP.2013.6638772">Proc. ICASSP 2013 </a>).
  *
- * @param D Number of samples
- * @param q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
+ * @param[in] D Number of samples
+ * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
  *  where \f$ t_n = T[0] + n(T[1]-T[0])/(D-1) \f$ and \f$n=0,1,\dots,D-1\f$, of
  *  the to-be-transformed signal in ascending order
  *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$)
- * @param eps_t Step-size, eps_t \f$= (T[1]-T[0])/(D-1) \f$.
- * @param kappa =+1 for the focusing nonlinear Schroedinger equation,
+ * @param[in] eps_t Step-size, eps_t \f$= (T[1]-T[0])/(D-1) \f$.
+ * @param[in] kappa =+1 for the focusing nonlinear Schroedinger equation,
  *  =-1 for the defocusing one
- * @param result Array of length fac * D, will contain the combined scattering matrix.
+ * @param[out] result Array of length fac * D, will contain the combined scattering matrix.
  * fac is determined based on the chosen type of discretization \link fnft_nse_discretization_t \endlink
  * by \link fnft__nse_fscatter_length \endlink.
- * @param deg_ptr Pointer to variable containing degree of the discretization.
+ * @param[out] deg_ptr Pointer to variable containing degree of the discretization.
  * Determined based on discretization by \link fnft__nse_discretization_degree \endlink.
- * @param W_ptr Pointer to normalization flag \link fnft_nsev_opts_t::normalization_flag \endlink.
- * @param discretization The type of discretization to be used. Should be of type 
+ * @param[in] W_ptr Pointer to normalization flag \link fnft_nsev_opts_t::normalization_flag \endlink.
+ * @param[in] discretization The type of discretization to be used. Should be of type 
  * \link fnft_nse_discretization_t \endlink. Not all fnft_nse_discretization_t discretizations are supported.
  * Check \link fnft_nse_discretization_t \endlink for list of supported types.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes

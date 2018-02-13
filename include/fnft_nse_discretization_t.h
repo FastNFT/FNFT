@@ -30,13 +30,13 @@
 /**
  * Enum that specifies discretizations used to compute nonlinear Fourier
  * transforms for the nonlinear Schroedinger equation. Used in
- * \link fnft_nsev_opts_t \endlink.\n
- * fnft_nse_discretization_2SPLIT2A_MODAL is the normalized Ablowitz-Ladik discretization from 
- * Wahls and Poor,<a href="http://dx.doi.org/10.1109/ICASSP.2013.6638772">&quot;Introducing the fast nonlinear Fourier transform,&quot;</a> Proc. ICASSP 2013.\n
- * fnft_nse_discretization_2SPLIT2A is taken from \n
- * fnft_nse_discretization_2SPLIT4A and fnft_nse_discretization_2SPLIT4B are equivalent forms of
- * Eq. 20 in Prins and Wahls, &quot;Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot; to appear in Proc. ICASSP 2018. \n
- * fnft_nse_discretization_BO is taken from Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot;Computation of the direct scattering transform for the nonlinear Schroedinger  equation,&quot;</a> J. Comput. Phys. 102(2), 1992. It is supported by \link fnft__nse_scatter.h \endlink.\n
+ * \link fnft_nsev_opts_t \endlink.\n \n
+ * fnft_nse_discretization_2SPLIT2A_MODAL: It is the normalized Ablowitz-Ladik discretization from 
+ * Wahls and Poor,<a href="http://dx.doi.org/10.1109/ICASSP.2013.6638772">&quot;Introducing the fast nonlinear Fourier transform,&quot;</a> Proc. ICASSP 2013.\n \n
+ * fnft_nse_discretization_2SPLIT2A : It has been taken from \n \n
+ * fnft_nse_discretization_2SPLIT4A and fnft_nse_discretization_2SPLIT4B : They are equivalent forms of
+ * Eq. 20 in Prins and Wahls, &quot;Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot; to appear in Proc. ICASSP 2018. \n \n
+ * fnft_nse_discretization_BO : It has been taken from Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot;Computation of the direct scattering transform for the nonlinear Schroedinger  equation,&quot;</a> J. Comput. Phys. 102(2), 1992. It is supported by \link fnft__nse_scatter.h \endlink.\n 
  * Other discretizations are supported by \link fnft__nse_fscatter.h \endlink.\n
  * @ingroup data_types
  */

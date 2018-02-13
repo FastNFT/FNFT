@@ -29,7 +29,7 @@
 #include "fnft.h"
 
 /**
- * @brief Fast evaluation of a polynomial on a spiral in the complex plane.
+ * @brief Fast evaluation of a polynomial on a spiral in the complex plane.\n
  * @ingroup poly
  *
  * This routine implements the Chirp Z-transform. Given a polynomial
@@ -41,7 +41,7 @@
  *
  *  \f[ w_k=AW^{-m}, \quad m=0,1,\dots,M-1, \f]
  *
- * using only \f$ O\{(N+M)\log(N+M)\} \f$ floating poFNFT_INT operations.
+ * using only \f$ O\{(N+M)\log(N+M)\} \f$ floating point operations.
  *
  * @see https://doi.org/10.1109/TAU.1969.1162034
  *

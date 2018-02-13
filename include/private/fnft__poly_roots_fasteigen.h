@@ -29,14 +29,14 @@
 #include "fnft.h"
 
 /**
- * @brief Fast computation of polynomial roots.
+ * @brief Fast computation of polynomial roots.\n
  * @ingroup poly
  *
  * This routine compute the roots of a polynomial
  *
  *   \f[ p(z)=p_0+p_1 z^1+p_2 z^2+...+p_{deg} z^{deg} \f]
  *
- * using only \f$ O\{ deg^2 \}\f$ floating poFNFT_INT operations.
+ * using only \f$ O\{ deg^2 \}\f$ floating point operations.
  *
  * @see https://arxiv.org/abs/1611.02435v2
  *

@@ -31,8 +31,13 @@
 
 /**
  * Enum that specifies how the bound states are filtered. Used in
- * \link fnft_nsev_opts_t \endlink.
+ * \link fnft_nsev_opts_t \endlink.\n \n	
  * @ingroup data_types
+ *  fnft_nsev_bsfilt_NONE: All detected roots of \f$ a(\lambda) \f$ are returned. \n \n
+ *  fnft_nsev_bsfilt_BASIC: Only roots in the upper halfplane are returned and roots very close
+ *  to each other are merged. \n \n
+ *  fnft_nsev_bsfilt_FULL: Bound states in physically implausible regions are furthermore
+ *  rejected. 
  */
 typedef enum {
     fnft_nsev_bsfilt_NONE,
@@ -42,57 +47,8 @@ typedef enum {
 
 /**
  * Enum that specifies how the bound states are localized. Used in
- * \link fnft_nsev_opts_t \endlink.
+ * \link fnft_nsev_opts_t \endlink. \n \n
  * @ingroup data_types
- */
-typedef enum {
-    fnft_nsev_bsloc_FAST_EIGENVALUE,
-    fnft_nsev_bsloc_NEWTON,
-    fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE
-} fnft_nsev_bsloc_t;
-
-/**
- * Enum that specifies the type of the discrete spectrum computed by the
- * routine. Used in \link fnft_nsev_opts_t \endlink.
- * @ingroup data_types
- */
-typedef enum {
-    fnft_nsev_dstype_NORMING_CONSTANTS,
-    fnft_nsev_dstype_RESIDUES,
-    fnft_nsev_dstype_BOTH
-} fnft_nsev_dstype_t;
-
-/**
- * Enum that specifies the type of the continuous spectrum computed by the
- * routine. Used in \link fnft_nsev_opts_t \endlink.
- * @ingroup data_types
- */
-typedef enum {
-    fnft_nsev_cstype_REFLECTION_COEFFICIENT,
-    fnft_nsev_cstype_AB,
-    fnft_nsev_cstype_BOTH
-} fnft_nsev_cstype_t;
-
-/**
- * @struct fnft_nsev_opts_t
- * @brief Stores additional options for the routine \link fnft_nsev \endlink. 
- * @ingroup fnft
- * @ingroup data_types
- * 
- * Use the \link fnft_nsev_default_opts \endlink routine in order to generate
- * a new variable of this type with default options and modify as needed.
- *
- * @var fnft_nsev_opts_t::bound_state_filtering
- *  Controls how \link fnft_nsev \endlink decide whether a numerically found
- *  root of \f$ a(\lambda) \f$ is an actual bound state or not. \n \n
- *  fnft_nsev_bsfilt_NONE: All detected roots of \f$ a(\lambda) \f$ are returned. \n \n
- *  fnft_nsev_bsfilt_BASIC: Only roots in the upper halfplane are returned and roots very close
- *  to each other are merged. \n \n
- *  fnft_nsev_bsfilt_FULL: Bound states in physically implausible regions are furthermore
- *  rejected. 
- *
- * @var fnft_nsev_opts_t::bound_state_localization
- *  Controls how \link fnft_nsev \endlink localizes bound states. \n \n
  *  fnft_nsev_bsloc_FAST_EIGENVALUE: A rooting finding routine due to Aurentz et al. (see
  *  https://arxiv.org/abs/1611.02435 and https://github.com/eiscor/eiscor)
  *  with \f$ O(D^2) \f$ complexity is used to detect the roots of
@@ -117,24 +73,34 @@ typedef enum {
  *  \f$ O(D \log^2 D + niter K D) \f$, where \f$ K \f$ is the number of bound
  *  states that survived the filtering operation of the initial call to the
  *  fnft_nsev_bsloc_FAST_EIGENVALUE method w.r.t. the subsampled signal.
- *
- * @var fnft_nsev_opts_t::niter
- *  Number of Newton iterations to be carried out when either the fnft_nsev_bsloc_NEWTON or
- *  the fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE method is used.
- *
- * @var fnft_nsev_opts_t::discspec_type
- *  Controls how \link fnft_nsev \endlink fills the array
- *  normconsts_or_residues. \n \n
+ */
+typedef enum {
+    fnft_nsev_bsloc_FAST_EIGENVALUE,
+    fnft_nsev_bsloc_NEWTON,
+    fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE
+} fnft_nsev_bsloc_t;
+
+/**
+ * Enum that specifies the type of the discrete spectrum computed by the
+ * routine. Used in \link fnft_nsev_opts_t \endlink.\n \n
+ * @ingroup data_types
  *  fnft_nsev_dstype_NORMING_CONSTANTS: The array is filled with the norming constants
  *  \f$ b_k \f$. \n\n
  *  fnft_nsev_dstype_RESIDUES: The array is filled with the residues (aka spectral amplitudes)
  *  \f$ b_k\big/\frac{da(\lambda_k)}{d\lambda} \f$. \n \n
  *  fnft_nsev_dstype_BOTH: The array contains both, first the norming constants and then the
  *  residues. Note that the length of the array passed by the user has to be 2*(*K_ptr) in this case.
- *
- * @var fnft_nsev_opts_t::contspec_type
- *  Controls how \link fnft_nsev \endlink fills the array
- *  contspec. \n \n
+ */
+typedef enum {
+    fnft_nsev_dstype_NORMING_CONSTANTS,
+    fnft_nsev_dstype_RESIDUES,
+    fnft_nsev_dstype_BOTH
+} fnft_nsev_dstype_t;
+
+/**
+ * Enum that specifies the type of the continuous spectrum computed by the
+ * routine. Used in \link fnft_nsev_opts_t \endlink.\n \n 
+ * @ingroup data_types
  *  fnft_nsev_cstype_REFLECTION_COEFFICIENT: The array is filled with the values of
  *  \f$ b(\xi)/a(\xi) \f$ on the grid specified in the description of
  *  \link fnft_nsev \endlink. \n\n
@@ -142,6 +108,45 @@ typedef enum {
  *  specified in the description of \link fnft_nsev \endlink, followed by
  *  the values of \f$ b(\xi) \f$ on the same grid. Note that the length of the
  *  array contspec passed by the user has to be 2(*M_ptr) in this case.\n\n
+ */
+typedef enum {
+    fnft_nsev_cstype_REFLECTION_COEFFICIENT,
+    fnft_nsev_cstype_AB,
+    fnft_nsev_cstype_BOTH
+} fnft_nsev_cstype_t;
+
+/**
+ * @struct fnft_nsev_opts_t
+ * @brief Stores additional options for the routine \link fnft_nsev \endlink. 
+ * @ingroup fnft
+ * @ingroup data_types
+ * 
+ * Use the \link fnft_nsev_default_opts \endlink routine in order to generate
+ * a new variable of this type with default options and modify as needed.
+ *
+ * @var fnft_nsev_opts_t::bound_state_filtering
+ *  Controls how \link fnft_nsev \endlink decide whether a numerically found
+ *  root of \f$ a(\lambda) \f$ is an actual bound state or not. \n 
+ *  Should be of type \link fnft_nsev_bsfilt_t \endlink.
+ *
+ * @var fnft_nsev_opts_t::bound_state_localization
+ *  Controls how \link fnft_nsev \endlink localizes bound states. \n 
+ * Should be of type \link fnft_nsev_bsloc_t \endlink.  
+ *
+ * @var fnft_nsev_opts_t::niter
+ *  Number of Newton iterations to be carried out when either the fnft_nsev_bsloc_NEWTON or
+ *  the fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE method is used.
+ *
+ * @var fnft_nsev_opts_t::discspec_type
+ *  Controls how \link fnft_nsev \endlink fills the array
+ *  normconsts_or_residues. \n 
+ * Should be of type \link fnft_nsev_dstype_t \endlink.
+ *
+ * @var fnft_nsev_opts_t::contspec_type
+ *  Controls how \link fnft_nsev \endlink fills the array
+ *  contspec. \n 
+ * Should be of type \link fnft_nsev_cstype_t \endlink.
+ * 
  *
  * @var fnft_nsev_opts_t::normalization_flag
  *  Controls whether intermediate results during the fast forward scattering
@@ -183,9 +188,9 @@ fnft_nsev_opts_t fnft_nsev_default_opts();
  * @brief Returns the maximum number of bound states that can be detected by
  * fnft_nsev.
  * @ingroup fnft
- * @param D Number of samples that will be passed to \link fnft_nsev \endlink. Should be
+ * @param[in] D Number of samples that will be passed to \link fnft_nsev \endlink. Should be
  *  larger than zero.
- * @param opts Options that will be passed to fnft_nsev. If NULL is passed,
+ * @param[in] opts Options that will be passed to fnft_nsev. If NULL is passed,
  *  the default options will be used.
  * @return Returns the maximum number of bound states or zero on error.
  */
@@ -214,16 +219,16 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *      - Hari and Kschischang, <a href="https://doi.org/10.1109/JLT.2016.2577702">&quot;Bi-Directional Algorithm for Computing Discrete Spectral Amplitudes in the NFT,&quot; </a>J. Lightwave Technol. 34(15), 2016.
  *      - Aurentz et al., <a href="https://arxiv.org/abs/1611.02435">&quot;Roots of Polynomials: on twisted QR methods for companion matrices and pencils,&quot;</a> Preprint, arXiv:1611.02435 [math.NA]</a>, Dec. 2016.
  *
- * @param D Number of samples
- * @param q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
+ * @param[in] D Number of samples
+ * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
  *  where \f$ t_n = T[0] + n(T[1]-T[0])/(D-1) \f$ and \f$n=0,1,\dots,D-1\f$, of
  *  the to-be-transformed signal in ascending order
  *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$)
- * @param T Array of length 2, contains the position in time of the first and
+ * @param[in] T Array of length 2, contains the position in time of the first and
  *  of the last sample. It should be T[0]<T[1].
- * @param M Number of points at which the continuous spectrum (aka
+ * @param[in] M Number of points at which the continuous spectrum (aka
  *  reflection coefficient) should be computed.
- * @param contspec Array of length M in which the routine will store the
+ * @param[out] contspec Array of length M in which the routine will store the
  *  desired samples \f$ r(\xi_m) \f$ of the continuous spectrum (aka
  *  reflection coefficient) in ascending order,
  *  where \f$ \xi_m = XI[0]+(XI[1]-XI[0])/(M-1) \f$ and \f$m=0,1,\dots,M-1\f$.
@@ -231,29 +236,29 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *  continuous spectrum will not be computed. By changing the options, it is
  *  also possible to compute the values of \f$ a(\xi) \f$ and \f$ b(\xi) \f$
  *  instead. In that case, twice the amount of memory has to be allocated.
- * @param XI Array of length 2, contains the position of the first and the last
+ * @param[in] XI Array of length 2, contains the position of the first and the last
  *  sample of the continuous spectrum. It should be XI[0]<XI[1]. Can also be
  *  NULL if contspec==NULL.
- * @param K_ptr Upon entry, *K_ptr should contain the length of the array
+ * @param[in,out] K_ptr Upon entry, *K_ptr should contain the length of the array
  *  bound_states. Upon return, *K_ptr contains the number of actually detected
  *  bound states. If the length of the array bound_states was not sufficient
  *  to store all of the detected bound states, a warning is printed and as many
  *  bound states as possible are returned instead.
- * @param bound_states Array. Upon return, the routine has stored the detected
+ * @param[out] bound_states Array. Upon return, the routine has stored the detected
  *  bound states (aka eigenvalues) in the first *K_ptr entries of this array.
  *  If NULL is passed instead, the discrete spectrum will not be computed.
  *  Has to be preallocated by the user. The user can choose an arbitrary
  *  length. Typically, D is a good choice.
- * @param normconsts_or_residues Array of the same length as bound_states. Upon
+ * @param[out] normconsts_or_residues Array of the same length as bound_states. Upon
  *  return, the routine has stored the residues (aka spectral amplitudes)
  *  \f$\rho_k = b_k\big/ \frac{da(\lambda_k)}{d\lambda}\f$ in the
  *  first *K_ptr entries of this array. By passing a proper opts, it is also
  *  possible to store the norming constants (the '\f$ b_k \f$') or both. Has to
  *  be pre-allocated by the user. If NULL is passed instead, the residues
  *  will not be computed.
- * @param kappa =+1 for the focusing nonlinear Schroedinger equation,
+ * @param[in] kappa =+1 for the focusing nonlinear Schroedinger equation,
  *  =-1 for the defocusing one
- * @param opts Pointer to a \link fnft_nsev_opts_t \endlink object. The object
+ * @param[in] opts Pointer to a \link fnft_nsev_opts_t \endlink object. The object
  *  can be used to modify the behavior of the routine. Use
  *  the routine \link fnft_nsev_default_opts \endlink
  *  to generate such an object and modify as desired. It is also possible to

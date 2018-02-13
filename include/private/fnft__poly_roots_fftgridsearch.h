@@ -29,7 +29,7 @@
 #include "fnft.h"
 
 /**
- * @brief Unit circle roots of a polynomial via grid search.
+ * @brief Unit circle roots of a polynomial via grid search.\n
  * @ingroup poly
  *
  *

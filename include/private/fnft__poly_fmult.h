@@ -29,21 +29,38 @@
 #include "fnft.h"
 
 /**
+ * @brief Fast multiplication of multiple polynomials of same degree.\n
+ * @ingroup poly
  * Fast multiplication of n polynomials of degree d. Their coefficients are
  * stored in the array p and will be overwritten. If W_ptr != NULL, the
  * result has been normalized by a factor 2^W. Upon exit, W has been stored
  * in *W_ptr.
- * @returns \link FNFT_SUCCESS \endlink or an error code.
+ * @param[in] d Degree of the polynomials.
+ * @param[in] n Number of polynomials.
+ * @param[in,out] p Complex valued array which initially holds the coefficients of 
+ * the polynomials being multiplied and on exit holds the result.
+ * @param[in] W_ptr Pointer to normalization flag. 
+ * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
+ *  defined in \link fnft_errwarn.h \endlink.
  */
 FNFT_INT fnft__poly_fmult(FNFT_UINT * const d, FNFT_UINT n, FNFT_COMPLEX * const p,
     FNFT_INT * const W_ptr);
 
 /**
+ * @brief Fast multiplication of multiple 2x2 matrix-valued polynomials of same degree.\n
+ * @ingroup poly
  * Fast multiplication of n 2x2 matrix-valued polynomials of degree d. Their
  * coefficients are stored in the array p and will be overwritten. If
  * W_ptr != NULL, the result has been normalized by a factor 2^W. Upon exit,
  * W has been stored in *W_ptr.
- * @returns \link FNFT_SUCCESS \endlink or an error code.
+ * @param[in] d Degree of the polynomials.
+ * @param[in] n Number of 2x2 matrix-valued polynomials.
+ * @param[in] p Complex valued array which holds the coefficients of 
+ * the polynomials being multiplied.
+ * @param[out] result Complex valued array that hold the result of the mulitplication.
+ * @param[in] W_ptr Pointer to normalization flag. 
+ * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
+ *  defined in \link fnft_errwarn.h \endlink.
  */
 FNFT_INT fnft__poly_fmult2x2(FNFT_UINT *d, FNFT_UINT n, FNFT_COMPLEX * const p, 
     FNFT_COMPLEX * const result, FNFT_INT * const W_ptr);

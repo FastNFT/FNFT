@@ -31,8 +31,17 @@
 
 /**
  * Enum that controls how spectrum is localized. Used in
- * \link fnft_nsep_opts_t \endlink.
+ * \link fnft_nsep_opts_t \endlink.\n \n
  * @ingroup data_types
+ *  fnft_nsep_opts_loc_SUBSAMPLE_AND_REFINE: Similar approach as for 
+ *  fnft_nsev_opts_dsloc_SUBSAMPLE_AND_REFINE (see
+ *  \link fnft_nsev_opts_t::bound_state_localization\endlink.)\n\n
+ *  fnft_nsep_opts_loc_GRIDSEARCH: Uses a grid search to localize roots. Can
+ *  only find main and auxiliary spectrum points on the real axis. In the
+ *  defocusing case, the main spectrum is always real.\n\n
+ *  fnft_nsep_opts_loc_MIXED: Uses the SUBSAMPLE_AND_REFINE method to find the
+ *  non-real parts of the spectra and the GRIDSEARCH method to find the real
+ *  parts.
  */
 typedef enum {
     fnft_nsep_loc_SUBSAMPLE_AND_REFINE,
@@ -42,8 +51,13 @@ typedef enum {
 
 /**
  * Enum that controls how spectrum is filtered. Used in
- * \link fnft_nsep_opts_t \endlink.
+ * \link fnft_nsep_opts_t \endlink.\n \n
  * @ingroup data_types
+ *  fnft_nsep_opts_filt_NONE: No filtering.\n\n
+ *  fnft_nsep_opts_filt_MANUAL: Only points within the specified
+ *  \link fnft_nsep_opts_t::bounding_box \endlink are kept. \n\n
+ *  fnft_nsep_opts_filt_AUTO: As above, but the boundary box is chosen by
+ *  the routine.
  */
 typedef enum {
     fnft_nsep_filt_NONE,
@@ -62,27 +76,15 @@ typedef enum {
  *
  * @var fnft_nsep_opts_t::localization
  *  Controls how both the main spectrum and the auxiliary main spectrum points
- *  are localized. \n\n
- *  fnft_nsep_opts_loc_SUBSAMPLE_AND_REFINE: Similar approach as for 
- *  fnft_nsev_opts_dsloc_SUBSAMPLE_AND_REFINE (see
- *  \link fnft_nsev_opts_t::bound_state_localization\endlink.)\n\n
- *  fnft_nsep_opts_loc_GRIDSEARCH: Uses a grid search to localize roots. Can
- *  only find main and auxiliary spectrum points on the real axis. In the
- *  defocusing case, the main spectrum is always real.\n\n
- *  fnft_nsep_opts_loc_MIXED: Uses the SUBSAMPLE_AND_REFINE method to find the
- *  non-real parts of the spectra and the GRIDSEARCH method to find the real
- *  parts.
+ *  are localized. \n
+ *  Should be of type \link fnft_nsep_loc_t \endlink.
  *
  * @var fnft_nsep_opts_t::filtering
  *  Controls how both the main spectrum and the auxiliary spectrum are
  *  filtered. It is recommended to use MANUAL filtering as accurate filtering
- *  reduces the runtime of the routine.\n\n
- *  fnft_nsep_opts_filt_NONE: No filtering.\n\n
- *  fnft_nsep_opts_filt_MANUAL: Only points within the specified
- *  \link fnft_nsep_opts_t::bounding_box \endlink are kept. \n\n
- *  fnft_nsep_opts_filt_AUTO: As above, but the boundary box is chosen by
- *  the routine.
- *
+ *  reduces the runtime of the routine.\n
+ *  Should be of type \link fnft_nsep_filt_t \endlink.
+ * 
  * @var fnft_nsep_opts_t::bounding_box
  *  Array of four reals. Defines a box in the complex plane that is used for
  *  filtering: \n
@@ -144,41 +146,41 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  *      - Wahls and Poor, <a href="http://dx.doi.org/10.1109/TIT.2015.2485944">&quot;Fast numerical nonlinear Fourier transforms,&quot;</a> IEEE Trans. Inform. Theor. 61(12), 2015.
  *      - Prins and Wahls, &quot;Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot; to appear in Proc. ICASSP 2018.
  * 
- * @param D Number of samples
- * @param q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
+ * @param[in] D Number of samples
+ * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
  *  where \f$ t_n = T[0] + n*L/D \f$, where L=T[2]-T[1] is the period and
  *  \f$n=0,1,\dots,D-1\f$, of the to-be-transformed signal in ascending order
  *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$)
- * @param T Array of length 2. T[0] is the position in time of the first
+ * @param[in] T Array of length 2. T[0] is the position in time of the first
  *  sample. T[2] is the beginning of the next period. (The location of the last
  *  sample is thus t_{D-1}=T[2]-L/D.) It should be T[0]<T[1].
- * @param K_ptr Upon entry, *K_ptr should contain the length of the array
+ * @param[in,out] K_ptr Upon entry, *K_ptr should contain the length of the array
  *  main_spec. Upon return, *K_ptr contains the number of actually detected
  *  points in the main spectrum. If the length of the array main_spec was not
  *  sufficient to store all of the detected points in the main spectrum, a
  *  warning is printed and as many points as possible are returned instead.
- * @param main_spec Array. Upon return, the routine has stored the detected
+ * @param[out] main_spec Array. Upon return, the routine has stored the detected
  *  main specrum points (i.e., the points for which the trace of the monodromy
  *  matrix is either +2 or -2) in the first *K_ptr entries of this array.
  *  If NULL is passed instead, the main spectrum will not be computed.
  *  Has to be preallocated by the user. The user can choose an arbitrary
  *  length. Typically, D is a good choice.
- * @param M_ptr Upon entry, *M_ptr should contain the length of the array
+ * @param[in,out] M_ptr Upon entry, *M_ptr should contain the length of the array
  *  aux_spec. Upon return, *M_ptr contains the number of actually detected
  *  points in the auxiliary spectrum. If the length of the array aux_spec was
  *  not sufficient to store all of the detected points in the auxiliary
  *  spectrum, a warning is printed and as many points as possible are returned
  *  instead.
- * @param aux_spec Array. Upon return, the routine has stored the detected
+ * @param[out] aux_spec Array. Upon return, the routine has stored the detected
  *  auxiliary specrum points (i.e., the points for which the upper right
  *  element of the monodromy matrix is zero) in the first *M_ptr entries of
  *  this array. If NULL is passed instead, the auxiliary spectrum will not be
  *  computed. Has to be preallocated by the user. The user can choose an
  *  arbitrary length. Typically, D is a good choice.
- * @param sheet_indices Not yet implemented. Pass NULL.
- * @param kappa =+1 for the focusing nonlinear Schroedinger equation,
+ * @param[in] sheet_indices Not yet implemented. Pass NULL.
+ * @param[in] kappa =+1 for the focusing nonlinear Schroedinger equation,
  *  =-1 for the defocusing one
- * @param opts Pointer to a \link fnft_nsep_opts_t \endlink object. The object
+ * @param[in] opts Pointer to a \link fnft_nsep_opts_t \endlink object. The object
  *  can be used to modify the behavior of the routine. Use
  *  the routine \link fnft_nsep_default_opts \endlink
  *  to generate such an object and modify as desired. It is also possible to
