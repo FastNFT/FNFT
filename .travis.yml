@@ -13,6 +13,4 @@ matrix:
       env: GCC_VER="5" CC=/usr/bin/gcc-5 FC=/usr/bin/gfortran-5
 
 script:
-        cmake .
-        make
-        make test
+        cmake . && make && make test
