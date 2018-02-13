@@ -1,5 +1,7 @@
 # FNFT: Fast Nonlinear Fourier Transforms
 
+[![Build Status](https://travis-ci.org/FastNFT/FNFT.svg?branch=development)](https://travis-ci.org/FastNFT/FNFT)
+
 FNFT is a software library for the fast numerical computation of nonlinear Fourier transforms, which are also known as direct scattering transforms. FNFT is written in C and comes with a MATLAB interface. It also contains some third-party Fortran code.
 
 The algorithms are mainly based on ideas in [1]-[3], but also use ideas from other papers such as [4]-[8]. The following nonlinear Fourier transforms are currently implemented in FNFT:
