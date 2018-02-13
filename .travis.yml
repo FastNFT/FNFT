@@ -1,0 +1,20 @@
+language: c
+
+
+
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          sources: 
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-5
+            - gfortran-5
+      env: GCC_VER="5" CC=/usr/bin/gcc-5 FC=/usr/bin/gfortran-5
+
+script:
+        cmake .
+        make
+        make test
