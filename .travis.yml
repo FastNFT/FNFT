@@ -10,7 +10,7 @@ matrix:
           packages:
             - gcc-4.9
             - gfortran-4.9
-      env: GCC_VER="5" CC=/usr/bin/gcc-4.9 FC=/usr/bin/gfortran-4.9
+      env: GCC_VER="4.9" CC=/usr/bin/gcc-4.9 FC=/usr/bin/gfortran-4.9
 
   include:
     - os: linux
@@ -32,7 +32,7 @@ matrix:
           packages:
             - gcc-7
             - gfortran-7
-      env: GCC_VER="5" CC=/usr/bin/gcc-7 FC=/usr/bin/gfortran-7
+      env: GCC_VER="7" CC=/usr/bin/gcc-7 FC=/usr/bin/gfortran-7
 
 script:
         cmake . && make && make test
