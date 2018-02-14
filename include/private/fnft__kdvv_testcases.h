@@ -20,6 +20,7 @@
 /**
  * @file fnft__kdvv_testcases.h
  * @brief Provides test cases for the tests of \link fnft_kdvv \endlink.
+ *
  * @ingroup kdv
  */
 
@@ -31,6 +32,10 @@
 /**
  * List of currently implemented test cases for the KdV with vanishing
  * boundary conditions.
+ *
+ * fnft__kdvv_testcases_SECH - A squared sech potential.\n
+ * fnft__kdvv_testcases_RECT - A rectangular potential.
+ *
  * @ingroup kdv
  */
 typedef enum {
@@ -39,12 +44,23 @@ typedef enum {
 } fnft__kdvv_testcases_t;
 
 /**
+ * @brief Routine to run tests for \link fnft_kdvv \endlink.
+ *
  * This routine is used by the tests for \link fnft_kdvv \endlink. It runs the
  * specified test case tc with the specificed number of samples D and the
  * options opts, and tests if several errors stay below the provided error
- * bounds in eb. If yes, the routine \link FNFT_SUCCESS \endlink. Otherwise,
- * it returns an error code (normally, \link FNFT_EC_TEST_FAILED \endlink).
- * @ingroup nse
+ * bounds in eb.
+ *
+ * @param[in] tc Type of test case.
+ * @param[in] D Number of samples.
+ * @param[in] eb Real valued array with 6 elements corresponding to various
+ * error bounds.
+ * @param[in] opts \link fnft_kdvv_opts_t \endlink options for the tests.
+ * @return If all errors stay below bounds the routine
+ * \link FNFT_SUCCESS \endlink. Otherwise, it returns an error code
+ * (normally, \link FNFT_EC_TEST_FAILED \endlink).
+ *
+ * @ingroup kdv
  */
 FNFT_INT fnft__kdvv_testcases_test_fnft(fnft__kdvv_testcases_t tc, FNFT_UINT D,
     const FNFT_REAL eb[6], fnft_kdvv_opts_t * const opts); 
