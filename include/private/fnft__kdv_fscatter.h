@@ -35,7 +35,7 @@
  * @ingroup kdv
  * This routine returns the matrix
  * \f[
- *  M = \text{exp}\left(\begin{bmatrix}
+ *  \mathbf{M} = \text{exp}\left(\begin{bmatrix}
  *       0 & q \\ -1 & 0
  *      \end{bmatrix}\epsilon_t\right)
  *    = \begin{bmatrix}

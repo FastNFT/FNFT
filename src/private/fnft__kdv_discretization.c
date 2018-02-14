@@ -22,10 +22,8 @@
 #include "fnft__kdv_discretization.h"
 
 /**
- * Returns the max degree d of the polynomials in a single scattering
- * matrix or zero if the discretization is unknown. It defines the step
- * size of the frequency grid z = exp(2*I*\xi*eps_t/d) based on the
- * discretization type.
+ * This routine returns the max degree d of the polynomials in a single
+ * scattering matrix or zero if the discretization is unknown.
  */
 UINT fnft__kdv_discretization_degree(kdv_discretization_t
         discretization)
@@ -57,15 +55,13 @@ UINT fnft__kdv_discretization_degree(kdv_discretization_t
         case kdv_discretization_2SPLIT7B:
             return 105;
             
-        default:
+        default: // Unknown discretization
             return 0;
     }
 }
 
 /**
- * Returns the boundary coefficient boundary_coeff in the boundary
- * condition T[end] = T[1]+eps_t*boundary_coeff based on the discretization
- * type. Defined only for discretizations supported by kdv_fscatter.c
+ * This routine returns the boundary coefficient based on the discretization.
  */
 REAL fnft__kdv_discretization_boundary_coeff(kdv_discretization_t discretization)
 {
