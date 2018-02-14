@@ -8,12 +8,8 @@ matrix:
           sources: 
             - ubuntu-toolchain-r-test
           packages:
-            - gcc-7
-            - gfortran-7
-      env: GCC_VER="7" CC=/usr/bin/gcc-7 FC=/usr/bin/gfortran-7"
-
-install:
-	-export CC=/usr/bin/gcc-7
-	-export FC=/usr/bin/gfortran-7
+            - gcc-5
+            - gfortran-5
+      env: GCC_VER="5" CC=/usr/bin/gcc-5 FC=/usr/bin/gfortran-5"
 
 script: cmake . && make && make test
