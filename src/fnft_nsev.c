@@ -41,15 +41,19 @@ static fnft_nsev_opts_t default_opts = {
     .discretization = nse_discretization_2SPLIT4B
 };
 
-// Returns an options object for the main routine with default settings.
-// See the header file for a detailed description.
+/**
+ * Creates a new options variable for fnft_nsev with default settings.
+ * See the header file for a detailed description.
+ */
 fnft_nsev_opts_t fnft_nsev_default_opts()
 {
     return default_opts;
 }
 
-// Returns the maximum number of bound states that can be detected or zero
-// on error. See header file for details.
+/**
+ * Returns the maximum number of bound states that can be detected by
+ * fnft_nsev. See header file for details.
+ */
 UINT fnft_nsev_max_K(const UINT D, fnft_nsev_opts_t const * const opts)
 {
     if (opts != NULL)
@@ -58,9 +62,10 @@ UINT fnft_nsev_max_K(const UINT D, fnft_nsev_opts_t const * const opts)
         return nse_discretization_degree(default_opts.discretization) * D;
 }
 
-// Declare auxiliary routines used by the main routine fnft_nsev.
-// Their bodies follow below.
-
+/**
+ * Declare auxiliary routines used by the main routine fnft_nsev.
+ * Their bodies follow below.
+ */
 static inline INT tf2contspec(
     const UINT deg,
     const INT W,
@@ -103,8 +108,11 @@ static inline INT refine_roots_newton(
     nse_discretization_t discretization,
     const UINT niter);
 
-// The main routine. See the header file for documentation.
-
+/**
+ * Fast nonlinear Fourier transform for the nonlinear Schroedinger
+ * equation with vanishing boundary conditions.
+ * See the header file for documentation.
+ */
 INT fnft_nsev(
     const UINT D,
     COMPLEX * const q,
@@ -151,7 +159,7 @@ INT fnft_nsev(
     // of the transfer matrix, the second and fourth quarter of the
     // array carry redundant information that is not used. These quarters
     // are therefore used as buffers and may be overwritten at some point.
-    i = nse_fscatter_length(D, opts->discretization);
+    i = nse_fscatter_numel(D, opts->discretization);
     if (i == 0) { // size D>=2, this means unknown discretization
         ret_code = E_INVALID_ARGUMENT(opts->discretization);
         goto release_mem;

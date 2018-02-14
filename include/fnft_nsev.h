@@ -171,7 +171,6 @@ typedef struct {
 /**
  * @brief Creates a new options variable for \link fnft_nsev \endlink with
  * default settings.
- * @ingroup fnft
  *
  * @returns A \link fnft_nsev_opts_t \endlink object with the following options.\n
  *  bound_state_filtering = fnft_nsev_bsfilt_FULL\n
@@ -181,18 +180,23 @@ typedef struct {
  *  contspec_type = fnft_nsev_cstype_REFLECTION_COEFFICIENT\n
  *  normalization_flag = 1\n
  *  discretization = fnft_nse_discretization_2SPLIT4B\n
+ *
+  * @ingroup fnft
  */
 fnft_nsev_opts_t fnft_nsev_default_opts();
 
 /**
  * @brief Returns the maximum number of bound states that can be detected by
  * fnft_nsev.
- * @ingroup fnft
- * @param[in] D Number of samples that will be passed to \link fnft_nsev \endlink. Should be
+ *
+ * @param[in] D Number of samples that will be passed to
+ * \link fnft_nsev \endlink. Should be
  *  larger than zero.
  * @param[in] opts Options that will be passed to fnft_nsev. If NULL is passed,
  *  the default options will be used.
  * @return Returns the maximum number of bound states or zero on error.
+ *
+ * @ingroup fnft
  */
 FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
     fnft_nsev_opts_t const * const opts);
@@ -200,8 +204,7 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
 /**
  * @brief Fast nonlinear Fourier transform for the nonlinear Schroedinger
  *  equation with vanishing boundary conditions.
- * @ingroup fnft
- * \n \n
+ *
  * This routine computes the nonlinear Fourier transform for the nonlinear
  * Schroedinger equation \f[ iq_x + q_{tt} \pm 2q|q|^2=0, \quad  q=q(x,t), \f]
  * of Zakharov and Shabat (<a href="http://jetp.ac.ru/cgi-bin/e/index/e/34/1/p62?a=list">Soviet. Phys. JTEP 31(1), 1972</a>)
@@ -266,6 +269,8 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *  user is reponsible to freeing the object after the routine has returned.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
+ *
+ * @ingroup fnft
  */
 FNFT_INT fnft_nsev(const FNFT_UINT D, FNFT_COMPLEX * const q, 
     FNFT_REAL const * const T, const FNFT_UINT M, 

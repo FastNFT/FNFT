@@ -31,7 +31,7 @@
  * Returns the length (in number of elements) for "result" in nse_fscatter
  * or 0 if either the discretization is unknown or D=0.
  */
-UINT nse_fscatter_length(UINT D,
+UINT nse_fscatter_numel(UINT D,
         nse_discretization_t discretization)
 {
     // 2x2 matrix of degree+1 elements
@@ -69,7 +69,7 @@ INT nse_fscatter(const UINT D, COMPLEX const * const q,
         return E_INVALID_ARGUMENT(deg_ptr);
     
     // Allocate buffers
-    len = nse_fscatter_length(D, discretization);
+    len = nse_fscatter_numel(D, discretization);
     if (len == 0) { // size D>0, this means unknown discretization
         return E_INVALID_ARGUMENT(opts->discretization);
     }

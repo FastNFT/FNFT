@@ -27,19 +27,17 @@
 #include "fnft__misc.h"
 
 /**
- * Returns the length (in number of elements) for "result" in kdv_fscatter
- * or 0 if either the discretization is unknown or D=0.
+ * Returns the length of array to be allocated based on the number
+ * of samples and discretization.
  */
-UINT kdv_fscatter_length(UINT D,
-        kdv_discretization_t discretization)
+UINT kdv_fscatter_numel(UINT D, kdv_discretization_t discretization)
 {
     // 2x2 matrix of degree+1 elements for each sample
     return 4*(kdv_discretization_degree(discretization) + 1)*D;
 }
 
 /**
- * Calculate M = [cos(eps_t*sqrt(q)),         q * eps * sinc(eps_t*sqrt(q) ;
- *                -eps_t*sinc(eps_t*sqrt(q)), cos(eps_t*sqrt(q))           ];
+ * Returns the scattering matrix for a single step at frequency zero.
  */
 INT kdv_fscatter_zero_freq_scatter_matrix(COMPLEX *M,
                                                 const REAL eps_t, const REAL q)
@@ -51,7 +49,8 @@ INT kdv_fscatter_zero_freq_scatter_matrix(COMPLEX *M,
     return 0;
 }
 /**
- * result needs to be pre-allocated with malloc(kdv_fscatter_length(D,discretization)*sizeof(COMPLEX))
+ * Fast computation of polynomial approximation of the combined scattering
+ * matrix.
  */
 INT kdv_fscatter(const UINT D, COMPLEX const * const q,
                  const REAL eps_t, COMPLEX * const result, UINT * const deg_ptr,
@@ -78,7 +77,7 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
         return E_INVALID_ARGUMENT(deg_ptr);
 
     // Allocate buffers
-    len = kdv_fscatter_length(D, discretization);
+    len = kdv_fscatter_numel(D, discretization);
     if (len == 0) { // size D>0, this means unknown discretization
         return E_INVALID_ARGUMENT(opts->discretization);
     }
@@ -140,12 +139,12 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
                 
                 // construct the scattering matrix for the i-th sample
                 p11[1] = 0.0;
-                p11[0] = e_1B[0];//p22[1];
-                p12[1] = e_1B[1];//-q[i]*p21[0];
+                p11[0] = e_1B[0];
+                p12[1] = e_1B[1];
                 p12[0] = 0.0;
-                p21[1] = 0.0;                                 //coef of z^1
-                p21[0] = e_1B[2];//-eps_t*misc_CSINC(DEL);    //coef of z^0
-                p22[1] = e_1B[0];//CCOS(DEL);
+                p21[1] = 0.0;
+                p21[0] = e_1B[2];
+                p22[1] = e_1B[0];
                 p22[0] = 0.0;
                 
                 p11 += *deg_ptr + 1;
@@ -885,58 +884,3 @@ release_mem:
     free(p);
     return ret_code;
 }
-
-
-
-//                p11[12] = ;
-//                p11[11] = ;
-//                p11[10] = ;
-//                p11[9] = ;
-//                p11[8] = ;
-//                p11[7] = ;
-//                p11[6] = ;
-//                p11[5] = ;
-//                p11[4] = ;
-//                p11[3] = ;
-//                p11[2] = ;
-//                p11[1] = ;
-//                p11[0] = ;
-//                p12[12] = ;
-//                p12[11] = ;
-//                p12[10] = ;
-//                p12[9] = ;
-//                p12[8] = ;
-//                p12[7] = ;
-//                p12[6] = ;
-//                p12[5] = ;
-//                p12[4] = ;
-//                p12[3] = ;
-//                p12[2] = ;
-//                p12[1] = ;
-//                p12[0] = ;
-//                p21[12] = ;
-//                p21[11] = ;
-//                p21[10] = ;
-//                p21[9] = ;
-//                p21[8] = ;
-//                p21[7] = ;
-//                p21[6] = ;
-//                p21[5] = ;
-//                p21[4] = ;
-//                p21[3] = ;
-//                p21[2] = ;
-//                p21[1] = ;
-//                p21[0] = ;
-//                p22[12] = ;
-//                p22[11] = ;
-//                p22[10] = ;
-//                p22[9] = ;
-//                p22[8] = ;
-//                p22[7] = ;
-//                p22[6] = ;
-//                p22[5] = ;
-//                p22[4] = ;
-//                p22[3] = ;
-//                p22[2] = ;
-//                p22[1] = ;
-//                p22[0] = ;

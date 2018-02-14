@@ -203,7 +203,7 @@ static inline INT gridsearch(const UINT D,
         return E_NOT_YET_IMPLEMENTED(sheet_indices, "Pass NULL");
 
     // Allocate memory for the transfer matrix
-    i = nse_fscatter_length(D, opts_ptr->discretization);
+    i = nse_fscatter_numel(D, opts_ptr->discretization);
     if (i == 0) { // since Dsub>=2, this means unknown discretization
         ret_code = E_INVALID_ARGUMENT(opts_ptr->discretization);
         goto release_mem;
@@ -404,7 +404,7 @@ static inline INT subsample_and_refine(const UINT D,
     CHECK_RETCODE(ret_code, release_mem);
 
     // Allocate memory for the transfer matrix
-    i = nse_fscatter_length(Dsub, opts_ptr->discretization);
+    i = nse_fscatter_numel(Dsub, opts_ptr->discretization);
     if (i == 0) { // since Dsub>=2, this means unknown discretization
         ret_code = E_INVALID_ARGUMENT(opts_ptr->discretization);
         goto release_mem;

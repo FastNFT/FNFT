@@ -27,22 +27,34 @@
 #include "fnft__kdv_discretization.h"
 #include "fnft_kdvv.h"
 
+/**
+ * Stores additional options for the routine fnft_kdvv.
+ */
 kdvv_opts_t default_opts = {
-    .discretization = kdv_discretization_2SPLIT2A
+    .discretization = kdv_discretization_2SPLIT8B
 };
 
+/**
+ * Creates a new options variable for fnft_kdvv with default settings.
+ */
 kdvv_opts_t fnft_kdvv_default_opts()
 {
     return default_opts;
 }
 
-// Declare auxiliary routine used by the main routine fnft_kdvv.
+/**
+ * Declare auxiliary routine used by the main routine fnft_kdvv.
+ * Its body follows below.
+ */
 static INT tf2contspec_negxi(UINT deg,
     COMPLEX *transfer_matrix, REAL const * const T,
     const UINT D, REAL const * const XI, const UINT M,
     COMPLEX * result, fnft_kdvv_opts_t * opts_ptr);
 
-// The main routine.
+/**
+ * Fast nonlinear Fourier transform for the Korteweg-de Vries equation with
+ * vanishing boundary conditions.
+ */
 INT fnft_kdvv(const UINT D,
     COMPLEX * const u,
     REAL const * const T,
@@ -81,7 +93,7 @@ INT fnft_kdvv(const UINT D,
         opts_ptr = &default_opts;
 
     // Allocate memory for the transfer matrix
-    transfer_matrix = malloc(kdv_fscatter_length(D,opts_ptr->discretization)*sizeof(COMPLEX));
+    transfer_matrix = malloc(kdv_fscatter_numel(D,opts_ptr->discretization)*sizeof(COMPLEX));
     if (transfer_matrix == NULL) {
         ret_code = E_NOMEM;
         goto release_mem;
@@ -177,7 +189,7 @@ static INT tf2contspec_negxi(UINT deg,
 
     if (opts_ptr->discretization==kdv_discretization_2SPLIT2A){
         // Correct H12_vals and H21_vals for trick that implements 2split2A with
-        // first order polynomials instead of second order polynomials
+        // first order polynomials instead of second order polynomials.
         for (i=0; i<M; i++) {
             xi = -XI[0] - i*eps_xi;
             sqrt_z = CEXP( I*xi*eps_t / degree1step);

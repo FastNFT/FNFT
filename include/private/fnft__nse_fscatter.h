@@ -42,7 +42,7 @@
  * @param[in] discretization Type of discretization from \link fnft_nse_discretization_t \endlink.
  * @returns Returns the length to be allocated. Returns 0 for unknown discretizations.
  */
-FNFT_UINT fnft__nse_fscatter_length(FNFT_UINT D,
+FNFT_UINT fnft__nse_fscatter_numel(FNFT_UINT D,
     fnft_nse_discretization_t discretization);
 
 /**
@@ -64,9 +64,9 @@ FNFT_UINT fnft__nse_fscatter_length(FNFT_UINT D,
  * @param[in] eps_t Step-size, eps_t \f$= (T[1]-T[0])/(D-1) \f$.
  * @param[in] kappa =+1 for the focusing nonlinear Schroedinger equation,
  *  =-1 for the defocusing one
- * @param[out] result Array of length fac * D, will contain the combined scattering matrix.
- * fac is determined based on the chosen type of discretization \link fnft_nse_discretization_t \endlink
- * by \link fnft__nse_fscatter_length \endlink.
+ * @param[out] result array of length `nse_fscatter_numel(D,discretization)`,
+ * will contain the combined scattering matrix. Result needs to be pre-allocated
+ * with `malloc(nse_fscatter_numel(D,discretization)*sizeof(COMPLEX))`.
  * @param[out] deg_ptr Pointer to variable containing degree of the discretization.
  * Determined based on discretization by \link fnft__nse_discretization_degree \endlink.
  * @param[in] W_ptr Pointer to normalization flag \link fnft_nsev_opts_t::normalization_flag \endlink.
@@ -83,7 +83,7 @@ FNFT_INT fnft__nse_fscatter(const FNFT_UINT D, FNFT_COMPLEX const * const q,
     FNFT_INT * const W_ptr, fnft_nse_discretization_t discretization);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
-#define nse_fscatter_length(...) fnft__nse_fscatter_length(__VA_ARGS__)
+#define nse_fscatter_numel(...) fnft__nse_fscatter_numel(__VA_ARGS__)
 #define nse_fscatter(...) fnft__nse_fscatter(__VA_ARGS__)
 #endif
 

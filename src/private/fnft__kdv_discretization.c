@@ -16,6 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
 * Shrinivas Chimmalgi (TU Delft) 2017.
+* Peter J. Prins (TU Delft) 2018.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
