@@ -23,6 +23,10 @@
 #include "fnft__misc.h" // for misc_sech
 #include "fnft__kdvv_testcases.h"
 
+/**
+ * Routine to run tests for \link fnft_kdvv \endlink
+ */
+
 INT fnft__kdvv_testcases(kdvv_testcases_t tc, const UINT D,
     COMPLEX ** const q_ptr, REAL * const T, 
     UINT * const M_ptr, COMPLEX ** const contspec_ptr,

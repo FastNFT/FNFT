@@ -29,7 +29,8 @@
 #include "fnft.h"
 
 /**
- * @brief Fast multiplication of multiple polynomials of same degree.\n
+ * @brief Fast multiplication of multiple polynomials of same degree.
+ * 
  * @ingroup poly
  * Fast multiplication of n polynomials of degree d. Their coefficients are
  * stored in the array p and will be overwritten. If W_ptr != NULL, the
@@ -47,7 +48,8 @@ FNFT_INT fnft__poly_fmult(FNFT_UINT * const d, FNFT_UINT n, FNFT_COMPLEX * const
     FNFT_INT * const W_ptr);
 
 /**
- * @brief Fast multiplication of multiple 2x2 matrix-valued polynomials of same degree.\n
+ * @brief Fast multiplication of multiple 2x2 matrix-valued polynomials of same degree.
+ * 
  * @ingroup poly
  * Fast multiplication of n 2x2 matrix-valued polynomials of degree d. Their
  * coefficients are stored in the array p and will be overwritten. If

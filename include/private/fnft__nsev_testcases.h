@@ -20,6 +20,7 @@
 /**
  * @file fnft__nsev_testcases.h
  * @brief Provides test cases for the tests of \link fnft_nsev \endlink.
+ *
  * @ingroup nse
  */
 
@@ -31,11 +32,13 @@
 
 /**
  * List of currently implemented test cases for the NSE with vanishing
- * boundary conditions.\n
+ * boundary conditions.\n \n
+ *
+ * fnft__nsev_testcases_SECH_FOCUSING : Test for focusing NSE (kappa = +1) with a sech potential.\n \n
+ * fnft__nsev_testcases_SECH_DEFOCUSING : Test for defocusing NSE (kappa = -1) with a sech potential.\n \n
+ * fnft__nsev_testcases_TRUNCATED_SOLITON : Test for focusing NSE (kappa = +1) with a truncated solitonic potential.
+ *
  * @ingroup nse
- * fnft__nsev_testcases_SECH_FOCUSING - Test for focusing NSE (kappa = +1) with a sech potential.\n
- * fnft__nsev_testcases_SECH_DEFOCUSING - Test for defocusing NSE (kappa = -1) with a sech potential.\n
- * fnft__nsev_testcases_TRUNCATED_SOLITON - Test for focusing NSE (kappa = +1) with a truncated solitonic potential.\n
  */
 typedef enum {
     fnft__nsev_testcases_SECH_FOCUSING, 
@@ -46,7 +49,8 @@ typedef enum {
 /**
  * @brief Routine to run tests for \link fnft_nsev \endlink.\n
  * @ingroup nse
- * 
+ *
+ * This routine is used by the tests for \link fnft_nsev \endlink.
  * It runs the specified test case tc with the specificed number of samples D and the
  * options opts, and tests if several errors stay below the provided error
  * bounds in eb. 
