@@ -42,7 +42,6 @@
  *  Controls which discretization is applied to the continuous-time scattering
  *  problem. See \link fnft_kdv_discretization_t \endlink.
  *
- * @ingroup fnft
  * @ingroup data_types
  */
 typedef struct {

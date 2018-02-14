@@ -116,14 +116,50 @@
 
 /* --- Auxiliary macros and functions. Do not use directly. --- */
 
+/**
+ * Macro that prints the given error message using \link fnft__errmsg_aux 
+ * \endlink and returns the error code ec. Auxiliary macro. Do not call
+ * directly.
+ * @ingroup private_errwarn
+ */
 #define FNFT__ERRMSG(ec,msg)         fnft__errmsg_aux(ec, __func__, __LINE__, msg);
-#define FNFT__E_INVALID_INPUT_(num) "Input " #num " is invalid."
+
+/**
+ * Auxiliary macro that is used to stringify the input to
+ * \link FNFT__E_INVALID_ARGUMENT \endlink. Do not call directly.
+ * @ingroup private_errwarn
+ */
 #define FNFT__E_INVALID_ARGUMENT_(name) "Invalid argument "#name"."
+
+/**
+ * Auxiliary macro used used to to stringify the input to
+ * \link FNFT__E_NOT_YET_IMPLEMENTED \endlink. Do not call directly.
+ * @ingroup private_errwarn
+ */
 #define FNFT__E_NOT_YET_IMPLEMENTED_(name,msg) "Not yet implemented ("#name"). "#msg
+
+/**
+ * Auxiliary macro used to stringify the input to
+ * \link FNFT__E_NOT_YET_IMPLEMENTED \endlink. Do not call directly.
+ * @ingroup private_errwarn
+ */
 #define FNFT__E_SANITY_CHECK_FAILED_(msg) "Sanity check failed ("#msg")."
 
-FNFT_INT fnft__errmsg_aux(const FNFT_INT ec, const char *func, const FNFT_INT line,
-    const char *msg);
+/**
+ * Auxiliary function that prints a formated error message using
+ * the printf function returned by \link fnft_errwarn_getprintf \endlink.
+ * It simply returns the error code ec. Do not call directly.
+ * @ingroup private_errwarn
+ */
+FNFT_INT fnft__errmsg_aux(const FNFT_INT ec, const char *func,
+    const FNFT_INT line, const char *msg);
+
+/**
+ * Auxiliary function that prints a formated warning message using
+ * the printf function returned by \link fnft_errwarn_getprintf \endlink.
+ * Do not call directly.
+ * @ingroup private_errwarn
+ */
 void fnft__warn_aux(const char *func, const FNFT_INT line, const char *msg);
 
 #endif

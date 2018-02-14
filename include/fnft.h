@@ -29,8 +29,9 @@
  * \mainpage FNFT: Fast nonlinear Fourier transforms
  *
  * The library is separated into a public ("fnft_" prefix) and a private part
- * ("fnft__" prefix). To get started, read the module \ref fnft and try the
- * examples in the examples directory.
+ * ("fnft__" prefix). \n\n
+ * To get started, read the module \ref fnft and try the examples in the
+ * examples directory.
  */
 
 /* Define groups for Doxygen documentation */
