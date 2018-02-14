@@ -68,6 +68,7 @@ typedef enum {
 /**
  * @struct fnft_nsep_opts_t
  * @brief Stores additional options for the routine \link fnft_nsep \endlink. 
+ * 
  * @ingroup fnft
  * @ingroup data_types
  *
@@ -115,8 +116,8 @@ typedef struct {
 /**
  * @brief Creates a new options variable for \link fnft_nsep \endlink with
  * default settings.
+ * 
  * @ingroup fnft
- *
  * @returns A \link fnft_nsep_opts_t \endlink object with the following options.\n
  *  localization = fnft_nsep_loc_MIXED\n
  *  filtering = fnft_nsep_filt_AUTO\n
@@ -133,6 +134,7 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
 /**
  * @brief Fast nonlinear Fourier transform for the nonlinear Schroedinger
  *  equation with periodic boundary conditions.
+ * 
  * @ingroup fnft
  * \n \n
  * This routine computes the nonlinear Fourier transform for the nonlinear

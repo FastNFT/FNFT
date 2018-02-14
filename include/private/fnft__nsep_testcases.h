@@ -25,10 +25,10 @@
 
 /**
  * List of currently implemented test cases for the NSE with periodic
- * boundary conditions.
+ * boundary conditions.\n \n
  * @ingroup nse
- * fnft__nsep_testcases_PLANE_WAVE_FOCUSING - Test for focusing NSE (kappa = +1) with a plane wave signal.\n
- * fnft__nsep_testcases_CONSTANT_DEFOCUSING - Test for defocusing NSE (kappa = -1) with a constant signal.\n
+ * fnft__nsep_testcases_PLANE_WAVE_FOCUSING : Test for focusing NSE (kappa = +1) with a plane wave signal.\n \n
+ * fnft__nsep_testcases_CONSTANT_DEFOCUSING : Test for defocusing NSE (kappa = -1) with a constant signal.
  */
 typedef enum {
     fnft__nsep_testcases_PLANE_WAVE_FOCUSING,

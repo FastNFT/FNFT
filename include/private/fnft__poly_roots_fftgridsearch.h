@@ -29,10 +29,9 @@
 #include "fnft.h"
 
 /**
- * @brief Unit circle roots of a polynomial via grid search.\n
+ * @brief Unit circle roots of a polynomial via grid search.
+ * 
  * @ingroup poly
- *
- *
  * This routine approximates the unit circle roots of a polynomial
  *
  *   \f[ p(z)=p_0 + p_{1}z^1 + \dots p_{deg} + p_N z^{deg}, \f]

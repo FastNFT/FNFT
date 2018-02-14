@@ -48,7 +48,7 @@ FNFT_UINT fnft__nse_discretization_degree(fnft_nse_discretization_t
  * @brief Returns the mapping coefficient based on discretization.
  *
  * This routine returns the mapping coefficient map_coeff based on the discretization of type 
- * \link fnft_nse_discretization_t \endlink. Then \f$ z=e^{map\_coeff.j.xi.eps_t} \f$.\n
+ * \link fnft_nse_discretization_t \endlink. Then \f$ z=e^{map\_coeff.j.xi.eps\_t} \f$.\n
  * Returns NAN for discretizations not supported by \link fnft__nse_fscatter \endlink.
  *
  * @ingroup nse

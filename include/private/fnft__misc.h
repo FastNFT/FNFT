@@ -28,7 +28,8 @@
 #include "fnft.h"
 
 /**
- * @brief Helper function for debugging. Prints an array in MATLAB style.\n
+ * @brief Helper function for debugging. Prints an array in MATLAB style.
+ * 
  * @ingroup misc
  * This function prints an array in MATLAB style.
  * @param[in] len Length of the array to be printed.
@@ -38,7 +39,8 @@
 void fnft__misc_print_buf(FNFT_INT len, FNFT_COMPLEX *buf, char *varname);
 
 /**
- * @brief Relative l1 error between two vectors.\n
+ * @brief Relative l1 error between two vectors.
+ * 
  * @ingroup misc
  * This function computes the relative l1 error between two vectors.\n
  * \f$err = \frac{\sum_{i=0}^{i=len-1} |vec\_numer[i]-vec\_exact[i]|}{\sum_{i=0}^{i=len-1} |vec\_exact[i]|}\f$.
@@ -51,7 +53,8 @@ FNFT_REAL fnft__misc_rel_err(FNFT_INT len, FNFT_COMPLEX *vec_numer,
     FNFT_COMPLEX *vec_exact);
 
 /**
- * @brief Hausdorff distance between two vectors.\n
+ * @brief Hausdorff distance between two vectors.
+ * 
  * @ingroup misc
  * This function computes the Hausdorff distance between two vectors vecA and vecB.
  * @param[in] lenA Length of vector vecA.
@@ -65,16 +68,18 @@ FNFT_REAL fnft__misc_hausdorff_dist(const FNFT_UINT lenA,
     FNFT_COMPLEX const * const vecB);
 
 /**
- * @brief Hyperbolic secant.\n
+ * @brief Hyperbolic secant.
+ * 
  * @ingroup misc
- * This function returns the hyperbolic secant of a complex valued argument.
- * @param[in] Z Complex valued argument.
+ * This function returns the hyperbolic secant of a \link FNFT_COMPLEX \endlink.
+ * @param[in] Z \link FNFT_COMPLEX \endlink argument.
  * @return hyperbolic secant of Z.
  */
 FNFT_COMPLEX fnft__misc_sech(FNFT_COMPLEX Z);
 
 /**
- * @brief Squared l2 norm. \n
+ * @brief Squared l2 norm. 
+ * 
  * @ingroup misc
  * This function computes the quantity\n
  * \f$ val = \frac{b-a}{2N}.(|Z[0]|^2+|Z[N-1]|^2)+\sum_{i=1}^{i=N-2}\frac{b-a}{N}.|Z[i]|^2\f$.
@@ -88,7 +93,8 @@ FNFT_REAL fnft__misc_l2norm2(const FNFT_UINT N, FNFT_COMPLEX const * const Z,
     const FNFT_REAL a, const FNFT_REAL b);
 
 /**
- * @brief Filters array by retaining elements inside a bounding box.\n
+ * @brief Filters array by retaining elements inside a bounding box
+ * 
  * @ingroup misc
  * This function filters the array vals. Only values that satisfy
  *
@@ -115,7 +121,8 @@ FNFT_INT fnft__misc_filter(FNFT_UINT * const N, FNFT_COMPLEX * const vals,
 
 
 /**
- * @brief Filter array based on specified tolerance.\n
+ * @brief Filter array based on specified tolerance.
+ * 
  * @ingroup misc
  * This function removes all entries from the array vals with |Im(val)|>tol_im.
  * @param[in,out] N_ptr Pointer to number of values to be filtered. On exit *N_ptr is overwritten with
@@ -129,7 +136,8 @@ FNFT_INT fnft__misc_filter_nonreal(FNFT_UINT *N_ptr, FNFT_COMPLEX * const vals,
     const FNFT_REAL tol_im);
 
 /**
- * @brief Filters array by retaining elements outside a bounding box.\n
+ * @brief Filters array by retaining elements outside a bounding box.
+ * 
  * @ingroup misc
  * This function filters the array vals. Only values OUTSIDE the bounding box
  * are kept. 
@@ -148,7 +156,8 @@ FNFT_INT fnft__misc_filter_inv(FNFT_UINT * const N_ptr, FNFT_COMPLEX * const val
     FNFT_REAL const * const bounding_box);
 
 /**
- * @brief Merges elements in an array with distance lower than tol.\n
+ * @brief Merges elements in an array with distance lower than tol.
+ * 
  * @ingroup misc
  * This function filters an array by merging elements if distance between the elements is less than tol.
  * @param[in,out] N_ptr It is the pointer to the number of elements to be filtered. On exit *N_ptr is overwritten with
@@ -162,7 +171,8 @@ FNFT_INT fnft__misc_merge(FNFT_UINT *N_ptr, FNFT_COMPLEX * const vals,
     FNFT_REAL tol);
 
 /**
- * @brief Computes a subsampled version of array q.\n
+ * @brief Computes a subsampled version of array q.
+ * 
  * @ingroup misc
  * Computes a subsampled version of q. The length of q is D>=2. The routine
  * will allocate memory for the subsampled signal qsub and updates the
@@ -182,10 +192,11 @@ FNFT_INT fnft__misc_downsample(FNFT_COMPLEX const * const q, const FNFT_UINT D,
     FNFT_UINT * const subsampling_factor_ptr);
 
 /**
- * @brief Sinc function for complex arguments.\n
+ * @brief Sinc function for complex arguments.
+ * 
  * @ingroup misc
- * Functions computes the Sinc function sin(x)/x for complex argument.
- * @param[in] x Complex valued argument.
+ * Functions computes the Sinc function sin(x)/x for \link FNFT_COMPLEX \endlink argument.
+ * @param[in] x \link FNFT_COMPLEX \endlink argument.
  * @returns Sinc(x).
  */
 FNFT_COMPLEX fnft__misc_CSINC(FNFT_COMPLEX x);

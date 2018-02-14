@@ -33,7 +33,7 @@
  * @brief Computes \f$a(\lambda)\f$, \f$ a'(\lambda) = \frac{\partial a(\lambda)}{\partial \lambda}\f$
  * and \f$b(\lambda)\f$ for complex values \f$\lambda\f$ assuming that they are very close to the true 
  * bound-states.
- * \n
+ * 
  * The function performs slow direct scattering and is primarily based on the reference 
  * Boffetta and Osborne 
  * (<a href="http://dx.doi.org/10.1016/0021-9991(92)90370-E">J. Comput. Physics 1992 </a>).
@@ -73,7 +73,7 @@ FNFT_INT fnft__nse_scatter_bound_states(const FNFT_UINT D, FNFT_COMPLEX const *c
 
 /**
  * @brief Computes the scattering matrix and its derivative.
- * \n
+ * 
  * The function computes the scattering matrix and the derivative of the scattering matrix with 
  * respect to \f$\lambda\f$. The function performs slow direct scattering and is primarily based on the reference 
  * Boffetta and Osborne 

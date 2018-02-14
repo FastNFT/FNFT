@@ -33,7 +33,8 @@
 
 /**
  * @brief Returns the length of vector to be allocated based on the number
- * of samples and discretization.\n
+ * of samples and discretization.
+ * 
  * @ingroup nse
  * This routine returns the length 4*D*(nse_discretization_degree(discretization) + 1) 
  * to be allocated based on the number
@@ -48,7 +49,7 @@ FNFT_UINT fnft__nse_fscatter_numel(FNFT_UINT D,
 /**
  * @brief Fast computation of polynomial approximation of the combined scattering 
  * matrix.
- * \n
+ * 
  * This routine computes the polynomial approximation of the combined scattering 
  * matrix by multipying together individual scattering matrices.\n
  * Individual scattering matrices depend on the chosen discretization.
