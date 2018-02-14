@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(fnft C)
 
 set(FNFT_VERSION_MAJOR 0)
-set(FNFT_VERSION_MINOR 0)
+set(FNFT_VERSION_MINOR 1)
 set(FNFT_VERSION_PATCH 0)
 
 include(CheckIncludeFiles)
