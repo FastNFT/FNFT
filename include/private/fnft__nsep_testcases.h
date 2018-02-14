@@ -17,6 +17,13 @@
 * Sander Wahls (TU Delft) 2017.
 */
 
+/**
+ * @file fnft__nsep_testcases.h
+ * @brief Provides test cases for the tests of \link fnft_nsep \endlink.
+ *
+ * @ingroup nse
+ */
+
 #ifndef FNFT__NSEP_TESTCASES_H
 #define FNFT__NSEP_TESTCASES_H
 
@@ -36,7 +43,8 @@ typedef enum {
 } fnft__nsep_testcases_t;
 
 /**
- * @brief This routine is used by the tests for \link fnft_nsep \endlink. \n
+ * @brief This routine is used by the tests for \link fnft_nsep \endlink.  
+ * 
  * @ingroup nse
  * It runs the specified test case tc with the specificed number of samples D and the
  * options opts, and tests if several errors stay below the provided error
