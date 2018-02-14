@@ -169,7 +169,7 @@ in MATLAB to get more information.
 
 ## Community Guidelines
 
-Please use the [issue tracker](https://github.com/FastNFT/FNFT/issues) to report any problems with the software. If you want to contribute to the development of FNFT, please [email](mailto:s.wahls ##at## tudelft.nl) Sander Wahls.
+Please use the [issue tracker](https://github.com/FastNFT/FNFT/issues) to report any problems with the software. If you want to contribute to the development of FNFT, please [email](mailto:s.wahls##at##tudelft.nl) Sander Wahls.
 
 ## Contributors
 
