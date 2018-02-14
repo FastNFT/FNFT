@@ -167,6 +167,10 @@ The MATLAB interface is documented in the usual way. Run the commands
 
 in MATLAB to get more information.
 
+## Community Guidelines
+
+Please use the [issue tracker](https://github.com/FastNFT/FNFT/issues) to report any problems with the software. If you want to contribute to the development of FNFT, please [email](mailto:s.wahls ##at## tudelft.nl) Sander Wahls.
+
 ## Contributors
 
 * Sander Wahls, TU Delft
@@ -183,11 +187,9 @@ FNFT is provided under the terms of the [GNU General Public License, version 2](
   under the European Union’s Horizon 2020 research and innovation programme
   (grant agreement No 716669).
 
-* FNFT incorporates code from the Fortran library 
-[eiscor](https://github.com/eiscor/eiscor).
+* FNFT incorporates code from the Fortran library [eiscor](https://github.com/eiscor/eiscor).
 
-* FNFT incorporates code from the C library
-[Kiss FFT](http://kissfft.sourceforge.net/).
+* FNFT incorporates code from the C library [Kiss FFT](http://kissfft.sourceforge.net/).
 
 ## References
 
