@@ -5,6 +5,9 @@
 %   [contspec, bound_states, normconsts] = MEX_FNFT_NSEV(q, T, XI, kappa,
 %       OPTIONAL INPUTS)
 %
+% DESCRIPTION
+%   Provides an interface to the C routine fnft_nsev.
+%
 % INPUTS
 %   q               Complex row vector of length D=2^n
 %   T               Real 1x2 vector
