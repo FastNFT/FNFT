@@ -10,11 +10,10 @@ matrix:
           packages:
             - gcc-7
             - gfortran-7
-      env: GCC_VER="7" CMAKE_CC=gcc-7 CMAKE_FC=gfortran-7"
+      env: GCC_VER="7" CC=/usr/bin/gcc-7 FC=/usr/bin/gfortran-7"
 
 install:
-	-export CC=gcc-7
-	-export FC=gfortran-7
+	-export CC=/usr/bin/gcc-7
+	-export FC=/usr/bin/gfortran-7
 
-script:
-        cmake . && make && make test
+script: cmake . && make && make test
