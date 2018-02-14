@@ -8,37 +8,9 @@ matrix:
           sources: 
             - ubuntu-toolchain-r-test
           packages:
-            - gcc-4.9
-            - gfortran-4.9
-      env: 
-	- MATRIX_EVAL="CMAKE_CC=gcc-4.9 && CMAKE_FC=gfortran-4.9"
-
-  include:
-    - os: linux
-      addons:
-        apt:
-          sources: 
-            - ubuntu-toolchain-r-test
-          packages:
-            - gcc-5
-            - gfortran-5
-      env: 
-	- MATRIX_EVAL="CMAKE_CC=gcc-5 && CMAKE_FC=gfortran-5"
-
-  include:
-    - os: linux
-      addons:
-        apt:
-          sources: 
-            - ubuntu-toolchain-r-test
-          packages:
             - gcc-7
             - gfortran-7
-      env: 
-	- MATRIX_EVAL="CMAKE_CC=gcc-7 && CMAKE_FC=gfortran-7"
-
-before_install:
-    - eval "${MATRIX_EVAL}"
+      env: GCC_VER="7" CMAKE_CC=gcc-7 CMAKE_FC=gfortran-7"
 
 script:
         CC=CMAKE_CC && FC=CMAKE_FC && cmake . && make && make test
