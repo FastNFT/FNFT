@@ -1,4 +1,4 @@
-language: c
+language: C
 
 matrix:
   include:
@@ -10,7 +10,8 @@ matrix:
           packages:
             - gcc-4.9
             - gfortran-4.9
-      env: GCC_VER="4.9" CC=/usr/bin/gcc-4.9 FC=/usr/bin/gfortran-4.9
+      env: 
+	- MATRIX_EVAL="CMAKE_CC=gcc-4.9 && CMAKE_FC=gfortran-4.9"
 
   include:
     - os: linux
@@ -21,7 +22,8 @@ matrix:
           packages:
             - gcc-5
             - gfortran-5
-      env: GCC_VER="5" CC=/usr/bin/gcc-5 FC=/usr/bin/gfortran-5
+      env: 
+	- MATRIX_EVAL="CMAKE_CC=gcc-5 && CMAKE_FC=gfortran-5"
 
   include:
     - os: linux
@@ -32,7 +34,11 @@ matrix:
           packages:
             - gcc-7
             - gfortran-7
-      env: GCC_VER="7" CC=/usr/bin/gcc-7 FC=/usr/bin/gfortran-7
+      env: 
+	- MATRIX_EVAL="CMAKE_CC=gcc-7 && CMAKE_FC=gfortran-7"
+
+before_install:
+    - eval "${MATRIX_EVAL}"
 
 script:
-        cmake . && make && make test
+        CC=CMAKE_CC && FC=CMAKE_FC && cmake . && make && make test
