@@ -60,6 +60,7 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
     INT i, ret_code, W;
     COMPLEX *p, *p11, *p12, *p21, *p22;
     UINT n, len;
+    COMPLEX e_Bstorage[21];
     COMPLEX *e_0_5B, *e_1B, *e_1_5B, *e_2B, *e_3B, *e_4B, *e_5B, *e_6B, *e_8B,
                                         *e_10B, *e_12B, *e_15B, *e_21B, *e_24B,
                                         *e_30B, *e_35B, *e_42B, *e_70B, *e_105B;
@@ -102,7 +103,7 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
     switch (discretization) {
         case kdv_discretization_2SPLIT1A:
             
-            e_1B = malloc(3*sizeof(COMPLEX));
+            e_1B = &e_Bstorage[0];
             
             for (i=D-1; i>=0; i--) {
                 
@@ -124,14 +125,12 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
                 p22 += *deg_ptr + 1;
             }
             
-            free(e_1B);
-            
             break;
             
         case kdv_discretization_2SPLIT1B: //Intentional fallthrough
         case kdv_discretization_2SPLIT2A: //Differs by correction in fnft_kdvv.c
             
-            e_1B = malloc(3*sizeof(COMPLEX));
+            e_1B = &e_Bstorage[0];
             
             for (i=D-1; i>=0; i--) {
                 
@@ -153,12 +152,10 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
                 p22 += *deg_ptr + 1;
             }
             
-            free(e_1B);
-            
             break;
         case kdv_discretization_2SPLIT2B:
 
-            e_0_5B = malloc(3*sizeof(COMPLEX));
+            e_0_5B = &e_Bstorage[0];
 
             for (i=D-1; i>=0; i--) {
 
@@ -180,15 +177,13 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
                 p22 += *deg_ptr + 1;
             }
 
-            free(e_0_5B);
-
             break;
 
         case kdv_discretization_2SPLIT3A:
 
-            e_1B = malloc(3*sizeof(COMPLEX));
-            e_2B = malloc(3*sizeof(COMPLEX));
-            e_3B = malloc(3*sizeof(COMPLEX));
+            e_1B = &e_Bstorage[0];
+            e_2B = &e_Bstorage[3];
+            e_3B = &e_Bstorage[6];
 
             for (i=D-1; i>=0; i--) {
 
@@ -220,17 +215,13 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
                 p22 += *deg_ptr + 1;
             }
 
-            free(e_1B);
-            free(e_2B);
-            free(e_3B);
-
             break;
             
         case kdv_discretization_2SPLIT3B:
 
-            e_1B = malloc(3*sizeof(COMPLEX));
-            e_2B = malloc(3*sizeof(COMPLEX));
-            e_3B = malloc(3*sizeof(COMPLEX));
+            e_1B = &e_Bstorage[0];
+            e_2B = &e_Bstorage[3];
+            e_3B = &e_Bstorage[6];
 
             for (i=D-1; i>=0; i--) {
 
@@ -262,16 +253,12 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
                 p22 += *deg_ptr + 1;
             }
 
-            free(e_1B);
-            free(e_2B);
-            free(e_3B);
-
             break;
         
       case kdv_discretization_2SPLIT4A:
 
-            e_2B = malloc(3*sizeof(COMPLEX));
-            e_4B = malloc(3*sizeof(COMPLEX));
+            e_2B = &e_Bstorage[0];
+            e_4B = &e_Bstorage[3];
             
             for (i=D-1; i>=0; i--) {
                 
@@ -305,15 +292,12 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
                 p12 += *deg_ptr + 1;
                 p22 += *deg_ptr + 1;
             }
-            
-            free(e_2B);
-            free(e_4B);
-            
+
             break;
         case kdv_discretization_2SPLIT4B:
 
-            e_0_5B = malloc(3*sizeof(COMPLEX));
-            e_1B = malloc(3*sizeof(COMPLEX));
+            e_0_5B = &e_Bstorage[0];
+            e_1B = &e_Bstorage[3];
             
             for (i=D-1; i>=0; i--) {
                 
@@ -339,10 +323,7 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
                 p12 += *deg_ptr + 1;
                 p22 += *deg_ptr + 1;
             }
-            
-            free(e_0_5B);
-            free(e_1B);
-            
+
             break;
         
         case kdv_discretization_2SPLIT5A:
@@ -350,11 +331,11 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
             for (n=0; n<len; n++)
                 p[n] = 0.0;
             
-            e_3B = malloc(3*sizeof(COMPLEX));
-            e_5B = malloc(3*sizeof(COMPLEX));
-            e_6B = malloc(3*sizeof(COMPLEX));
-            e_10B = malloc(3*sizeof(COMPLEX));
-            e_15B = malloc(3*sizeof(COMPLEX));
+            e_3B = &e_Bstorage[0];
+            e_5B = &e_Bstorage[3];
+            e_6B = &e_Bstorage[6];
+            e_10B = &e_Bstorage[9];
+            e_15B = &e_Bstorage[12];
             
             for (i=D-1; i>=0; i--) {
                 
@@ -396,12 +377,6 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
                 p22 += *deg_ptr + 1;
             }
             
-            free(e_3B);
-            free(e_5B);
-            free(e_6B);
-            free(e_10B);
-            free(e_15B);
-            
             break;
             
         case kdv_discretization_2SPLIT5B:
@@ -409,11 +384,11 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
             for (n=0; n<len; n++)
                 p[n] = 0.0;
             
-            e_3B = malloc(3*sizeof(COMPLEX));
-            e_5B = malloc(3*sizeof(COMPLEX));
-            e_6B = malloc(3*sizeof(COMPLEX));
-            e_10B = malloc(3*sizeof(COMPLEX));
-            e_15B = malloc(3*sizeof(COMPLEX));
+            e_3B = &e_Bstorage[0];
+            e_5B = &e_Bstorage[3];
+            e_6B = &e_Bstorage[6];
+            e_10B = &e_Bstorage[9];
+            e_15B = &e_Bstorage[12];
             
             for (i=D-1; i>=0; i--) {
                 
@@ -455,12 +430,6 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
                 p22 += *deg_ptr + 1;
             }
             
-            free(e_3B);
-            free(e_5B);
-            free(e_6B);
-            free(e_10B);
-            free(e_15B);
-            
             break;
             
         case kdv_discretization_2SPLIT6A:
@@ -468,9 +437,9 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
             for (n=0; n<len; n++)
                 p[n] = 0.0;
             
-            e_4B = malloc(3*sizeof(COMPLEX));
-            e_6B = malloc(3*sizeof(COMPLEX));
-            e_12B = malloc(3*sizeof(COMPLEX));
+            e_4B = &e_Bstorage[0];
+            e_6B = &e_Bstorage[3];
+            e_12B = &e_Bstorage[6];
 
             for (i=D-1; i>=0; i--) {
 
@@ -511,10 +480,6 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
                 p22 += *deg_ptr + 1;
             }
 
-            free(e_4B);
-            free(e_6B);
-            free(e_12B);
-
             break;
         
         case kdv_discretization_2SPLIT6B:
@@ -522,10 +487,10 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
             for (n=0; n<len; n++)
                 p[n] = 0.0;
             
-            e_1B = malloc(3*sizeof(COMPLEX));
-            e_1_5B = malloc(3*sizeof(COMPLEX));
-            e_2B = malloc(3*sizeof(COMPLEX));
-            e_3B = malloc(3*sizeof(COMPLEX));
+            e_1B = &e_Bstorage[0];
+            e_1_5B = &e_Bstorage[3];
+            e_2B = &e_Bstorage[6];
+            e_3B = &e_Bstorage[9];
 
             for (i=D-1; i>=0; i--) {
 
@@ -569,11 +534,6 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
                 p12 += *deg_ptr + 1;
                 p22 += *deg_ptr + 1;
             }
-            
-            free(e_1B);
-            free(e_1_5B);
-            free(e_2B);
-            free(e_3B);
 
             break;
             
@@ -582,13 +542,13 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
             for (n=0; n<len; n++)
                 p[n] = 0.0;
             
-            e_15B = malloc(3*sizeof(COMPLEX));
-            e_21B = malloc(3*sizeof(COMPLEX));
-            e_30B = malloc(3*sizeof(COMPLEX));
-            e_35B = malloc(3*sizeof(COMPLEX));
-            e_42B = malloc(3*sizeof(COMPLEX));
-            e_70B = malloc(3*sizeof(COMPLEX));
-            e_105B = malloc(3*sizeof(COMPLEX));
+            e_15B = &e_Bstorage[0];
+            e_21B = &e_Bstorage[3];
+            e_30B = &e_Bstorage[6];
+            e_35B = &e_Bstorage[9];
+            e_42B = &e_Bstorage[12];
+            e_70B = &e_Bstorage[15];
+            e_105B = &e_Bstorage[18];
             
             for (i=D-1; i>=0; i--) {
                 
@@ -643,14 +603,6 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
                 p12 += *deg_ptr + 1;
                 p22 += *deg_ptr + 1;
             }
-            
-            free(e_15B);
-            free(e_21B);
-            free(e_30B);
-            free(e_35B);
-            free(e_42B);
-            free(e_70B);
-            free(e_105B);
 
             break;
             
@@ -659,13 +611,13 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
             for (n=0; n<len; n++)
                 p[n] = 0.0;
             
-            e_15B = malloc(3*sizeof(COMPLEX));
-            e_21B = malloc(3*sizeof(COMPLEX));
-            e_30B = malloc(3*sizeof(COMPLEX));
-            e_35B = malloc(3*sizeof(COMPLEX));
-            e_42B = malloc(3*sizeof(COMPLEX));
-            e_70B = malloc(3*sizeof(COMPLEX));
-            e_105B = malloc(3*sizeof(COMPLEX));
+            e_15B = &e_Bstorage[0];
+            e_21B = &e_Bstorage[3];
+            e_30B = &e_Bstorage[6];
+            e_35B = &e_Bstorage[9];
+            e_42B = &e_Bstorage[12];
+            e_70B = &e_Bstorage[15];
+            e_105B = &e_Bstorage[18];
             
             for (i=D-1; i>=0; i--) {
                 
@@ -720,15 +672,7 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
                 p12 += *deg_ptr + 1;
                 p22 += *deg_ptr + 1;
             }
-            
-            free(e_15B);
-            free(e_21B);
-            free(e_30B);
-            free(e_35B);
-            free(e_42B);
-            free(e_70B);
-            free(e_105B);
-            
+
             break;
 
         case kdv_discretization_2SPLIT8A:
@@ -736,10 +680,10 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
             for (n=0; n<len; n++)
                 p[n] = 0.0;
             
-            e_6B = malloc(3*sizeof(COMPLEX));
-            e_8B = malloc(3*sizeof(COMPLEX));
-            e_12B = malloc(3*sizeof(COMPLEX));
-            e_24B = malloc(3*sizeof(COMPLEX));
+            e_6B = &e_Bstorage[0];
+            e_8B = &e_Bstorage[3];
+            e_12B = &e_Bstorage[6];
+            e_24B = &e_Bstorage[9];
 
             for (i=D-1; i>=0; i--) {
                 
@@ -793,11 +737,6 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
                 p12 += *deg_ptr + 1;
                 p22 += *deg_ptr + 1;
             }
-            
-            free(e_6B);
-            free(e_8B);
-            free(e_12B);
-            free(e_24B);
 
             break;
             
@@ -806,11 +745,11 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
             for (n=0; n<len; n++)
                 p[n] = 0.0;
             
-            e_1_5B = malloc(3*sizeof(COMPLEX));
-            e_2B = malloc(3*sizeof(COMPLEX));
-            e_3B = malloc(3*sizeof(COMPLEX));
-            e_4B = malloc(3*sizeof(COMPLEX));
-            e_6B = malloc(3*sizeof(COMPLEX));
+            e_1_5B = &e_Bstorage[0];
+            e_2B = &e_Bstorage[3];
+            e_3B = &e_Bstorage[6];
+            e_4B = &e_Bstorage[9];
+            e_6B = &e_Bstorage[12];
 
             for (i=D-1; i>=0; i--) {
 
@@ -864,12 +803,6 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
                 p22 += *deg_ptr + 1;
             }
 
-            free(e_1_5B);
-            free(e_2B);
-            free(e_3B);
-            free(e_4B);
-            free(e_6B);
-            
             break;
             
         default: // Unknown discretization
