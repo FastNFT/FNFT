@@ -29,9 +29,9 @@
 #include "fnft.h"
 
 /**
- * @brief Fast evaluation of a polynomial on a spiral in the complex plane.\n
+ * @brief Fast evaluation of a polynomial on a spiral in the complex plane.
+ * 
  * @ingroup poly
- *
  * This routine implements the Chirp Z-transform. Given a polynomial
  *
  *   \f[ p(z)=p_0+p_1 z^1+p_2 z^2+...+p_{deg} z^{deg} \f]

@@ -32,6 +32,11 @@
 
 /**
  * List of currently implemented test cases for the NSE with vanishing
+ * boundary conditions.\n \n
+ * @ingroup nse
+ * fnft__nsev_testcases_SECH_FOCUSING : Test for focusing NSE (kappa = +1) with a sech potential.\n \n
+ * fnft__nsev_testcases_SECH_DEFOCUSING : Test for defocusing NSE (kappa = -1) with a sech potential.\n \n
+ * fnft__nsev_testcases_TRUNCATED_SOLITON : Test for focusing NSE (kappa = +1) with a truncated solitonic potential.
  * boundary conditions.\n
  * fnft__nsev_testcases_SECH_FOCUSING - Test for focusing NSE (kappa = +1) with a sech potential.\n
  * fnft__nsev_testcases_SECH_DEFOCUSING - Test for defocusing NSE (kappa = -1) with a sech potential.\n
