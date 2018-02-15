@@ -44,6 +44,7 @@
  * `fnft_kdv_discretization_2SPLIT2S`: Degree = 1, Order of accuracy = 2\n
  * `fnft_kdv_discretization_2SPLIT3A`: Degree = 3, Order of accuracy = 3\n
  * `fnft_kdv_discretization_2SPLIT3B`: Degree = 3, Order of accuracy = 3\n
+ * `fnft_kdv_discretization_2SPLIT3S`: Degree = 2, Order of accuracy = 3\n
  * `fnft_kdv_discretization_2SPLIT4A`: Degree = 4, Order of accuracy = 4\n
  * `fnft_kdv_discretization_2SPLIT4B`: Degree = 2, Order of accuracy = 4\n
  * `fnft_kdv_discretization_2SPLIT5A`: Degree = 15, Order of accuracy = 5\n
@@ -72,6 +73,7 @@ typedef enum {
     fnft_kdv_discretization_2SPLIT2S,
     fnft_kdv_discretization_2SPLIT3A,
     fnft_kdv_discretization_2SPLIT3B,
+    fnft_kdv_discretization_2SPLIT3S,
     fnft_kdv_discretization_2SPLIT4A,
     fnft_kdv_discretization_2SPLIT4B,
     fnft_kdv_discretization_2SPLIT5A,
@@ -92,6 +94,7 @@ typedef enum {
 #define kdv_discretization_2SPLIT2S fnft_kdv_discretization_2SPLIT2S
 #define kdv_discretization_2SPLIT3A fnft_kdv_discretization_2SPLIT3A
 #define kdv_discretization_2SPLIT3B fnft_kdv_discretization_2SPLIT3B
+#define kdv_discretization_2SPLIT3S fnft_kdv_discretization_2SPLIT3S
 #define kdv_discretization_2SPLIT4A fnft_kdv_discretization_2SPLIT4A
 #define kdv_discretization_2SPLIT4B fnft_kdv_discretization_2SPLIT4B
 #define kdv_discretization_2SPLIT5A fnft_kdv_discretization_2SPLIT5A

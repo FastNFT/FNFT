@@ -36,6 +36,7 @@ UINT fnft__kdv_discretization_degree(kdv_discretization_t
         case kdv_discretization_2SPLIT2B:
         case kdv_discretization_2SPLIT2S:
             return 1;
+        case kdv_discretization_2SPLIT3S:
         case kdv_discretization_2SPLIT4B:
             return 2;
         case kdv_discretization_2SPLIT3A:
@@ -76,6 +77,7 @@ REAL fnft__kdv_discretization_boundary_coeff(kdv_discretization_t discretization
         case kdv_discretization_2SPLIT2S:
         case kdv_discretization_2SPLIT3A:
         case kdv_discretization_2SPLIT3B:
+        case kdv_discretization_2SPLIT3S:
         case kdv_discretization_2SPLIT4A:
         case kdv_discretization_2SPLIT4B:
         case kdv_discretization_2SPLIT5A:
