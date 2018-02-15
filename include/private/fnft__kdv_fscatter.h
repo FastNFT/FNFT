@@ -62,8 +62,8 @@ FNFT_UINT fnft__kdv_fscatter_numel(FNFT_UINT D,
  *      \end{bmatrix}\,.
  * \f]
  * @param[out] M Result Array of length 3, contains
- * \f$\{M_{11}=M_{22},M_{12},M_{21}\}\f$, needs to be pre-allocated with
- * `malloc(3*sizeof(COMPLEX))`.
+ * \f$\{M_{11}=M_{22},M_{12},M_{21}\}\f$, needs to be pre-allocated as an
+ * Array of length 3.
  * @param[in] eps_t Step-size, eps_t \f$= (T[1]-T[0])/(D-1) \f$.
  * @param[in] q (Locally) constant potential for this step.
  *
