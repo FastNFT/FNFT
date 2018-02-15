@@ -126,7 +126,7 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
             }
             
             break;
-            
+        
         case kdv_discretization_2SPLIT1B: //Intentional fallthrough
         case kdv_discretization_2SPLIT2A: //Differs by correction in fnft_kdvv.c
             
@@ -179,7 +179,33 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
 
             break;
 
-        case kdv_discretization_2SPLIT3A:
+        case kdv_discretization_2SPLIT2S:
+            
+            e_1B = &e_Bstorage[0];
+            
+            for (i=D-1; i>=0; i--) {
+                
+                kdv_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ *deg_ptr, q[i]);
+                
+                // construct the scattering matrix for the i-th sample
+                p11[1] = 0.0;
+                p11[0] = e_1B[0];
+                p12[1] = e_1B[1]/2;
+                p12[0] = e_1B[1]/2;
+                p21[1] = e_1B[2]/2;
+                p21[0] = e_1B[2]/2;
+                p22[1] = e_1B[0];
+                p22[0] = 0.0;
+                
+                p11 += *deg_ptr + 1;
+                p21 += *deg_ptr + 1;
+                p12 += *deg_ptr + 1;
+                p22 += *deg_ptr + 1;
+            }
+            
+            break;
+            
+       case kdv_discretization_2SPLIT3A:
 
             e_1B = &e_Bstorage[0];
             e_2B = &e_Bstorage[3];
