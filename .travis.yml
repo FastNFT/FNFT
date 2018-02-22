@@ -11,11 +11,9 @@ matrix:
             - gcc-5
             - gfortran-5
       env:
-        - GCC_VER="5" MATRIX_EVAL="CC=gcc-5 && FC=gfortran-5"
+        - GCC_VER="5" MATRIX_EVAL="CC=gcc-5 && FC=gfortran-5 && CMAKE_Fortran_COMPILER=gfortran-5"
 
 script: cmake . && make && make test
 
 before_install:
     - eval "${MATRIX_EVAL}"
-    - ${CC} --version
-    - ${FC} --version
