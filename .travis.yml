@@ -10,10 +10,6 @@ matrix:
           packages:
             - gcc-5
             - gfortran-5
-      env:
-        - MATRIX_EVAL="CC=gcc-5"
+      env: GCC_VER="5" CC=/usr/bin/gcc-5 FC=/usr/bin/gfortran-5"
 
 script: cmake . && make && make test
-
-before_install:
-    - eval "${MATRIX_EVAL}"
