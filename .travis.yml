@@ -8,7 +8,7 @@ matrix:
           sources: 
             - ubuntu-toolchain-r-test
           packages:
-            - g++-5
+            - gcc-5
             - gfortran-5
       env:
         - MATRIX_EVAL="CC=gcc-5 && FC=gfortran-5"
@@ -17,3 +17,5 @@ script: cmake . && make && make test
 
 before_install:
     - eval "${MATRIX_EVAL}"
+    - ${CC} --version
+    - ${FC} --version
