@@ -14,23 +14,21 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
-* Peter J Prins (TU Delft) 2018
+* Shrinivas Chimmalgi (TU Delft) 2018
 */
 
 /**
- * \file fnft__kdv_fscatter.h
+ * \file fnft__akns_fscatter.h
  * @brief Computes the polynomial approximation of the combined scattering 
  * matrix.
  *
  * @ingroup kdv
  */
 
-#ifndef FNFT__KDV_FSCATTER_H
-#define FNFT__KDV_FSCATTER_H
+#ifndef FNFT__AKNS_FSCATTER_H
+#define FNFT__AKNS_FSCATTER_H
 
-#include "fnft_kdv_discretization_t.h"
-#include "fnft__akns_fscatter.h"
+#include "fnft__discretization_t.h"
 
 /**
  * @brief Returns the length of array to be allocated based on the number
@@ -46,8 +44,8 @@
  *
  * @ingroup kdv
  */
-FNFT_UINT fnft__kdv_fscatter_numel(FNFT_UINT D,
-                                    fnft_kdv_discretization_t discretization);
+FNFT_UINT fnft__akns_fscatter_numel(FNFT_UINT D,
+                                    fnft__discretization_t discretization);
 
 /**
  * @brief Returns the scattering matrix for a single step at frequency zero.
@@ -70,8 +68,8 @@ FNFT_UINT fnft__kdv_fscatter_numel(FNFT_UINT D,
  *
  * @ingroup kdv
  */
-FNFT_INT fnft__kdv_fscatter_zero_freq_scatter_matrix(FNFT_COMPLEX *M,
-                                    const FNFT_REAL eps_t, const FNFT_REAL q);
+FNFT_INT fnft__akns_fscatter_zero_freq_scatter_matrix(FNFT_COMPLEX *M,
+                                    const FNFT_REAL eps_t, const FNFT_REAL q, fnft__discretization_opts_t *opts);
 
 /**
  * @brief Fast computation of polynomial approximation of the combined scattering
@@ -103,13 +101,14 @@ FNFT_INT fnft__kdv_fscatter_zero_freq_scatter_matrix(FNFT_COMPLEX *M,
  *
  * @ingroup kdv
  */
-FNFT_INT fnft__kdv_fscatter(const FNFT_UINT D, FNFT_COMPLEX const * const q,
+FNFT_INT fnft__akns_fscatter(const FNFT_UINT D, FNFT_COMPLEX const * const q,
                  const FNFT_REAL eps_t, FNFT_COMPLEX * const result, FNFT_UINT * const deg_ptr,
-                            fnft_kdv_discretization_t discretization);
+                            fnft__discretization_opts_t *opts);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
-#define kdv_fscatter_numel(...) fnft__kdv_fscatter_numel(__VA_ARGS__)
-#define kdv_fscatter(...) fnft__kdv_fscatter(__VA_ARGS__)
+#define akns_fscatter_numel(...) fnft__akns_fscatter_numel(__VA_ARGS__)
+#define akns_fscatter(...) fnft__akns_fscatter(__VA_ARGS__)
+#define akns_fscatter_zero_freq_scatter_matrix(...) fnft__akns_fscatter_zero_freq_scatter_matrix(__VA_ARGS__)
 #endif
 
 #endif
