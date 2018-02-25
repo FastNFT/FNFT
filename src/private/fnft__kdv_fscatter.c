@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
+* Peter J Prins (TU Delft) 2017-2018.
 * Shrinivas Chimmalgi (TU Delft) 2018.
 
 */
@@ -41,6 +42,7 @@ UINT kdv_fscatter_numel(UINT D, kdv_discretization_t discretization)
 /**
  * Returns the scattering matrix for a single step at frequency zero.
  */
+/*
 INT kdv_fscatter_zero_freq_scatter_matrix(COMPLEX *M,
                                                 const REAL eps_t, const REAL q)
 {
@@ -50,10 +52,11 @@ INT kdv_fscatter_zero_freq_scatter_matrix(COMPLEX *M,
     M[1] = -q * M[2];                  // M(1,2)
     return 0;
 }
+*/
 
 INT kdv_fscatter(const UINT D, COMPLEX const * const q,
                  const REAL eps_t, COMPLEX * const result, UINT * const deg_ptr,
-                 kdv_discretization_t discretization)
+                 INT * const W_ptr, kdv_discretization_t discretization)
 {
     INT ret_code;
     fnft__discretization_opts_t opts = {
@@ -133,7 +136,7 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
             return E_INVALID_ARGUMENT(discretization);
     }
 
-    ret_code = akns_fscatter(D, q, eps_t, result, deg_ptr, &opts);
+    ret_code = akns_fscatter(D, q, eps_t, result, deg_ptr, W_ptr, &opts);
     return ret_code;
     
 

@@ -41,19 +41,42 @@ UINT akns_fscatter_numel(UINT D, discretization_t discretization)
  * Returns the scattering matrix for a single step at frequency zero.
  */
 INT fnft__akns_fscatter_zero_freq_scatter_matrix(COMPLEX *M,
-                                                const REAL eps_t, const REAL q, discretization_opts_t *opts)
+                                                const REAL eps_t, const COMPLEX q, discretization_opts_t *opts)
 {   
-    REAL Delta = eps_t * CSQRT(q);
+    REAL Delta;
+    COMPLEX r;
 
     switch(opts->evolution_equation){
 	case evolution_equation_kdv:
-
+         
+         Delta = eps_t * CSQRT(q);
     	 M[0] = CCOS(Delta);                // M(1,1) = M(2,2)
    	 M[2] = -eps_t * misc_CSINC(Delta); // M(2,1)
     	 M[1] = -q * M[2];                  // M(1,2)
          return 0;
     	break;
+	
+	case evolution_equation_fnse:
 
+         r = -CONJ(q);
+         if (q == 0){
+             M[0] = 1; M[1] = 0; M[2] = 0;
+         }else{
+             M[0] = CCOSH(eps_t*CSQRT(q)*CSQRT(r));
+             M[1] = (CSINH(eps_t*CSQRT(r*q))*CSQRT(r*q))/r;
+             M[2] = -CONJ(M[1]);
+         }
+
+	case evolution_equation_dnse:
+
+         r = CONJ(q);
+         if (q == 0){
+             M[0] = 1; M[1] = 0; M[2] = 0;
+         }else{
+             M[0] = CCOSH(eps_t*CSQRT(q)*CSQRT(r));
+             M[1] = (CSINH(eps_t*CSQRT(r*q))*CSQRT(r*q))/r;
+             M[2] = CONJ(M[1]);
+         }
        default:
         return E_INVALID_ARGUMENT(opts->contspec_type);
     }
@@ -64,10 +87,10 @@ INT fnft__akns_fscatter_zero_freq_scatter_matrix(COMPLEX *M,
  */
 INT akns_fscatter(const UINT D, COMPLEX const * const q,
                  const REAL eps_t, COMPLEX * const result, UINT * const deg_ptr,
-                 discretization_opts_t *opts)
+                 INT * const W_ptr, discretization_opts_t *opts)
 {
     
-    INT i, ret_code, W;
+    INT i, ret_code;
     COMPLEX *p, *p11, *p12, *p21, *p22;
     UINT n, len;
     COMPLEX e_Bstorage[21];
@@ -876,7 +899,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
             goto release_mem;
     }
     // Multiply the individual scattering matrices
-    ret_code = poly_fmult2x2(deg_ptr, D, p, result, &W);
+    ret_code = poly_fmult2x2(deg_ptr, D, p, result, W_ptr);
     CHECK_RETCODE(ret_code, release_mem);
     
 release_mem:

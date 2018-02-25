@@ -70,6 +70,7 @@ INT fnft_kdvv(const UINT D,
     REAL eps_t;
     UINT deg;
     INT ret_code = SUCCESS;
+    INT W = 0, *W_ptr = NULL;
 
     // Check inputs
     if (D < 2)
@@ -104,11 +105,8 @@ INT fnft_kdvv(const UINT D,
 
     // Compute the transfer matrix 
     ret_code = kdv_fscatter(D, u, eps_t, transfer_matrix, &deg,
-        opts_ptr->discretization);
-    if (ret_code != SUCCESS) {
-        ret_code = E_SUBROUTINE(ret_code);
-        goto release_mem;
-    }
+        W_ptr, opts_ptr->discretization);
+    CHECK_RETCODE(ret_code, release_mem);
     // print_buf2(4*(deg+1), transfer_matrix, "TM");
 
     // Compute the continuous spectrum

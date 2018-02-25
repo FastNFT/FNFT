@@ -69,7 +69,7 @@ FNFT_UINT fnft__akns_fscatter_numel(FNFT_UINT D,
  * @ingroup kdv
  */
 FNFT_INT fnft__akns_fscatter_zero_freq_scatter_matrix(FNFT_COMPLEX *M,
-                                    const FNFT_REAL eps_t, const FNFT_REAL q, fnft__discretization_opts_t *opts);
+                                    const FNFT_REAL eps_t, const FNFT_COMPLEX q, fnft__discretization_opts_t *opts);
 
 /**
  * @brief Fast computation of polynomial approximation of the combined scattering
@@ -103,7 +103,7 @@ FNFT_INT fnft__akns_fscatter_zero_freq_scatter_matrix(FNFT_COMPLEX *M,
  */
 FNFT_INT fnft__akns_fscatter(const FNFT_UINT D, FNFT_COMPLEX const * const q,
                  const FNFT_REAL eps_t, FNFT_COMPLEX * const result, FNFT_UINT * const deg_ptr,
-                            fnft__discretization_opts_t *opts);
+                            INT * const W_ptr, fnft__discretization_opts_t *opts);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define akns_fscatter_numel(...) fnft__akns_fscatter_numel(__VA_ARGS__)

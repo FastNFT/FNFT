@@ -105,7 +105,7 @@ FNFT_INT fnft__kdv_fscatter_zero_freq_scatter_matrix(FNFT_COMPLEX *M,
  */
 FNFT_INT fnft__kdv_fscatter(const FNFT_UINT D, FNFT_COMPLEX const * const q,
                  const FNFT_REAL eps_t, FNFT_COMPLEX * const result, FNFT_UINT * const deg_ptr,
-                            fnft_kdv_discretization_t discretization);
+                            INT * const W_ptr, fnft_kdv_discretization_t discretization);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define kdv_fscatter_numel(...) fnft__kdv_fscatter_numel(__VA_ARGS__)

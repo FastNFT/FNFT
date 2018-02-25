@@ -29,7 +29,7 @@
 
 
 #include "fnft_nse_discretization_t.h"
-
+#include "fnft__akns_fscatter.h"
 
 /**
  * @brief Returns the length of vector to be allocated based on the number

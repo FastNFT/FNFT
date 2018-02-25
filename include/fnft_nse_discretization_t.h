@@ -42,19 +42,49 @@
  */
 typedef enum {
     fnft_nse_discretization_2SPLIT2_MODAL,
+    fnft_nse_discretization_BO,
+    fnft_nse_discretization_2SPLIT1A,
+    fnft_nse_discretization_2SPLIT1B,
     fnft_nse_discretization_2SPLIT2A,
+    fnft_nse_discretization_2SPLIT2B,
+    fnft_nse_discretization_2SPLIT2S,
+    fnft_nse_discretization_2SPLIT3A,
+    fnft_nse_discretization_2SPLIT3B,
+    fnft_nse_discretization_2SPLIT3S,
     fnft_nse_discretization_2SPLIT4A,
     fnft_nse_discretization_2SPLIT4B,
-    fnft_nse_discretization_BO
+    fnft_nse_discretization_2SPLIT5A,
+    fnft_nse_discretization_2SPLIT5B,
+    fnft_nse_discretization_2SPLIT6A,
+    fnft_nse_discretization_2SPLIT6B,
+    fnft_nse_discretization_2SPLIT7A,
+    fnft_nse_discretization_2SPLIT7B,
+    fnft_nse_discretization_2SPLIT8A,
+    fnft_nse_discretization_2SPLIT8B
 } fnft_nse_discretization_t;
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define nse_discretization_2SPLIT2_MODAL fnft_nse_discretization_2SPLIT2_MODAL
-#define nse_discretization_2SPLIT2A fnft_nse_discretization_2SPLIT2A
-#define nse_discretization_2SPLIT4A fnft_nse_discretization_2SPLIT4A
-#define nse_discretization_2SPLIT4B fnft_nse_discretization_2SPLIT4B 
 #define nse_discretization_BO fnft_nse_discretization_BO
 #define nse_discretization_t fnft_nse_discretization_t
+#define nse_discretization_2SPLIT1A fnft_nse_discretization_2SPLIT1A
+#define nse_discretization_2SPLIT1B fnft_nse_discretization_2SPLIT1B
+#define nse_discretization_2SPLIT2A fnft_nse_discretization_2SPLIT2A
+#define nse_discretization_2SPLIT2B fnft_nse_discretization_2SPLIT2B
+#define nse_discretization_2SPLIT2S fnft_nse_discretization_2SPLIT2S
+#define nse_discretization_2SPLIT3A fnft_nse_discretization_2SPLIT3A
+#define nse_discretization_2SPLIT3B fnft_nse_discretization_2SPLIT3B
+#define nse_discretization_2SPLIT3S fnft_nse_discretization_2SPLIT3S
+#define nse_discretization_2SPLIT4A fnft_nse_discretization_2SPLIT4A
+#define nse_discretization_2SPLIT4B fnft_nse_discretization_2SPLIT4B
+#define nse_discretization_2SPLIT5A fnft_nse_discretization_2SPLIT5A
+#define nse_discretization_2SPLIT5B fnft_nse_discretization_2SPLIT5B
+#define nse_discretization_2SPLIT6A fnft_nse_discretization_2SPLIT6A
+#define nse_discretization_2SPLIT6B fnft_nse_discretization_2SPLIT6B
+#define nse_discretization_2SPLIT7A fnft_nse_discretization_2SPLIT7A
+#define nse_discretization_2SPLIT7B fnft_nse_discretization_2SPLIT7B
+#define nse_discretization_2SPLIT8A fnft_nse_discretization_2SPLIT8A
+#define nse_discretization_2SPLIT8B fnft_nse_discretization_2SPLIT8B
 #endif
 
 #endif

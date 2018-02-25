@@ -87,7 +87,8 @@ typedef enum {
 } fnft__discretization_t;
 
 typedef enum{
-    fnft__evolution_equation_nse,
+    fnft__evolution_equation_fnse,
+    fnft__evolution_equation_dnse,
     fnft__evolution_equation_kdv
 } fnft__evolution_equation_t;
 
@@ -118,7 +119,8 @@ typedef struct {
 #define discretization_t fnft__discretization_t
 #define discretization_opts_t fnft__discretization_opts_t
 #define evolution_equation_t fnft__evolution_equation_t
-#define evolution_equation_nse fnft__evolution_equation_nse
+#define evolution_equation_fnse fnft__evolution_equation_fnse
+#define evolution_equation_dnse fnft__evolution_equation_dnse
 #define evolution_equation_kdv fnft__evolution_equation_kdv
 #endif
 
