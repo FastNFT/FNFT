@@ -116,10 +116,10 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
 	   opts.discretization = discretization_2SPLIT8B;
 	   break;
         case kdv_discretization_2SPLIT5A:
-	   opts.discretization = discretization_2SPLIT1A;
+	   opts.discretization = discretization_2SPLIT5A;
 	   break;
         case kdv_discretization_2SPLIT5B:
-	   opts.discretization = discretization_2SPLIT1A;
+	   opts.discretization = discretization_2SPLIT5B;
 	   break;
         case kdv_discretization_2SPLIT8A:
 	   opts.discretization = discretization_2SPLIT8A;
