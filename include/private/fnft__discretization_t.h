@@ -84,7 +84,8 @@ typedef enum {
     fnft__discretization_2SPLIT7A,
     fnft__discretization_2SPLIT7B,
     fnft__discretization_2SPLIT8A,
-    fnft__discretization_2SPLIT8B
+    fnft__discretization_2SPLIT8B,
+    fnft__discretization_BO
 } fnft__discretization_t;
 
 
@@ -108,6 +109,7 @@ typedef enum {
 #define discretization_2SPLIT7B fnft__discretization_2SPLIT7B
 #define discretization_2SPLIT8A fnft__discretization_2SPLIT8A
 #define discretization_2SPLIT8B fnft__discretization_2SPLIT8B
+#define discretization_BO fnft__discretization_BO
 #define discretization_t fnft__discretization_t
 #endif
 

@@ -20,7 +20,7 @@
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft__errwarn.h"
-#include "fnft__nse_scatter.h"
+#include "fnft__kdv_scatter.h"
 #include <stdio.h>
 
 /**
@@ -30,10 +30,10 @@
  * Result should be preallocated with size 8 * K
  * Default scheme should be set as BO.
  */
-INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
-    const REAL eps_t, const INT kappa, const UINT K, 
+INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
+    const REAL eps_t, const UINT K, 
     COMPLEX const * const lambda,
-    COMPLEX * const result, nse_discretization_t discretization)
+    COMPLEX * const result, kdv_discretization_t discretization)
 {
      
     INT ret_code = SUCCESS;
@@ -48,8 +48,6 @@ INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
         return E_INVALID_ARGUMENT(q);
     if (!(eps_t > 0))
         return E_INVALID_ARGUMENT(eps_t);
-    if (abs(kappa) != 1)
-        return E_INVALID_ARGUMENT(kappa);
     if (K <= 0.0)
         return E_INVALID_ARGUMENT(K);
     if (lambda == NULL)
@@ -58,7 +56,7 @@ INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
         return E_INVALID_ARGUMENT(result);
 
     switch (discretization) {
-        case nse_discretization_BO:
+        case kdv_discretization_BO:
             akns_discretization = discretization_BO;
             break;
                    
@@ -71,12 +69,9 @@ INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
         ret_code = E_NOMEM;
     }
     
-    if (kappa == 1){
-        for (i = 0; i < D; i++)
-            r[i] = -CONJ(q[i]);}
-    else{
-        for (i = 0; i < D; i++)
-            r[i] = CONJ(q[i]);}
+    for (i = 0; i < D; i++)
+        r[i] = -1;
+
     
     ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result, akns_discretization);
     return ret_code;
