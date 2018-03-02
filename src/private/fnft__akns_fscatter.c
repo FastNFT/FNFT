@@ -40,60 +40,29 @@ UINT akns_fscatter_numel(UINT D, discretization_t discretization)
 /**
  * Returns the scattering matrix for a single step at frequency zero.
  */
-INT fnft__akns_fscatter_zero_freq_scatter_matrix(COMPLEX *M,
-                                                const REAL eps_t, const COMPLEX q, discretization_opts_t *opts)
+static inline void akns_fscatter_zero_freq_scatter_matrix(COMPLEX * const M,
+                                                const REAL eps_t, const COMPLEX q, const COMPLEX r)
 {   
-    REAL Delta;
-    COMPLEX r;
-
-    switch(opts->evolution_equation){
-	case evolution_equation_kdv:
-         
-         Delta = eps_t * CSQRT(q);
-    	 M[0] = CCOS(Delta);                // M(1,1) = M(2,2)
-   	 M[2] = -eps_t * misc_CSINC(Delta); // M(2,1)
-    	 M[1] = -q * M[2];                  // M(1,2)
-         return 0;
-    	break;
-	
-	case evolution_equation_fnse:
-
-         r = -CONJ(q);
-         if (q == 0){
-             M[0] = 1; M[1] = 0; M[2] = 0;
-         }else{
-             M[0] = CCOSH(eps_t*CSQRT(q)*CSQRT(r));
-             M[1] = (CSINH(eps_t*CSQRT(r*q))*CSQRT(r*q))/r;
-             M[2] = -CONJ(M[1]);
-         }
-
-	case evolution_equation_dnse:
-
-         r = CONJ(q);
-         if (q == 0){
-             M[0] = 1; M[1] = 0; M[2] = 0;
-         }else{
-             M[0] = CCOSH(eps_t*CSQRT(q)*CSQRT(r));
-             M[1] = (CSINH(eps_t*CSQRT(r*q))*CSQRT(r*q))/r;
-             M[2] = CONJ(M[1]);
-         }
-       default:
-        return E_INVALID_ARGUMENT(opts->contspec_type);
-    }
+    COMPLEX Delta, del;
+    Delta = eps_t * CSQRT(-q*r);
+    del = eps_t * misc_CSINC(Delta);
+    M[0] = CCOS(Delta);
+    M[2] = r * del;
+    M[1] = q * del;
 }
 /**
  * Fast computation of polynomial approximation of the combined scattering
  * matrix.
  */
-INT akns_fscatter(const UINT D, COMPLEX const * const q,
+INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r,
                  const REAL eps_t, COMPLEX * const result, UINT * const deg_ptr,
-                 INT * const W_ptr, discretization_opts_t *opts)
+                 INT * const W_ptr, discretization_t discretization)
 {
     
     INT i, ret_code;
     COMPLEX *p, *p11, *p12, *p21, *p22;
     UINT n, len;
-    COMPLEX e_Bstorage[21];
+    COMPLEX e_Bstorage[21], scl;
     COMPLEX *e_0_5B, *e_1B, *e_1_5B, *e_2B, *e_3B, *e_4B, *e_5B, *e_6B, *e_8B,
                                         *e_10B, *e_12B, *e_15B, *e_21B, *e_24B,
                                         *e_30B, *e_35B, *e_42B, *e_70B, *e_105B;
@@ -102,7 +71,9 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
     if (D == 0)
         return E_INVALID_ARGUMENT(D);
     if (q == NULL)
-        return E_INVALID_ARGUMENT(u);
+        return E_INVALID_ARGUMENT(q);
+    if (r == NULL)
+        return E_INVALID_ARGUMENT(r);
     if (eps_t <= 0.0)
         return E_INVALID_ARGUMENT(eps_t);
     if (result == NULL)
@@ -111,9 +82,9 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
         return E_INVALID_ARGUMENT(deg_ptr);
 
     // Allocate buffers
-    len = akns_fscatter_numel(D, opts->discretization);
+    len = akns_fscatter_numel(D, discretization);
     if (len == 0) { // size D>0, this means unknown discretization
-        return E_INVALID_ARGUMENT(opts->discretization);
+        return E_INVALID_ARGUMENT(discretization);
     }
     p = malloc(len*sizeof(COMPLEX));
     
@@ -122,9 +93,9 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
         return E_NOMEM;
     
     // Set the individual scattering matrices up
-    *deg_ptr = akns_discretization_degree(opts->discretization);
+    *deg_ptr = akns_discretization_degree(discretization);
     if (*deg_ptr == 0) {
-        ret_code = E_INVALID_ARGUMENT(opts->discretization);
+        ret_code = E_INVALID_ARGUMENT(discretization);
         goto release_mem;
     }
 
@@ -133,14 +104,48 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
     p21 = p12 + D*(*deg_ptr+1);
     p22 = p21 + D*(*deg_ptr+1);
     
-    switch (opts->discretization) {
+    switch (discretization) {
+
+        case discretization_2SPLIT2_MODAL: // Modified Ablowitz-Ladik discretization
+
+            for (i=D-1; i>=0; i--) {
+                // compute the scaling factor scl = 1/sqrt(1+kappa*|eps_t*q[i]|^2)
+		scl = 1.0/CSQRT(1-eps_t*q[i]*eps_t*r[i]);
+/*
+                scl = eps_t*CABS(q[i]);
+                if (kappa == -1) {
+                    if (scl >= 1.0) {
+                        ret_code = E_OTHER("kappa == -1 but eps_t*|q[i]|>=1 ... decrease step size");
+                        goto release_mem;
+                    }
+                    scl = 1.0 / ( SQRT(1.0 + scl) * SQRT(1.0 - scl) );
+                } else
+                    scl = 1.0 / HYPOT(1.0, scl);
+     */           
+                // construct the scattering matrix for the i-th sample
+                p11[0] = 0.0;
+                p11[1] = scl;
+                p12[0] = scl*eps_t*q[i];
+                p12[1] = 0.0;
+                p21[0] = 0.0;
+                p21[1] = scl*eps_t*r[i];
+                p22[0] = scl;
+                p22[1] = 0.0;
+                p11 += *deg_ptr + 1;
+                p21 += *deg_ptr + 1;
+                p12 += *deg_ptr + 1;
+                p22 += *deg_ptr + 1;
+            }
+            
+            break;
+
         case discretization_2SPLIT1A:
             
             e_1B = &e_Bstorage[0];
             
             for (i=D-1; i>=0; i--) {
                 
-                akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ *deg_ptr, q[i], opts);
+                akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ *deg_ptr, q[i], r[i]);
                 
                 // construct the scattering matrix for the i-th sample
                 p11[1] = 0.0;       //coef of z^1
@@ -167,7 +172,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
             
             for (i=D-1; i>=0; i--) {
                 
-                akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ *deg_ptr, q[i], opts);
+                akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ *deg_ptr, q[i], r[i]);
                 
                 // construct the scattering matrix for the i-th sample
                 p11[1] = 0.0;
@@ -192,7 +197,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
 
             for (i=D-1; i>=0; i--) {
 
-                akns_fscatter_zero_freq_scatter_matrix(e_0_5B, 0.5*eps_t/ *deg_ptr, q[i], opts);
+                akns_fscatter_zero_freq_scatter_matrix(e_0_5B, 0.5*eps_t/ *deg_ptr, q[i], r[i]);
 
                 // construct the scattering matrix for the i-th sample
                 p11[1] = e_0_5B[1]*e_0_5B[2];
@@ -218,7 +223,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
             
             for (i=D-1; i>=0; i--) {
                 
-                akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ *deg_ptr, q[i], opts);
+                akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ *deg_ptr, q[i], r[i]);
                 
                 // construct the scattering matrix for the i-th sample
                 p11[1] = 0.0;
@@ -246,9 +251,9 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
 
             for (i=D-1; i>=0; i--) {
 
-                akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_2B, 2*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_3B, 3*eps_t/ *deg_ptr, q[i], opts);
+                akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_2B, 2*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_3B, 3*eps_t/ *deg_ptr, q[i], r[i]);
 
                 // construct the scattering matrix for the i-th sample
                 p11[3] = 0.0;
@@ -284,9 +289,9 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
 
             for (i=D-1; i>=0; i--) {
 
-                akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_2B, 2*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_3B, 3*eps_t/ *deg_ptr, q[i], opts);
+                akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_2B, 2*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_3B, 3*eps_t/ *deg_ptr, q[i], r[i]);
 
                 // construct the scattering matrix for the i-th sample
                 p11[3] = 0.0;
@@ -320,8 +325,8 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
 
             for (i=D-1; i>=0; i--) {
                 
-                akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_2B, 2*eps_t/ *deg_ptr, q[i], opts);
+                akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_2B, 2*eps_t/ *deg_ptr, q[i], r[i]);
 
                 // construct the scattering matrix for the i-th sample
                 p11[2] = 2*e_1B[1]*e_1B[2]/3;
@@ -351,8 +356,8 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
             
             for (i=D-1; i>=0; i--) {
                 
-                akns_fscatter_zero_freq_scatter_matrix(e_2B, 2*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_4B, 4*eps_t/ *deg_ptr, q[i], opts);
+                akns_fscatter_zero_freq_scatter_matrix(e_2B, 2*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_4B, 4*eps_t/ *deg_ptr, q[i], r[i]);
                 
                 // construct the scattering matrix for the i-th sample
                 p11[4] = 0.0;
@@ -390,8 +395,8 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
             
             for (i=D-1; i>=0; i--) {
                 
-                akns_fscatter_zero_freq_scatter_matrix(e_0_5B, 0.5*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ *deg_ptr, q[i], opts);
+                akns_fscatter_zero_freq_scatter_matrix(e_0_5B, 0.5*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ *deg_ptr, q[i], r[i]);
                 
                 // construct the scattering matrix for the i-th sample
                 p11[2] = (4*e_1B[0]*e_0_5B[1]*e_0_5B[2] - e_1B[1]*e_1B[2])/3;
@@ -428,11 +433,11 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
             
             for (i=D-1; i>=0; i--) {
                 
-                akns_fscatter_zero_freq_scatter_matrix(e_3B, 3*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_5B, 5*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_6B, 6*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_10B, 10*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_15B, 15*eps_t/ *deg_ptr, q[i], opts);
+                akns_fscatter_zero_freq_scatter_matrix(e_3B, 3*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_5B, 5*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_6B, 6*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_10B, 10*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_15B, 15*eps_t/ *deg_ptr, q[i], r[i]);
                 
                 // construct the scattering matrix for the i-th sample
                 
@@ -481,11 +486,11 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
             
             for (i=D-1; i>=0; i--) {
                 
-                akns_fscatter_zero_freq_scatter_matrix(e_3B, 3*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_5B, 5*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_6B, 6*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_10B, 10*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_15B, 15*eps_t/ *deg_ptr, q[i], opts);
+                akns_fscatter_zero_freq_scatter_matrix(e_3B, 3*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_5B, 5*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_6B, 6*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_10B, 10*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_15B, 15*eps_t/ *deg_ptr, q[i], r[i]);
                 
                 // construct the scattering matrix for the i-th sample
                 
@@ -532,9 +537,9 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
 
             for (i=D-1; i>=0; i--) {
 
-                akns_fscatter_zero_freq_scatter_matrix(e_4B, 4*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_6B, 6*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_12B, 12*eps_t/ *deg_ptr, q[i], opts);
+                akns_fscatter_zero_freq_scatter_matrix(e_4B, 4*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_6B, 6*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_12B, 12*eps_t/ *deg_ptr, q[i], r[i]);
 
                 // construct the scattering matrix for the i-th sample
                 //p11
@@ -583,10 +588,10 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
 
             for (i=D-1; i>=0; i--) {
 
-                akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_1_5B, 1.5*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_2B, 2*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_3B, 3*eps_t/ *deg_ptr, q[i], opts);
+                akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_1_5B, 1.5*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_2B, 2*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_3B, 3*eps_t/ *deg_ptr, q[i], r[i]);
 
                 // construct the scattering matrix for the i-th sample
 
@@ -641,13 +646,13 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
             
             for (i=D-1; i>=0; i--) {
                 
-                akns_fscatter_zero_freq_scatter_matrix(e_15B, 15*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_21B, 21*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_30B, 30*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_35B, 35*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_42B, 42*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_70B, 70*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_105B, 105*eps_t/ *deg_ptr, q[i], opts);
+                akns_fscatter_zero_freq_scatter_matrix(e_15B, 15*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_21B, 21*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_30B, 30*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_35B, 35*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_42B, 42*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_70B, 70*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_105B, 105*eps_t/ *deg_ptr, q[i], r[i]);
                 
                 // construct the scattering matrix for the i-th sample
                 
@@ -710,13 +715,13 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
             
             for (i=D-1; i>=0; i--) {
                 
-                akns_fscatter_zero_freq_scatter_matrix(e_15B, 15*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_21B, 21*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_30B, 30*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_35B, 35*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_42B, 42*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_70B, 70*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_105B, 105*eps_t/ *deg_ptr, q[i], opts);
+                akns_fscatter_zero_freq_scatter_matrix(e_15B, 15*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_21B, 21*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_30B, 30*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_35B, 35*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_42B, 42*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_70B, 70*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_105B, 105*eps_t/ *deg_ptr, q[i], r[i]);
                 
                 // construct the scattering matrix for the i-th sample
                 
@@ -776,10 +781,10 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
 
             for (i=D-1; i>=0; i--) {
                 
-                akns_fscatter_zero_freq_scatter_matrix(e_6B, 6*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_8B, 8*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_12B, 12*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_24B, 24*eps_t/ *deg_ptr, q[i], opts);
+                akns_fscatter_zero_freq_scatter_matrix(e_6B, 6*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_8B, 8*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_12B, 12*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_24B, 24*eps_t/ *deg_ptr, q[i], r[i]);
 
                 // construct the scattering matrix for the i-th sample
  
@@ -842,11 +847,11 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
 
             for (i=D-1; i>=0; i--) {
 
-                akns_fscatter_zero_freq_scatter_matrix(e_1_5B, 1.5*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_2B, 2*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_3B, 3*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_4B, 4*eps_t/ *deg_ptr, q[i], opts);
-                akns_fscatter_zero_freq_scatter_matrix(e_6B, 6*eps_t/ *deg_ptr, q[i], opts);
+                akns_fscatter_zero_freq_scatter_matrix(e_1_5B, 1.5*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_2B, 2*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_3B, 3*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_4B, 4*eps_t/ *deg_ptr, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_6B, 6*eps_t/ *deg_ptr, q[i], r[i]);
 
                 // construct the scattering matrix for the i-th sample
                 
@@ -895,7 +900,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q,
             break;
             
         default: // Unknown discretization
-            ret_code = E_INVALID_ARGUMENT(opts->discretization);
+            ret_code = E_INVALID_ARGUMENT(discretization);
             goto release_mem;
     }
     // Multiply the individual scattering matrices

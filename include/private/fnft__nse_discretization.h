@@ -45,17 +45,6 @@ FNFT_UINT fnft__nse_discretization_degree(fnft_nse_discretization_t
         discretization);
 
 /**
- * @brief Returns the mapping coefficient based on discretization.
- *
- * This routine returns the mapping coefficient map_coeff based on the discretization of type 
- * \link fnft_nse_discretization_t \endlink. Then \f$ z=e^{map\_coeff.j.xi.eps\_t} \f$.\n
- * Returns NAN for discretizations not supported by \link fnft__nse_fscatter \endlink.
- *
- * @ingroup nse
- */
-FNFT_REAL fnft__nse_discretization_mapping_coeff(fnft_nse_discretization_t discretization);
-
-/**
  * @brief This routine returns the boundary coefficient based on the
  * discretization.
  *
@@ -73,7 +62,6 @@ FNFT_REAL fnft__nse_discretization_boundary_coeff(fnft_nse_discretization_t disc
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define nse_discretization_degree(...) fnft__nse_discretization_degree(__VA_ARGS__)
-#define nse_discretization_mapping_coeff(...) fnft__nse_discretization_mapping_coeff(__VA_ARGS__)
 #define nse_discretization_boundary_coeff(...) fnft__nse_discretization_boundary_coeff(__VA_ARGS__)
 #endif
 

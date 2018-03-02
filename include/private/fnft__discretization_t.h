@@ -66,6 +66,7 @@
  * @ingroup data_types
  */
 typedef enum {
+    fnft__discretization_2SPLIT2_MODAL,
     fnft__discretization_2SPLIT1A,
     fnft__discretization_2SPLIT1B,
     fnft__discretization_2SPLIT2A,
@@ -86,18 +87,9 @@ typedef enum {
     fnft__discretization_2SPLIT8B
 } fnft__discretization_t;
 
-typedef enum{
-    fnft__evolution_equation_fnse,
-    fnft__evolution_equation_dnse,
-    fnft__evolution_equation_kdv
-} fnft__evolution_equation_t;
-
-typedef struct {
-    fnft__discretization_t discretization;
-    fnft__evolution_equation_t evolution_equation;
-} fnft__discretization_opts_t;
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
+#define discretization_2SPLIT2_MODAL fnft__discretization_2SPLIT2_MODAL
 #define discretization_2SPLIT1A fnft__discretization_2SPLIT1A
 #define discretization_2SPLIT1B fnft__discretization_2SPLIT1B
 #define discretization_2SPLIT2A fnft__discretization_2SPLIT2A
@@ -117,11 +109,6 @@ typedef struct {
 #define discretization_2SPLIT8A fnft__discretization_2SPLIT8A
 #define discretization_2SPLIT8B fnft__discretization_2SPLIT8B
 #define discretization_t fnft__discretization_t
-#define discretization_opts_t fnft__discretization_opts_t
-#define evolution_equation_t fnft__evolution_equation_t
-#define evolution_equation_fnse fnft__evolution_equation_fnse
-#define evolution_equation_dnse fnft__evolution_equation_dnse
-#define evolution_equation_kdv fnft__evolution_equation_kdv
 #endif
 
 #endif

@@ -30,6 +30,7 @@ UINT fnft__akns_discretization_degree(discretization_t
         discretization)
 {
     switch (discretization) {
+        case discretization_2SPLIT2_MODAL:
         case discretization_2SPLIT1A:
         case discretization_2SPLIT1B:
         case discretization_2SPLIT2A: // With change of base trick

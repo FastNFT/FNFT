@@ -42,28 +42,7 @@ UINT fnft__nse_discretization_degree(nse_discretization_t
     }
 }
 
-/**
- * Returns the mapping coefficient map_coeff in the mapping
- * z = exp(map_coeff*I*\lam*eps_t) based on the discretization type.
- * Defined only for discretizations supported by nse_fscatter.c
- */
-REAL fnft__nse_discretization_mapping_coeff(nse_discretization_t discretization)
-{
 
-    switch (discretization) {
-        case nse_discretization_2SPLIT2_MODAL:
-        case nse_discretization_2SPLIT2A:
-            return 2.0;
-        case nse_discretization_2SPLIT4A:
-            return -0.5;
-        case nse_discretization_2SPLIT4B:
-            return -1.0;
-            
-        default: // Unknown discretization
-            return NAN;
-            
-    }
-}
 /**
  * This routine returns the boundary coefficient based on the discretization.
  */
@@ -72,8 +51,8 @@ REAL fnft__nse_discretization_boundary_coeff(nse_discretization_t discretization
 
     switch (discretization) {
         case nse_discretization_2SPLIT2_MODAL:
+            //return 0.0; // TODO: this value should be 0.5 for every staircase approximation that uses midpoint values.
         case nse_discretization_2SPLIT2A:
-            return 0.0; // TODO: this value should be 0.5 for every staircase approximation that uses midpoint values.
         case nse_discretization_2SPLIT4A:
         case nse_discretization_2SPLIT4B:
             return 0.5;

@@ -47,29 +47,6 @@
 FNFT_UINT fnft__akns_fscatter_numel(FNFT_UINT D,
                                     fnft__discretization_t discretization);
 
-/**
- * @brief Returns the scattering matrix for a single step at frequency zero.
- *
- * This routine returns the matrix
- * \f[
- *  \mathbf{M} = \text{exp}\left(\begin{bmatrix}
- *       0 & q \\ -1 & 0
- *      \end{bmatrix}\epsilon_t\right)
- *    = \begin{bmatrix}
- *  \cos(\epsilon_t\sqrt{q})  &  q\epsilon_t\text{sinc}(\epsilon_t\sqrt{q}) \\
- *  -\epsilon_t\text{sinc}(\epsilon_t\sqrt{q})  &  \cos(\epsilon_t\sqrt{q})
- *      \end{bmatrix}\,.
- * \f]
- * @param[out] M Result Array of length 3, contains
- * \f$\{M_{11}=M_{22},M_{12},M_{21}\}\f$, needs to be pre-allocated as an
- * Array of length 3.
- * @param[in] eps_t Step-size, eps_t \f$= (T[1]-T[0])/(D-1) \f$.
- * @param[in] q (Locally) constant potential for this step.
- *
- * @ingroup kdv
- */
-FNFT_INT fnft__akns_fscatter_zero_freq_scatter_matrix(FNFT_COMPLEX *M,
-                                    const FNFT_REAL eps_t, const FNFT_COMPLEX q, fnft__discretization_opts_t *opts);
 
 /**
  * @brief Fast computation of polynomial approximation of the combined scattering
@@ -101,14 +78,13 @@ FNFT_INT fnft__akns_fscatter_zero_freq_scatter_matrix(FNFT_COMPLEX *M,
  *
  * @ingroup kdv
  */
-FNFT_INT fnft__akns_fscatter(const FNFT_UINT D, FNFT_COMPLEX const * const q,
+FNFT_INT fnft__akns_fscatter(const FNFT_UINT D, FNFT_COMPLEX const * const q, FNFT_COMPLEX const * const r,
                  const FNFT_REAL eps_t, FNFT_COMPLEX * const result, FNFT_UINT * const deg_ptr,
-                            INT * const W_ptr, fnft__discretization_opts_t *opts);
+                            INT * const W_ptr, fnft__discretization_t discretization);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define akns_fscatter_numel(...) fnft__akns_fscatter_numel(__VA_ARGS__)
 #define akns_fscatter(...) fnft__akns_fscatter(__VA_ARGS__)
-#define akns_fscatter_zero_freq_scatter_matrix(...) fnft__akns_fscatter_zero_freq_scatter_matrix(__VA_ARGS__)
 #endif
 
 #endif
