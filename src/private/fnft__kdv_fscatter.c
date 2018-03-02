@@ -42,7 +42,7 @@ UINT kdv_fscatter_numel(UINT D, kdv_discretization_t discretization)
 INT kdv_fscatter_zero_freq_scatter_matrix(COMPLEX *M,
                                                 const REAL eps_t, const REAL q)
 {
-    REAL Delta = eps_t * CSQRT(q);
+    COMPLEX Delta = eps_t * CSQRT(q);
     M[0] = CCOS(Delta);                // M(1,1) = M(2,2)
     M[2] = -eps_t * misc_CSINC(Delta); // M(2,1)
     M[1] = -q * M[2];                  // M(1,2)
