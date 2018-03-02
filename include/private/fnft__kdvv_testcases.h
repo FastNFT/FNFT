@@ -34,13 +34,15 @@
  * boundary conditions.
  *
  * fnft__kdvv_testcases_SECH - A squared sech potential.\n
- * fnft__kdvv_testcases_RECT - A rectangular potential.
+ * fnft__kdvv_testcases_RECT - A rectangular potential, amplitude=1.\n
+ * fnft__kdvv_testcases_NEGATIVE_RECT - A rectangular potential, amplitude=-1.\n
  *
  * @ingroup kdv
  */
 typedef enum {
     fnft__kdvv_testcases_SECH,
-    fnft__kdvv_testcases_RECT
+    fnft__kdvv_testcases_RECT,
+    fnft__kdvv_testcases_NEGATIVE_RECT,
 } fnft__kdvv_testcases_t;
 
 /**
@@ -68,6 +70,7 @@ FNFT_INT fnft__kdvv_testcases_test_fnft(fnft__kdvv_testcases_t tc, FNFT_UINT D,
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define kdvv_testcases_SECH fnft__kdvv_testcases_SECH
 #define kdvv_testcases_RECT fnft__kdvv_testcases_RECT
+#define kdvv_testcases_NEGATIVE_RECT fnft__kdvv_testcases_NEGATIVE_RECT
 #define kdvv_testcases_t fnft__kdvv_testcases_t
 #define kdvv_testcases(...) fnft__kdvv_testcases(__VA_ARGS__)
 #define kdvv_testcases_test_fnft(...) fnft__kdvv_testcases_test_fnft(__VA_ARGS__)
