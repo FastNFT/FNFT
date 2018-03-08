@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "fnft__poly_fmult.h"
+#include "fnft__misc.h"
 #include "kiss_fft.h"
 #include "_kiss_fft_guts.h"
 
@@ -120,7 +121,7 @@ static INT poly_rescale(const UINT d, COMPLEX * const p)
 INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p, 
     INT * const W_ptr)
 {
-    UINT i, deg, lenmem, len, memneeded, memneeded_buf;
+    UINT i, deg, lenmem, len, memneeded, memneeded_buf, mod_n, deg_excess = 0;
     void *mem, *mem_fft, *mem_ifft;
     COMPLEX *p1, *p2, *result;
     kiss_fft_cfg cfg_fft = NULL, cfg_ifft = NULL;
@@ -128,11 +129,11 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
     INT ret_code;
 
     // Allocate memory for for calls to poly_fmult2
-    deg = *d;
+    deg = *d;   
     lenmem = poly_fmult2_lenmen(deg * n);
     mem = malloc(lenmem); // contains the memory for the actual data
     // The line below find max number of bytes needed for an (I)FFT config
-    kiss_fft_alloc(poly_fmult2_len(*d * n/2), 0, NULL, &memneeded);
+    kiss_fft_alloc(poly_fmult2_lenmen(deg * n/2), 0, NULL, &memneeded);
     mem_fft = malloc(memneeded); // memory for FFT configs
     mem_ifft = malloc(memneeded); // memory for IFFT configs
     if (mem == NULL || mem_fft == NULL || mem_ifft == NULL) {
@@ -158,9 +159,11 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
         p1 = p;
         p2 = p + (deg + 1);
         result = p;
-        
+       
         // Multiply all pairs of polynomials, normalize if desired
-        for (i=0; i<n; i+=2) {
+        mod_n = n % 2;
+        for (i=0; i<n-mod_n; i+=2) {
+
             ret_code = poly_fmult2(deg, p1, p2, result, mem, cfg_fft,
                 cfg_ifft, 0);
             CHECK_RETCODE(ret_code, release_mem);
@@ -173,15 +176,29 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
             result += 2*deg + 1;
         }
 
-        // REAL degrees and half the number of polynomials
-        deg *= 2;
-        if (n%2 != 0) { // n was no power of two
-            ret_code = E_INVALID_ARGUMENT(n);
-            goto release_mem;
+        // If the n number of polynomials was odd, take care of the left over
+        // polynomial -> simply keep it, but extend to next degree 2*deg+1
+        if (mod_n != 0) {
+
+            INT diff = (n - mod_n)/2;
+            memmove(p1 + (deg - diff), p1, (deg+1)*sizeof(COMPLEX));
+            for (i=0; i<deg; i++)
+                result[i] = 0;
+            deg_excess += deg; // to keep track of leading zero coefficients
+                               // that we have introduced with the zero padding
         }
-        n /= 2;
+
+        // Double degrees and (more or less) half the number of polynomials
+        deg *= 2;
+        n = (n - mod_n)/2 + mod_n;
     }
-    
+
+    // Remove leading coefficients that we know are are zero, if any
+    if (deg_excess > 0) {
+        memmove(p, p + deg_excess, (deg-deg_excess+1)*sizeof(COMPLEX));
+        deg -= deg_excess;
+    }
+
     // Set degree of final result, free memory and return w/o error
     *d = deg;
     if (W_ptr != NULL)

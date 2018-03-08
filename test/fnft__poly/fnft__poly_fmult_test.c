@@ -23,30 +23,7 @@
 #include "fnft__misc.h"
 #include "fnft__errwarn.h"
 
-/*INT test_poly_fmult2()
-{
-    const INT deg = 4;
-    kiss_fft_cpx p1[5] = {1, 0, 0, 2, 3, 0, 0, 4, 5, 0};
-    kiss_fft_cpx p2[5] = {0, 5, 6, 0, 0, 7, 8, 0, 0, 9};
-    kiss_fft_cpx result[9];
-    kiss_fft_cpx result_exact[9] = {0, 5, -4, 0, 0, 34, -8, 0, 0, 95, 8, 0, \
-        0, 94, 4, 0, 0, 45};
-    void *mem;
-    UINT lenmem;
-
-    lenmem = poly_fmult2_lenmen(deg);
-    mem = malloc(lenmem);
-    if (mem == NULL)
-        return E_NOMEM;
-
-    if (poly_fmult2(deg, p1, p2, result, mem, lenmem, 0) == FNFT_ERROR)
-        return E_SUBROUTINE;
-    if (rel_err(2*deg+1, result, result_exact) > 10*DBL_EPSILON)
-        return FNFT_E_INCORRECT_RESULT;
-    return SUCCESS;
-}*/
-
-static INT poly_fmult_test(INT normalize_flag)
+static INT poly_fmult_test_D_is_power_of_2(INT normalize_flag)
 {
     UINT deg = 2, n = 8, i;
     COMPLEX p[24];
@@ -56,23 +33,81 @@ static INT poly_fmult_test(INT normalize_flag)
         format long g; r.'
     */
     COMPLEX result_exact[18] = { \
-           10690.1093069785 - I*7285.45565246217, \
-           22605.6811426431 - I*19510.065631389, \
-           57389.5004107115 - I*20763.2575587549, \
-           53847.0938223071 - I*18963.5560762862, \
-           88648.7268642591 - I*2309.98190237675, \
-           66515.8698354361 - I*3878.11603829108, \
-           45160.5175520559 + I*12083.5337878339, \
-           64021.1527510823 + I*34487.976136233, \
-          -26614.7840829275 + I*18912.0673174305, \
-           624.669240812309 + I*18294.2454730283, \
-           7755.19752834515 + I*18447.5313133858, \
-          -33812.2918248361 + I*1257.46809193287, \
-          -711.103319555697 - I*2023.66741077336, \
-           9781.54461527385 + I*407.75394285625, \
-           39.3498537600159 + I*420.245708764338, \
-          -508.134987301475 + I*156.212629759735, \
+           10690.1093069785 - I*7285.45565246217,
+           22605.6811426431 - I*19510.065631389, 
+           57389.5004107115 - I*20763.2575587549,
+           53847.0938223071 - I*18963.5560762862,
+           88648.7268642591 - I*2309.98190237675,
+           66515.8698354361 - I*3878.11603829108,
+           45160.5175520559 + I*12083.5337878339,
+           64021.1527510823 + I*34487.976136233, 
+          -26614.7840829275 + I*18912.0673174305,
+           624.669240812309 + I*18294.2454730283,
+           7755.19752834515 + I*18447.5313133858,
+          -33812.2918248361 + I*1257.46809193287,
+          -711.103319555697 - I*2023.66741077336,
+           9781.54461527385 + I*407.75394285625, 
+           39.3498537600159 + I*420.245708764338,
+          -508.134987301475 + I*156.212629759735,
            4.42978955469815 - I*0.0813363246183392 };
+    INT W, *W_ptr = NULL;
+    REAL scl;
+    INT ret_code;
+
+    for (i=0; i<(deg+1)*n; i++) {
+        p[i] = SQRT(i+1.0)*(COS(i) + I*SIN(-2.0*i));
+    }
+    if (normalize_flag)
+        W_ptr = &W;
+    ret_code = poly_fmult(&deg, n, p, W_ptr);
+    if (ret_code != SUCCESS)
+        return E_SUBROUTINE(ret_code);
+    if (normalize_flag) {
+        if (W == 0)
+            return E_TEST_FAILED;
+        scl = POW(2.0, W);
+        for (i=0; i<deg+1; i++)
+            p[i] *= scl;
+    }
+    if (misc_rel_err(deg+1, p, result_exact) > 100*EPSILON)
+        return E_TEST_FAILED;
+    return SUCCESS;
+}
+
+static INT poly_fmult_test_D_is_no_power_of_2(INT normalize_flag)
+{
+    UINT deg = 2, n = 11, i;
+    COMPLEX p[(deg+1)*16]; // 16 = next power of two of n=11
+    /* Matlab code to generate the "exact" result:
+        deg=2; n=11; N=(deg+1)*n; i=0:(N-1);
+        p=sqrt(i+1).*(cos(i) + 1j*sin(-2*i)); r=p(1:(deg+1));
+        for (k=(deg+2):(deg+1):N), r=conv(r,p(k:(k+deg))); end
+        format long g; r.'
+    */
+    COMPLEX result_exact[23] = {
+          -319308.705234574 -      166784.182995777*I, 
+          -2743910.31810172 -      794705.736952064*I,
+           -9075447.9140096 -      882018.812864758*I,
+          -18191941.8165097 -      122049.064791405*I,
+          -30115074.8590672 +      760936.799294374*I,
+          -44814146.2207504 +      1917904.17878258*I,
+          -59509427.3900375 +       1151280.7345219*I,
+          -67870895.8105611 +       6758914.6822708*I,
+          -65004270.8979727 +      2378651.90695769*I,
+           -62350519.934101 -      4351181.14834246*I,
+           -49802387.816833 +      6324801.48028804*I,
+          -25632453.5014797 -      15474491.9397379*I,
+          -19770246.1054521 -      11669704.6069006*I,
+          -5178072.79922669 +      454130.609010228*I,
+           7883730.23930349 -      23609117.6699819*I,
+          -1012854.76439042 -      6787648.75896478*I,
+           2010055.29299395 +      1306386.13720826*I,
+           4346918.37729613 -      8535073.39464626*I,
+          -2082296.12229051 -      649844.924066411*I,
+          -1785325.93258564 +      2098730.17691877*I,
+            50207.974399346 -      84587.5774434785*I,
+           56394.1550202597 -      147664.217837454*I,
+          -801.466849402119 +      1048.08952721767*I };        
     INT W, *W_ptr = NULL;
     REAL scl;
     INT ret_code;
@@ -130,7 +165,7 @@ static INT poly_fmult2x2_test(INT normalize_flag)
 
     format long g; result_exact = [r11 r12 r21 r22].'
     */
-    COMPLEX p[32], result[24];
+    COMPLEX p[32], result[2*32];
     COMPLEX result_exact[20] = { \
         60.6824426714241 + I*64.8661118935554, \
         192.332936227757 - I*1.10233198818688, \
@@ -181,16 +216,32 @@ static INT poly_fmult2x2_test(INT normalize_flag)
 INT main(void)
 {
     INT ret_code;
-    /*printf("poly_fmult2: %s\n", test_poly_fmult2()==FNFT_ERROR \
-        ? "test failed" : "test passed");*/
 
-    ret_code = poly_fmult_test(0); // 1x1 without normalization
+    ret_code = poly_fmult_test_D_is_no_power_of_2(0); // 1x1 w/o normalization
     if (ret_code != SUCCESS) {
         E_SUBROUTINE(ret_code);
         return EXIT_FAILURE;
     }
 
-    ret_code = poly_fmult_test(1); // 1x1 without normalization
+    ret_code = poly_fmult_test_D_is_no_power_of_2(1); // 1x1 with normalization
+    if (ret_code != SUCCESS) {
+        E_SUBROUTINE(ret_code);
+        return EXIT_FAILURE;
+    }
+
+    ret_code = poly_fmult_test_D_is_power_of_2(0); // 1x1 without normalization
+    if (ret_code != SUCCESS) {
+        E_SUBROUTINE(ret_code);
+        return EXIT_FAILURE;
+    }
+
+    ret_code = poly_fmult_test_D_is_power_of_2(1); // 1x1 without normalization
+    if (ret_code != SUCCESS) {
+        E_SUBROUTINE(ret_code);
+        return EXIT_FAILURE;
+    }
+
+    ret_code = poly_fmult_test_D_is_no_power_of_2(1); // 1x1 with normalization
     if (ret_code != SUCCESS) {
         E_SUBROUTINE(ret_code);
         return EXIT_FAILURE;

@@ -36,10 +36,13 @@
  * stored in the array p and will be overwritten. If W_ptr != NULL, the
  * result has been normalized by a factor 2^W. Upon exit, W has been stored
  * in *W_ptr.
- * @param[in] d Degree of the polynomials.
+ * @param[in, out] d Upon entry, degree of the input polynomials. Upon exit,
+ *  degree of their product.
  * @param[in] n Number of polynomials.
- * @param[in,out] p Complex valued array which initially holds the coefficients of 
- * the polynomials being multiplied and on exit holds the result.
+ * @param[in,out] p Complex valued array with m entries, where m is the first
+ *  power of two larger than or to equal to n. Upon entry, the first (*d+1)*n
+ *  elements of this array contain the coefficients of the polynomials.
+ *  Upon exit, the first *d+1 elements contain the result.
  * @param[in] W_ptr Pointer to normalization flag. 
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
