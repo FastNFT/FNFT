@@ -308,3 +308,13 @@ COMPLEX misc_CSINC(COMPLEX x)
         return CCOS(x/CSQRT(3));
 }
 
+UINT misc_nextpowerof2(const UINT number)
+{
+    if (number == 0)
+        return 0;
+    UINT result = 1;
+    while (result < number)
+        result *= 2;
+    return result;
+}
+
