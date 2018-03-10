@@ -58,11 +58,14 @@ FNFT_INT fnft__poly_fmult(FNFT_UINT * const d, FNFT_UINT n, FNFT_COMPLEX * const
  * coefficients are stored in the array p and will be overwritten. If
  * W_ptr != NULL, the result has been normalized by a factor 2^W. Upon exit,
  * W has been stored in *W_ptr.
- * @param[in] d Degree of the polynomials.
+ * @param[in] d Pointer to a \link FNFT_UINT \endlink containing the degree of
+ * the polynomials.
  * @param[in] n Number of 2x2 matrix-valued polynomials.
- * @param[in] p Complex valued array which holds the coefficients of 
- * the polynomials being multiplied.
- * @param[out] result Complex valued array that hold the result of the mulitplication.
+ * @param[in,out] p Complex valued array which holds the coefficients of 
+ * the polynomials being multiplied. Should be of length m*(*d+1), where
+ * m is the first power of two larger or equal to n. WARNING: p is overwritten.
+ * @param[out] result Complex valued array that holds the result of the
+ * multiplication. Should be of the same size as p.
  * @param[in] W_ptr Pointer to normalization flag. 
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.

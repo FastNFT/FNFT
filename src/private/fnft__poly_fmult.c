@@ -28,18 +28,18 @@
 #include "kiss_fft.h"
 #include "_kiss_fft_guts.h"
 
-static INT poly_fmult2_len(UINT deg)
+static inline INT poly_fmult2_len(UINT deg)
 {
     return kiss_fft_next_fast_size(2*(deg + 1) - 1);
 }
 
-static UINT poly_fmult2_lenmen(UINT deg)
+static inline UINT poly_fmult2_lenmen(UINT deg)
 {
     return sizeof(kiss_fft_cpx)*(4*poly_fmult2_len(deg) - 1);
 }
 
-static INT poly_fmult2(const UINT deg, COMPLEX *p1, \
-    COMPLEX *p2, COMPLEX *result, void *mem, \
+static inline INT poly_fmult2(const UINT deg, COMPLEX *p1, 
+    COMPLEX *p2, COMPLEX *result, void *mem, 
     kiss_fft_cfg cfg_fft, kiss_fft_cfg cfg_ifft, INT add_flag)
 {
     UINT i, len;
@@ -89,7 +89,7 @@ static INT poly_fmult2(const UINT deg, COMPLEX *p1, \
     return SUCCESS;
 }
 
-static INT poly_rescale(const UINT d, COMPLEX * const p)
+static inline INT poly_rescale(const UINT d, COMPLEX * const p)
 {
     UINT i;
     INT a;
@@ -133,7 +133,8 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
     lenmem = poly_fmult2_lenmen(deg * n);
     mem = malloc(lenmem); // contains the memory for the actual data
     // The line below find max number of bytes needed for an (I)FFT config
-    kiss_fft_alloc(poly_fmult2_lenmen(deg * n/2), 0, NULL, &memneeded);
+    kiss_fft_alloc(poly_fmult2_len(deg * misc_nextpowerof2(n)/2), 0, NULL,
+        &memneeded);
     mem_fft = malloc(memneeded); // memory for FFT configs
     mem_ifft = malloc(memneeded); // memory for IFFT configs
     if (mem == NULL || mem_fft == NULL || mem_ifft == NULL) {
@@ -180,7 +181,7 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
         // polynomial -> simply keep it, but extend to next degree 2*deg+1
         if (mod_n != 0) {
 
-            INT diff = (n - mod_n)/2;
+            const INT diff = (n - mod_n)/2; // = p1 - result
             memmove(p1 + (deg - diff), p1, (deg+1)*sizeof(COMPLEX));
             for (i=0; i<deg; i++)
                 result[i] = 0;
@@ -210,7 +211,7 @@ release_mem:
     return ret_code;
 }
 
-static INT poly_rescale2x2(const UINT d,
+static inline INT poly_rescale2x2(const UINT d,
     COMPLEX * const p11,
     COMPLEX * const p12,
     COMPLEX * const p21,
@@ -256,15 +257,10 @@ static INT poly_rescale2x2(const UINT d,
     return a;
 }
 
-/*
-* length of p = m*m*n*(deg+1)
-* length of result = m*m*(n/2)*(2*deg+1)
-* WARNING: p is overwritten
-*/
 INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
     COMPLEX * const result, INT * const W_ptr)
 {
-    UINT i, deg, lenmem, len, memneeded, memneeded_buf;
+    UINT i, deg, lenmem, len, memneeded, memneeded_buf, deg_excess = 0;
     void *mem, *mem_fft, *mem_ifft;
     UINT o1, o2, or; // pointer offsets
     COMPLEX *p11, *p12, *p21, *p22;
@@ -284,7 +280,8 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
     lenmem = poly_fmult2_lenmen(deg * n);
     mem = malloc(lenmem); // memory for actual data
     // Find max number of bytes needed for an (I)FFT configuration
-    kiss_fft_alloc(poly_fmult2_len(*d * n/2), 0, NULL, &memneeded);
+    kiss_fft_alloc(poly_fmult2_len(deg * misc_nextpowerof2(n)/2), 0, NULL,
+        &memneeded);
     mem_fft = malloc(memneeded); // memory for the FFT configs
     mem_ifft = malloc(memneeded); // memory for the IFFT configs
     if (mem == NULL || mem_fft == NULL || mem_ifft == NULL) {
@@ -311,14 +308,19 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
         o2 = deg + 1;
         or = 0;
 
+        // Degree of the results of this iteration, number of results
+        const UINT mod_n = n % 2;
+        const UINT next_n = (n - mod_n)/2 + mod_n;
+        const UINT next_deg = 2*deg;
+
         // Setup pointers to the individual polynomials in result
         r11 = result;
-        r12 = r11 + (n/2)*(2*deg+1);
-        r21 = r12 + (n/2)*(2*deg+1);
-        r22 = r21 + (n/2)*(2*deg+1);
+        r12 = r11 + next_n*(next_deg+1);
+        r21 = r12 + next_n*(next_deg+1);
+        r22 = r21 + next_n*(next_deg+1);
 
         // Multiply all pairs of polynomials, normalize if desired
-        for (i=0; i<n; i+=2) {
+        for (i=0; i<n-mod_n; i+=2) {
 
             // Multiply current pair of 2x2 matrix-valued polynomials
             ret_code = poly_fmult2(deg, p11+o1, p11+o2, r11+or, mem,
@@ -355,31 +357,57 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
 
             // Normalize if desired
             if (W_ptr != NULL)
-                W += poly_rescale2x2(2*deg, r11+or, r12+or, r21+or, r22+or);
+                W += poly_rescale2x2(next_deg, r11+or, r12+or, r21+or, r22+or);
 
             // Move pointers to next pair
-            o1 += 2*deg + 2;
-            o2 += 2*deg + 2;
-            or += 2*deg + 1;
+            o1 += 2*(deg + 1);
+            o2 += 2*(deg + 1);
+            or += next_deg + 1;
         }
 
-        // Update degrees and number of polynomials
-        deg *= 2;
-        if (n%2 != 0) {
-            ret_code = E_INVALID_ARGUMENT(n); // n was no power of two
-            goto release_mem;
+        // If the n number of polynomials was odd, take care of the left over
+        // polynomial -> simply keep it, but extend to next degree 2*deg+1
+        if (mod_n != 0) {
+            memcpy(r11+or+deg, p11+o1, (deg+1)*sizeof(COMPLEX));
+            memcpy(r12+or+deg, p12+o1, (deg+1)*sizeof(COMPLEX));
+            memcpy(r21+or+deg, p21+o1, (deg+1)*sizeof(COMPLEX));
+            memcpy(r22+or+deg, p22+o1, (deg+1)*sizeof(COMPLEX));
+            for (i=0; i<deg; i++) {
+                r11[or + i] = 0;
+                r12[or + i] = 0;
+                r21[or + i] = 0;
+                r22[or + i] = 0;
+            }
+            deg_excess += deg; // to keep track of leading zero coefficients
+                               // that we have introduced with the zero padding
         }
-        n /= 2;
 
         // Prepare for the next iteration
         if (n>1) {
-            memcpy(p11, r11, n*(deg+1)*sizeof(COMPLEX));
-            memcpy(p12, r12, n*(deg+1)*sizeof(COMPLEX));
-            memcpy(p21, r21, n*(deg+1)*sizeof(COMPLEX));
-            memcpy(p22, r22, n*(deg+1)*sizeof(COMPLEX));
+            memcpy(p11, r11, next_n*(next_deg+1)*sizeof(COMPLEX));
+            memcpy(p12, r12, next_n*(next_deg+1)*sizeof(COMPLEX));
+            memcpy(p21, r21, next_n*(next_deg+1)*sizeof(COMPLEX));
+            memcpy(p22, r22, next_n*(next_deg+1)*sizeof(COMPLEX));
         }
+
+        // Double degrees and (more or less) half the number of polynomials
+        deg = next_deg;
+        n = next_n;
     }
-    
+ 
+    // Remove leading coefficients that we know are zero, if any
+    if (deg_excess > 0) {
+        memmove(r11, r11 + deg_excess,
+            (deg - deg_excess + 1)*sizeof(COMPLEX));
+        memmove(r12 - deg_excess, r12 + deg_excess,
+            (deg - deg_excess + 1)*sizeof(COMPLEX));
+        memmove(r21 - 2*deg_excess, r21 + deg_excess,
+            (deg - deg_excess + 1)*sizeof(COMPLEX));
+        memmove(r22 - 3*deg_excess, r22 + deg_excess,
+            (deg - deg_excess + 1)*sizeof(COMPLEX));
+        deg -= deg_excess;
+    }
+
     // Set degree of final result, free memory and return w/o error
     *d = deg;
     if (W_ptr != NULL)
