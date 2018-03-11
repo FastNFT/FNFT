@@ -26,7 +26,7 @@
 static INT poly_fmult_test_n_is_power_of_2(INT normalize_flag)
 {
     UINT deg = 2, n = 8, i;
-    COMPLEX p[n*(deg + 1)]; // since n is already a power of two
+    COMPLEX p[poly_fmult_numel(deg, n)]; // since n is already a power of two
     /* Matlab code to generate the "exact" result:
         i=0:23; p=sqrt(i+1).*(cos(i) + 1j*sin(-2*i));
         r=p(1:3); for (k=4:3:24), r=conv(r,p(k:(k+2))); end
@@ -80,7 +80,7 @@ static INT poly_fmult_test_n_is_power_of_2(INT normalize_flag)
 static INT poly_fmult_test_n_is_no_power_of_2(INT normalize_flag)
 {
     UINT deg = 2, n = 11, i;
-    COMPLEX p[(deg+1)*misc_nextpowerof2(n)];
+    COMPLEX p[poly_fmult_numel(deg, n)];
     /* Matlab code to generate the "exact" result:
         deg=2; n=11; N=(deg+1)*n; i=0:(N-1);
         p=sqrt(i+1).*(cos(i) + 1j*sin(-2*i)); r=p(1:(deg+1));
@@ -171,7 +171,7 @@ static INT poly_fmult2x2_test_n_is_power_of_2(INT normalize_flag)
 
     format long g; result_exact = [r11 r12 r21 r22].'
     */
-    const UINT memsize = 4*n*(deg + 1); // since n is already a power of two
+    const UINT memsize = poly_fmult2x2_numel(deg, n);
     COMPLEX p[memsize], result[memsize];
     COMPLEX result_exact[20] = {
         60.6824426714241 + I*64.8661118935554,
@@ -262,7 +262,7 @@ static INT poly_fmult2x2_test_n_is_no_power_of_2(INT normalize_flag)
 
     format long g; result_exact = [r11 r12 r21 r22].'
     */
-    const UINT memsize = 4*misc_nextpowerof2(n)*(deg + 1);
+    const UINT memsize = poly_fmult2x2_numel(deg, n);
     COMPLEX p[memsize];
     COMPLEX result[memsize];
     COMPLEX result_exact[24] = {

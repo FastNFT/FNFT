@@ -28,6 +28,17 @@
 #include "kiss_fft.h"
 #include "_kiss_fft_guts.h"
 
+UINT poly_fmult_numel(UINT deg, UINT n)
+{
+    // This estimate is sometimes conservative.
+    return (deg+1)*misc_nextpowerof2(n);
+}
+
+UINT poly_fmult2x2_numel(UINT deg, UINT n)
+{
+    return 4*(deg+1)*misc_nextpowerof2(n);
+}
+
 static inline INT poly_fmult2_len(UINT deg)
 {
     return kiss_fft_next_fast_size(2*(deg + 1) - 1);

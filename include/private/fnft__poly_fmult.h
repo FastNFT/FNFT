@@ -29,6 +29,20 @@
 #include "fnft.h"
 
 /**
+ * @brief Number of elements that the input p to
+ * \link fnft__poly_fmult \endlink should have.
+ *
+ * @ingroup poly
+ * Specifies how much memory (in number of elements) the user needs to allocate
+ * for the input p of the routine \link fnft__poly_fmult \endlink.
+ * @param [in] deg Degree of the polynomials
+ * @param [in] n Number of polynomials
+ * @return A number m. The input p to \link fnft__poly_fmult \endlink should be
+ * a array with m entries.
+ */
+FNFT_UINT fnft__poly_fmult_numel(const FNFT_UINT deg, const FNFT_UINT n);
+
+/**
  * @brief Fast multiplication of multiple polynomials of same degree.
  * 
  * @ingroup poly
@@ -39,16 +53,31 @@
  * @param[in, out] d Upon entry, degree of the input polynomials. Upon exit,
  *  degree of their product.
  * @param[in] n Number of polynomials.
- * @param[in,out] p Complex valued array with m entries, where m is the first
- *  power of two larger than or to equal to n. Upon entry, the first (*d+1)*n
- *  elements of this array contain the coefficients of the polynomials.
- *  Upon exit, the first *d+1 elements contain the result.
+ * @param[in,out] p Complex valued array with m entries, where m is determined
+ *  using \link fnft__poly_fmult_memneeded \endlink. Upon entry, the first
+ *  (*d+1)*n elements of this array contain the coefficients of the
+ *  polynomials. Upon exit, the first *d+1 elements contain the result.
  * @param[in] W_ptr Pointer to normalization flag. 
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  */
 FNFT_INT fnft__poly_fmult(FNFT_UINT * const d, FNFT_UINT n, FNFT_COMPLEX * const p,
     FNFT_INT * const W_ptr);
+
+/**
+ * @brief Number of elements that the inputs p and result to
+ * \link fnft__poly_fmult2x2 \endlink should have.
+ *
+ * @ingroup poly
+ * Specifies how much memory (in number of elements) the user needs to allocate
+ * for the inputs p and result of the routine
+ * \link fnft__poly_fmult2x2 \endlink.
+ * @param [in] deg Degree of the polynomials
+ * @param [in] n Number of polynomials
+ * @return A number m. The inputs p and result to
+ * \link fnft__poly_fmult2x2 \endlink should be a array with m entries.
+ */
+FNFT_UINT fnft__poly_fmult2x2_numel(const FNFT_UINT deg, const FNFT_UINT n);
 
 /**
  * @brief Fast multiplication of multiple 2x2 matrix-valued polynomials of same degree.
@@ -63,7 +92,8 @@ FNFT_INT fnft__poly_fmult(FNFT_UINT * const d, FNFT_UINT n, FNFT_COMPLEX * const
  * @param[in] n Number of 2x2 matrix-valued polynomials.
  * @param[in,out] p Complex valued array which holds the coefficients of 
  * the polynomials being multiplied. Should be of length m*(*d+1), where
- * m is the first power of two larger or equal to n. WARNING: p is overwritten.
+ * m is obtained using \link fnft__poly_fmult_memneeded \lendlink.
+ * WARNING: p is overwritten.
  * @param[out] result Complex valued array that holds the result of the
  * multiplication. Should be of the same size as p.
  * @param[in] W_ptr Pointer to normalization flag. 
@@ -74,6 +104,8 @@ FNFT_INT fnft__poly_fmult2x2(FNFT_UINT *d, FNFT_UINT n, FNFT_COMPLEX * const p,
     FNFT_COMPLEX * const result, FNFT_INT * const W_ptr);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
+#define poly_fmult_numel(...) fnft__poly_fmult_numel(__VA_ARGS__)
+#define poly_fmult2x2_numel(...) fnft__poly_fmult2x2_numel(__VA_ARGS__)
 #define poly_fmult(...) fnft__poly_fmult(__VA_ARGS__)
 #define poly_fmult2x2(...) fnft__poly_fmult2x2(__VA_ARGS__)
 #endif

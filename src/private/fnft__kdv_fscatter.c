@@ -32,8 +32,11 @@
  */
 UINT kdv_fscatter_numel(UINT D, kdv_discretization_t discretization)
 {
-    // 2x2 matrix of degree+1 elements for each sample
-    return 4*(kdv_discretization_degree(discretization) + 1)*D;
+    const UINT deg = kdv_discretization_degree(discretization);
+    if (deg == 0)
+        return 0; // unknown discretization
+    else
+        return poly_fmult2x2_numel(deg, D);
 }
 
 /**
