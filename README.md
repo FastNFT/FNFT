@@ -1,6 +1,6 @@
 # FNFT: Fast Nonlinear Fourier Transforms
 
-[![Build Status](https://travis-ci.org/FastNFT/FNFT.svg?branch=development)](https://travis-ci.org/FastNFT/FNFT)
+[![Build Status](https://travis-ci.org/FastNFT/FNFT.svg?branch=development)](https://travis-ci.org/FastNFT/FNFT) [![DOI](http://joss.theoj.org/papers/10.21105/joss.00597/status.svg)](https://doi.org/10.21105/joss.00597)
 
 FNFT is a software library for the fast numerical computation of nonlinear Fourier transforms, which are also known as direct scattering transforms. FNFT is written in C and comes with a MATLAB interface. It also contains some third-party Fortran code.
 
@@ -15,6 +15,23 @@ The algorithms are mainly based on ideas in [1]-[3], but also use ideas from oth
     * Vanishing boundary conditions (reflection coefficient only)
 
 It is planned to extend this list further and also add inverse transforms in future releases. Please join the [FNFT mailling list](https://listserv.tudelft.nl/mailman/listinfo/fnft-announcements) if you want to be notified about new releases of FNFT.
+
+If you use FNFT for your academic work, please consider citing the accompanying [software paper](https://doi.org/10.21105/joss.00597).  Latex users can use the following BibTex entry.
+
+```
+@article{FNFT2018,
+	author  = {S. Wahls and S. Chimmalgi and P.J. Prins},
+	title   = {{FNFT: A Software Library for Computing Nonlinear Fourier Transforms}},
+	journal = {{The Journal of Open Source Software}},
+	year    = {2018},
+	volume  = {3},
+	issue   = {23},
+	pages   = {597},
+	doi     = {10.21105/joss.00597},
+	url     = {https://doi.org/10.21105/joss.00597},
+	issn	= {2475-9066}
+}
+```
 
 ## Installation
 
