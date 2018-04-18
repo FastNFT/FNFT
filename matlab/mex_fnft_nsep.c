@@ -79,7 +79,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
         /* Check if current input is a string as desired and convert it */
         if ( !mxIsChar(prhs[k]) ) {
-            snprintf(msg, sizeof msg, "%zuth input should be a string.", k+1);
+            snprintf(msg, sizeof msg, "%uth input should be a string.",
+                (unsigned int)(k+1));
             goto on_error;
         }
         char *str = mxArrayToString(prhs[k]);
@@ -98,7 +99,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             fnft_errwarn_setprintf(NULL);
 
         } else {
-            snprintf(msg, sizeof msg, "%zuth input has invalid value.", k+1);
+            snprintf(msg, sizeof msg, "%uth input has invalid value.", 
+                (unsigned int)(k+1));
             goto on_error;
         }
     }
