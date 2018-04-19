@@ -440,9 +440,9 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
         r12 = r11 + (deg+1);
         r21 = r12 + (deg+1);
         r22 = r21 + (deg+1);
-        memcpy(r12, r12_pad, (deg+1)*sizeof(COMPLEX));
-        memcpy(r21, r21_pad, (deg+1)*sizeof(COMPLEX));
-        memcpy(r22, r22_pad, (deg+1)*sizeof(COMPLEX));
+        memmove(r12, r12_pad, (deg+1)*sizeof(COMPLEX));
+        memmove(r21, r21_pad, (deg+1)*sizeof(COMPLEX));
+        memmove(r22, r22_pad, (deg+1)*sizeof(COMPLEX));
     }
 
     // Set degree of final result, free memory and return w/o error
