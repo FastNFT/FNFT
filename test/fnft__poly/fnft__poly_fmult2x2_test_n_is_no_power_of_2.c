@@ -113,7 +113,7 @@ static INT poly_fmult2x2_test_n_is_no_power_of_2(INT normalize_flag)
         for (i=0; i<4*(deg+1); i++)
             result[i] *= scl;
     }
-    if (misc_rel_err(4*(deg+1), result, result_exact) > 1000*EPSILON)
+    if (misc_rel_err(4*(deg+1), result, result_exact) > 100*EPSILON)
         return E_TEST_FAILED;
 
     return SUCCESS;
