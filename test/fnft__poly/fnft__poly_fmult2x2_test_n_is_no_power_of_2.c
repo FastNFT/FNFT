@@ -19,7 +19,6 @@
 
 #define FNFT_ENABLE_SHORT_NAMES
 
-#include <stdio.h>
 #include "fnft__poly_fmult.h"
 #include "fnft__misc.h"
 #include "fnft__errwarn.h"
@@ -114,8 +113,6 @@ static INT poly_fmult2x2_test_n_is_no_power_of_2(INT normalize_flag)
         for (i=0; i<4*(deg+1); i++)
             result[i] *= scl;
     }
-    misc_print_buf(4*(deg+1), result, "result");
-    printf("rel_err = %e\n", misc_rel_err(4*(deg+1), result, result_exact));
     if (misc_rel_err(4*(deg+1), result, result_exact) > 100*EPSILON)
         return E_TEST_FAILED;
 
