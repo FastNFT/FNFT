@@ -423,7 +423,7 @@ static inline INT tf2boundstates(
         case nsev_bsloc_FAST_EIGENVALUE:
             
             K = deg;
-            if (*K_ptr <= K) {
+            if (*K_ptr >= K) {
                 buffer = bound_states;
             } else {
                 // Store intermediate results in unused part of transfer matrix.
