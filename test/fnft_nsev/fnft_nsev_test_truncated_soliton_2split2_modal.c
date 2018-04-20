@@ -45,8 +45,10 @@ INT main()
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Check the case where D is not a power of two. The error bounds have to
-    // be tight for this to make sense!
+    // be tight but not too tight for this to make sense!
     ret_code = nsev_testcases_test_fnft(tc, D+1, error_bounds, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = nsev_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Check for quadratic error decay
