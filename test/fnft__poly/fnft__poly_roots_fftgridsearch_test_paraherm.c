@@ -22,7 +22,8 @@
 #include "fnft__misc.h"
 #include "fnft__errwarn.h"
 
-static INT poly_roots_fftgridsearch_test_deg_even(UINT M, REAL eb1, REAL eb2)
+static INT poly_roots_fftgridsearch_paraherm_test(UINT M, REAL eb1,
+REAL eb2)
 {
     const UINT deg = 6;
     COMPLEX p[7] = { 4-5*I, 3-4*I, 2-3*I, 2, 2+3*I, 3+4*I, 4+5*I };
@@ -49,7 +50,7 @@ static INT poly_roots_fftgridsearch_test_deg_even(UINT M, REAL eb1, REAL eb2)
         return E_NOMEM;
 
     nroots = M;
-	ret_code = poly_roots_fftgridsearch(deg, p, &nroots, PHI, roots);
+	ret_code = poly_roots_fftgridsearch_paraherm(deg, p, &nroots, PHI, roots);
     if (ret_code != SUCCESS) {
 		ret_code = E_SUBROUTINE(ret_code);
         goto release_mem;
@@ -66,7 +67,7 @@ static INT poly_roots_fftgridsearch_test_deg_even(UINT M, REAL eb1, REAL eb2)
     PHI[0] = 1;
     PHI[1] = 1.5;
     nroots = M;
-	ret_code = poly_roots_fftgridsearch(deg, p, &nroots, PHI, roots);
+	ret_code = poly_roots_fftgridsearch_paraherm(deg, p, &nroots, PHI, roots);
     if (ret_code != SUCCESS) {
 		ret_code = E_SUBROUTINE(ret_code);
         goto release_mem;
@@ -87,18 +88,16 @@ release_mem:
 int main()
 {
     UINT M = 128;
+    REAL eb1 = 6.2e-4, eb2 = 3.6e-6;
     INT ret_code;
-    REAL eb1 = 0.0014; 
-    REAL eb2 = 4.8e-6;
 
-    ret_code = poly_roots_fftgridsearch_test_deg_even(M, eb1, eb2);
+    ret_code = poly_roots_fftgridsearch_paraherm_test(M, eb1, eb2);
     if (ret_code != SUCCESS) {
         E_SUBROUTINE(ret_code);
         return EXIT_FAILURE;
     }
 
-    // Note: Second error reduces only 3.6-fold in this example ... 
-    ret_code = poly_roots_fftgridsearch_test_deg_even(2*M, eb1/4, eb2/3.6);
+    ret_code = poly_roots_fftgridsearch_paraherm_test(2*M, eb1/4, eb2/4);
     if (ret_code != SUCCESS) {
         E_SUBROUTINE(ret_code);
         return EXIT_FAILURE;
