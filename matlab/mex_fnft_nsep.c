@@ -75,11 +75,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     fnft_errwarn_setprintf(mexPrintf);
 
     /* Check remaining inputs, if any */
-    for (k=3; k<nrhs; i++) {
+    for (k=3; k<nrhs; k++) {
 
         /* Check if current input is a string as desired and convert it */
         if ( !mxIsChar(prhs[k]) ) {
-            snprintf(msg, sizeof msg, "%zuth input should be a string.", k+1);
+            snprintf(msg, sizeof msg, "%uth input should be a string.",
+                (unsigned int)(k+1));
             goto on_error;
         }
         char *str = mxArrayToString(prhs[k]);
@@ -92,13 +93,45 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if ( strcmp(str, "filt_none") == 0 ) {
 
 			opts.filtering = fnft_nsep_filt_NONE;
+        
+		} else if ( strcmp(str, "filt_manual") == 0 ) {
+ 
+            opts.filtering = fnft_nsep_filt_MANUAL;
+            
+            /* Extract bounding box for manual filltering */
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+            || mxGetM(prhs[k+1]) != 1 || mxGetN(prhs[k+1]) != 4) {
+                snprintf(msg, sizeof msg, "'filt_manual' should be followed by a real row vector of length four. See the help.");
+                goto on_error;
+            }
+            double const * const tmp = mxGetPr(prhs[k+1]);
+            opts.bounding_box[0] = (FNFT_REAL)tmp[0];
+            opts.bounding_box[1] = (FNFT_REAL)tmp[1];
+            opts.bounding_box[2] = (FNFT_REAL)tmp[2];
+            opts.bounding_box[3] = (FNFT_REAL)tmp[3];
 
-		} else if ( strcmp(str, "quiet") == 0 ) {
+            /* Increase k to account for bounding box vector */
+            k++;
+ 
+		} else if ( strcmp(str, "loc_mixed") == 0 ) {
+            
+            opts.localization = fnft_nsep_loc_MIXED;
+
+		} else if ( strcmp(str, "loc_subsample_and_refine") == 0 ) {
+            
+            opts.localization = fnft_nsep_loc_SUBSAMPLE_AND_REFINE;
+
+		} else if ( strcmp(str, "loc_gridsearch") == 0 ) {
+            
+            opts.localization = fnft_nsep_loc_GRIDSEARCH;
+
+        } else if ( strcmp(str, "quiet") == 0 ) {
 
             fnft_errwarn_setprintf(NULL);
 
         } else {
-            snprintf(msg, sizeof msg, "%zuth input has invalid value.", k+1);
+            snprintf(msg, sizeof msg, "%uth input has invalid value.", 
+                (unsigned int)(k+1));
             goto on_error;
         }
     }

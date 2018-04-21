@@ -381,7 +381,7 @@ release_mem_5:
 release_mem_4:
     free(*bound_states_ptr);
 release_mem_3:
-    free(ab_ptr);
+    free(*ab_ptr);
 release_mem_2:
     free(*contspec_ptr);
 release_mem_1:
@@ -517,7 +517,7 @@ const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
     COMPLEX * normconsts_exact = NULL;
     COMPLEX * residues_exact = NULL;
     UINT K, K_exact, M;
-    INT kappa;
+    INT kappa = 0;
     REAL errs[6] = { FNFT_NAN };
     INT ret_code;
 

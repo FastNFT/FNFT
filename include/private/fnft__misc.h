@@ -201,6 +201,15 @@ FNFT_INT fnft__misc_downsample(FNFT_COMPLEX const * const q, const FNFT_UINT D,
  */
 FNFT_COMPLEX fnft__misc_CSINC(FNFT_COMPLEX x);
 
+/**
+ * @brief Closest larger or equal number that is a power of two.
+ *
+ * @ingroup misc
+ * @param [in] number
+ * @returns min{r >= number : exists d such that r = 2^d}
+ */
+FNFT_UINT fnft__misc_nextpowerof2(const FNFT_UINT number);
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define misc_print_buf(...) fnft__misc_print_buf(__VA_ARGS__)
 #define misc_rel_err(...) fnft__misc_rel_err(__VA_ARGS__)
@@ -213,6 +222,7 @@ FNFT_COMPLEX fnft__misc_CSINC(FNFT_COMPLEX x);
 #define misc_merge(...) fnft__misc_merge(__VA_ARGS__)
 #define misc_downsample(...) fnft__misc_downsample(__VA_ARGS__)
 #define misc_CSINC(...) fnft__misc_CSINC(__VA_ARGS__)
+#define misc_nextpowerof2(...) fnft__misc_nextpowerof2(__VA_ARGS__)
 #endif
 
 #endif

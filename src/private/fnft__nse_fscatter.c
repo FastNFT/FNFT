@@ -34,12 +34,16 @@
 UINT nse_fscatter_numel(UINT D,
         nse_discretization_t discretization)
 {
-    // 2x2 matrix of degree+1 elements
-    return 4*D*(nse_discretization_degree(discretization) + 1);
+    const UINT deg = nse_discretization_degree(discretization);
+    if (deg == 0)
+        return 0; // unknown discretiyzation
+    else
+        return poly_fmult2x2_numel(deg, D);
 }
 
 /**
- * result needs to be pre-allocated with size 4*(deg+1)*D*sizeof(COMPLEX)
+ * result needs to be pre-allocated with size
+ * nse_fscatter_numel(...)*sizeof(COMPLEX)
  */
 INT nse_fscatter(const UINT D, COMPLEX const * const q,
     const REAL eps_t, const INT kappa,
