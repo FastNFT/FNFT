@@ -35,6 +35,7 @@ static fnft_nsev_opts_t default_opts = {
     .bound_state_filtering = nsev_bsfilt_FULL,
     .bound_state_localization = nsev_bsloc_SUBSAMPLE_AND_REFINE,
     .niter = 10,
+    .Dsub = 0, // auto
     .discspec_type = nsev_dstype_NORMING_CONSTANTS,
     .contspec_type = nsev_cstype_REFLECTION_COEFFICIENT,
     .normalization_flag = 1,
@@ -129,7 +130,6 @@ INT fnft_nsev(
     COMPLEX *transfer_matrix = NULL;
     COMPLEX *qsub = NULL;
     REAL eps_t;
-    UINT Dsub;
     UINT deg;
     INT W = 0, *W_ptr = NULL;
     INT ret_code = SUCCESS;
@@ -197,8 +197,9 @@ INT fnft_nsev(
             // First step: Find initial guesses for the bound states using the
             // fast eigenvalue method. To bound the complexity, a subsampled
             // version of q, qsub, will be passed to the fast eigenroutine.
-           
-            Dsub = SQRT(D * LOG2(D) * LOG2(D));
+            UINT Dsub = opts->Dsub;
+            if (Dsub == 0) // The user wants us to determine Dsub
+                Dsub = SQRT(D * LOG2(D) * LOG2(D));
             UINT first_last_index[2];
             ret_code = misc_downsample(D, q, &Dsub, &qsub, first_last_index);
             CHECK_RETCODE(ret_code, release_mem);
