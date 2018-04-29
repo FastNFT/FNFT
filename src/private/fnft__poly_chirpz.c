@@ -22,8 +22,7 @@
 #include "fnft__errwarn.h"
 #include "fnft__poly_chirpz.h"
 #include "fnft__poly_fmult.h"
-#include "kiss_fft.h"
-#include "_kiss_fft_guts.h"
+#include "fnft__fft_wrapper.h"
 
 /*
  * result should be of length M
@@ -31,13 +30,11 @@
  * L.R. Rabiner, R.W. Schafer and C.M. Rader, "The Chirp z-Transform
  * Algorithm," IEEE Trans. Audio Electroacoust. 17(2), Jun. 1969.
  */
-INT poly_chirpz(const UINT deg, COMPLEX const * const p, \
-    const COMPLEX A, const COMPLEX W, const UINT M, \
+INT poly_chirpz(const UINT deg, COMPLEX const * const p,
+    const COMPLEX A, const COMPLEX W, const UINT M,
     COMPLEX * const result)
 {
-    COMPLEX Z;
-    kiss_fft_cpx *Y, *V, *buf;
-    kiss_fft_cfg cfg;
+    COMPLEX *Y, *V, *buf;
     INT ret_code = SUCCESS;
     UINT n;
 
@@ -51,67 +48,49 @@ INT poly_chirpz(const UINT deg, COMPLEX const * const p, \
 
     // Allocate memory
     const UINT N = deg + 1;
-    const UINT L = kiss_fft_next_fast_size(N + M - 1);
-    cfg = kiss_fft_alloc((int)L, 0, NULL, NULL);
-    Y = malloc(L * sizeof(kiss_fft_cpx));
-    V = malloc(L * sizeof(kiss_fft_cpx));
-    buf = malloc(L * sizeof(kiss_fft_cpx));
-    if (cfg == NULL && Y == NULL && V == NULL && buf == NULL) {
+    const UINT L = fft_wrapper_next_fft_length(N + M - 1);
+    Y = fft_wrapper_malloc(L * sizeof(COMPLEX));
+    V = fft_wrapper_malloc(L * sizeof(COMPLEX));
+    buf = fft_wrapper_malloc(L * sizeof(COMPLEX));
+    if (Y == NULL || V == NULL || buf == NULL) {
         ret_code = E_NOMEM;
         goto release_mem;
     }
 
     // Setup yn and compute Yr = fft(yn)
-    for (n=0; n<=N-1; n++) {
-        Z = p[deg - n] * CPOW(A, -1.0*n) * CPOW(W, 0.5*n*n);
-        buf[n].r = CREAL(Z);
-        buf[n].i = CIMAG(Z);
-    }
-    for (n=N; n<L; n++) {
-        buf[n].r = 0;
-        buf[n].i = 0;
-    }
-    kiss_fft(cfg, buf, Y);
+    for (n=0; n<=N-1; n++)
+        buf[n] = p[deg - n] * CPOW(A, -1.0*n) * CPOW(W, 0.5*n*n);
+    for (n=N; n<L; n++) 
+        buf[n] = 0;
+    ret_code = fft_wrapper_single_fft(L, buf, Y, 0, NULL);
+    CHECK_RETCODE(ret_code, release_mem);
 
     // Setup vn and compute Vr = fft(vn)
-    for (n=0; n<=M-1; n++) {
-        Z = CPOW(W, -0.5*n*n);
-        buf[n].r = CREAL(Z);
-        buf[n].i = CIMAG(Z);
-    }
-    for (n=M; n<=L-N; n++) {
-        buf[n].r = 0;
-        buf[n].i = 0;
-    }
-    for (n=L-N+1; n<L; n++) {
-         Z = CPOW(W, -0.5*(L - n)*(L - n));
-         buf[n].r = CREAL(Z);
-         buf[n].i = CIMAG(Z);
-    }
-    kiss_fft(cfg, buf, V);
+    for (n=0; n<=M-1; n++)
+        buf[n] = CPOW(W, -0.5*n*n);
+    for (n=M; n<=L-N; n++)
+        buf[n] = 0;
+    for (n=L-N+1; n<L; n++)
+         buf[n] = CPOW(W, -0.5*(L - n)*(L - n));
+    ret_code = fft_wrapper_single_fft(L, buf, V, 0, NULL);
+    CHECK_RETCODE(ret_code, release_mem);
 
     // Multiply V and Y
     for (n=0; n<L; n++)
-        C_MUL(buf[n], V[n], Y[n]);
+        buf[n] = V[n] * Y[n];
     
     // Compute inverse FFT of the product and store it in V
-    free(cfg);   
-    cfg = kiss_fft_alloc((int)L, 1, NULL, NULL);
-    if (cfg == NULL) {
-        ret_code = E_NOMEM;
-        goto release_mem;
-    }
-    kiss_fft(cfg, buf, V);
+    ret_code = fft_wrapper_single_fft(L, buf, V, 1, NULL);
+    CHECK_RETCODE(ret_code, release_mem);
 
     // Form the final result
     for (n=0; n<M; n++)
-        result[n] = CPOW(W, 0.5*n*n) * (V[n].r + I*V[n].i) / L;
+        result[n] = CPOW(W, 0.5*n*n) * V[n] / L;
 
     // Release memory and return
 release_mem:
-    free(cfg);
-    free(Y);
-    free(V);
-    free(buf);
+    fft_wrapper_free(Y);
+    fft_wrapper_free(V);
+    fft_wrapper_free(buf);
     return ret_code;
 }
