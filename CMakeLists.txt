@@ -13,7 +13,7 @@ include(CheckLanguage)
 # options
 option(DEBUG "Compile with debugging symbols" OFF)
 option(WITH_MATLAB "Build the Matlab interface" ON)
-option(MACHINE_SPECIFIC_OPTIMIZATION "Activate optimizations specific for this machine" OFF)
+option(MACHINE_SPECIFIC_OPTIMIZATION "Activate optimizations specific for this machine" ON)
 option(ADDRESS_SANITIZER "Enable address sanitzer for known compilers" OFF)
 if (MACHINE_SPECIFIC_OPTIMIZATION)
 	message("Optimizing for this specific machine.")
