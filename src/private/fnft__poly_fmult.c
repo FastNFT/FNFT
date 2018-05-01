@@ -168,7 +168,7 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
 
         // Create FFT and IFFT config (computes twiddle factors, so reuse)
         len = poly_fmult2_len(deg);
-        ret_code = fft_wrapper_create_plan(&plan_fwd, len, buf0, buf1, 0);
+        ret_code = fft_wrapper_create_plan(&plan_fwd, len, buf0, buf1, -1);
         CHECK_RETCODE(ret_code, release_mem);
         ret_code = fft_wrapper_create_plan(&plan_inv, len, buf0, buf1, 1);
         CHECK_RETCODE(ret_code, release_mem);
@@ -349,7 +349,7 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
 
         // Create FFT and IFFT config (computes twiddle factors, so reuse)
         len = poly_fmult2_len(deg);
-        ret_code = fft_wrapper_create_plan(&plan_fwd, len, buf0, buf1, 0);
+        ret_code = fft_wrapper_create_plan(&plan_fwd, len, buf0, buf1, -1);
         CHECK_RETCODE(ret_code, release_mem);
         ret_code = fft_wrapper_create_plan(&plan_inv, len, buf0, buf2, 1);
         CHECK_RETCODE(ret_code, release_mem);

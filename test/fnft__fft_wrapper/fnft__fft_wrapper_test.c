@@ -42,7 +42,7 @@ static INT fft_wrapper_test()
 
     for (i=0; i<fft_length; i++)
         in[i] = in_exact[i];
-    ret_code = fft_wrapper_create_plan(&plan, fft_length, in, out, 0);
+    ret_code = fft_wrapper_create_plan(&plan, fft_length, in, out, -1);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = fft_wrapper_execute_plan(plan, in, out);
     CHECK_RETCODE(ret_code, leave_fun);

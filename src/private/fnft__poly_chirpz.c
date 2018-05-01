@@ -59,7 +59,7 @@ INT poly_chirpz(const UINT deg, COMPLEX const * const p,
         goto release_mem;
     }
 
-    ret_code = fft_wrapper_create_plan(&plan_fwd, L, buf, Y, 0);
+    ret_code = fft_wrapper_create_plan(&plan_fwd, L, buf, Y, -1);
     CHECK_RETCODE(ret_code, release_mem);
     ret_code = fft_wrapper_create_plan(&plan_inv, L, buf, Y, 1);
     CHECK_RETCODE(ret_code, release_mem);
