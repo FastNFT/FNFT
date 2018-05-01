@@ -22,6 +22,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "fnft__errwarn.h"
 #include "fnft__poly_fmult.h"
 #include "fnft__misc.h"

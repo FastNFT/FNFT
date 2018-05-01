@@ -35,6 +35,8 @@ INT poly_chirpz(const UINT deg, COMPLEX const * const p,
     COMPLEX * const result)
 {
     COMPLEX *Y, *V, *buf;
+    fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
+    fft_wrapper_plan_t plan_inv = fft_wrapper_safe_plan_init();
     INT ret_code = SUCCESS;
     UINT n;
 
@@ -57,12 +59,17 @@ INT poly_chirpz(const UINT deg, COMPLEX const * const p,
         goto release_mem;
     }
 
+    ret_code = fft_wrapper_create_plan(&plan_fwd, L, buf, Y, 0);
+    CHECK_RETCODE(ret_code, release_mem);
+    ret_code = fft_wrapper_create_plan(&plan_inv, L, buf, Y, 1);
+    CHECK_RETCODE(ret_code, release_mem);
+
     // Setup yn and compute Yr = fft(yn)
     for (n=0; n<=N-1; n++)
         buf[n] = p[deg - n] * CPOW(A, -1.0*n) * CPOW(W, 0.5*n*n);
     for (n=N; n<L; n++) 
         buf[n] = 0;
-    ret_code = fft_wrapper_single_fft(L, buf, Y, 0);
+    ret_code = fft_wrapper_execute_plan(plan_fwd, buf, Y);
     CHECK_RETCODE(ret_code, release_mem);
 
     // Setup vn and compute Vr = fft(vn)
@@ -72,7 +79,7 @@ INT poly_chirpz(const UINT deg, COMPLEX const * const p,
         buf[n] = 0;
     for (n=L-N+1; n<L; n++)
          buf[n] = CPOW(W, -0.5*(L - n)*(L - n));
-    ret_code = fft_wrapper_single_fft(L, buf, V, 0);
+    ret_code = fft_wrapper_execute_plan(plan_fwd, buf, V);
     CHECK_RETCODE(ret_code, release_mem);
 
     // Multiply V and Y
@@ -80,7 +87,7 @@ INT poly_chirpz(const UINT deg, COMPLEX const * const p,
         buf[n] = V[n] * Y[n];
     
     // Compute inverse FFT of the product and store it in V
-    ret_code = fft_wrapper_single_fft(L, buf, V, 1);
+    ret_code = fft_wrapper_execute_plan(plan_inv, buf, V);
     CHECK_RETCODE(ret_code, release_mem);
 
     // Form the final result
@@ -89,6 +96,8 @@ INT poly_chirpz(const UINT deg, COMPLEX const * const p,
 
     // Release memory and return
 release_mem:
+    fft_wrapper_destroy_plan(&plan_fwd);
+    fft_wrapper_destroy_plan(&plan_inv);
     fft_wrapper_free(Y);
     fft_wrapper_free(V);
     fft_wrapper_free(buf);
