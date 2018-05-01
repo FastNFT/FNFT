@@ -52,9 +52,8 @@ static inline INT poly_fmult2(
     COMPLEX *p1, 
     COMPLEX *p2,
     COMPLEX *result,
-    fft_wrapper_plan_t * plan0,
-    fft_wrapper_plan_t * plan1,
-    fft_wrapper_plan_t * plan2,
+    fft_wrapper_plan_t plan_fwd,
+    fft_wrapper_plan_t plan_inv,
     COMPLEX * buf0,
     COMPLEX * buf1,
     COMPLEX * buf2,
@@ -71,19 +70,19 @@ static inline INT poly_fmult2(
         buf0[i] = p1[i];
     for (i = deg + 1; i < len; i++)
         buf0[i] = 0;
-    ret_code = fft_wrapper_execute_plan(plan0);
+    ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf1);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // FFT of second polynomial
     for (i = 0; i <= deg; i++)
         buf0[i] = p2[i];
-    ret_code = fft_wrapper_execute_plan(plan1);
+    ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf2);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Inverse FFT of product
     for (i = 0; i < len; i++)
         buf0[i] = buf1[i] * buf2[i];
-    ret_code = fft_wrapper_execute_plan(plan2);
+    ret_code = fft_wrapper_execute_plan(plan_inv, buf0, buf1);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Extract result
@@ -135,7 +134,8 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
 {
     UINT i, j, deg, len, lenmem;
     COMPLEX *p1, *p2, *result;
-    fft_wrapper_plan_t plan0, plan1, plan2;
+    fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
+    fft_wrapper_plan_t plan_inv = fft_wrapper_safe_plan_init();
     COMPLEX *buf0 = NULL, *buf1 = NULL, *buf2 = NULL;
     INT W = 0;
     INT ret_code;
@@ -167,11 +167,9 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
 
         // Create FFT and IFFT config (computes twiddle factors, so reuse)
         len = poly_fmult2_len(deg);
-        ret_code = fft_wrapper_create_plan(&plan0, len, buf0, buf1, 0, NULL);
+        ret_code = fft_wrapper_create_plan(&plan_fwd, len, buf0, buf1, 0);
         CHECK_RETCODE(ret_code, release_mem);
-        ret_code = fft_wrapper_create_plan(&plan1, len, buf0, buf2, 0, NULL);
-        CHECK_RETCODE(ret_code, release_mem);
-        ret_code = fft_wrapper_create_plan(&plan2, len, buf0, buf1, 1, NULL);
+        ret_code = fft_wrapper_create_plan(&plan_inv, len, buf0, buf1, 1);
         CHECK_RETCODE(ret_code, release_mem);
 
         // Pointers to current pair of polynomials and their product
@@ -181,8 +179,8 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
         
         // Multiply all pairs of polynomials, normalize if desired
         for (i=0; i<n; i+=2) {
-            ret_code = poly_fmult2(deg, p1, p2, result, &plan0, &plan1,
-                    &plan2, buf0, buf1, buf2, 0);
+            ret_code = poly_fmult2(deg, p1, p2, result, plan_fwd, plan_inv,
+                buf0, buf1, buf2, 0);
             CHECK_RETCODE(ret_code, release_mem);
 
             if (W_ptr != NULL)
@@ -193,9 +191,8 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
             result += 2*deg + 1;
         }
 
-        fft_wrapper_destroy_plan(&plan0);
-        fft_wrapper_destroy_plan(&plan1);
-        fft_wrapper_destroy_plan(&plan2);
+        fft_wrapper_destroy_plan(&plan_fwd);
+        fft_wrapper_destroy_plan(&plan_inv);
  
         // Double degrees and half the number of polynomials
         deg *= 2;
@@ -211,9 +208,8 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
     if (W_ptr != NULL)
         *W_ptr = W;
 release_mem:  
-    fft_wrapper_destroy_plan(&plan0);
-    fft_wrapper_destroy_plan(&plan1);
-    fft_wrapper_destroy_plan(&plan2);
+    fft_wrapper_destroy_plan(&plan_fwd);
+    fft_wrapper_destroy_plan(&plan_inv);
     fft_wrapper_free(buf0);
     fft_wrapper_free(buf1);
     fft_wrapper_free(buf2);
@@ -280,7 +276,8 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
     COMPLEX *p11_pad, *p12_pad, *p21_pad, *p22_pad;
     COMPLEX *r11 = NULL, *r12 = NULL, *r21 = NULL, *r22 = NULL;
     COMPLEX *r12_pad, *r21_pad, *r22_pad;
-    fft_wrapper_plan_t plan0, plan1, plan2;
+    fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
+    fft_wrapper_plan_t plan_inv = fft_wrapper_safe_plan_init();
     COMPLEX *buf0 = NULL, *buf1 = NULL, *buf2 = NULL;
     INT W = 0;
     INT ret_code;
@@ -351,11 +348,9 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
 
         // Create FFT and IFFT config (computes twiddle factors, so reuse)
         len = poly_fmult2_len(deg);
-        ret_code = fft_wrapper_create_plan(&plan0, len, buf0, buf1, 0, NULL);
+        ret_code = fft_wrapper_create_plan(&plan_fwd, len, buf0, buf1, 0);
         CHECK_RETCODE(ret_code, release_mem);
-        ret_code = fft_wrapper_create_plan(&plan1, len, buf0, buf2, 0, NULL);
-        CHECK_RETCODE(ret_code, release_mem);
-        ret_code = fft_wrapper_create_plan(&plan2, len, buf0, buf1, 1, NULL);
+        ret_code = fft_wrapper_create_plan(&plan_inv, len, buf0, buf2, 1);
         CHECK_RETCODE(ret_code, release_mem);
 
         // Offsets for the current pair of polynomials and their product
@@ -374,35 +369,35 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
 
             // Multiply current pair of 2x2 matrix-valued polynomials
             ret_code = poly_fmult2(deg, p11+o1, p11+o2, r11+or,
-                    &plan0, &plan1, &plan2, buf0, buf1, buf2, 0);
+                plan_fwd, plan_inv, buf0, buf1, buf2, 0);
             CHECK_RETCODE(ret_code, release_mem);
 
             ret_code = poly_fmult2(deg, p12+o1, p21+o2, r11+or,
-                    &plan0, &plan1, &plan2, buf0, buf1, buf2, 1);
+                    plan_fwd, plan_inv, buf0, buf1, buf2, 1);
             CHECK_RETCODE(ret_code, release_mem);
 
             ret_code = poly_fmult2(deg, p11+o1, p12+o2, r12+or,
-                    &plan0, &plan1, &plan2, buf0, buf1, buf2, 0);
+                    plan_fwd, plan_inv, buf0, buf1, buf2, 0);
             CHECK_RETCODE(ret_code, release_mem);
 
             ret_code = poly_fmult2(deg, p12+o1, p22+o2, r12+or,
-                    &plan0, &plan1, &plan2, buf0, buf1, buf2, 1);
+                    plan_fwd, plan_inv, buf0, buf1, buf2, 1);
             CHECK_RETCODE(ret_code, release_mem);
 
             ret_code = poly_fmult2(deg, p21+o1, p11+o2, r21+or,
-                    &plan0, &plan1, &plan2, buf0, buf1, buf2, 0);
+                    plan_fwd, plan_inv, buf0, buf1, buf2, 0);
             CHECK_RETCODE(ret_code, release_mem);
 
             ret_code = poly_fmult2(deg, p22+o1, p21+o2, r21+or,
-                    &plan0, &plan1, &plan2, buf0, buf1, buf2, 1);
+                    plan_fwd, plan_inv, buf0, buf1, buf2, 1);
             CHECK_RETCODE(ret_code, release_mem);
 
             ret_code = poly_fmult2(deg, p21+o1, p12+o2, r22+or,
-                    &plan0, &plan1, &plan2, buf0, buf1, buf2, 0);
+                    plan_fwd, plan_inv, buf0, buf1, buf2, 0);
             CHECK_RETCODE(ret_code, release_mem);
 
             ret_code = poly_fmult2(deg, p22+o1, p22+o2, r22+or,
-                    &plan0, &plan1, &plan2, buf0, buf1, buf2, 1);
+                    plan_fwd, plan_inv, buf0, buf1, buf2, 1);
             CHECK_RETCODE(ret_code, release_mem);
 
             // Normalize if desired
@@ -423,9 +418,8 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
         }
         n /= 2;
 
-        fft_wrapper_destroy_plan(&plan0);
-        fft_wrapper_destroy_plan(&plan1);
-        fft_wrapper_destroy_plan(&plan2);
+        fft_wrapper_destroy_plan(&plan_fwd);
+        fft_wrapper_destroy_plan(&plan_inv);
 
         // Prepare for the next iteration
         if (n>1) {
@@ -455,9 +449,8 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
     if (W_ptr != NULL)
         *W_ptr = W;
 release_mem:
-    fft_wrapper_destroy_plan(&plan0);
-    fft_wrapper_destroy_plan(&plan1);
-    fft_wrapper_destroy_plan(&plan2);
+    fft_wrapper_destroy_plan(&plan_fwd);
+    fft_wrapper_destroy_plan(&plan_inv);
     fft_wrapper_free(buf0);
     fft_wrapper_free(buf1);
     fft_wrapper_free(buf2);

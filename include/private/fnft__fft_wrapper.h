@@ -23,14 +23,7 @@
 #include "fnft.h"
 #include "kiss_fft.h"
 
-typedef struct {
-    kiss_fft_cfg cfg;
-    FNFT_UINT fft_length;
-    FNFT_COMPLEX * in;
-    FNFT_COMPLEX * out;
-    FNFT_UINT work_length;
-    FNFT_COMPLEX * work;   
-} fnft__fft_wrapper_plan_t;
+typedef kiss_fft_cfg fnft__fft_wrapper_plan_t;
 
 #endif
 
@@ -40,53 +33,53 @@ static inline FNFT_UINT fnft__fft_wrapper_next_fft_length(
     return kiss_fft_next_fast_size(desired_length);    
 }
 
-static inline FNFT_UINT fnft__fft_wrapper_work_size(FNFT_UINT fft_length)
+static inline fnft__fft_wrapper_plan_t fnft__fft_wrapper_safe_plan_init()
 {
-    return 0;
+    return NULL;
 }
 
 static inline FNFT_INT fnft__fft_wrapper_create_plan(
-    fnft__fft_wrapper_plan_t * plan,
+    fnft__fft_wrapper_plan_t * plan_ptr,
     FNFT_UINT fft_length,
     FNFT_COMPLEX * in,
     FNFT_COMPLEX * out,
-    FNFT_INT is_inverse,    
-    void * work)
+    FNFT_INT is_inverse)
 {
-    if (plan == NULL)
+    if (plan_ptr == NULL)
         return FNFT__E_INVALID_ARGUMENT(plan);
     if (fft_length == 0)
         return FNFT__E_INVALID_ARGUMENT(fft_length);
-    if (in == NULL)
-        return FNFT__E_INVALID_ARGUMENT(in);
-    if (out == NULL)
-        return FNFT__E_INVALID_ARGUMENT(out);
     if (is_inverse > 1)
         return FNFT__E_INVALID_ARGUMENT(is_inverse);
-    plan->cfg = kiss_fft_alloc(fft_length, is_inverse, NULL, NULL);
-    if (plan->cfg == NULL)
+
+    (void)in;
+    (void)out;
+
+    *plan_ptr = kiss_fft_alloc(fft_length, is_inverse, NULL, NULL);
+    if (*plan_ptr == NULL)
         return FNFT__E_NOMEM;
-    plan->in = in;
-    plan->out = out;
+
     return FNFT_SUCCESS;
 }
 
 static inline FNFT_INT fnft__fft_wrapper_execute_plan(
-    fnft__fft_wrapper_plan_t * plan)
+    fnft__fft_wrapper_plan_t plan, FNFT_COMPLEX *in, FNFT_COMPLEX *out)
 {
     if (plan == NULL)
         return FNFT__E_INVALID_ARGUMENT(plan);
-    kiss_fft(plan->cfg, (kiss_fft_cpx *)plan->in, (kiss_fft_cpx *)plan->out);
+
+    kiss_fft((kiss_fft_cfg)plan, (kiss_fft_cpx *)in, (kiss_fft_cpx *)out);
+
     return FNFT_SUCCESS;
 }
 
 static inline FNFT_INT fnft__fft_wrapper_destroy_plan(
-    fnft__fft_wrapper_plan_t * plan)
+    fnft__fft_wrapper_plan_t * plan_ptr)
 {
-    if (plan == NULL)
-        return FNFT__E_INVALID_ARGUMENT(plan);
-    KISS_FFT_FREE(plan->cfg);
-    plan->cfg = NULL;
+    if (plan_ptr == NULL)
+        return FNFT__E_INVALID_ARGUMENT(plan_ptr);
+    KISS_FFT_FREE(*plan_ptr);
+    *plan_ptr = fnft__fft_wrapper_safe_plan_init();
     return FNFT_SUCCESS;
 }
 
@@ -101,14 +94,13 @@ static inline void fnft__fft_wrapper_free(void * ptr)
 }
 
 static inline INT fnft__fft_wrapper_single_fft(UINT len, COMPLEX * in,
-    COMPLEX * out, FNFT_INT is_inverse, void * work)
+    COMPLEX * out, FNFT_INT is_inverse)
 {
     FNFT_INT ret_code = FNFT_SUCCESS;
-    fnft__fft_wrapper_plan_t plan;
-    ret_code = fnft__fft_wrapper_create_plan(&plan, len, in, out, is_inverse,
-        work);
+    fnft__fft_wrapper_plan_t plan = fnft__fft_wrapper_safe_plan_init();
+    ret_code = fnft__fft_wrapper_create_plan(&plan, len, in, out, is_inverse);
     FNFT__CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = fnft__fft_wrapper_execute_plan(&plan);
+    ret_code = fnft__fft_wrapper_execute_plan(plan, in, out);
     FNFT__CHECK_RETCODE(ret_code, leave_fun);
     ret_code = fnft__fft_wrapper_destroy_plan(&plan);
     FNFT__CHECK_RETCODE(ret_code, leave_fun);
@@ -121,7 +113,7 @@ leave_fun:
 #define FNFT__FFT_WRAPPER_SHORT_NAMES
 #define fft_wrapper_plan_t fnft__fft_wrapper_plan_t
 #define fft_wrapper_next_fft_length(...) fnft__fft_wrapper_next_fft_length(__VA_ARGS__)
-#define fft_wrapper_work_size(...) fnft__fft_wrapper_work_size(__VA_ARGS__)
+#define fft_wrapper_safe_plan_init(...) fnft__fft_wrapper_safe_plan_init(__VA_ARGS__)
 #define fft_wrapper_create_plan(...) fnft__fft_wrapper_create_plan(__VA_ARGS__)
 #define fft_wrapper_execute_plan(...) fnft__fft_wrapper_execute_plan(__VA_ARGS__)
 #define fft_wrapper_destroy_plan(...) fnft__fft_wrapper_destroy_plan(__VA_ARGS__)

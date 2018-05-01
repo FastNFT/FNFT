@@ -62,7 +62,7 @@ INT poly_chirpz(const UINT deg, COMPLEX const * const p,
         buf[n] = p[deg - n] * CPOW(A, -1.0*n) * CPOW(W, 0.5*n*n);
     for (n=N; n<L; n++) 
         buf[n] = 0;
-    ret_code = fft_wrapper_single_fft(L, buf, Y, 0, NULL);
+    ret_code = fft_wrapper_single_fft(L, buf, Y, 0);
     CHECK_RETCODE(ret_code, release_mem);
 
     // Setup vn and compute Vr = fft(vn)
@@ -72,7 +72,7 @@ INT poly_chirpz(const UINT deg, COMPLEX const * const p,
         buf[n] = 0;
     for (n=L-N+1; n<L; n++)
          buf[n] = CPOW(W, -0.5*(L - n)*(L - n));
-    ret_code = fft_wrapper_single_fft(L, buf, V, 0, NULL);
+    ret_code = fft_wrapper_single_fft(L, buf, V, 0);
     CHECK_RETCODE(ret_code, release_mem);
 
     // Multiply V and Y
@@ -80,7 +80,7 @@ INT poly_chirpz(const UINT deg, COMPLEX const * const p,
         buf[n] = V[n] * Y[n];
     
     // Compute inverse FFT of the product and store it in V
-    ret_code = fft_wrapper_single_fft(L, buf, V, 1, NULL);
+    ret_code = fft_wrapper_single_fft(L, buf, V, 1);
     CHECK_RETCODE(ret_code, release_mem);
 
     // Form the final result
