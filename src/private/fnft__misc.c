@@ -278,10 +278,11 @@ INT misc_downsample(COMPLEX const * const q, const UINT D,
     // O(D*log2(D)*log2(D)) -- this is the complexity that the
     // algorithm for computing the continuous spectrum needs anyway
     // (if M==D).
-    Dsub = POW(2.0, CEIL( \
-        0.5 * LOG2(D * LOG2(D) * LOG2(D)) ));
-    if (Dsub <= 2)
+    Dsub = POW(2.0, CEIL( 0.5 * LOG2(D * LOG2(D) * LOG2(D)) ));
+    if (!(Dsub >= 2))
         Dsub = 2;
+    if (!(Dsub <= D))
+        Dsub = D;
     subsampling_factor = D / Dsub;
             
     // Create the subsampled version of q, qsub
