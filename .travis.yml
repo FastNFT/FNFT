@@ -10,11 +10,6 @@ matrix:
           packages:
             - gcc-5
             - gfortran-5
-      env:
-          - GCC_VER="5" 
-          - CC="/usr/bin/gcc-5"
-          - FC="/usr/bin/gfortran-5"
-          - CMAKE_OPTIONS=""
     - os: linux
       addons:
         apt:
@@ -24,10 +19,10 @@ matrix:
             - gcc-5
             - gfortran-5
             - libfftw3-dev
-      env:
-          - GCC_VER="5" 
-          - CC="/usr/bin/gcc-5"
-          - FC="/usr/bin/gfortran-5"
+
+before_script:
+    - sudo update_alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 100
+    - sudo update_alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-5 100
 
 script:
     - cmake .

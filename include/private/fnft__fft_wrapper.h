@@ -116,7 +116,7 @@ static inline FNFT_INT fnft__fft_wrapper_create_plan(
 #else
     (void)in;
     (void)out;
-    *plan_ptr = kiss_fft_alloc(fft_length, 2*is_inverse-1, NULL, NULL);
+    *plan_ptr = kiss_fft_alloc(fft_length, (is_inverse+1)/2, NULL, NULL);
 #endif
 
     if (*plan_ptr == NULL)
