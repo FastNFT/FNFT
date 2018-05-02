@@ -53,6 +53,7 @@ find_path(FFTW3_INCLUDE fftw3.h)
 if (FFTW3_LIB AND FFTW3_INCLUDE)
     if (ENABLE_FFTW)
         message("++ FFTW3 found and enabled. Run cmake with \"-DENABLE_FFTW=OFF\" to disable.")
+        set(HAVE_FFTW3 1) # for updating fnft_config.h
     else()
         message("++ FFTW3 found but NOT enabled. Run cmake with \"-DENABLE_FFTW=ON\" to enable.")
     endif()
