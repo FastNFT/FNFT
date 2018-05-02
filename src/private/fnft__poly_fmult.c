@@ -19,14 +19,14 @@
 
 #define FNFT_ENABLE_SHORT_NAMES
 
-#include "fnft__errwarn.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include "fnft__errwarn.h"
 #include "fnft__poly_fmult.h"
-#include "kiss_fft.h"
-#include "_kiss_fft_guts.h"
 #include "fnft__misc.h"
+#include "fnft__fft_wrapper.h"
 
 UINT poly_fmult_numel(UINT deg, UINT n)
 {
@@ -40,63 +40,65 @@ UINT poly_fmult2x2_numel(UINT deg, UINT n)
 
 static inline INT poly_fmult2_len(UINT deg)
 {
-    return kiss_fft_next_fast_size(2*(deg + 1) - 1);
+    return fft_wrapper_next_fft_length(2*(deg + 1) - 1);
 }
 
 static inline UINT poly_fmult2_lenmen(UINT deg)
 {
-    return sizeof(kiss_fft_cpx)*(4*poly_fmult2_len(deg) - 1);
+    return sizeof(COMPLEX)*(4*poly_fmult2_len(deg) - 1);
 }
 
-static inline INT poly_fmult2(const UINT deg, COMPLEX *p1, 
-    COMPLEX *p2, COMPLEX *result, void *mem, 
-    kiss_fft_cfg cfg_fft, kiss_fft_cfg cfg_ifft, INT add_flag)
+static inline INT poly_fmult2(
+    const UINT deg,
+    COMPLEX *p1, 
+    COMPLEX *p2,
+    COMPLEX *result,
+    fft_wrapper_plan_t plan_fwd,
+    fft_wrapper_plan_t plan_inv,
+    COMPLEX * buf0,
+    COMPLEX * buf1,
+    COMPLEX * buf2,
+    INT add_flag)
 {
     UINT i, len;
-    kiss_fft_cpx *buf0, *buf1, *buf2;
+    INT ret_code = SUCCESS;
 
     // Prepare buffers
     len = poly_fmult2_len(deg);
-    buf0 = (kiss_fft_cpx *)mem;
-    buf1 = buf0 + len;
-    buf2 = buf1 + len;
 
     // FFT of first polynomial
-    for (i = 0; i <= deg; i++) {
-        buf0[i].r = creal(p1[i]);
-        buf0[i].i = cimag(p1[i]);
-    }
-    for (i = deg + 1; i < len; i++) {
-        buf0[i].r = 0;
-        buf0[i].i = 0;
-    }
-    kiss_fft(cfg_fft, buf0, buf1);
+    for (i = 0; i <= deg; i++)
+        buf0[i] = p1[i];
+    for (i = deg + 1; i < len; i++)
+        buf0[i] = 0;
+    ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf1);
+    CHECK_RETCODE(ret_code, leave_fun);
 
     // FFT of second polynomial
-    for (i = 0; i <= deg; i++) {
-        buf0[i].r = creal(p2[i]);
-        buf0[i].i = cimag(p2[i]);
-    }
-    kiss_fft(cfg_fft, buf0, buf2);
+    for (i = 0; i <= deg; i++)
+        buf0[i] = p2[i];
+    ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf2);
+    CHECK_RETCODE(ret_code, leave_fun);
 
     // Inverse FFT of product
     for (i = 0; i < len; i++)
-        C_MUL(buf0[i], buf1[i], buf2[i]);
-    kiss_fft(cfg_ifft, buf0, buf1);
+        buf0[i] = buf1[i] * buf2[i];
+    ret_code = fft_wrapper_execute_plan(plan_inv, buf0, buf1);
+    CHECK_RETCODE(ret_code, leave_fun);
 
     // Extract result
     if (!add_flag) {
         for (i = 0; i < 2*deg + 1; i++) {
-            result[i] = buf1[i].r/len + I*buf1[i].i/len;
+            result[i] = buf1[i]/len;
         }
     } else {
         for (i = 0; i < 2*deg + 1; i++) {
-            result[i] += buf1[i].r/len + I*buf1[i].i/len;
+            result[i] += buf1[i]/len;
         }
     }
 
-    // No error
-    return SUCCESS;
+leave_fun:
+    return ret_code;
 }
 
 static inline INT poly_rescale(const UINT d, COMPLEX * const p)
@@ -131,10 +133,11 @@ static inline INT poly_rescale(const UINT d, COMPLEX * const p)
 INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p, 
     INT * const W_ptr)
 {
-    UINT i, j, deg, lenmem, len, memneeded, memneeded_buf;
-    void *mem, *mem_fft, *mem_ifft;
+    UINT i, j, deg, len, lenmem;
     COMPLEX *p1, *p2, *result;
-    kiss_fft_cfg cfg_fft = NULL, cfg_ifft = NULL;
+    fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
+    fft_wrapper_plan_t plan_inv = fft_wrapper_safe_plan_init();
+    COMPLEX *buf0 = NULL, *buf1 = NULL, *buf2 = NULL;
     INT W = 0;
     INT ret_code;
 
@@ -151,13 +154,11 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
     n += n_excess;
 
     // Allocate memory for for calls to poly_fmult2
-    lenmem = poly_fmult2_lenmen(deg * n);
-    mem = malloc(lenmem); // contains the memory for the actual data
-    // The line below find max number of bytes needed for an (I)FFT config
-    kiss_fft_alloc(poly_fmult2_len(*d * n/2), 0, NULL, &memneeded);
-    mem_fft = malloc(memneeded); // memory for FFT configs
-    mem_ifft = malloc(memneeded); // memory for IFFT configs
-    if (mem == NULL || mem_fft == NULL || mem_ifft == NULL) {
+    lenmem = poly_fmult2_len(deg * n) * sizeof(COMPLEX);
+    buf0 = fft_wrapper_malloc(lenmem);
+    buf1 = fft_wrapper_malloc(lenmem);
+    buf2 = fft_wrapper_malloc(lenmem);
+    if (buf0 == NULL || buf1 == NULL || buf2 == NULL) {
         ret_code = E_NOMEM;
         goto release_mem;
     }
@@ -167,14 +168,10 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
 
         // Create FFT and IFFT config (computes twiddle factors, so reuse)
         len = poly_fmult2_len(deg);
-        memneeded_buf = memneeded;
-        cfg_fft = kiss_fft_alloc(len, 0, mem_fft, &memneeded_buf);
-        memneeded_buf = memneeded;
-        cfg_ifft = kiss_fft_alloc(len, 1, mem_ifft, &memneeded_buf);
-        if (cfg_fft == NULL || cfg_ifft == NULL) {
-            ret_code = E_NOMEM;
-            goto release_mem;
-        }   
+        ret_code = fft_wrapper_create_plan(&plan_fwd, len, buf0, buf1, -1);
+        CHECK_RETCODE(ret_code, release_mem);
+        ret_code = fft_wrapper_create_plan(&plan_inv, len, buf0, buf1, 1);
+        CHECK_RETCODE(ret_code, release_mem);
 
         // Pointers to current pair of polynomials and their product
         p1 = p;
@@ -183,8 +180,8 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
         
         // Multiply all pairs of polynomials, normalize if desired
         for (i=0; i<n; i+=2) {
-            ret_code = poly_fmult2(deg, p1, p2, result, mem, cfg_fft,
-                cfg_ifft, 0);
+            ret_code = poly_fmult2(deg, p1, p2, result, plan_fwd, plan_inv,
+                buf0, buf1, buf2, 0);
             CHECK_RETCODE(ret_code, release_mem);
 
             if (W_ptr != NULL)
@@ -195,6 +192,9 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
             result += 2*deg + 1;
         }
 
+        fft_wrapper_destroy_plan(&plan_fwd);
+        fft_wrapper_destroy_plan(&plan_inv);
+ 
         // Double degrees and half the number of polynomials
         deg *= 2;
         if (n%2 != 0) { // n was no power of two
@@ -209,9 +209,11 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
     if (W_ptr != NULL)
         *W_ptr = W;
 release_mem:  
-    free(mem);
-    free(mem_fft);
-    free(mem_ifft);
+    fft_wrapper_destroy_plan(&plan_fwd);
+    fft_wrapper_destroy_plan(&plan_inv);
+    fft_wrapper_free(buf0);
+    fft_wrapper_free(buf1);
+    fft_wrapper_free(buf2);
     return ret_code;
 }
 
@@ -269,14 +271,15 @@ static inline INT poly_rescale2x2(const UINT d,
 INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
     COMPLEX * const result, INT * const W_ptr)
 {
-    UINT i, j, deg, lenmem, len, memneeded, memneeded_buf;
-    void *mem, *mem_fft, *mem_ifft;
+    UINT i, j, deg, lenmem, len;
     UINT o1, o2, or; // pointer offsets
     COMPLEX *p11, *p12, *p21, *p22;
     COMPLEX *p11_pad, *p12_pad, *p21_pad, *p22_pad;
     COMPLEX *r11 = NULL, *r12 = NULL, *r21 = NULL, *r22 = NULL;
     COMPLEX *r12_pad, *r21_pad, *r22_pad;
-    kiss_fft_cfg cfg_fft = NULL, cfg_ifft = NULL;
+    fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
+    fft_wrapper_plan_t plan_inv = fft_wrapper_safe_plan_init();
+    COMPLEX *buf0 = NULL, *buf1 = NULL, *buf2 = NULL;
     INT W = 0;
     INT ret_code;
 
@@ -332,13 +335,11 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
     }
     
     // Allocate memory for for calls to poly_fmult2
-    lenmem = poly_fmult2_lenmen(deg * n);
-    mem = malloc(lenmem); // memory for actual data
-    // Find max number of bytes needed for an (I)FFT configuration
-    kiss_fft_alloc(poly_fmult2_len(*d * n/2), 0, NULL, &memneeded);
-    mem_fft = malloc(memneeded); // memory for the FFT configs
-    mem_ifft = malloc(memneeded); // memory for the IFFT configs
-    if (mem == NULL || mem_fft == NULL || mem_ifft == NULL) {
+    lenmem = poly_fmult2_len(deg * n) * sizeof(COMPLEX);
+    buf0 = fft_wrapper_malloc(lenmem);
+    buf1 = fft_wrapper_malloc(lenmem);
+    buf2 = fft_wrapper_malloc(lenmem);
+    if (buf0 == NULL || buf1 == NULL || buf2 == NULL) {
         ret_code = E_NOMEM;
         goto release_mem;
     }
@@ -348,14 +349,10 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
 
         // Create FFT and IFFT config (computes twiddle factors, so reuse)
         len = poly_fmult2_len(deg);
-        memneeded_buf = memneeded;
-        cfg_fft = kiss_fft_alloc(len, 0, mem_fft, &memneeded_buf);
-        memneeded_buf = memneeded;
-        cfg_ifft = kiss_fft_alloc(len, 1, mem_ifft, &memneeded_buf);
-        if (cfg_fft == NULL || cfg_ifft == NULL) {
-            ret_code = E_NOMEM;
-            goto release_mem;
-        }   
+        ret_code = fft_wrapper_create_plan(&plan_fwd, len, buf0, buf1, -1);
+        CHECK_RETCODE(ret_code, release_mem);
+        ret_code = fft_wrapper_create_plan(&plan_inv, len, buf0, buf2, 1);
+        CHECK_RETCODE(ret_code, release_mem);
 
         // Offsets for the current pair of polynomials and their product
         o1 = 0;
@@ -372,36 +369,36 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
         for (i=0; i<n; i+=2) {
 
             // Multiply current pair of 2x2 matrix-valued polynomials
-            ret_code = poly_fmult2(deg, p11+o1, p11+o2, r11+or, mem,
-                cfg_fft, cfg_ifft, 0);
+            ret_code = poly_fmult2(deg, p11+o1, p11+o2, r11+or,
+                plan_fwd, plan_inv, buf0, buf1, buf2, 0);
             CHECK_RETCODE(ret_code, release_mem);
 
-            ret_code = poly_fmult2(deg, p12+o1, p21+o2, r11+or, mem,
-                cfg_fft, cfg_ifft, 1);
+            ret_code = poly_fmult2(deg, p12+o1, p21+o2, r11+or,
+                    plan_fwd, plan_inv, buf0, buf1, buf2, 1);
             CHECK_RETCODE(ret_code, release_mem);
 
-            ret_code = poly_fmult2(deg, p11+o1, p12+o2, r12+or, mem,
-                cfg_fft, cfg_ifft, 0);
+            ret_code = poly_fmult2(deg, p11+o1, p12+o2, r12+or,
+                    plan_fwd, plan_inv, buf0, buf1, buf2, 0);
             CHECK_RETCODE(ret_code, release_mem);
 
-            ret_code = poly_fmult2(deg, p12+o1, p22+o2, r12+or, mem, 
-                cfg_fft, cfg_ifft, 1);
+            ret_code = poly_fmult2(deg, p12+o1, p22+o2, r12+or,
+                    plan_fwd, plan_inv, buf0, buf1, buf2, 1);
             CHECK_RETCODE(ret_code, release_mem);
 
-            ret_code = poly_fmult2(deg, p21+o1, p11+o2, r21+or, mem,
-                cfg_fft, cfg_ifft, 0);
+            ret_code = poly_fmult2(deg, p21+o1, p11+o2, r21+or,
+                    plan_fwd, plan_inv, buf0, buf1, buf2, 0);
             CHECK_RETCODE(ret_code, release_mem);
 
-            ret_code = poly_fmult2(deg, p22+o1, p21+o2, r21+or, mem,
-                cfg_fft, cfg_ifft, 1);
+            ret_code = poly_fmult2(deg, p22+o1, p21+o2, r21+or,
+                    plan_fwd, plan_inv, buf0, buf1, buf2, 1);
             CHECK_RETCODE(ret_code, release_mem);
 
-            ret_code = poly_fmult2(deg, p21+o1, p12+o2, r22+or, mem,
-                cfg_fft, cfg_ifft, 0);
+            ret_code = poly_fmult2(deg, p21+o1, p12+o2, r22+or,
+                    plan_fwd, plan_inv, buf0, buf1, buf2, 0);
             CHECK_RETCODE(ret_code, release_mem);
 
-            ret_code = poly_fmult2(deg, p22+o1, p22+o2, r22+or, mem,
-                cfg_fft, cfg_ifft, 1);
+            ret_code = poly_fmult2(deg, p22+o1, p22+o2, r22+or,
+                    plan_fwd, plan_inv, buf0, buf1, buf2, 1);
             CHECK_RETCODE(ret_code, release_mem);
 
             // Normalize if desired
@@ -421,6 +418,9 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
             goto release_mem;
         }
         n /= 2;
+
+        fft_wrapper_destroy_plan(&plan_fwd);
+        fft_wrapper_destroy_plan(&plan_inv);
 
         // Prepare for the next iteration
         if (n>1) {
@@ -450,9 +450,11 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
     if (W_ptr != NULL)
         *W_ptr = W;
 release_mem:
-    free(mem);
-    free(mem_fft);
-    free(mem_ifft);
+    fft_wrapper_destroy_plan(&plan_fwd);
+    fft_wrapper_destroy_plan(&plan_inv);
+    fft_wrapper_free(buf0);
+    fft_wrapper_free(buf1);
+    fft_wrapper_free(buf2);
     return ret_code;
 }
 

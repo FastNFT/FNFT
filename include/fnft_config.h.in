@@ -27,6 +27,7 @@
 #cmakedefine HAVE__THREAD_LOCAL 1
 #cmakedefine HAVE___THREAD 1
 #cmakedefine DEBUG 1
+#cmakedefine HAVE_FFTW3 1
 
 #endif
 
