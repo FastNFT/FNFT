@@ -11,7 +11,7 @@ matrix:
             - gcc-5
             - gfortran-5
           env:
-            - CMAKE_OPTIONS=""
+            - MY_CMAKE_OPTIONS=""
     - os: linux
       addons:
         apt:
@@ -22,18 +22,16 @@ matrix:
             - gfortran-5
             - libfftw3-dev
           env:
-            - CMAKE_OPTIONS="-DENABLE_FFTW=ON"
-
-before_install:
-    - export CMAKE_OPTIONS=${CMAKE_OPTIONS}    
+            - MY_CMAKE_OPTIONS="-DENABLE_FFTW=ON"
 
 before_script:
     - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 100
     - sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-5 100
     - mkdir build
     - cd build
+    - echo $MY_CMAKE_OPTIONS
  
 script:
-    - cmake .. ${CMAKE_OPTIONS}
+    - cmake .. $MY_CMAKE_OPTIONS
     - make 
     - make test CTEST_OUTPUT_ON_FAILURE=1
