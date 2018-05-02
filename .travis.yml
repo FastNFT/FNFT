@@ -24,14 +24,16 @@ matrix:
           env:
             - CMAKE_OPTIONS="-DENABLE_FFTW=ON"
 
+before_install:
+    - export CMAKE_OPTIONS=${CMAKE_OPTIONS}    
+
 before_script:
     - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 100
     - sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-5 100
-    - export CMAKE_OPTIONS=${CMAKE_OPTIONS}    
-
-script:
     - mkdir build
     - cd build
+ 
+script:
     - cmake .. ${CMAKE_OPTIONS}
     - make 
     - make test CTEST_OUTPUT_ON_FAILURE=1
