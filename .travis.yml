@@ -10,10 +10,8 @@ matrix:
           packages:
             - gcc-5
             - gfortran-5
-          script:
-            - cmake ..
-            - make 
-            - make test CTEST_OUTPUT_ON_FAILURE=1
+          env:
+            - MATRIX_EVAL="cmake .. && make && make test CTEST_OUTPUT_ON_FAILURE=1"
     - os: linux
       addons:
         apt:
@@ -23,10 +21,8 @@ matrix:
             - gcc-5
             - gfortran-5
             - libfftw3-dev
-        script:
-            - cmake .. -DENABLE_FFTW=ON
-            - make 
-            - make test CTEST_OUTPUT_ON_FAILURE=1
+          env:
+            - MATRIX_EVAL="cmake .. -DENABLE_FFTW=ON && make && make test CTEST_OUTPUT_ON_FAILURE=1"
 
 before_script:
     - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 100
@@ -34,4 +30,5 @@ before_script:
     - mkdir build
     - cd build
 
-
+script:
+    - eval "${MATRIX_EVAL}"
