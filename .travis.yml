@@ -10,6 +10,8 @@ matrix:
           packages:
             - gcc-5
             - gfortran-5
+          env:
+            - CMAKE_OPTIONS=""
     - os: linux
       addons:
         apt:
@@ -19,6 +21,8 @@ matrix:
             - gcc-5
             - gfortran-5
             - libfftw3-dev
+          env:
+            - CMAKE_OPTIONS="-DENABLE_FFTW=ON"
 
 before_script:
     - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 100

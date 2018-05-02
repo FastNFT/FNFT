@@ -15,7 +15,7 @@ option(DEBUG "Compile with debugging symbols" OFF)
 option(WITH_MATLAB "Build the Matlab interface" ON)
 option(MACHINE_SPECIFIC_OPTIMIZATION "Activate optimizations specific for this machine" ON)
 option(ADDRESS_SANITIZER "Enable address sanitzer for known compilers" OFF)
-option(DISABLE_FFTW "Do not use FFTW even it is available" OFF)
+option(ENABLE_FFTW "Use FFTW if it is available" OFF)
 
 # check for complex.h
 check_include_files(complex.h HAVE_COMPLEX_H)
@@ -51,17 +51,15 @@ endif()
 find_library(FFTW3_LIB fftw3)
 find_path(FFTW3_INCLUDE fftw3.h)
 if (FFTW3_LIB AND FFTW3_INCLUDE)
-    if (NOT DISABLE_FFTW)
-        set(HAVE_FFTW3 ON)
-        message("++ Shared FFTW3 found, using it. (Run cmake with -DDISABLE_FFTW=ON to disable.)")
+    if (ENABLE_FFTW)
+        message("++ FFTW3 found and enabled. Run cmake with \"-DENABLE_FFTW=OFF\" to disable.")
     else()
-        set(HAVE_FFTW3 OFF)
-        message("++ Shared FFTW3 found, not using it as requested by user")
+        message("++ FFTW3 found but NOT enabled. Run cmake with \"-DENABLE_FFTW=ON\" to enable.")
     endif()
 else()
-    set(HAVE_FFTW3 OFF)
     set(FFTW3_LIB "")
-    message("++ Shared FFTW3 not found, will use Kiss FFT")
+    set(FFTW3_INCLUDE "")
+    message("++ FFTW3 NOT found. Will use Kiss FFT instead.")
 endif()
 
 # header files
@@ -114,9 +112,7 @@ configure_file(include/fnft_config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/include/fnft
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/private)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/3rd_party/kiss_fft)
-if (HAVE_FFTW3)
-    include_directories(${FFTW3_INCLUDE})
-endif()
+include_directories(${FFTW3_INCLUDE})
 
 # configure Fortran support
 enable_language(Fortran)
@@ -144,6 +140,7 @@ file(GLOB_RECURSE TEST_SOURCES "test/*_test*.c")
 
 # generate shared library
 add_library(fnft SHARED ${SOURCES} ${PRIVATE_SOURCES} ${KISS_FFT_SOURCES} ${EISCOR_SOURCES})
+target_link_libraries(fnft ${FFTW3_LIB})
 set_target_properties(fnft PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib")
 
 # installation under Linux
