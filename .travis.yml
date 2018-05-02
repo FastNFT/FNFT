@@ -29,6 +29,6 @@ before_script:
     - sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-5 100
 
 script:
-    - cmake .
+    - eval "cmake . ${CMAKE_OPTIONS}"
     - make 
     - make test CTEST_OUTPUT_ON_FAILURE=1
