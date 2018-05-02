@@ -27,6 +27,6 @@ before_script:
     - cd build
  
 script:
-    - if dpkg -s libfftw3-dev | grep "not installed">/dev/null; then cmake ..; else cmake .. -DENABLE_FFTW=ON; fi
+    - if dpkg -s libfftw3-dev; then cmake .. -DENABLE_FFTW=ON; else cmake ..; fi
     - make 
     - make test CTEST_OUTPUT_ON_FAILURE=1
