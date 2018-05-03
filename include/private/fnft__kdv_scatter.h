@@ -45,8 +45,6 @@
  *  the to-be-transformed signal in ascending order
  *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$)
  * @param[in] eps_t Step-size, eps_t \f$= (T[1]-T[0])/(D-1) \f$.
- * @param[in] kappa =+1 for the focusing nonlinear Schroedinger equation,
- *  =-1 for the defocusing one
  * @param[in] K Number of values of \f$\lambda\f$.
  * @param[in] lambda Array of length K, contains the values of \f$\lambda\f$.
  * @param[out] result Array of length 8*K, contains the values [S11 S12 S21 S22 S11' S12' S21' S22'] 

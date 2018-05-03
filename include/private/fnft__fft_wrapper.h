@@ -133,7 +133,7 @@ static inline FNFT_INT fnft__fft_wrapper_create_plan(
  * @param[in] in Input buffer, not neccessarily the same that was used
  *   when creating the plan. The length however has to be the same. Create
  *   with \link fnft__fft_wrapper_malloc \endlink to ensure correct alignment.
- * @param[out] in Output buffer, not neccessarily the same that was used
+ * @param[out] out Output buffer, not neccessarily the same that was used
  *   when creating the plan. The length however has to be the same. Create
  *   with \link fnft__fft_wrapper_malloc \endlink to ensure correct alignment.
  * @return FFT_SUCCESS or an error code.

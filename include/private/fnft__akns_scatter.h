@@ -19,9 +19,9 @@
 */
 
 /**
- * @file fnft__nse_scatter.h
+ * @file fnft__akns_scatter.h
  * @brief Slow forward scattering.
- * @ingroup nse
+ * @ingroup akns
  */
 
 #ifndef FNFT__AKNS_SCATTER_H
@@ -43,9 +43,11 @@
  *  where \f$ t_n = T[0] + n(T[1]-T[0])/(D-1) \f$ and \f$n=0,1,\dots,D-1\f$, of
  *  the to-be-transformed signal in ascending order
  *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$)
+ * @param[in] r Array of length D, contains samples \f$ r(t_n)=r(x_0, t_n) \f$,
+ *  where \f$ t_n = T[0] + n(T[1]-T[0])/(D-1) \f$ and \f$n=0,1,\dots,D-1\f$, of
+ *  the to-be-transformed signal in ascending order
+ *  (i.e., \f$ r(t_0), r(t_1), \dots, r(t_{D-1}) \f$)
  * @param[in] eps_t Step-size, eps_t \f$= (T[1]-T[0])/(D-1) \f$.
- * @param[in] kappa =+1 for the focusing nonlinear Schroedinger equation,
- *  =-1 for the defocusing one
  * @param[in] K Number of values of \f$\lambda\f$.
  * @param[in] lambda Array of length K, contains the values of \f$\lambda\f$.
  * @param[out] result Array of length 8*K, contains the values [S11 S12 S21 S22 S11' S12' S21' S22'] 
@@ -55,7 +57,7 @@
  * Check \link fnft_nse_discretization_t \endlink for list of supported types.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
- * @ingroup nse
+ * @ingroup akns
  */
 FNFT_INT fnft__akns_scatter_matrix(const UINT D, COMPLEX const * const q, 
     COMPLEX const * const r, const REAL eps_t,

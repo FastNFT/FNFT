@@ -42,21 +42,6 @@ UINT kdv_fscatter_numel(UINT D, kdv_discretization_t discretization)
         return poly_fmult2x2_numel(deg, D);
 }
 
-/**
- * Returns the scattering matrix for a single step at frequency zero.
- */
-/*
-INT kdv_fscatter_zero_freq_scatter_matrix(COMPLEX *M,
-                                                const REAL eps_t, const REAL q)
-{
-    COMPLEX Delta = eps_t * CSQRT(q);
-    M[0] = CCOS(Delta);                // M(1,1) = M(2,2)
-    M[2] = -eps_t * misc_CSINC(Delta); // M(2,1)
-    M[1] = -q * M[2];                  // M(1,2)
-    return 0;
-}
-*/
-
 INT kdv_fscatter(const UINT D, COMPLEX const * const q,
                  const REAL eps_t, COMPLEX * const result, UINT * const deg_ptr,
                  INT * const W_ptr, kdv_discretization_t discretization)

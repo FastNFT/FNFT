@@ -92,7 +92,7 @@ FNFT_UINT fnft__poly_fmult2x2_numel(const FNFT_UINT deg, const FNFT_UINT n);
  * @param[in] n Number of 2x2 matrix-valued polynomials.
  * @param[in,out] p Complex valued array which holds the coefficients of 
  * the polynomials being multiplied. Should be of length m*(*d+1), where
- * m is obtained using \link fnft__poly_fmult_memneeded \lendlink.
+ * m is obtained using \link fnft__poly_fmult_memneeded \endlink.
  * WARNING: p is overwritten.
  * @param[out] result Complex valued array that holds the result of the
  * multiplication. Should be of the same size as p.

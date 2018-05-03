@@ -63,6 +63,7 @@
  *
  * Used in \link fnft_kdvv_opts_t \endlink.
  *
+ * `fnft_nse_discretization_BO` : It has been taken from Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot;Computation of the direct scattering transform for the nonlinear Schroedinger  equation,&quot;</a> J. Comput. Phys. 102(2), 1992. It is supported by \link fnft__kdv_scatter.h \endlink.\n 
  * @ingroup data_types
  */
 typedef enum {

@@ -22,7 +22,7 @@
  * @brief Computes the polynomial approximation of the combined scattering 
  * matrix.
  *
- * @ingroup kdv
+ * @ingroup akns
  */
 
 #ifndef FNFT__AKNS_FSCATTER_H
@@ -35,14 +35,13 @@
  * of samples and discretization.
  *
  * This routine returns the length
- * `4*D*(kdv_discretization_degree(discretization) + 1)`
  * to be allocated based on the number of samples and discretization of type
  * discretization.
  * @param[in] D Number of samples.
- * @param[in] discretization Type of discretization from \link fnft_kdv_discretization_t \endlink.
+ * @param[in] discretization Type of discretization from \link fnft__discretization_t \endlink.
  * @returns Returns the length to be allocated. Returns 0 for unknown discretizations.
  *
- * @ingroup kdv
+ * @ingroup akns
  */
 FNFT_UINT fnft__akns_fscatter_numel(FNFT_UINT D,
                                     fnft__discretization_t discretization);
@@ -64,22 +63,27 @@ FNFT_UINT fnft__akns_fscatter_numel(FNFT_UINT D,
  *  where \f$ t_n = T[0] + n(T[1]-T[0])/(D-1) \f$ and \f$n=0,1,\dots,D-1\f$, of
  *  the to-be-transformed signal in ascending order
  *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$)
+ * @param[in] r Array of length D, contains samples \f$ r(t_n)=r(x_0, t_n) \f$,
+ *  where \f$ t_n = T[0] + n(T[1]-T[0])/(D-1) \f$ and \f$n=0,1,\dots,D-1\f$, of
+ *  the to-be-transformed signal in ascending order
+ *  (i.e., \f$ r(t_0), r(t_1), \dots, r(t_{D-1}) \f$)
  * @param[in] eps_t Step-size, eps_t \f$= (T[1]-T[0])/(D-1) \f$.
- * @param[out] result array of length `kdv_fscatter_numel(D,discretization)`,
+ * @param[out] result array of length `akns_fscatter_numel(D,discretization)`,
  * will contain the combined scattering matrix. Result needs to be pre-allocated
- * with `malloc(kdv_fscatter_numel(D,discretization)*sizeof(COMPLEX))`.
+ * with `malloc(akns_fscatter_numel(D,discretization)*sizeof(COMPLEX))`.
  * @param[out] deg_ptr Pointer to variable containing degree of the discretization.
- * Determined based on discretization by \link fnft__kdv_discretization_degree \endlink.
+ * Determined based on discretization by \link fnft__akns_discretization_degree \endlink.
+ * @param[in] W_ptr Normalization flag. Polynomial coefficients are normalized
+ * if W_ptr is non-zero.
  * @param[in] discretization The type of discretization to be used. Should be of type
- * \link fnft_kdv_discretization_t \endlink.
- * Check \link fnft_kdv_discretization_t \endlink for list of supported types.
+ * \link fnft__discretization_t \endlink.
+ * Check \link fnft__discretization_t \endlink for list of supported types.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  *
- * @ingroup kdv
+ * @ingroup akns
  */
-FNFT_INT fnft__akns_fscatter(const FNFT_UINT D, FNFT_COMPLEX const * const q, FNFT_COMPLEX const * const r,
-                 const FNFT_REAL eps_t, FNFT_COMPLEX * const result, FNFT_UINT * const deg_ptr,
+FNFT_INT fnft__akns_fscatter(const FNFT_UINT D, FNFT_COMPLEX const * const q, FNFT_COMPLEX const * const r, const FNFT_REAL eps_t, FNFT_COMPLEX * const result, FNFT_UINT * const deg_ptr,
                             INT * const W_ptr, fnft__discretization_t discretization);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES

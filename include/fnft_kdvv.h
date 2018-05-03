@@ -34,15 +34,14 @@
 /**
  * @struct fnft_kdvv_opts_t
  * @brief Stores additional options for the routine \link fnft_kdvv \endlink. 
- *
+ * @ingroup fnft
+ * @ingroup data_types
  * Use the \link fnft_kdvv_default_opts \endlink routine in order to generate
  * a new variable of this type with default options and modify as needed.
  *
  * @var fnft_kdvv_opts_t::discretization
  *  Controls which discretization is applied to the continuous-time scattering
  *  problem. See \link fnft_kdv_discretization_t \endlink.
- *
- * @ingroup data_types
  */
 typedef struct {
     fnft_kdv_discretization_t discretization;

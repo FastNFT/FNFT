@@ -28,16 +28,44 @@
 #include "fnft.h"
 
 /**
- * Enum that specifies discretizations used to compute nonlinear Fourier
- * transforms for the nonlinear Schroedinger equation. Used in
- * \link fnft_nsev_opts_t \endlink.\n \n
- * fnft_nse_discretization_2SPLIT2A_MODAL: It is the normalized Ablowitz-Ladik discretization from 
- * Wahls and Poor,<a href="http://dx.doi.org/10.1109/ICASSP.2013.6638772">&quot;Introducing the fast nonlinear Fourier transform,&quot;</a> Proc. ICASSP 2013.\n \n
- * fnft_nse_discretization_2SPLIT2A : It has been taken from \n \n
- * fnft_nse_discretization_2SPLIT4A and fnft_nse_discretization_2SPLIT4B : They are equivalent forms of
- * Eq. 20 in Prins and Wahls, &quot;Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot; to appear in Proc. ICASSP 2018. \n \n
- * fnft_nse_discretization_BO : It has been taken from Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot;Computation of the direct scattering transform for the nonlinear Schroedinger  equation,&quot;</a> J. Comput. Phys. 102(2), 1992. It is supported by \link fnft__nse_scatter.h \endlink.\n 
- * Other discretizations are supported by \link fnft__nse_fscatter.h \endlink.\n
+ * @brief Enum that specifies discretizations used to compute nonlinear Fourier
+ * transforms for the Nonlinear Schroedinger Equation.
+ *
+ * In general, discretizations with a lower degree are faster, while those with
+ * a highter order of accuracy are more accurate. Therefore, the best choice is
+ * normally among `-2A`, `-2B`, `-2S` `-4B`, `-6B` and `-8B`.
+ * The choice between these is a trade-off between speed and accuracy.
+ *
+ * `fnft_nse_discretization_2SPLIT1A`: Degree = 1, Order of accuracy = 1\n
+ * `fnft_nse_discretization_2SPLIT1B`: Degree = 1, Order of accuracy = 1\n
+ * `fnft_nse_discretization_2SPLIT2A`: Degree = 1, Order of accuracy = 2\n
+ * `fnft_nse_discretization_2SPLIT2B`: Degree = 1, Order of accuracy = 2\n
+ * `fnft_nse_discretization_2SPLIT2S`: Degree = 1, Order of accuracy = 2\n
+ * `fnft_nse_discretization_2SPLIT2_MODAL`: Degree = 1, Order of accuracy = 2\n
+ * `fnft_nse_discretization_2SPLIT3A`: Degree = 3, Order of accuracy = 3\n
+ * `fnft_nse_discretization_2SPLIT3B`: Degree = 3, Order of accuracy = 3\n
+ * `fnft_nse_discretization_2SPLIT3S`: Degree = 2, Order of accuracy = 3\n
+ * `fnft_nse_discretization_2SPLIT4A`: Degree = 4, Order of accuracy = 4\n
+ * `fnft_nse_discretization_2SPLIT4B`: Degree = 2, Order of accuracy = 4\n
+ * `fnft_nse_discretization_2SPLIT5A`: Degree = 15, Order of accuracy = 5\n
+ * `fnft_nse_discretization_2SPLIT5B`: Degree = 15, Order of accuracy = 5\n
+ * `fnft_nse_discretization_2SPLIT6A`: Degree = 12, Order of accuracy = 6\n
+ * `fnft_nse_discretization_2SPLIT6B`: Degree = 6, Order of accuracy = 6\n
+ * `fnft_nse_discretization_2SPLIT7A`: Degree = 105, Order of accuracy = 7\n
+ * `fnft_nse_discretization_2SPLIT7B`: Degree = 105, Order of accuracy = 7\n
+ * `fnft_nse_discretization_2SPLIT8A`: Degree = 24, Order of accuracy = 8\n
+ * `fnft_nse_discretization_2SPLIT8B`: Degree = 12, Order of accuracy = 8
+ *
+ * These discretizations are based on exponential spliting schemes, defined in
+ * Prins and Wahls, &quot;Higher order exponential splittings for the fast
+ * non-linear Fourier transform of the KdV equation,&quot;
+ * to appear in Proc. ICASSP 2018.
+ * `fnft_nse_discretization_2SPLIT2_MODAL` is the normalized Ablowitz-Ladik discretization from 
+ * Wahls and Poor,<a href="http://dx.doi.org/10.1109/ICASSP.2013.6638772">&quot;Introducing the fast nonlinear Fourier transform,&quot;</a> Proc. ICASSP 2013.\n 
+ *
+ * Used in \link fnft_nsev_opts_t \endlink.
+ *
+ * `fnft_nse_discretization_BO` has been taken from Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot;Computation of the direct scattering transform for the nonlinear Schroedinger  equation,&quot;</a> J. Comput. Phys. 102(2), 1992. It is supported by \link fnft__kdv_scatter.h \endlink.\n 
  * @ingroup data_types
  */
 typedef enum {

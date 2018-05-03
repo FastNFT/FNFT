@@ -33,13 +33,6 @@
  * Returns the length of array to be allocated based on the number
  * of samples and discretization.
  */
-/*
-UINT akns_fscatter_numel(UINT D, discretization_t discretization)
-{
-    // 2x2 matrix of degree+1 elements for each sample
-    return 4*(akns_discretization_degree(discretization) + 1)*D;
-}
-*/
 
 UINT akns_fscatter_numel(UINT D, discretization_t discretization)
 {
@@ -122,9 +115,6 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
         case discretization_2SPLIT2_MODAL: // Modified Ablowitz-Ladik discretization
 
             for (i=D-1; i>=0; i--) {
-                // compute the scaling factor scl = 1/sqrt(1+kappa*|eps_t*q[i]|^2)
-		//scl = 1.0/CSQRT(1-eps_t*q[i]*eps_t*r[i]);
-
                 scl = eps_t*CABS(q[i]);
                 if ((-CREAL(q[i])/CREAL(r[i])) == -1) {
                     if ((double)scl >= 1.0) {
@@ -144,29 +134,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p21[1] = 0.0;
                 p22[0] = 0.0;
                 p22[1] = scl;
-/*             
-                p11[0] = 0.0;
-                p11[1] = scl;
-                p12[0] = scl*eps_t*q[i];
-                p12[1] = 0.0;
-                p21[0] = 0.0;
-                p21[1] = scl*eps_t*r[i];
-                p22[0] = scl;
-                p22[1] = 0.0;
 
-	        p11[0] = scl;
-                p11[1] = 0.0;
-                p11[2] = 0.0;
-	        p12[0] = 0.0;
-                p12[1] = scl*eps_t*q[i];
-                p12[2] = 0.0;
-	        p21[0] = 0.0;
-                p21[1] = scl*eps_t*r[i];
-                p21[2] = 0.0;
-	        p22[0] = 0.0;
-                p22[1] = 0.0;
-                p22[2] = scl;
-*/
                 p11 += *deg_ptr + 1;
                 p21 += *deg_ptr + 1;
                 p12 += *deg_ptr + 1;
