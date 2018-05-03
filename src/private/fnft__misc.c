@@ -228,6 +228,8 @@ INT misc_merge(UINT *N_ptr, COMPLEX * const vals, REAL tol)
     
     if (N_ptr == NULL)
         return E_INVALID_ARGUMENT(N_ptr)
+    if (*N_ptr == 0)
+        return SUCCESS;
     if (vals == NULL)
         return E_INVALID_ARGUMENT(vals);
     if (tol < 0.0)
@@ -276,10 +278,11 @@ INT misc_downsample(COMPLEX const * const q, const UINT D,
     // O(D*log2(D)*log2(D)) -- this is the complexity that the
     // algorithm for computing the continuous spectrum needs anyway
     // (if M==D).
-    Dsub = POW(2.0, CEIL( \
-        0.5 * LOG2(D * LOG2(D) * LOG2(D)) ));
-    if (Dsub <= 2)
+    Dsub = POW(2.0, CEIL( 0.5 * LOG2(D * LOG2(D) * LOG2(D)) ));
+    if (!(Dsub >= 2))
         Dsub = 2;
+    if (!(Dsub <= D))
+        Dsub = D;
     subsampling_factor = D / Dsub;
             
     // Create the subsampled version of q, qsub
@@ -306,5 +309,15 @@ COMPLEX misc_CSINC(COMPLEX x)
         return CSIN(x)/x;
     else
         return CCOS(x/CSQRT(3));
+}
+
+UINT misc_nextpowerof2(const UINT number)
+{
+    if (number == 0)
+        return 0;
+    UINT result = 1;
+    while (result < number)
+        result *= 2;
+    return result;
 }
 

@@ -40,7 +40,7 @@ INT poly_roots_fftgridsearch(const UINT deg,
     REAL tmp;
 
 	// Check inputs
-    if ( deg%2 == 1 || deg < 2 ) // degree must be even and >= 2
+    if ( deg < 2 )
         return E_INVALID_ARGUMENT(deg);
 	if (p == NULL)
 		return E_INVALID_ARGUMENT(p);

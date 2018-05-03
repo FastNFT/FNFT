@@ -32,12 +32,28 @@
  * Returns the length of array to be allocated based on the number
  * of samples and discretization.
  */
+
+UINT nse_fscatter_numel(UINT D, nse_discretization_t discretization)
+{
+
+    const UINT deg = nse_discretization_degree(discretization);
+    if (deg == 0)
+        return 0; // unknown discretization
+    else
+        return poly_fmult2x2_numel(deg, D);
+}
+
+/*
 UINT nse_fscatter_numel(UINT D, nse_discretization_t discretization)
 {
     // 2x2 matrix of degree+1 elements for each sample
     return 4*(nse_discretization_degree(discretization) + 1)*D;
 }
-
+*/
+/**
+ * result needs to be pre-allocated with size
+ * nse_fscatter_numel(...)*sizeof(COMPLEX)
+ */
 
 INT nse_fscatter(const UINT D, COMPLEX const * const q,
         const REAL eps_t, const INT kappa,

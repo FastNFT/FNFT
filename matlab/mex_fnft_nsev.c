@@ -76,8 +76,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     
     /* Check values of first four inputs */
 
-    if ( D<2 || (D & (D-1)) != 0 )
-        mexErrMsgTxt("Length of the first input q should be a positive power of two.");
+    if ( D<2 )
+        mexErrMsgTxt("Length of the first input q should be at least two.");
     if ( T[0] >= T[1] )
         mexErrMsgTxt("T(1) >= T(2).");
     if ( XI[0] >= XI[1] )
@@ -99,7 +99,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         
         /* Check if current input is a string as desired and convert it */
         if ( !mxIsChar(prhs[k]) ) {
-            snprintf(msg, sizeof msg, "%zuth input should be a string.", k+1);
+            snprintf(msg, sizeof msg, "%uth input should be a string.", 
+                (unsigned int)(k+1));
             goto on_error;
         }
         char *str = mxArrayToString(prhs[k]);
@@ -210,7 +211,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             fnft_errwarn_setprintf(NULL);
             
         } else {
-            snprintf(msg, sizeof msg, "%zuth input has invalid value.", k+1);
+            snprintf(msg, sizeof msg, "%uth input has invalid value.", 
+                (unsigned int)(k+1));
             goto on_error;
         }
     }

@@ -91,7 +91,7 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
                                   // far, 1st val is for main spec, 2nd for aux
 
     // Check inputs
-    if (D < 2)
+    if (D < 2 || (D & (D-1)) != 0 )
         return E_INVALID_ARGUMENT(D);
     if (q == NULL)
         return E_INVALID_ARGUMENT(q);

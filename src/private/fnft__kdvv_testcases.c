@@ -37,7 +37,8 @@ INT fnft__kdvv_testcases(kdvv_testcases_t tc, const UINT D,
 {
     UINT i;
     INT ret_code;
-
+    REAL eps_t, t_i;
+    
     // Avoid not used warnings. Not yet used, but will be in the future.
     (void) ab_ptr;
     (void) K_ptr;
@@ -63,6 +64,7 @@ INT fnft__kdvv_testcases(kdvv_testcases_t tc, const UINT D,
 
     case kdvv_testcases_SECH:
     case kdvv_testcases_RECT:
+    case kdvv_testcases_NEGATIVE_RECT:
         *M_ptr = 16;
         break;
 
@@ -168,8 +170,7 @@ INT fnft__kdvv_testcases(kdvv_testcases_t tc, const UINT D,
         T[1] = 2.0; // Last midpoint, not upper boundary
         
         // Space domain signal.
-        REAL eps_t = (T[1] - T[0])/(D-1);
-        REAL t_i;
+        eps_t = (T[1] - T[0])/(D-1);
         for (i=0; i<D; i++)
         {
             t_i = T[0] + i*eps_t;
@@ -204,6 +205,72 @@ INT fnft__kdvv_testcases(kdvv_testcases_t tc, const UINT D,
         (*contspec_ptr)[15] = - 0.05487470411329939736278578609268675453902 + 0.1750134338640520324045894423655821274481*I;
        
         break;
+        case kdvv_testcases_NEGATIVE_RECT:
+            
+            // This test case can be found in A.R. Osborne, “Non-linear Fourier
+            // analysis for the infinite-interval Korteweg-de Vries equation I: An
+            // algorithm for the direct scattering transform,” Journal of
+            // Computational Physics, Aug. 1991. DOI: 10.1016/0021-9991(91)90223-8,
+            // Section 8.
+            
+            // The following MATLAB code has been used to compute the values below.
+            /*
+             ampl = sym(-1);
+             zeta = sym(0:15).'*sym(pi)/sym(32);
+             ell = sym(1)/sym(2);
+             
+             kappa = sqrt(ampl + zeta.^2);
+             gamma = (kappa./zeta - zeta./kappa)/2;
+             delta = (kappa./zeta + zeta./kappa)/2;
+             T = exp(-2i*zeta*ell) ./ (cos(2*kappa*ell) - 1i*delta.*sin(2*kappa*ell));
+             R = 1i*gamma.*sin(2*kappa*ell).*T;
+             R(zeta==0) = -1; % Limit value
+             
+             digits(40)
+             T = vpa(T);
+             R = vpa(R);
+             */
+            
+            // Space domain
+            T[0] = -1.0; // First midpoint, not Lower boundary
+            T[1] = 2.0; // Last midpoint, not upper boundary
+            
+            // Space domain signal.
+            eps_t = (T[1] - T[0])/(D-1);
+            for (i=0; i<D; i++)
+            {
+                t_i = T[0] + i*eps_t;
+                if (FABS(t_i) == 0.5)
+                    (*q_ptr)[i] = -0.5;
+                else if (FABS(t_i) < 0.5)
+                    (*q_ptr)[i] = -1.0;
+                else
+                    (*q_ptr)[i] = 0.0;
+            }
+            
+            // Nonlinear spectral domain
+            XI[0] = 0;
+            XI[1] = 15.0/32.0 * PI;
+            
+            // Reflection coeffcient b(xi)/a(xi) (correct up to 40 digits)
+            (*contspec_ptr)[0] = -1.0;
+            (*contspec_ptr)[1] = - 0.9739467451573985957325199506505369746269 - 0.1555349345978652050355041906667439098412*I;
+            (*contspec_ptr)[2] = - 0.9028461287936049160123145171199359789702 - 0.2886658747278307501061098125374803592192*I;
+            (*contspec_ptr)[3] = - 0.8035893706069043424417437224776288780565 - 0.3860712396445988976800969426815119972634*I;
+            (*contspec_ptr)[4] = - 0.6942959495032771276336443457983276729256 - 0.4458321143826399624140237249662353773942*I;
+            (*contspec_ptr)[5] = - 0.5883026354166293688520907843779958639994 - 0.4736712903480039438303182672382621165122*I;
+            (*contspec_ptr)[6] = - 0.4928616941529652270973842683008589805061 - 0.4779635646873800727933323613989818639574*I;
+            (*contspec_ptr)[7] = - 0.4105790992193202275287820600991870226904 - 0.4665343758579364554211810570573020018263*I;
+            (*contspec_ptr)[8] = - 0.3413610425339451031793827543119710816707 - 0.4454554051133676402777299476062467490621*I;
+            (*contspec_ptr)[9] = - 0.2838730864160965326338171390016363811241 - 0.4189872470579770003111002353275753860492*I;
+            (*contspec_ptr)[10] = - 0.2363914002637033829184948430988984518262 - 0.3899428589360900543040072991771807959595*I;
+            (*contspec_ptr)[11] = - 0.1972200838907117762619350871506416854197 - 0.3601034786315031830009142805874726386018*I;
+            (*contspec_ptr)[12] = - 0.164859568723129283134171400591204814203 - 0.3305584195242223038998178971998403180682*I;
+            (*contspec_ptr)[13] = - 0.138050443728764079251355187952046416493 - 0.3019489387707935514557779796321053408133*I;
+            (*contspec_ptr)[14] = - 0.115762402295287875481515944676992871465 - 0.2746325066021757723919274197888779148303*I;
+            (*contspec_ptr)[15] = - 0.09716336474331456198864288349325815895773 - 0.2487897763433119534338284333930560885291*I;
+            
+            break;
     default: // unknown test case
 
         ret_code = E_INVALID_ARGUMENT(tc);

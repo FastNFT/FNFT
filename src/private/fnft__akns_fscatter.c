@@ -15,6 +15,8 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
+* Peter J Prins (TU Delft) 2017-2018.
+* Shrinivas Chimmalgi (TU Delft) 2018.
 
 */
 
@@ -31,12 +33,23 @@
  * Returns the length of array to be allocated based on the number
  * of samples and discretization.
  */
+/*
 UINT akns_fscatter_numel(UINT D, discretization_t discretization)
 {
     // 2x2 matrix of degree+1 elements for each sample
     return 4*(akns_discretization_degree(discretization) + 1)*D;
 }
+*/
 
+UINT akns_fscatter_numel(UINT D, discretization_t discretization)
+{
+
+    const UINT deg = akns_discretization_degree(discretization);
+    if (deg == 0)
+        return 0; // unknown discretization
+    else
+        return poly_fmult2x2_numel(deg, D);
+}
 /**
  * Returns the scattering matrix for a single step at frequency zero.
  */
