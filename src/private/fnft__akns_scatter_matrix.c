@@ -81,6 +81,7 @@ INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
                     ud1 = eps_t*l*l*chi*I;
                     ud2 = l*(eps_t*ch-sh)/ks;
                     
+		    if (ks != 0){
                     U[0][0] = ch-u1;
                     U[0][1] = qn*sh;
                     U[1][0] = rn*sh;
@@ -92,7 +93,20 @@ INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
                     U[2][2] = ch-u1;
                     U[2][3] = qn*sh;
                     U[3][2] = rn*sh;
-                    U[3][3] = ch+u1;
+                    U[3][3] = ch+u1;}
+                    else{
+                    U[0][0] = 1;
+                    U[0][1] = 0;
+                    U[1][0] = 0;
+                    U[1][1] = 1;
+                    U[2][0] = 1;
+                    U[2][1] = 0;
+                    U[3][0] = 0;
+                    U[3][1] = 1;
+                    U[2][2] = 1;
+                    U[2][3] = 0;
+                    U[3][2] = 0;
+                    U[3][3] = 1;}
 
                     for (c1 = 0; c1 < 4; c1++) {
                         for (c2 = 0; c2 < 4; c2++) {

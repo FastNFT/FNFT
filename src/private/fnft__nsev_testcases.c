@@ -560,10 +560,10 @@ const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
     for (UINT i=0; i<6; i++)
        printf("nsev_testcases_test_fnft: error_bounds[%i] = %2.1e <= %2.1e\n",
             (int)i, errs[i], error_bounds[i]);
-    misc_print_buf(M, contspec, "r_num");
-    misc_print_buf(M, contspec_exact, "r_exact"); 
-//     misc_print_buf(2*M, contspec+M, "ab_num");
-//     misc_print_buf(2*M, ab_exact, "ab_exact");   
+    //misc_print_buf(M, contspec, "r_num");
+    //misc_print_buf(M, contspec_exact, "r_exact"); 
+    misc_print_buf(2*M, contspec+M, "ab_num");
+     misc_print_buf(2*M, ab_exact, "ab_exact");   
 #endif
 
     // Check if the errors are below the specified bounds. Organized such that

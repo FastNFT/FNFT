@@ -306,6 +306,16 @@ static inline INT tf2contspec(
          H21_vals);
     CHECK_RETCODE(ret_code, leave_fun);    
     
+    if (opts->discretization==nse_discretization_2SPLIT2A){
+        // Correct H12_vals for trick that implements 2split2A with
+        // first order polynomials instead of second order polynomials.
+        for (i=0; i<M; i++) {
+            xi = XI[0] + i*eps_xi;
+            sqrt_z = CEXP( I*xi*eps_t / degree1step);
+            H21_vals[i] *= sqrt_z;
+        }
+    }
+
     // Compute the continuous spectrum
     switch (opts->contspec_type) {
 
@@ -316,15 +326,7 @@ static inline INT tf2contspec(
 
     case nsev_cstype_REFLECTION_COEFFICIENT:
 
-    if (opts->discretization==nse_discretization_2SPLIT2A){
-        // Correct H12_vals for trick that implements 2split2A with
-        // first order polynomials instead of second order polynomials.
-        for (i=0; i<M; i++) {
-            xi = XI[0] + i*eps_xi;
-            sqrt_z = CEXP( I*xi*eps_t / degree1step);
-            H21_vals[i] *= sqrt_z;
-        }
-    }
+
 
         phase_factor_rho = -2.0*(T[1] + eps_t*boundary_coeff);
         for (i = 0; i < M; i++) {
@@ -342,17 +344,9 @@ static inline INT tf2contspec(
 
         scale = POW(2.0, W); // needed since the transfer matrix might
                                   // have been scaled by nse_fscatter
-       
+        phase_factor_a =  2.0*D*eps_t + T[1] + T[0];
+        phase_factor_b = 2.0*(D-boundary_coeff)*eps_t + T[0] - T[1];
 
-        if (boundary_coeff == 0.0) {
-            //phase_factor_a = T[0] + T[1];
-            //phase_factor_b = T[0] - T[1];
-            phase_factor_a =  D*eps_t + T[1] + T[0];
-            phase_factor_b = (D-boundary_coeff)*eps_t + T[0] - T[1];
-        } else {
-            phase_factor_a =  2.0*D*eps_t + T[1] + T[0];
-            phase_factor_b = 2.0*(D-boundary_coeff)*eps_t + T[0] - T[1];
-        }
 
         for (i = 0; i < M; i++) {
             xi = XI[0] + i*eps_xi;       

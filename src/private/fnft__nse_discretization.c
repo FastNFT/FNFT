@@ -29,8 +29,8 @@ UINT fnft__nse_discretization_degree(nse_discretization_t
         discretization)
 {
     switch (discretization) {
-        case nse_discretization_2SPLIT2_MODAL:
         case nse_discretization_2SPLIT2A:
+        case nse_discretization_2SPLIT2_MODAL:
             return 1;
         case nse_discretization_2SPLIT4A:
             return 4;
@@ -51,7 +51,7 @@ REAL fnft__nse_discretization_boundary_coeff(nse_discretization_t discretization
 
     switch (discretization) {
         case nse_discretization_2SPLIT2_MODAL:
-            //return 0.0; // TODO: this value should be 0.5 for every staircase approximation that uses midpoint values.
+            return 0.0; // TODO: this value should be 0.5 for every staircase approximation that uses midpoint values.
         case nse_discretization_2SPLIT2A:
         case nse_discretization_2SPLIT4A:
         case nse_discretization_2SPLIT4B:

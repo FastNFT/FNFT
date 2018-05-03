@@ -110,19 +110,28 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
 
             for (i=D-1; i>=0; i--) {
                 // compute the scaling factor scl = 1/sqrt(1+kappa*|eps_t*q[i]|^2)
-		scl = 1.0/CSQRT(1-eps_t*q[i]*eps_t*r[i]);
-/*
+		//scl = 1.0/CSQRT(1-eps_t*q[i]*eps_t*r[i]);
+
                 scl = eps_t*CABS(q[i]);
-                if (kappa == -1) {
-                    if (scl >= 1.0) {
+                if ((-CREAL(q[i])/CREAL(r[i])) == -1) {
+                    if ((double)scl >= 1.0) {
                         ret_code = E_OTHER("kappa == -1 but eps_t*|q[i]|>=1 ... decrease step size");
                         goto release_mem;
                     }
-                    scl = 1.0 / ( SQRT(1.0 + scl) * SQRT(1.0 - scl) );
+                    scl = 1.0/CSQRT(1-eps_t*q[i]*eps_t*r[i]);
                 } else
-                    scl = 1.0 / HYPOT(1.0, scl);
-     */           
+                    scl = 1.0/CSQRT(1-eps_t*q[i]*eps_t*r[i]);
+              
                 // construct the scattering matrix for the i-th sample
+                p11[0] = scl;
+                p11[1] = 0.0;
+                p12[0] = 0.0;
+                p12[1] = scl*eps_t*q[i];
+                p21[0] = scl*eps_t*r[i];
+                p21[1] = 0.0;
+                p22[0] = 0.0;
+                p22[1] = scl;
+/*             
                 p11[0] = 0.0;
                 p11[1] = scl;
                 p12[0] = scl*eps_t*q[i];
@@ -131,10 +140,25 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p21[1] = scl*eps_t*r[i];
                 p22[0] = scl;
                 p22[1] = 0.0;
+
+	        p11[0] = scl;
+                p11[1] = 0.0;
+                p11[2] = 0.0;
+	        p12[0] = 0.0;
+                p12[1] = scl*eps_t*q[i];
+                p12[2] = 0.0;
+	        p21[0] = 0.0;
+                p21[1] = scl*eps_t*r[i];
+                p21[2] = 0.0;
+	        p22[0] = 0.0;
+                p22[1] = 0.0;
+                p22[2] = scl;
+*/
                 p11 += *deg_ptr + 1;
                 p21 += *deg_ptr + 1;
                 p12 += *deg_ptr + 1;
                 p22 += *deg_ptr + 1;
+
             }
             
             break;
