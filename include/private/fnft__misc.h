@@ -201,7 +201,7 @@ FNFT_INT fnft__misc_downsample(const FNFT_UINT D, FNFT_COMPLEX const * const q,
  * @ingroup misc
  * Functions computes the Sinc function sin(x)/x for \link FNFT_COMPLEX \endlink argument.
  * @param[in] x \link FNFT_COMPLEX \endlink argument.
- * @returns Sinc(x).
+ * @return Sinc(x).
  */
 FNFT_COMPLEX fnft__misc_CSINC(FNFT_COMPLEX x);
 
@@ -210,7 +210,7 @@ FNFT_COMPLEX fnft__misc_CSINC(FNFT_COMPLEX x);
  *
  * @ingroup misc
  * @param [in] number
- * @returns min{r >= number : exists d such that r = 2^d}
+ * @return min{r >= number : exists d such that r = 2^d}
  */
 FNFT_UINT fnft__misc_nextpowerof2(const FNFT_UINT number);
 

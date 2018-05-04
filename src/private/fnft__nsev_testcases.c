@@ -72,14 +72,12 @@ INT nsev_testcases(nsev_testcases_t tc, const UINT D,
 
     case nsev_testcases_SECH_DEFOCUSING:
         *M_ptr = 16;
-        *K_ptr = 1; // There is actually no soliton, but we set this value
-        // to avoid undefined behavior of the malloc calls below.
+        *K_ptr = 0;
         break;
 
     case nsev_testcases_TRUNCATED_SOLITON:
         *M_ptr = 16;
-        *K_ptr = 1; // There is actually no soliton, but we set this value
-        // to avoid undefined behavior of the malloc calls below.
+        *K_ptr = 0;
         break;
 
     default:
@@ -92,31 +90,42 @@ INT nsev_testcases(nsev_testcases_t tc, const UINT D,
         ret_code = E_NOMEM;
         goto release_mem_1;
     }
-    *contspec_ptr = malloc((*M_ptr) * sizeof(COMPLEX));
-    if (*contspec_ptr == NULL) {
-        ret_code = E_NOMEM;
-        goto release_mem_2;
+    if (*M_ptr > 0) {
+        *contspec_ptr = malloc((*M_ptr) * sizeof(COMPLEX));
+        if (*contspec_ptr == NULL) {
+            ret_code = E_NOMEM;
+            goto release_mem_2;
+        }
+        *ab_ptr = malloc(2*(*M_ptr) * sizeof(COMPLEX));
+        if (*ab_ptr == NULL) {
+            ret_code = E_NOMEM;
+            goto release_mem_3;
+        }
+    } else {
+        *contspec_ptr = NULL;
+        *ab_ptr = NULL;
     }
-    *ab_ptr = malloc(2*(*M_ptr) * sizeof(COMPLEX));
-    if (*ab_ptr == NULL) {
-        ret_code = E_NOMEM;
-        goto release_mem_3;
+    if (*K_ptr > 0) {
+        *bound_states_ptr = malloc((*K_ptr) * sizeof(COMPLEX));
+        if (*bound_states_ptr == NULL) {
+            ret_code = E_NOMEM;
+            goto release_mem_4;
+        }
+        *normconsts_ptr = malloc((*K_ptr) * sizeof(COMPLEX));
+        if (*normconsts_ptr == NULL) {
+            ret_code = E_NOMEM;
+            goto release_mem_5;
+        }    
+        *residues_ptr = malloc((*K_ptr) * sizeof(COMPLEX));
+        if (*residues_ptr == NULL) {
+            ret_code = E_NOMEM;
+            goto release_mem_6;
+        }    
+    } else {
+        *bound_states_ptr = NULL;
+        *normconsts_ptr = NULL;
+        *residues_ptr = NULL;
     }
-    *bound_states_ptr = malloc((*K_ptr) * sizeof(COMPLEX));
-    if (*bound_states_ptr == NULL) {
-        ret_code = E_NOMEM;
-        goto release_mem_4;
-    }    
-    *normconsts_ptr = malloc((*K_ptr) * sizeof(COMPLEX));
-    if (*normconsts_ptr == NULL) {
-        ret_code = E_NOMEM;
-        goto release_mem_5;
-    }    
-    *residues_ptr = malloc((*K_ptr) * sizeof(COMPLEX));
-    if (*residues_ptr == NULL) {
-        ret_code = E_NOMEM;
-        goto release_mem_6;
-    }    
 
     // generate test case
     switch (tc) {
@@ -316,6 +325,11 @@ INT nsev_testcases(nsev_testcases_t tc, const UINT D,
         (*contspec_ptr)[14] = 0.0420552444423587 - 0.0299273399538242*I;
         (*contspec_ptr)[15] = 0.0054223424902175 - 0.010076662096351*I;
 
+        // These are not the correct values, but not setting them at all can
+        // have funny side effects.
+        for (i=0; i<2*(*M_ptr); i++)
+            (*ab_ptr)[i] = 0.0;
+
         // There are no bound states. (Note: nevertheless, some memory was
         // allocated that has to be freed by the user.)
         *K_ptr = 0;
@@ -355,6 +369,11 @@ INT nsev_testcases(nsev_testcases_t tc, const UINT D,
             xi = XI[0] + i*(XI[1] - XI[0])/(*M_ptr - 1);
             (*contspec_ptr)[i] = -I*be / xi * (xi + I*be) / (xi - I*be);
         }
+
+        // These are not the correct values, but not setting them at all can
+        // have funny side effects.
+        for (i=0; i<2*(*M_ptr); i++)
+            (*ab_ptr)[i] = 0.0;
 
         // There are no bound states. (Note: nevertheless, some memory was
         // allocated that has to be freed by the user.)
@@ -416,7 +435,7 @@ static INT nsev_compare_nfs(const UINT M, const UINT K1, const UINT K2,
     else {
         dists[0] = 0.0;
         nrm = 0.0;
-        for (i=0; i<M; i++) {
+        for (i=0; !(i>=M); i++) {
             dists[0] += CABS(contspec_1[i] - contspec_2[i]);
             nrm += CABS(contspec_2[i]);
         }
@@ -429,7 +448,7 @@ static INT nsev_compare_nfs(const UINT M, const UINT K1, const UINT K2,
         // error in a
         dists[1] = 0.0;
         nrm = 0.0;
-        for (i=0; i<M; i++) {
+        for (i=0; !(i>=M); i++) {
             dists[1] += CABS(ab_1[i] - ab_2[i]);
             nrm += CABS(ab_2[i]);
         }
@@ -439,7 +458,7 @@ static INT nsev_compare_nfs(const UINT M, const UINT K1, const UINT K2,
         // error in b
         dists[2] = 0.0;
         nrm = 0.0;
-        for (i=M; i<2*M; i++) {
+        for (i=M; !(i>=2*M); i++) {
             dists[2] += CABS(ab_1[i] - ab_2[i]);
             nrm += CABS(ab_2[i]);
         }
@@ -462,9 +481,9 @@ static INT nsev_compare_nfs(const UINT M, const UINT K1, const UINT K2,
         else {
             dists[4] = 0.0;
             nrm = 0.0;
-            for (i=0; i<K1; i++) {
+            for (i=0; !(i>=K1); i++) {
                 min_dist = INFINITY;
-                for (j=0; j<K1; j++) {
+                for (j=0; !(j>=K1); j++) {
                     dist = CABS(bound_states_1[i] - bound_states_2[j]);
                     if (dist < min_dist) {
                         min_dist = dist;
@@ -484,9 +503,9 @@ static INT nsev_compare_nfs(const UINT M, const UINT K1, const UINT K2,
         else {
             dists[5] = 0.0;
             nrm = 0.0;
-            for (i=0; i<K1; i++) {
+            for (i=0; !(i>=K1); i++) {
                 min_dist = INFINITY;
-                for (j=0; j<K1; j++) {
+                for (j=0; !(j>=K1); j++) {
                     dist = CABS(bound_states_1[i] - bound_states_2[j]);
                     if (dist < min_dist) {
                         min_dist = dist;
@@ -518,7 +537,8 @@ const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
     COMPLEX * residues_exact = NULL;
     UINT K, K_exact, M;
     INT kappa = 0;
-    REAL errs[6] = { FNFT_NAN };
+    REAL errs[6] = {
+        FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN };
     INT ret_code;
 
     // Check inputs
@@ -536,7 +556,7 @@ const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
     K = nse_discretization_degree(opts->discretization) * D;
     bound_states = malloc(K * sizeof(COMPLEX));
     normconsts_and_residues = malloc(2*D * sizeof(COMPLEX));
-    if ( q == NULL || contspec == NULL || bound_states == NULL \
+    if ( q == NULL || contspec == NULL || bound_states == NULL
     || normconsts_and_residues == NULL) {
         ret_code = E_NOMEM;
         goto release_mem;
@@ -558,7 +578,7 @@ const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
 
 #ifdef DEBUG
     for (UINT i=0; i<6; i++)
-       printf("nsev_testcases_test_fnft: error_bounds[%i] = %2.1e <= %2.1e\n",
+        printf("nsev_testcases_test_fnft: error_bounds[%i] = %2.1e <= %2.1e\n",
             (int)i, errs[i], error_bounds[i]);
 #endif
 
