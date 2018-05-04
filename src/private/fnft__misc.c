@@ -254,13 +254,9 @@ INT misc_merge(UINT *N_ptr, COMPLEX * const vals, REAL tol)
     return SUCCESS;
 }
 
-INT misc_downsample(COMPLEX const * const q, const UINT D,
-    COMPLEX ** qsub_ptr, UINT * const Dsub_ptr,
-    UINT * const subsampling_factor_ptr)
+INT misc_downsample(const UINT D, COMPLEX const * const q,
+    UINT * const Dsub_ptr, COMPLEX ** qsub_ptr, UINT * const first_last_index)
 {
-    UINT i, Dsub, subsampling_factor;
-    COMPLEX * qsub;
-
     if (q == NULL)
         return E_INVALID_ARGUMENT(q);
     if (D <= 2)
@@ -269,33 +265,35 @@ INT misc_downsample(COMPLEX const * const q, const UINT D,
         return E_INVALID_ARGUMENT(qsub_ptr);
     if (Dsub_ptr == NULL)
         return E_INVALID_ARGUMENT(Dsub_ptr);
-    if (subsampling_factor_ptr == NULL)
-        return E_INVALID_ARGUMENT(subsampling_factor_ptr);
+    if (first_last_index == NULL)
+        return E_INVALID_ARGUMENT(first_last_index);
 
-    // Dsub is the number of samples of qsub. It is is chosen to be a
-    // power of two that is close to sqrt(D*log2(D)*log2(D)). The
-    // runtime of the fast eigenvalue root finder is thus
-    // O(D*log2(D)*log2(D)) -- this is the complexity that the
-    // algorithm for computing the continuous spectrum needs anyway
-    // (if M==D).
-    Dsub = POW(2.0, CEIL( 0.5 * LOG2(D * LOG2(D) * LOG2(D)) ));
-    if (!(Dsub >= 2))
-        Dsub = 2;
-    if (!(Dsub <= D))
+    // Determine number of samples after downsampling, Dsub 
+    UINT Dsub = *Dsub_ptr; // desired Dsub
+    if (Dsub < 2)
+       Dsub = 2;
+    if (Dsub > D)
         Dsub = D;
-    subsampling_factor = D / Dsub;
-            
-    // Create the subsampled version of q, qsub
-    qsub = malloc(Dsub * sizeof(COMPLEX));
+    const UINT nskip_per_step = ROUND((REAL)D / Dsub);
+    Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
+
+    COMPLEX * const qsub = malloc(Dsub * sizeof(COMPLEX));
     if (qsub == NULL)
         return E_NOMEM;
-    for (i=0; i<Dsub; i++)
-        qsub[i] = q[i * subsampling_factor];
+
+    // Perform the downsampling
+    UINT isub, i = 0;    
+    for (isub=0; isub<Dsub; isub++) {
+        qsub[isub] = q[i];
+        i += nskip_per_step;
+    }
+
+    // Original index of the first and last sample in qsub
+    first_last_index[0] = 0;
+    first_last_index[1] = i - 1;
 
     *qsub_ptr = qsub;
     *Dsub_ptr = Dsub;
-    *subsampling_factor_ptr = subsampling_factor;
-
     return SUCCESS;
 }
 

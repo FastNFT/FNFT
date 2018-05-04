@@ -386,7 +386,7 @@ static inline INT subsample_and_refine(const UINT D,
     REAL map_coeff;
     REAL tol_im;
 	UINT deg;
-    UINT Dsub, subsampling_factor;
+    UINT Dsub;
     REAL eps_t, eps_t_sub;
     INT W = 0, *W_ptr = NULL;
     UINT K = 0, K_filtered = 0;
@@ -400,8 +400,13 @@ static inline INT subsample_and_refine(const UINT D,
 
     // Create a subsampled version of q for computing initial guesses. (The
     // refinement will be carried out based on the original signal.)
-    ret_code = misc_downsample(q, D, &qsub, &Dsub, &subsampling_factor);
-    CHECK_RETCODE(ret_code, release_mem);
+    Dsub = POW(2.0, CEIL( 0.5 * LOG2(D * LOG2(D) * LOG2(D)) ));
+    UINT first_last_index[2] = { 0, 0 };
+    ret_code = misc_downsample(D, q, &Dsub, &qsub, first_last_index);
+    if ( first_last_index[0] != 0 || first_last_index[1]+1 != D )
+        return E_ASSERTION_FAILED; // Correct update of T for general
+                                   // downsampling still needs to be
+                                   // implemented
 
     // Allocate memory for the transfer matrix
     i = nse_fscatter_numel(Dsub, opts_ptr->discretization);

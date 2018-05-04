@@ -24,21 +24,21 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    size_t D;
-    double complex * q;
-    double * T;
-    size_t M;
-    double complex * contspec = NULL;
-    double * XI;
-    size_t K;
-    double complex * bound_states = NULL;
-    double complex * normconsts_or_residuals = NULL;
-    int kappa;
-    int skip_contspec_flag = 0;
-    int skip_bound_states_flag = 0;
-    int skip_normconsts_flag = 0;
-    size_t i, j;
-    ptrdiff_t k;
+    FNFT_UINT D;
+    FNFT_COMPLEX * q;
+    FNFT_REAL * T;
+    FNFT_UINT M;
+    FNFT_COMPLEX * contspec = NULL;
+    FNFT_REAL * XI;
+    FNFT_UINT K;
+    FNFT_COMPLEX * bound_states = NULL;
+    FNFT_COMPLEX * normconsts_or_residuals = NULL;
+    FNFT_INT kappa;
+    FNFT_INT skip_contspec_flag = 0;
+    FNFT_INT skip_bound_states_flag = 0;
+    FNFT_INT skip_normconsts_flag = 0;
+    FNFT_UINT i, j;
+    FNFT_INT k;
     double *re, *im;
     double *csr, *csi, *bsr, *bsi, *ncr, *nci;
     char msg[128]; // buffer for error messages
@@ -125,7 +125,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 goto on_error;
             }
             K = mxGetN(prhs[k+1]);
-            bound_states = mxMalloc(K * sizeof(double complex));
+            bound_states = mxMalloc(K * sizeof(FNFT_COMPLEX));
             if (bound_states == NULL) {
                 snprintf(msg, sizeof msg, "Out of memory.");
                 goto on_error;
@@ -147,7 +147,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 snprintf(msg, sizeof msg, "'bsloc_niter' should be followed by a non-negative real scalar.");
                 goto on_error;
             }
-            opts.niter = (size_t)mxGetScalar(prhs[k+1]);
+            opts.niter = (FNFT_UINT)mxGetScalar(prhs[k+1]);
             
             /* Increase k to account for vector of initial guesses */
     	    k++;
@@ -155,6 +155,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "bsloc_subsamp_refine") == 0 ) {
             
             opts.bound_state_localization = fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE;
+
+        } else if ( strcmp(str, "bsloc_Dsub") == 0 ) {
+
+            /* Extract desired number of iterations */
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+            || mxGetNumberOfElements(prhs[k+1]) != 1
+                    || mxGetScalar(prhs[k+1]) < 0.0 ) {
+                snprintf(msg, sizeof msg, "'bsloc_Dsub' should be followed by a non-negative real scalar.");
+                goto on_error;
+            }
+            opts.Dsub = (FNFT_UINT)mxGetScalar(prhs[k+1]);
+            
+            /* Increase k to account for vector of initial guesses */
+    	    k++;
+
             
         } else if ( strcmp(str, "bsfilt_none") == 0 ) {
             
@@ -219,7 +234,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     
     /* Allocate memory */
 
-    q = mxMalloc(D * sizeof(double complex));
+    q = mxMalloc(D * sizeof(FNFT_COMPLEX));
     if (q == NULL) {
         snprintf(msg, sizeof msg, "Out of memory.");
         goto on_error;
@@ -227,9 +242,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
    
     if (skip_contspec_flag == 0) {
         if (opts.contspec_type == fnft_nsev_cstype_AB)
-            contspec = mxMalloc(2*D * sizeof(double complex));
+            contspec = mxMalloc(2*D * sizeof(FNFT_COMPLEX));
         else
-            contspec = mxMalloc(D * sizeof(double complex));      
+            contspec = mxMalloc(D * sizeof(FNFT_COMPLEX));      
         if (contspec == NULL) {
             snprintf(msg, sizeof msg, "Out of memory.");
             goto on_error;
@@ -243,7 +258,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 snprintf(msg, sizeof msg, "fnft_nsev_max_K returned zero.");
                 goto on_error;
             }
-            bound_states = mxMalloc(K * sizeof(double complex));
+            bound_states = mxMalloc(K * sizeof(FNFT_COMPLEX));
         }
         if (bound_states == NULL) {
             snprintf(msg, sizeof msg, "Out of memory.");
@@ -252,7 +267,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
 
     if (skip_normconsts_flag == 0) {
-        normconsts_or_residuals = mxMalloc(D * sizeof(double complex));
+        normconsts_or_residuals = mxMalloc(D * sizeof(FNFT_COMPLEX));
         if (normconsts_or_residuals == NULL) {
             snprintf(msg, sizeof msg, "Out of memory.");
             goto on_error;
@@ -290,13 +305,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         csi = mxGetPi(plhs[0]);
         if (opts.contspec_type == fnft_nsev_cstype_AB) {
             for (i=0; i<2*D; i++) {
-                csr[i] = creal(contspec[i]);
-                csi[i] = cimag(contspec[i]);
+                csr[i] = FNFT_CREAL(contspec[i]);
+                csi[i] = FNFT_CIMAG(contspec[i]);
             }
         } else {
             for (i=0; i<D; i++) {
-                csr[i] = creal(contspec[i]);
-                csi[i] = cimag(contspec[i]);
+                csr[i] = FNFT_CREAL(contspec[i]);
+                csi[i] = FNFT_CIMAG(contspec[i]);
             }
         }
     } else {
@@ -308,8 +323,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         bsr = mxGetPr(plhs[1]);
         bsi = mxGetPi(plhs[1]);
         for (i=0; i<K; i++) {
-            bsr[i] = creal(bound_states[i]);
-            bsi[i] = cimag(bound_states[i]);
+            bsr[i] = FNFT_CREAL(bound_states[i]);
+            bsi[i] = FNFT_CIMAG(bound_states[i]);
         }
     } else if (nlhs >= 2) {
         plhs[1] = mxCreateDoubleMatrix(0, 0, mxCOMPLEX);
@@ -320,8 +335,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ncr = mxGetPr(plhs[2]);
         nci = mxGetPi(plhs[2]);
         for (i=0; i<K; i++) {
-            ncr[i] = creal(normconsts_or_residuals[i]);
-            nci[i] = cimag(normconsts_or_residuals[i]);
+            ncr[i] = FNFT_CREAL(normconsts_or_residuals[i]);
+            nci[i] = FNFT_CIMAG(normconsts_or_residuals[i]);
         }
     } else if (nlhs >= 3) {
         plhs[2] = mxCreateDoubleMatrix(0, 0, mxCOMPLEX);
