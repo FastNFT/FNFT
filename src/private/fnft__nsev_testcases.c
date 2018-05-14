@@ -381,7 +381,7 @@ release_mem_5:
 release_mem_4:
     free(*bound_states_ptr);
 release_mem_3:
-    free(ab_ptr);
+    free(*ab_ptr);
 release_mem_2:
     free(*contspec_ptr);
 release_mem_1:
