@@ -227,7 +227,9 @@ INT misc_merge(UINT *N_ptr, COMPLEX * const vals, REAL tol)
     UINT i, j, N, N_filtered;
     
     if (N_ptr == NULL)
-        return E_INVALID_ARGUMENT(N_ptr)
+        return E_INVALID_ARGUMENT(N_ptr);
+    if (*N_ptr == 0)
+        return SUCCESS;
     if (vals == NULL)
         return E_INVALID_ARGUMENT(vals);
     if (tol < 0.0)
