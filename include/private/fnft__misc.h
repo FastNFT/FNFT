@@ -171,25 +171,29 @@ FNFT_INT fnft__misc_merge(FNFT_UINT *N_ptr, FNFT_COMPLEX * const vals,
     FNFT_REAL tol);
 
 /**
- * @brief Computes a subsampled version of array q.
+ * @brief Downsamples an array.
  * 
  * @ingroup misc
  * Computes a subsampled version of q. The length of q is D>=2. The routine
  * will allocate memory for the subsampled signal qsub and updates the
  * pointer *qsub_ptr such that it points to the newly allocated qsub. The
- * user is responsible to freeing the memory later. The new number of samples
- * Dsub>=2 and the subsampling factor D/Dsub are stored in *Dsub_ptr and
- * *subsampling_factor_ptr.
- * @param[in] q Complex valued array to be subsampled.
+ * user is responsible to freeing the memory later. 
  * @param[in] D Number of samples in array q.
+ * @param[in] q Complex valued array to be subsampled.
  * @param[out] qsub_ptr Pointer to the starting location of subsampled signal.
- * @param[out] Dsub_ptr Pointer to new number of samples.
- * @param[out] subsampling_factor_ptr Pointer to subsampling factor D/Dsub.
+ * @param[out] Dsub_ptr Pointer to new number of samples. Upon entry, *Dsub_ptr
+ *             should contain a desired number of samples. Upon exit, *Dsub_ptr
+ *             has been overwritten with the actual number of samples that the
+ *             routine has chosen. It is usually close to the desired one.
+ * @param[out] first_last_index Vector of length two. Upon exit, it contains
+ *             the original index of the first and the last sample in qsub.
+ *             That is, qsub[0]=q[first_last_index[0]] and
+ *             qsub[Dsub-1]=q[first_last_index[1]].
  * @return Returns SUCCESS or an error code.
  */
-FNFT_INT fnft__misc_downsample(FNFT_COMPLEX const * const q, const FNFT_UINT D,
-    FNFT_COMPLEX ** qsub_ptr, FNFT_UINT * const Dsub_ptr,
-    FNFT_UINT * const subsampling_factor_ptr);
+FNFT_INT fnft__misc_downsample(const FNFT_UINT D, FNFT_COMPLEX const * const q,
+    FNFT_UINT * const Dsub_ptr, FNFT_COMPLEX ** qsub_ptr,
+    FNFT_UINT * const first_last_index);
 
 /**
  * @brief Sinc function for complex arguments.
@@ -197,9 +201,18 @@ FNFT_INT fnft__misc_downsample(FNFT_COMPLEX const * const q, const FNFT_UINT D,
  * @ingroup misc
  * Functions computes the Sinc function sin(x)/x for \link FNFT_COMPLEX \endlink argument.
  * @param[in] x \link FNFT_COMPLEX \endlink argument.
- * @returns Sinc(x).
+ * @return Sinc(x).
  */
 FNFT_COMPLEX fnft__misc_CSINC(FNFT_COMPLEX x);
+
+/**
+ * @brief Closest larger or equal number that is a power of two.
+ *
+ * @ingroup misc
+ * @param [in] number
+ * @return min{r >= number : exists d such that r = 2^d}
+ */
+FNFT_UINT fnft__misc_nextpowerof2(const FNFT_UINT number);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define misc_print_buf(...) fnft__misc_print_buf(__VA_ARGS__)
@@ -213,6 +226,7 @@ FNFT_COMPLEX fnft__misc_CSINC(FNFT_COMPLEX x);
 #define misc_merge(...) fnft__misc_merge(__VA_ARGS__)
 #define misc_downsample(...) fnft__misc_downsample(__VA_ARGS__)
 #define misc_CSINC(...) fnft__misc_CSINC(__VA_ARGS__)
+#define misc_nextpowerof2(...) fnft__misc_nextpowerof2(__VA_ARGS__)
 #endif
 
 #endif

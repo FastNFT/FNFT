@@ -293,17 +293,17 @@ static INT nsep_compare_nfs(const UINT K1, const UINT K2,
 
 INT nsep_testcases_test_fnft(nsep_testcases_t tc, UINT D, REAL error_bounds[3],
 fnft_nsep_opts_t * opts_ptr) {
-    COMPLEX * q;
+    COMPLEX * q = NULL;
     COMPLEX * mainspec = NULL;
     COMPLEX * auxspec = NULL;
     REAL * sheet_indices = NULL;
     REAL T[2];
-    COMPLEX * mainspec_exact;
-    COMPLEX * auxspec_exact;
-    REAL * sheet_indices_exact;
+    COMPLEX * mainspec_exact = NULL;
+    COMPLEX * auxspec_exact = NULL;
+    REAL * sheet_indices_exact = NULL;
     REAL remove_box[4];
     UINT K, K_exact, M, M_exact;
-    INT kappa;
+    INT kappa = 0;
     fnft_nsep_opts_t default_opts;
     REAL errs[3];
     INT ret_code;

@@ -65,14 +65,19 @@ typedef enum {
  *  are of length *K_ptr in this case. This method can be very fast if good
  *  initial guesses for the bound states are available. The complexity is
  *  \f$ O(niter (*K\_ptr) D) \f$. \n \n
- *  fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE: This method offers a good compromise between the other two. The
- *  method automatically finds initial guesses for the NEWTON method by first
- *  applying the FAST_EIGENVALUE method to a subsampled version of the signal.
- *  Second these initial guesses are refined using the NEWTON method. The
- *  subsampling factor is chosen such that the complexity is
- *  \f$ O(D \log^2 D + niter K D) \f$, where \f$ K \f$ is the number of bound
- *  states that survived the filtering operation of the initial call to the
- *  fnft_nsev_bsloc_FAST_EIGENVALUE method w.r.t. the subsampled signal.
+ *  fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE: This method offers a good compromise
+ *  between the other two. The method automatically finds initial guesses for
+ *  the NEWTON method by first applying the FAST_EIGENVALUE method to a
+ *  subsampled version of the signal. Second these initial guesses are refined
+ *  using the NEWTON method. The number of samples of the subsampled signal can
+ *  be controlled using the parameter Dsub in \link fnft_nsev_opts_t \link.
+ *  If Dsub=0, the routine automatically choosen this number such that the
+ *  complexity is \f$ O(D \log^2 D + niter K D) \f$, where \f$ K \f$ is the
+ *  number of bound states that survived the filtering operation of the initial
+ *  call to the fnft_nsev_bsloc_FAST_EIGENVALUE method w.r.t. the subsampled
+ *  signal. By choosing Dsub between 2 and D, the user can be request a
+ *  different number of samples. Note that algorithm uses this value only as an
+ *  indication.
  */
 typedef enum {
     fnft_nsev_bsloc_FAST_EIGENVALUE,
@@ -133,9 +138,15 @@ typedef enum {
  *  Controls how \link fnft_nsev \endlink localizes bound states. \n 
  * Should be of type \link fnft_nsev_bsloc_t \endlink.  
  *
+ * @var fnft_nsev_opts_t::Dsub
+ *   Controls how many samples are used after subsampling when bound states are
+ *   localized using the fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE method. See
+ *   \link fnft_nsev_bsloc_t \endlink for details.
+ *
  * @var fnft_nsev_opts_t::niter
- *  Number of Newton iterations to be carried out when either the fnft_nsev_bsloc_NEWTON or
- *  the fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE method is used.
+ *  Number of Newton iterations to be carried out when either the
+ *  fnft_nsev_bsloc_NEWTON or the fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE method
+ *  is used.
  *
  * @var fnft_nsev_opts_t::discspec_type
  *  Controls how \link fnft_nsev \endlink fills the array
@@ -162,6 +173,7 @@ typedef struct {
     fnft_nsev_bsfilt_t bound_state_filtering;
 	fnft_nsev_bsloc_t bound_state_localization;
     FNFT_UINT niter;
+    FNFT_UINT Dsub;
     fnft_nsev_dstype_t discspec_type;
     fnft_nsev_cstype_t contspec_type;
     FNFT_INT normalization_flag;

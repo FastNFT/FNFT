@@ -43,7 +43,11 @@ typedef double FNFT_REAL;
  * The complex floating point data type used by FNFT.
  * @ingroup numtype
  */
+#ifndef __cplusplus
 typedef double complex FNFT_COMPLEX;
+#else
+typedef std::complex<double> FNFT_COMPLEX;
+#endif
 
 /**
  * The signed integer used by FNFT.

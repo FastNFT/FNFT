@@ -21,15 +21,26 @@
 %   'bsloc_fasteigen'   Use fast eigenvalue method to locate bound states.
 %                   This method is very reliable, but requires O(D^2)
 %                   flops. This input is not followed by a value.
-%   'bsloc_subsamp_refine' Use a mixed method to locate bound states. This
-%                   method is reliable if D is not too low. It requires
-%                   O(niter D log^2 D) flops. Not followed by a value.
 %   'bsloc_newton'  Use Newton's method to locate bound states. This method
 %                   is reliable if good intial guesses for the bound states
 %                   are known. Followed by a complex row vector of K
 %                   initial guesses. It requires O(niter KD) flops.
+%   'bsloc_subsamp_refine' Use a mixed method to locate bound states. First
+%                   get initial guesses for the bound states by applying
+%                   the 'fasteigen' method to a subsampled version of the
+%                   signal. Then refine using 'newton' based on the full
+%                   signal. This method is reliable if D is not too low.
+%                   It requires O(niter D log^2 D) flops if Dsub (see
+%                   below) is set by the algorithm. Not followed by a
+%                   value.
 %   'bsloc_niter'   Number of iterations to be carried by Newton's method.
 %                   Followed by a scalar double.
+%   'bsloc_Dsub'    The desired number of samples for the subsampled signal
+%                   in the 'subsamp_refine' method. Less samples in the
+%                   subsampled stage result in faster execution time, but
+%                   might also lead to a loss of precision. Followed
+%                   by scalar value. Note that the routine treates Dsub as
+%                   as an indication. The actually used value might differ.
 %   'bsfilt_none'   Do not filter bound states at all.
 %   'bsfilt_basic'  Basic bound state filtering. Removes duplicates and
 %                   bound states in the lower half plane.

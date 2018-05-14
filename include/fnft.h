@@ -93,5 +93,9 @@
  *  equation
  */
 
+/**
+ * \defgroup fft_wrapper PRIVATE: Wrapper for fast Fourier transform routines
+ */
+
 #endif
 

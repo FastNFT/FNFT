@@ -34,15 +34,17 @@
  *
  * In general, discretizations with a lower degree are faster, while those with
  * a highter order of accuracy are more accurate. Therefore, the best choice is
- * normally among `-2A`, `-2B`, `-4B`, `-6B` and `-8B`.
+ * normally among `-2A`, `-2B`, `-2S` `-4B`, `-6B` and `-8B`.
  * The choice between these is a trade-off between speed and accuracy.
  *
  * `fnft_kdv_discretization_2SPLIT1A`: Degree = 1, Order of accuracy = 1\n
  * `fnft_kdv_discretization_2SPLIT1B`: Degree = 1, Order of accuracy = 1\n
  * `fnft_kdv_discretization_2SPLIT2A`: Degree = 1, Order of accuracy = 2\n
  * `fnft_kdv_discretization_2SPLIT2B`: Degree = 1, Order of accuracy = 2\n
+ * `fnft_kdv_discretization_2SPLIT2S`: Degree = 1, Order of accuracy = 2\n
  * `fnft_kdv_discretization_2SPLIT3A`: Degree = 3, Order of accuracy = 3\n
  * `fnft_kdv_discretization_2SPLIT3B`: Degree = 3, Order of accuracy = 3\n
+ * `fnft_kdv_discretization_2SPLIT3S`: Degree = 2, Order of accuracy = 3\n
  * `fnft_kdv_discretization_2SPLIT4A`: Degree = 4, Order of accuracy = 4\n
  * `fnft_kdv_discretization_2SPLIT4B`: Degree = 2, Order of accuracy = 4\n
  * `fnft_kdv_discretization_2SPLIT5A`: Degree = 15, Order of accuracy = 5\n
@@ -68,8 +70,10 @@ typedef enum {
     fnft_kdv_discretization_2SPLIT1B,
     fnft_kdv_discretization_2SPLIT2A,
     fnft_kdv_discretization_2SPLIT2B,
+    fnft_kdv_discretization_2SPLIT2S,
     fnft_kdv_discretization_2SPLIT3A,
     fnft_kdv_discretization_2SPLIT3B,
+    fnft_kdv_discretization_2SPLIT3S,
     fnft_kdv_discretization_2SPLIT4A,
     fnft_kdv_discretization_2SPLIT4B,
     fnft_kdv_discretization_2SPLIT5A,
@@ -87,8 +91,10 @@ typedef enum {
 #define kdv_discretization_2SPLIT1B fnft_kdv_discretization_2SPLIT1B
 #define kdv_discretization_2SPLIT2A fnft_kdv_discretization_2SPLIT2A
 #define kdv_discretization_2SPLIT2B fnft_kdv_discretization_2SPLIT2B
+#define kdv_discretization_2SPLIT2S fnft_kdv_discretization_2SPLIT2S
 #define kdv_discretization_2SPLIT3A fnft_kdv_discretization_2SPLIT3A
 #define kdv_discretization_2SPLIT3B fnft_kdv_discretization_2SPLIT3B
+#define kdv_discretization_2SPLIT3S fnft_kdv_discretization_2SPLIT3S
 #define kdv_discretization_2SPLIT4A fnft_kdv_discretization_2SPLIT4A
 #define kdv_discretization_2SPLIT4B fnft_kdv_discretization_2SPLIT4B
 #define kdv_discretization_2SPLIT5A fnft_kdv_discretization_2SPLIT5A

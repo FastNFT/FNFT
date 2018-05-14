@@ -35,6 +35,7 @@ static fnft_nsev_opts_t default_opts = {
     .bound_state_filtering = nsev_bsfilt_FULL,
     .bound_state_localization = nsev_bsloc_SUBSAMPLE_AND_REFINE,
     .niter = 10,
+    .Dsub = 0, // auto
     .discspec_type = nsev_dstype_NORMING_CONSTANTS,
     .contspec_type = nsev_cstype_REFLECTION_COEFFICIENT,
     .normalization_flag = 1,
@@ -129,7 +130,6 @@ INT fnft_nsev(
     COMPLEX *transfer_matrix = NULL;
     COMPLEX *qsub = NULL;
     REAL eps_t;
-    UINT subsampling_factor, Dsub;
     UINT deg;
     INT W = 0, *W_ptr = NULL;
     INT ret_code = SUCCESS;
@@ -191,19 +191,24 @@ INT fnft_nsev(
     if (kappa == +1 && bound_states != NULL) {
         
         // Compute the bound states
-        if (opts->bound_state_localization == nsev_bsloc_SUBSAMPLE_AND_REFINE) { // the
-            // mixed method gets special treatment
+        if (opts->bound_state_localization == nsev_bsloc_SUBSAMPLE_AND_REFINE) {
+            // the mixed method gets special treatment
             
             // First step: Find initial guesses for the bound states using the
             // fast eigenvalue method. To bound the complexity, a subsampled
             // version of q, qsub, will be passed to the fast eigenroutine.
-            
-            ret_code = misc_downsample(q, D, &qsub, &Dsub,&subsampling_factor);
+            UINT Dsub = opts->Dsub;
+            if (Dsub == 0) // The user wants us to determine Dsub
+                Dsub = SQRT(D * LOG2(D) * LOG2(D));
+            UINT first_last_index[2];
+            ret_code = misc_downsample(D, q, &Dsub, &qsub, first_last_index);
             CHECK_RETCODE(ret_code, release_mem);
+            REAL const Tsub[2] = { T[0] + first_last_index[0]*eps_t,
+                T[0] + first_last_index[1]*eps_t };
           
             // Fixed bound states of qsub using the fast eigenvalue method
             opts->bound_state_localization = nsev_bsloc_FAST_EIGENVALUE;
-            ret_code = fnft_nsev(Dsub, qsub, T, 0, NULL, XI, K_ptr,
+            ret_code = fnft_nsev(Dsub, qsub, Tsub, 0, NULL, XI, K_ptr,
                 bound_states, NULL, kappa, opts);
             CHECK_RETCODE(ret_code, release_mem);
            
