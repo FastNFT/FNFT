@@ -75,7 +75,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     fnft_errwarn_setprintf(mexPrintf);
 
     /* Check remaining inputs, if any */
-    for (k=3; k<nrhs; i++) {
+    for (k=3; k<nrhs; k++) {
 
         /* Check if current input is a string as desired and convert it */
         if ( !mxIsChar(prhs[k]) ) {

@@ -56,7 +56,7 @@ INT poly_chirpz(const UINT deg, COMPLEX const * const p, \
     Y = malloc(L * sizeof(kiss_fft_cpx));
     V = malloc(L * sizeof(kiss_fft_cpx));
     buf = malloc(L * sizeof(kiss_fft_cpx));
-    if (cfg == NULL && Y == NULL && V == NULL && buf == NULL) {
+    if (cfg == NULL || Y == NULL || V == NULL || buf == NULL) {
         ret_code = E_NOMEM;
         goto release_mem;
     }

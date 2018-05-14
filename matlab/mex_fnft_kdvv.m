@@ -1,7 +1,7 @@
 % MEX_FNFT_KDVV Fast nonlinear Fourier transform for the Korteweg-de Vries
 % equation with vanishing boundaries.
 %
-%   contspec = MEX_FNFT_KDVV(q, T, XI, kappa)
+%   contspec = MEX_FNFT_KDVV(q, T, XI)
 %
 % DESCRIPTION
 %   Provides an interface to the C routine fnft_kdvv.

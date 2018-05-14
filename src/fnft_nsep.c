@@ -337,6 +337,7 @@ static inline INT gridsearch(const UINT D,
         M = oversampling_factor*deg;
         ret_code = poly_roots_fftgridsearch(deg, transfer_matrix+(deg+1), &M,
             PHI, roots);
+        CHECK_RETCODE(ret_code, release_mem);
 
         // Coordinate transform (from discrete-time to continuous-time domain)
         for (i=0; i<M; i++)
@@ -476,6 +477,7 @@ static inline INT subsample_and_refine(const UINT D,
         // Refine the remaining roots
         ret_code = refine_mainspec(D, q, eps_t, K, roots,
             opts_ptr->max_evals, +2.0, kappa);
+        CHECK_RETCODE(ret_code, release_mem);
 
         // Filter the refined roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
@@ -574,7 +576,8 @@ static inline INT subsample_and_refine(const UINT D,
         // Refine the roots
         ret_code = refine_auxspec(D, q, eps_t, M, roots,
             opts_ptr->max_evals, kappa);
-
+        CHECK_RETCODE(ret_code, release_mem);
+ 
         // Filter the refined roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
             ret_code = misc_filter(&M, roots, NULL, opts_ptr->bounding_box);
