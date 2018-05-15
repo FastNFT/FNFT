@@ -27,6 +27,21 @@
 #define FNFT__POLY_FMULT_H
 
 #include "fnft.h"
+#include "fnft__fft_wrapper_plan_t.h"
+
+FNFT_INT fnft__poly_fmult_p1xp2_len(const FNFT_UINT deg);
+FNFT_UINT fnft__poly_fmult_p1xp2_lenmen(const FNFT_UINT deg);
+FNFT_INT fnft__poly_fmult_p1xp2(
+    const FNFT_UINT deg,
+    FNFT_COMPLEX const * const p1, 
+    FNFT_COMPLEX const * const p2,
+    FNFT_COMPLEX * const result,
+    fnft__fft_wrapper_plan_t plan_fwd,
+    fnft__fft_wrapper_plan_t plan_inv,
+    FNFT_COMPLEX * const buf0,
+    FNFT_COMPLEX * const buf1,
+    FNFT_COMPLEX * const buf2,
+    const FNFT_INT add_flag);
 
 /**
  * @brief Number of elements that the input p to
@@ -104,6 +119,9 @@ FNFT_INT fnft__poly_fmult2x2(FNFT_UINT *d, FNFT_UINT n, FNFT_COMPLEX * const p,
     FNFT_COMPLEX * const result, FNFT_INT * const W_ptr);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
+#define poly_fmult_p1xp2_len(...) fnft__poly_fmult_p1xp2_len(__VA_ARGS__)
+#define poly_fmult_p1xp2_lenmen(...) fnft__poly_fmult_p1xp2_lenmen(__VA_ARGS__)
+#define poly_fmult_p1xp2(...) fnft__poly_fmult_p1xp2(__VA_ARGS__)
 #define poly_fmult_numel(...) fnft__poly_fmult_numel(__VA_ARGS__)
 #define poly_fmult2x2_numel(...) fnft__poly_fmult2x2_numel(__VA_ARGS__)
 #define poly_fmult(...) fnft__poly_fmult(__VA_ARGS__)
