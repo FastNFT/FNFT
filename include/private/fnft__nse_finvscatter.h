@@ -28,6 +28,31 @@
 
 #include "fnft_nse_discretization_t.h"
 
+/**
+ * @brief Recovers the samples that corresponding to a transfer matrix fast.
+ *
+ * Recovers samples q[0], q[1], ..., q[D-1] that, when applied to \link
+ * fnft__nse_fscatter \endlink, the transfer matrix provided by the user is
+ * reconstructed. Note that the transfer matrix has to be (at least close to)
+ * realizable, i.e., such samples have to exist.
+ *
+ * More information about the algorithm used here can be found in
+ * <a href="http://dx.doi.org/10.1109/ISIT.2015.7282741">Wahls and Poor (Proc.
+ * IEEE ISIT 2015)</a> and <a href="https://doi.org/10.1190/1.1441417">McClary
+ * (Geophysics 48(10), 1983)</a>.
+ *
+ * @ingroup nse
+ * @param deg Degree of the polynomials in the transfer matrix.
+ * @param [in] transfer_matrix A transfer matrix in the same format as used by
+ *   \link fnft__nse_fscatter \endlink.
+ * @param [out] q Array with D=deg/base_deg entries in which the samples are
+ *   stored, where base_deg is the output of
+ *   \link fnft__nse_discretization_degree \endlink.
+ * @param eps_t See \link fnft__nse_fscatter \endlink.
+ * @param kappa See \link fnft__nse_fscatter \endlink.
+ * @param discretization See \link fnft__nse_fscatter \endlink. Currently,
+ *   only the 2SPLIT2_MODAL discretization is supported.
+ */
 FNFT_INT fnft__nse_finvscatter(
     const FNFT_UINT deg,
     FNFT_COMPLEX const * const transfer_matrix,

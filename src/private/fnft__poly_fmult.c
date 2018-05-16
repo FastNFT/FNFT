@@ -43,11 +43,6 @@ inline INT poly_fmult_two_polys_len(const UINT deg)
     return fft_wrapper_next_fft_length(2*(deg + 1) - 1);
 }
 
-inline UINT poly_fmult_two_polys_lenmen(const UINT deg)
-{
-    return sizeof(COMPLEX)*(4*poly_fmult_two_polys_len(deg) - 1);
-}
-
 inline INT poly_fmult_two_polys(
     const UINT deg,
     COMPLEX const * const p1, 
