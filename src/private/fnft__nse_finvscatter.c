@@ -28,70 +28,44 @@
 #include "fnft__fft_wrapper.h"
 #include <stdio.h>
 
-// poly_fmult_p1xp2 for lazy people, takes care of all buffers (ineffecient
-// since they are not reused => TODO)
-static INT poly_fmult_p1xp2_X(
-    const UINT deg, 
-    COMPLEX const * const p1, 
-    COMPLEX const * const p2,
-    COMPLEX * const result,
-    const INT add_flag)
+static inline INT create_fft_plans(const UINT deg,
+    fft_wrapper_plan_t * const plan_fwd_ptr,
+    fft_wrapper_plan_t * const plan_inv_ptr,
+    COMPLEX * const buf0, COMPLEX * const buf1)
 {
-    fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
-    fft_wrapper_plan_t plan_inv = fft_wrapper_safe_plan_init();
-    COMPLEX * buf0 = NULL;
-    COMPLEX * buf1 = NULL;
-    COMPLEX * buf2 = NULL;
     INT ret_code = SUCCESS;
 
-    const UINT len = poly_fmult_p1xp2_len(deg);
-
-    buf0 = fft_wrapper_malloc(len*sizeof(COMPLEX));
-    buf1 = fft_wrapper_malloc(len*sizeof(COMPLEX));
-    buf2 = fft_wrapper_malloc(len*sizeof(COMPLEX));
-    if (buf0 == NULL || buf1 == NULL || buf2 == NULL) {
-        ret_code = E_NOMEM;
-        goto leave_fun;
-    }
-
-    ret_code = fft_wrapper_create_plan(&plan_fwd, len, buf0, buf1, -1);
+    const UINT len = poly_fmult_two_polys_len(deg);
+    ret_code = fft_wrapper_create_plan(plan_fwd_ptr, len, buf0, buf1, -1);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = fft_wrapper_create_plan(&plan_inv, len, buf0, buf1, 1);
+    ret_code = fft_wrapper_create_plan(plan_inv_ptr, len, buf0, buf1, 1);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    ret_code = poly_fmult_p1xp2(deg, p1, p2, result, plan_fwd, plan_inv, buf0,
-        buf1, buf2, add_flag);
-    CHECK_RETCODE(ret_code, leave_fun);
-
-leave_fun:    
-    fft_wrapper_destroy_plan(&plan_fwd);
-    fft_wrapper_destroy_plan(&plan_inv);
-    fft_wrapper_free(buf0);
-    fft_wrapper_free(buf1);
-    fft_wrapper_free(buf2);
+leave_fun:
     return ret_code;
 }
 
 static INT nse_finvscatter_recurse(
     const UINT deg,
-    COMPLEX const * const T_11,
-    COMPLEX const * const T_12,
-    COMPLEX const * const T_21,
-    COMPLEX const * const T_22,
-    COMPLEX * const Ti_11,
-    COMPLEX * const Ti_12,
-    COMPLEX * const Ti_21,
-    COMPLEX * const Ti_22,
+    COMPLEX const * const T,
+    const UINT T_stride,
+    COMPLEX * const Ti,
+    const UINT Ti_stride,
     COMPLEX * const q,
     const REAL eps_t,
     const INT kappa,
-    const nse_discretization_t discretization)
+    const nse_discretization_t discretization,
+    COMPLEX * const buf0,
+    COMPLEX * const buf1,
+    COMPLEX * const buf2)
 {
     INT ret_code = SUCCESS;
     COMPLEX * T1 = NULL;
     COMPLEX * T1i = NULL;
     COMPLEX * T2i = NULL;
-
+    fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
+    fft_wrapper_plan_t plan_inv = fft_wrapper_safe_plan_init();
+ 
     if (deg > 1) { // recursive case
 
         // The transfer matrix for all samples is
@@ -114,101 +88,53 @@ static INT nse_finvscatter_recurse(
 
         // Allocate memory, prepare pointers
         T1 = malloc(4*(2*deg + 1) * sizeof(COMPLEX));
-        T1i = calloc(4*(deg/2 + 1), sizeof(COMPLEX));
+        T1i = malloc(4*(deg/2 + 1) * sizeof(COMPLEX));
         T2i = calloc(4*(deg + 1), sizeof(COMPLEX));
         if (T1 == NULL || T1i == NULL || T2i == NULL) {
             ret_code = E_NOMEM;
             goto leave_fun;
         }
 
-        COMPLEX * T1_11 = T1;
-        COMPLEX * T1_12 = T1_11 + (2*deg + 1);
-        COMPLEX * T1_21 = T1_12 + (2*deg + 1);
-        COMPLEX * T1_22 = T1_21 + (2*deg + 1);
-
-        COMPLEX * T2i_11 = T2i + deg/2;
-        COMPLEX * T2i_12 = T2i_11 + (deg + 1);
-        COMPLEX * T2i_21 = T2i_12 + (deg + 1);
-        COMPLEX * T2i_22 = T2i_21 + (deg + 1);
-
         // Step 1: Determine T2i(z) and the samples q[D/2],...,q[D-1] from the
-        // upper part of T(z).
+        // lower part of T(z).
         
-        ret_code = nse_finvscatter_recurse(deg/2, T_11+deg/2, T_12+deg/2,
-            T_21+deg/2, T_22+deg/2, T2i_11, T2i_12, T2i_21, T2i_22,
-            q + (deg/2), eps_t, kappa, discretization);
+        ret_code = nse_finvscatter_recurse(deg/2, T+deg/2, T_stride, T2i+deg/2,
+            deg+1, q+(deg/2), eps_t, kappa, discretization, buf0, buf1, buf2);
         CHECK_RETCODE(ret_code, leave_fun);
 
-        T2i_11 = T2i;
-        T2i_12 = T2i_11 + (deg + 1);
-        T2i_21 = T2i_12 + (deg + 1);
-        T2i_22 = T2i_21 + (deg + 1);
+        // Step 2: Determine T1(z) = T2i(z)*T(z).
 
-        // Step 2: Determine T1(z) = T2i(z)*T(z). Note that since the degree
-        // of T2i(z) is deg/2 
-        
-        ret_code = poly_fmult_p1xp2_X(deg, T2i_11, T_11, T1_11, 0);
+        create_fft_plans(deg, &plan_fwd, &plan_inv, buf0, buf1);
+        ret_code = poly_fmult_two_polys2x2(deg, T2i, deg+1, T, T_stride, T1,
+            2*deg+1, plan_fwd, plan_inv, buf0, buf1, buf2);
         CHECK_RETCODE(ret_code, leave_fun);
-        ret_code = poly_fmult_p1xp2_X(deg, T2i_12, T_21, T1_11, 1);
-        CHECK_RETCODE(ret_code, leave_fun);
-        ret_code = poly_fmult_p1xp2_X(deg, T2i_11, T_12, T1_12, 0);
-        CHECK_RETCODE(ret_code, leave_fun);
-        ret_code = poly_fmult_p1xp2_X(deg, T2i_12, T_22, T1_12, 1);
-        CHECK_RETCODE(ret_code, leave_fun);
-        ret_code = poly_fmult_p1xp2_X(deg, T2i_21, T_11, T1_21, 0);
-        CHECK_RETCODE(ret_code, leave_fun);
-        ret_code = poly_fmult_p1xp2_X(deg, T2i_22, T_21, T1_21, 1);
-        CHECK_RETCODE(ret_code, leave_fun);
-        ret_code = poly_fmult_p1xp2_X(deg, T2i_21, T_12, T1_22, 0);
-        CHECK_RETCODE(ret_code, leave_fun);
-        ret_code = poly_fmult_p1xp2_X(deg, T2i_22, T_22, T1_22, 1);
-        CHECK_RETCODE(ret_code, leave_fun);
+        fft_wrapper_destroy_plan(&plan_fwd);
+        fft_wrapper_destroy_plan(&plan_inv);
 
-        T1_11 = T1 + deg;
-        T1_12 = T1_11 + (2*deg + 1);
-        T1_21 = T1_12 + (2*deg + 1);
-        T1_22 = T1_21 + (2*deg + 1);
+        // Step 3: Determine T1i(z) and q[0],...,q[D/2-1] from T1(z).
 
-        T2i_11 = T2i + deg/2;
-        T2i_12 = T2i_11 + (deg + 1);
-        T2i_21 = T2i_12 + (deg + 1);
-        T2i_22 = T2i_21 + (deg + 1);
-
-        // Step 3: Determine T1i(z) and q[0],...,q[D/2-1] from T1(z)
- 
-        COMPLEX * T1i_11 = T1i;
-        COMPLEX * T1i_12 = T1i_11 + (deg/2 + 1);
-        COMPLEX * T1i_21 = T1i_12 + (deg/2 + 1);
-        COMPLEX * T1i_22 = T1i_21 + (deg/2 + 1);
-       
-        ret_code = nse_finvscatter_recurse(deg/2, T1_11, T1_12,
-            T1_21, T1_22, T1i_11, T1i_12, T1i_21, T1i_22,
-            q, eps_t, kappa, discretization);
+        ret_code = nse_finvscatter_recurse(deg/2, T1+deg, 2*deg+1, T1i,
+            deg/2+1, q, eps_t, kappa, discretization, buf0, buf1, buf2);
         CHECK_RETCODE(ret_code, leave_fun);
  
         // Step 4: Determine Ti(z) = T1i(z)*T2i(z) if requested
-        if (Ti_11 != NULL) {
-            ret_code = poly_fmult_p1xp2_X(deg/2, T1i_11, T2i_11, Ti_11, 0);
+        if (Ti != NULL) {
+            create_fft_plans(deg/2, &plan_fwd, &plan_inv, buf0, buf1);
+            ret_code = poly_fmult_two_polys2x2(deg/2,
+                T1i, deg/2+1,
+                T2i+deg/2, deg+1,
+                Ti, Ti_stride,
+                plan_fwd, plan_inv, buf0, buf1, buf2);
             CHECK_RETCODE(ret_code, leave_fun);
-            ret_code = poly_fmult_p1xp2_X(deg/2, T1i_12, T2i_21, Ti_11, 1);
-            CHECK_RETCODE(ret_code, leave_fun);
-            ret_code = poly_fmult_p1xp2_X(deg/2, T1i_11, T2i_12, Ti_12, 0);
-            CHECK_RETCODE(ret_code, leave_fun);
-            ret_code = poly_fmult_p1xp2_X(deg/2, T1i_12, T2i_22, Ti_12, 1);
-            CHECK_RETCODE(ret_code, leave_fun);
-            ret_code = poly_fmult_p1xp2_X(deg/2, T1i_21, T2i_11, Ti_21, 0);
-            CHECK_RETCODE(ret_code, leave_fun);
-            ret_code = poly_fmult_p1xp2_X(deg/2, T1i_22, T2i_21, Ti_21, 1);
-            CHECK_RETCODE(ret_code, leave_fun);
-            ret_code = poly_fmult_p1xp2_X(deg/2, T1i_21, T2i_12, Ti_22, 0);
-            CHECK_RETCODE(ret_code, leave_fun);
-            ret_code = poly_fmult_p1xp2_X(deg/2, T1i_22, T2i_22, Ti_22, 1);
-            CHECK_RETCODE(ret_code, leave_fun);
+            fft_wrapper_destroy_plan(&plan_fwd);
+            fft_wrapper_destroy_plan(&plan_inv);
         }
 
     } else if (deg == 1) { // base case
 
-        const COMPLEX Q = -kappa*CONJ(T_21[1] / T_11[1]);
+        COMPLEX const * const T_21 = T + 2*T_stride;
+
+        const COMPLEX Q = -kappa*CONJ(T_21[1] / T[1]);
         *q = Q/eps_t;
 
         const REAL scl_den = SQRT( 1.0 + kappa*CABS(Q)*CABS(Q) );
@@ -216,8 +142,12 @@ static INT nse_finvscatter_recurse(
             return E_DIV_BY_ZERO;
         const REAL scl = 1.0 / scl_den;
 
-        Ti_11[0] = scl;
-        Ti_11[1] = 0.0;
+        COMPLEX * const Ti_12 = Ti + Ti_stride;
+        COMPLEX * const Ti_21 = Ti_12 + Ti_stride;
+        COMPLEX * const Ti_22 = Ti_21 + Ti_stride;
+
+        Ti[0] = scl;
+        Ti[1] = 0.0;
         Ti_12[0] = -scl*Q;
         Ti_12[1] = 0.0;
         Ti_21[0] = 0.0;
@@ -269,15 +199,23 @@ INT nse_finvscatter(
 
     INT ret_code = SUCCESS;
 
-    COMPLEX const * const T_11 = transfer_matrix;
-    COMPLEX const * const T_12 = T_11 + (deg+1);
-    COMPLEX const * const T_21 = T_12 + (deg+1);
-    COMPLEX const * const T_22 = T_21 + (deg+1);
+    const UINT max_len = poly_fmult_two_polys_len(deg);
+    COMPLEX * const buf0 = fft_wrapper_malloc(max_len*sizeof(COMPLEX));
+    COMPLEX * const buf1 = fft_wrapper_malloc(max_len*sizeof(COMPLEX));
+    COMPLEX * const buf2 = fft_wrapper_malloc(max_len*sizeof(COMPLEX));
+    if (buf0 == NULL || buf1 == NULL || buf2 == NULL) {
+        ret_code = E_NOMEM;
+        goto leave_fun;
+    }
 
-    ret_code = nse_finvscatter_recurse(deg, T_11, T_12, T_21, T_22,
-        NULL, NULL, NULL, NULL, q, eps_t, kappa, discretization);
-    if (ret_code != SUCCESS)
-        ret_code = E_SUBROUTINE(ret_code);
+    ret_code = nse_finvscatter_recurse(deg, transfer_matrix, deg+1,
+        NULL, 0, q, eps_t, kappa, discretization,
+        buf0, buf1, buf2);
+    CHECK_RETCODE(ret_code, leave_fun);
 
-    return ret_code; 
+leave_fun:
+    fft_wrapper_free(buf0);
+    fft_wrapper_free(buf1);
+    fft_wrapper_free(buf2);
+    return ret_code;
 }
