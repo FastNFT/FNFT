@@ -29,9 +29,9 @@
 #include "fnft.h"
 #include "fnft__fft_wrapper_plan_t.h"
 
-FNFT_INT fnft__poly_fmult_p1xp2_len(const FNFT_UINT deg);
-FNFT_UINT fnft__poly_fmult_p1xp2_lenmen(const FNFT_UINT deg);
-FNFT_INT fnft__poly_fmult_p1xp2(
+FNFT_INT fnft__poly_fmult_two_polys_len(const FNFT_UINT deg);
+FNFT_UINT fnft__poly_fmult_two_polys_lenmen(const FNFT_UINT deg);
+FNFT_INT fnft__poly_fmult_two_polys(
     const FNFT_UINT deg,
     FNFT_COMPLEX const * const p1, 
     FNFT_COMPLEX const * const p2,
@@ -42,6 +42,18 @@ FNFT_INT fnft__poly_fmult_p1xp2(
     FNFT_COMPLEX * const buf1,
     FNFT_COMPLEX * const buf2,
     const FNFT_INT add_flag);
+FNFT_INT fnft__poly_fmult_two_polys2x2(const FNFT_UINT deg,
+    FNFT_COMPLEX const * const p1_11,
+    const FNFT_UINT p1_stride,
+    FNFT_COMPLEX const * const p2_11,
+    const FNFT_UINT p2_stride,
+    FNFT_COMPLEX * const result_11,
+    const FNFT_UINT result_stride,
+    fnft__fft_wrapper_plan_t plan_fwd,
+    fnft__fft_wrapper_plan_t plan_inv,
+    FNFT_COMPLEX * const buf0,
+    FNFT_COMPLEX * const buf1,
+    FNFT_COMPLEX * const buf2);
 
 /**
  * @brief Number of elements that the input p to
@@ -119,9 +131,10 @@ FNFT_INT fnft__poly_fmult2x2(FNFT_UINT *d, FNFT_UINT n, FNFT_COMPLEX * const p,
     FNFT_COMPLEX * const result, FNFT_INT * const W_ptr);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
-#define poly_fmult_p1xp2_len(...) fnft__poly_fmult_p1xp2_len(__VA_ARGS__)
-#define poly_fmult_p1xp2_lenmen(...) fnft__poly_fmult_p1xp2_lenmen(__VA_ARGS__)
-#define poly_fmult_p1xp2(...) fnft__poly_fmult_p1xp2(__VA_ARGS__)
+#define poly_fmult_two_polys_len(...) fnft__poly_fmult_two_polys_len(__VA_ARGS__)
+#define poly_fmult_two_polys_lenmen(...) fnft__poly_fmult_two_polys_lenmen(__VA_ARGS__)
+#define poly_fmult_two_polys(...) fnft__poly_fmult_two_polys(__VA_ARGS__)
+#define poly_fmult_two_polys2x2(...) fnft__poly_fmult_two_polys2x2(__VA_ARGS__)
 #define poly_fmult_numel(...) fnft__poly_fmult_numel(__VA_ARGS__)
 #define poly_fmult2x2_numel(...) fnft__poly_fmult2x2_numel(__VA_ARGS__)
 #define poly_fmult(...) fnft__poly_fmult(__VA_ARGS__)
