@@ -45,6 +45,13 @@ leave_fun:
     return ret_code;
 }
 
+static inline void destroy_fft_plans(fft_wrapper_plan_t * const plan_fwd_ptr,
+    fft_wrapper_plan_t * const plan_inv_ptr)
+{
+    fft_wrapper_destroy_plan(plan_fwd_ptr);
+    fft_wrapper_destroy_plan(plan_inv_ptr);
+}
+
 static INT nse_finvscatter_recurse(
     const UINT deg,
     COMPLEX const * const T,
@@ -108,8 +115,7 @@ static INT nse_finvscatter_recurse(
         ret_code = poly_fmult_two_polys2x2(deg, T2i, deg+1, T, T_stride, T1,
             2*deg+1, plan_fwd, plan_inv, buf0, buf1, buf2);
         CHECK_RETCODE(ret_code, leave_fun);
-        fft_wrapper_destroy_plan(&plan_fwd);
-        fft_wrapper_destroy_plan(&plan_inv);
+        destroy_fft_plans(&plan_fwd, &plan_inv);
 
         // Step 3: Determine T1i(z) and q[0],...,q[D/2-1] from T1(z).
 
@@ -126,8 +132,7 @@ static INT nse_finvscatter_recurse(
                 Ti, Ti_stride,
                 plan_fwd, plan_inv, buf0, buf1, buf2);
             CHECK_RETCODE(ret_code, leave_fun);
-            fft_wrapper_destroy_plan(&plan_fwd);
-            fft_wrapper_destroy_plan(&plan_inv);
+            destroy_fft_plans(&plan_fwd, &plan_inv);
         }
 
     } else if (deg == 1) { // base case
@@ -163,7 +168,9 @@ static INT nse_finvscatter_recurse(
 
 leave_fun:
     free(T1);
+    free(T1i);
     free(T2i);
+    destroy_fft_plans(&plan_fwd, &plan_inv);
     return ret_code;
 }
 
