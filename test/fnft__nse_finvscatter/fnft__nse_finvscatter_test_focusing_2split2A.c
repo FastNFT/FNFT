@@ -26,7 +26,7 @@ int main()
 #ifdef HAVE_FFTW3
         = 61.0*FNFT_EPSILON;
 #else
-        = 1005.0*FNFT_EPSILON;
+        = 1262.0*FNFT_EPSILON;
 #endif    
     const nse_discretization_t discretization
         = fnft_nse_discretization_2SPLIT2A;
