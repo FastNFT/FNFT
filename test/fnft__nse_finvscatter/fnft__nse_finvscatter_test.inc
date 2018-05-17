@@ -25,7 +25,8 @@
 #include "fnft__nse_finvscatter.h"
 #include "fnft__misc.h"
 
-static INT nse_finvscatter_test(const INT kappa, const REAL error_bound)
+static INT nse_finvscatter_test(const INT kappa, const REAL error_bound,
+    nse_discretization_t discretization)
 {
     INT ret_code = SUCCESS;
 
@@ -34,8 +35,6 @@ static INT nse_finvscatter_test(const INT kappa, const REAL error_bound)
     REAL eps_t = 0.12;
     UINT deg, i;
 
-    nse_discretization_t discretization =
-        fnft_nse_discretization_2SPLIT2_MODAL;
     const UINT len = nse_fscatter_numel(D, discretization);
 
     q = malloc(D * sizeof(COMPLEX));
@@ -60,6 +59,9 @@ static INT nse_finvscatter_test(const INT kappa, const REAL error_bound)
     CHECK_RETCODE(ret_code, leave_fun);
 
     REAL error = misc_rel_err(D, q, q_exact);
+//#ifdef DEBUG
+    printf("error = %g\n", error);
+//#endif
     if (!(error < error_bound)) {
         ret_code = E_TEST_FAILED;
         goto leave_fun;
@@ -70,16 +72,5 @@ leave_fun:
     free(q_exact);
     free(result);
     return ret_code;
-}
-
-int main()
-{
-    if (nse_finvscatter_test(+1, 31.0*FNFT_EPSILON) != SUCCESS)
-        return EXIT_FAILURE;
-
-    if (nse_finvscatter_test(-1, 113.0*FNFT_EPSILON) != SUCCESS)
-        return EXIT_FAILURE;
-
-    return EXIT_SUCCESS;
 }
 
