@@ -3,7 +3,7 @@ project(fnft C)
 
 set(FNFT_VERSION_MAJOR 0)
 set(FNFT_VERSION_MINOR 1)
-set(FNFT_VERSION_PATCH 0)
+set(FNFT_VERSION_PATCH 1)
 
 include(CheckIncludeFiles)
 include(CheckFunctionExists)
@@ -183,10 +183,10 @@ if (WITH_MATLAB)
 		file(GLOB MEX_SOURCES "matlab/mex_*.c")
 		foreach (srcfile ${MEX_SOURCES})
 			get_filename_component(mexfile ${srcfile} NAME_WE)
-            matlab_add_mex(NAME ${mexfile} SRC ${srcfile} LINK_TO fnft ${LIBM} ${FFTW3_LIB})
+      matlab_add_mex(NAME ${mexfile} SRC ${srcfile} LINK_TO fnft ${LIBM} ${FFTW3_LIB})
 			set_target_properties(${mexfile} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/matlab")
-            target_compile_options(${mexfile} PRIVATE -DMEX_DOUBLE_HANDLE)
-            # -DMEX_DOUBLE_HANDLE avoids the new complex interleaved API            
+      target_compile_options(${mexfile} PRIVATE -DMEX_DOUBLE_HANDLE)
+      # -DMEX_DOUBLE_HANDLE avoids the new complex interleaved API      
 		endforeach()
 	endif()
 endif()

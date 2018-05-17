@@ -272,6 +272,8 @@ static inline INT tf2contspec(
     
     // We reuse an unused part of the transfer matrix as buffer
     a_vals = transfer_matrix + (deg+1);
+    if (M > deg+1)
+        return E_NOT_YET_IMPLEMENTED(M >> D, "Any M<=2*D should work. It is planned to remove this restriction in the next release.");
     
     // Set step sizes
     eps_t = (T[1] - T[0])/(D - 1);
