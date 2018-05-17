@@ -34,8 +34,8 @@ static inline INT create_fft_plans(const UINT deg,
     COMPLEX * const buf0, COMPLEX * const buf1)
 {
     INT ret_code = SUCCESS;
-
     const UINT len = poly_fmult_two_polys_len(deg);
+
     ret_code = fft_wrapper_create_plan(plan_fwd_ptr, len, buf0, buf1, -1);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = fft_wrapper_create_plan(plan_inv_ptr, len, buf0, buf1, 1);
@@ -45,20 +45,30 @@ leave_fun:
     return ret_code;
 }
 
-static inline void destroy_fft_plans(fft_wrapper_plan_t * const plan_fwd_ptr,
-    fft_wrapper_plan_t * const plan_inv_ptr)
-{
-    fft_wrapper_destroy_plan(plan_fwd_ptr);
-    fft_wrapper_destroy_plan(plan_inv_ptr);
-}
+struct fnft__nse_finvscatter_stack_elem {
+    UINT deg;
+    COMPLEX * T;
+    UINT T_stride;
+    COMPLEX * Ti;
+    UINT Ti_stride;
+    COMPLEX * q;
+    COMPLEX * T1;
+    COMPLEX * T1i;
+    COMPLEX * T2i;
+    fft_wrapper_plan_t plan_fwd_1;
+    fft_wrapper_plan_t plan_inv_1;
+    fft_wrapper_plan_t plan_fwd_2;
+    fft_wrapper_plan_t plan_inv_2;
+    INT ret_code;
+    UINT start_pos;
+};
 
+// This is an iterative implementation of a recursive algorithm. We use our own
+// custom stack to simulate what the routine would do when implemented using
+// straight-forward recursion. This lets us avoid stack overflows that can
+// happen for (very?) large degrees if recursion is implemented naively.
 static INT nse_finvscatter_recurse(
-    const UINT deg,
-    COMPLEX const * const T,
-    const UINT T_stride,
-    COMPLEX * const Ti,
-    const UINT Ti_stride,
-    COMPLEX * const q,
+    struct fnft__nse_finvscatter_stack_elem * const s,
     const REAL eps_t,
     const INT kappa,
     const nse_discretization_t discretization,
@@ -66,117 +76,157 @@ static INT nse_finvscatter_recurse(
     COMPLEX * const buf1,
     COMPLEX * const buf2)
 {
-    INT ret_code = SUCCESS;
-    COMPLEX * T1 = NULL;
-    COMPLEX * T1i = NULL;
-    COMPLEX * T2i = NULL;
-    fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
-    fft_wrapper_plan_t plan_inv = fft_wrapper_safe_plan_init();
- 
-    if (deg > 1) { // recursive case
+    INT ret_code;
+    INT i = 0;
 
-        // The transfer matrix for all samples is
-        //
-        //   T(z) = T2(z)*T1(z), where
-        //
-        // T1(z) is built from the samples
-        //
-        //   q[0],...,q[D/2-1]
-        //
-        // and T2(z) is build from
-        //
-        //   q[D/2],...,q[D-1],
-        //
-        // respectively. The inverse of T(z), up to some power of z, is
-        //
-        //   Ti(z) = T1i(z)*T2i(z),
-        //
-        // where Tni(z) is the inverse of Tn(z) [also up to some power of z].
+    while (i >= 0) {
 
-        // Allocate memory, prepare pointers
-        T1 = malloc(4*(2*deg + 1) * sizeof(COMPLEX));
-        T1i = malloc(4*(deg/2 + 1) * sizeof(COMPLEX));
-        T2i = calloc(4*(deg + 1), sizeof(COMPLEX));
-        if (T1 == NULL || T1i == NULL || T2i == NULL) {
-            ret_code = E_NOMEM;
-            goto leave_fun;
-        }
+        if (s[i].start_pos == 1)
+            goto start_pos_1;
+        else if (s[i].start_pos == 2)
+            goto start_pos_2;
+    
+        if (s[i].deg > 1) { // recursive case
+    
+            // The transfer matrix for all samples is
+            //
+            //   T(z) = T2(z)*T1(z), where
+            //
+            // T1(z) is built from the samples
+            //
+            //   q[0],...,q[D/2-1]
+            //
+            // and T2(z) is build from
+            //
+            //   q[D/2],...,q[D-1],
+            //
+            // respectively. The inverse of T(z), up to some power of z, is
+            //
+            //   Ti(z) = T1i(z)*T2i(z),
+            //
+            // where Tni(z) is the inverse of Tn(z), also up to a power of z.
+    
+            // Allocate memory for level i if not done before
+            if (s[i].T1 == NULL) {
+                s[i].T1 = malloc(4*(2*s[i].deg + 1) * sizeof(COMPLEX));
+                s[i].T1i = malloc(4*(s[i].deg/2 + 1) * sizeof(COMPLEX));
+                s[i].T2i = calloc(4*(s[i].deg + 1), sizeof(COMPLEX));
+                if (s[i].T1 == NULL || s[i].T1i == NULL || s[i].T2i == NULL) {
+                    ret_code = E_NOMEM;
+                    goto leave_fun;
+                }
+            }
+    
+            // Step 1: Determine T2i(z) and the samples q[D/2],...,q[D-1] from
+            // the lower part of T(z) with a recursive call.
+            
+            s[i+1].deg = s[i].deg/2;
+            s[i+1].T = s[i].T + s[i].deg/2;
+            s[i+1].T_stride = s[i].T_stride;
+            s[i+1].Ti = s[i].T2i + s[i].deg/2;
+            s[i+1].Ti_stride = s[i].deg+1;
+            s[i+1].q = s[i].q + s[i].deg/2;
+            s[i+1].start_pos = 0;
+            s[i].start_pos = 1;
+            i++;
+            continue;
 
-        // Step 1: Determine T2i(z) and the samples q[D/2],...,q[D-1] from the
-        // lower part of T(z).
-        
-        ret_code = nse_finvscatter_recurse(deg/2, T+deg/2, T_stride, T2i+deg/2,
-            deg+1, q+(deg/2), eps_t, kappa, discretization, buf0, buf1, buf2);
-        CHECK_RETCODE(ret_code, leave_fun);
+start_pos_1:
 
-        // Step 2: Determine T1(z) = T2i(z)*T(z).
+            // Step 2: Determine T1(z) = T2i(z)*T(z).
+   
+            // Allocate 1st pair of FFT plans for level i if not done before
+            if (s[i].plan_fwd_1 == fft_wrapper_safe_plan_init()) {
+                create_fft_plans(s[i].deg, &s[i].plan_fwd_1, &s[i].plan_inv_1,
+                    buf0, buf1);
+            }
 
-        create_fft_plans(deg, &plan_fwd, &plan_inv, buf0, buf1);
-        ret_code = poly_fmult_two_polys2x2(deg, T2i, deg+1, T, T_stride, T1,
-            2*deg+1, plan_fwd, plan_inv, buf0, buf1, buf2);
-        CHECK_RETCODE(ret_code, leave_fun);
-        destroy_fft_plans(&plan_fwd, &plan_inv);
-
-        // Step 3: Determine T1i(z) and q[0],...,q[D/2-1] from T1(z).
-
-        ret_code = nse_finvscatter_recurse(deg/2, T1+deg, 2*deg+1, T1i,
-            deg/2+1, q, eps_t, kappa, discretization, buf0, buf1, buf2);
-        CHECK_RETCODE(ret_code, leave_fun);
- 
-        // Step 4: Determine Ti(z) = T1i(z)*T2i(z) if requested
-        if (Ti != NULL) {
-            create_fft_plans(deg/2, &plan_fwd, &plan_inv, buf0, buf1);
-            ret_code = poly_fmult_two_polys2x2(deg/2,
-                T1i, deg/2+1,
-                T2i+deg/2, deg+1,
-                Ti, Ti_stride,
-                plan_fwd, plan_inv, buf0, buf1, buf2);
+            ret_code = poly_fmult_two_polys2x2(s[i].deg,
+                s[i].T2i, s[i].deg+1,
+                s[i].T, s[i].T_stride,
+                s[i].T1, 2*s[i].deg+1,
+                s[i].plan_fwd_1, s[i].plan_inv_1, buf0, buf1, buf2);
             CHECK_RETCODE(ret_code, leave_fun);
-            destroy_fft_plans(&plan_fwd, &plan_inv);
+    
+            // Step 3: Determine T1i(z) and q[0],...,q[D/2-1] from T1(z) with
+            // a recursive call.
+    
+            s[i+1].deg = s[i].deg/2;
+            s[i+1].T = s[i].T1 + s[i].deg;
+            s[i+1].T_stride = 2*s[i].deg + 1;
+            s[i+1].Ti = s[i].T1i;
+            s[i+1].Ti_stride = s[i].deg/2+1;
+            s[i+1].q = s[i].q;
+            s[i+1].start_pos = 0;
+            s[i].start_pos = 2;
+            i++;
+            continue;
+
+start_pos_2:
+
+            // Step 4: Determine Ti(z) = T1i(z)*T2i(z) if requested
+            
+            if (s[i].Ti != NULL) {
+
+                // Allocate 2nd pair of FFT plans for level i if not done
+                // before
+                if (s[i].plan_fwd_2 == fft_wrapper_safe_plan_init()) {
+                    create_fft_plans(s[i].deg/2, &s[i].plan_fwd_2,
+                        &s[i].plan_inv_2, buf0, buf1);
+                }
+
+                ret_code = poly_fmult_two_polys2x2(s[i].deg/2,
+                    s[i].T1i, s[i].deg/2+1,
+                    s[i].T2i+s[i].deg/2, s[i].deg+1,
+                    s[i].Ti, s[i].Ti_stride,
+                    s[i].plan_fwd_2, s[i].plan_inv_2, buf0, buf1, buf2);
+                CHECK_RETCODE(ret_code, leave_fun);
+            }
+    
+        } else if (s[i].deg == 1) { // base case
+    
+            COMPLEX const * const T_21 = s[i].T + 2*s[i].T_stride;
+    
+            const COMPLEX Q = -kappa*CONJ(T_21[1] / s[i].T[1]);
+            *s[i].q = Q/eps_t;
+    
+            const REAL scl_den = SQRT( 1.0 + kappa*CABS(Q)*CABS(Q) );
+            if (scl_den == 0.0) {
+                ret_code = E_DIV_BY_ZERO;
+                goto leave_fun;
+            }
+            const REAL scl = 1.0 / scl_den;
+    
+            COMPLEX * const Ti_12 = s[i].Ti + s[i].Ti_stride;
+            COMPLEX * const Ti_21 = Ti_12 + s[i].Ti_stride;
+            COMPLEX * const Ti_22 = Ti_21 + s[i].Ti_stride;
+    
+            s[i].Ti[0] = scl;
+            s[i].Ti[1] = 0.0;
+            Ti_12[0] = -scl*Q;
+            Ti_12[1] = 0.0;
+            Ti_21[0] = 0.0;
+            Ti_21[1] = scl*kappa*CONJ(Q);
+            Ti_22[0] = 0.0;
+            Ti_22[1] = scl;
+    
+        } else { // deg == 0
+    
+            ret_code = E_ASSERTION_FAILED;
+            goto leave_fun;
+    
         }
-
-    } else if (deg == 1) { // base case
-
-        COMPLEX const * const T_21 = T + 2*T_stride;
-
-        const COMPLEX Q = -kappa*CONJ(T_21[1] / T[1]);
-        *q = Q/eps_t;
-
-        const REAL scl_den = SQRT( 1.0 + kappa*CABS(Q)*CABS(Q) );
-        if (scl_den == 0.0)
-            return E_DIV_BY_ZERO;
-        const REAL scl = 1.0 / scl_den;
-
-        COMPLEX * const Ti_12 = Ti + Ti_stride;
-        COMPLEX * const Ti_21 = Ti_12 + Ti_stride;
-        COMPLEX * const Ti_22 = Ti_21 + Ti_stride;
-
-        Ti[0] = scl;
-        Ti[1] = 0.0;
-        Ti_12[0] = -scl*Q;
-        Ti_12[1] = 0.0;
-        Ti_21[0] = 0.0;
-        Ti_21[1] = scl*kappa*CONJ(Q);
-        Ti_22[0] = 0.0;
-        Ti_22[1] = scl;
-
-    } else { // deg == 0
-
-        ret_code = E_ASSERTION_FAILED;
-
+    
+        i--;
     }
 
 leave_fun:
-    free(T1);
-    free(T1i);
-    free(T2i);
-    destroy_fft_plans(&plan_fwd, &plan_inv);
     return ret_code;
 }
 
 INT nse_finvscatter(
     const UINT deg,
-    COMPLEX const * const transfer_matrix,
+    COMPLEX * const transfer_matrix,
     COMPLEX * const q,
     const REAL eps_t,
     const INT kappa,
@@ -205,24 +255,60 @@ INT nse_finvscatter(
     }
 
     INT ret_code = SUCCESS;
+    UINT i;
 
     const UINT max_len = poly_fmult_two_polys_len(deg);
     COMPLEX * const buf0 = fft_wrapper_malloc(max_len*sizeof(COMPLEX));
     COMPLEX * const buf1 = fft_wrapper_malloc(max_len*sizeof(COMPLEX));
     COMPLEX * const buf2 = fft_wrapper_malloc(max_len*sizeof(COMPLEX));
-    if (buf0 == NULL || buf1 == NULL || buf2 == NULL) {
+
+    const UINT stack_size = LOG2(D) + 1;
+    struct fnft__nse_finvscatter_stack_elem * const s = malloc(
+        stack_size * sizeof(struct fnft__nse_finvscatter_stack_elem));
+
+    if (buf0 == NULL || buf1 == NULL || buf2 == NULL || s == NULL) {
         ret_code = E_NOMEM;
         goto leave_fun;
     }
 
-    ret_code = nse_finvscatter_recurse(deg, transfer_matrix, deg+1,
-        NULL, 0, q, eps_t, kappa, discretization,
-        buf0, buf1, buf2);
-    CHECK_RETCODE(ret_code, leave_fun);
+    s[0].deg = deg;
+    s[0].T = transfer_matrix;
+    s[0].T_stride = deg+1;
+    s[0].Ti = NULL;
+    s[0].Ti_stride = 0;
+    s[0].q = q;
+    s[0].start_pos = 0;
+    s[0].ret_code = SUCCESS;
+
+    for (i=0; i<stack_size; i++) {
+        s[i].T1 = NULL;
+        s[i].T1i = NULL;
+        s[i].T2i = NULL;
+        s[i].plan_fwd_1 = fft_wrapper_safe_plan_init();
+        s[i].plan_inv_1 = fft_wrapper_safe_plan_init();
+        s[i].plan_fwd_2 = fft_wrapper_safe_plan_init();
+        s[i].plan_inv_2 = fft_wrapper_safe_plan_init();
+    }
+
+    ret_code = nse_finvscatter_recurse(s, eps_t, kappa, discretization, buf0,
+        buf1, buf2);
+    if (ret_code != SUCCESS)
+        ret_code = E_SUBROUTINE(ret_code);
+
+    for (i=0; i<stack_size; i++) {
+        free(s[i].T1);
+        free(s[i].T1i);
+        free(s[i].T2i);
+        fft_wrapper_destroy_plan(&s[i].plan_fwd_1);
+        fft_wrapper_destroy_plan(&s[i].plan_inv_1);
+        fft_wrapper_destroy_plan(&s[i].plan_fwd_2);
+        fft_wrapper_destroy_plan(&s[i].plan_inv_2);
+    }
 
 leave_fun:
     fft_wrapper_free(buf0);
     fft_wrapper_free(buf1);
     fft_wrapper_free(buf2);
+    free(s);
     return ret_code;
 }

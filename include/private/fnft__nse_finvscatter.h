@@ -34,7 +34,10 @@
  * Recovers samples q[0], q[1], ..., q[D-1] that, when applied to \link
  * fnft__nse_fscatter \endlink, the transfer matrix provided by the user is
  * reconstructed. Note that the transfer matrix has to be (at least close to)
- * realizable, i.e., such samples have to exist.
+ * realizable, i.e., such samples have to exist. Also, the transfer matrix
+ * has to be sufficiently nice to keep numerical errors tolerable, which
+ * in my experience means that the q[n] it corresponds to are "smooth enough"
+ * and such that |eps_t*q[n]|<<1 for all n.
  *
  * More information about the algorithm used here can be found in
  * <a href="http://dx.doi.org/10.1109/ISIT.2015.7282741">Wahls and Poor (Proc.
@@ -55,7 +58,7 @@
  */
 FNFT_INT fnft__nse_finvscatter(
     const FNFT_UINT deg,
-    FNFT_COMPLEX const * const transfer_matrix,
+    FNFT_COMPLEX * const transfer_matrix,
     FNFT_COMPLEX * const q,
     const FNFT_REAL eps_t,
     const FNFT_INT kappa,

@@ -25,22 +25,29 @@
 #include "fnft__nse_finvscatter.h"
 #include "fnft__misc.h"
 
-static INT nse_finvscatter_test(INT kappa)
+static INT nse_finvscatter_test(const INT kappa, const REAL error_bound)
 {
     INT ret_code = SUCCESS;
 
-    const UINT D = 32;
-    COMPLEX q[D], q_exact[D];
+    const UINT D = 16384;
+    COMPLEX * q, * q_exact, * result;
     REAL eps_t = 0.12;
     UINT deg, i;
 
     nse_discretization_t discretization =
         fnft_nse_discretization_2SPLIT2_MODAL;
     const UINT len = nse_fscatter_numel(D, discretization);
-    COMPLEX result[len];
+
+    q = malloc(D * sizeof(COMPLEX));
+    q_exact = malloc(D * sizeof(COMPLEX));
+    result = malloc(len * sizeof(COMPLEX));
+    if (q == NULL || q_exact == NULL || result == NULL) {
+        ret_code = E_NOMEM;
+        goto leave_fun;
+    }
 
     for (i=0; i<D; i++) {
-        q_exact[i] = ((REAL)(i+1)/(D+1))*CEXP(I*(REAL)i/D);
+        q_exact[i] = ((REAL)(i+1)/(D+1)/D)*CEXP(I*(REAL)i/D);
         q[i] = 0.0;
     }
 
@@ -52,22 +59,25 @@ static INT nse_finvscatter_test(INT kappa)
         discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    REAL err = misc_rel_err(D, q, q_exact);
-    if (!(err < 100*FNFT_EPSILON)) {
+    REAL error = misc_rel_err(D, q, q_exact);
+    if (!(error < error_bound)) {
         ret_code = E_TEST_FAILED;
         goto leave_fun;
     }
 
 leave_fun:
+    free(q);
+    free(q_exact);
+    free(result);
     return ret_code;
 }
 
 int main()
 {
-    if (nse_finvscatter_test(+1) != SUCCESS)
+    if (nse_finvscatter_test(+1, 31.0*FNFT_EPSILON) != SUCCESS)
         return EXIT_FAILURE;
 
-    if (nse_finvscatter_test(-1) != SUCCESS)
+    if (nse_finvscatter_test(-1, 113.0*FNFT_EPSILON) != SUCCESS)
         return EXIT_FAILURE;
 
     return EXIT_SUCCESS;
