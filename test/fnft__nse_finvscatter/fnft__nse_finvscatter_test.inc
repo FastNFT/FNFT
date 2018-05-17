@@ -59,9 +59,9 @@ static INT nse_finvscatter_test(const INT kappa, const REAL error_bound,
     CHECK_RETCODE(ret_code, leave_fun);
 
     REAL error = misc_rel_err(D, q, q_exact);
-//#ifdef DEBUG
+#ifdef DEBUG
     printf("error = %g\n", error);
-//#endif
+#endif
     if (!(error < error_bound)) {
         ret_code = E_TEST_FAILED;
         goto leave_fun;
