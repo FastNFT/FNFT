@@ -38,33 +38,28 @@ UINT poly_fmult2x2_numel(UINT deg, UINT n)
     return 4*(deg+1)*misc_nextpowerof2(n);
 }
 
-static inline INT poly_fmult2_len(UINT deg)
+inline INT poly_fmult_two_polys_len(const UINT deg)
 {
     return fft_wrapper_next_fft_length(2*(deg + 1) - 1);
 }
 
-static inline UINT poly_fmult2_lenmen(UINT deg)
-{
-    return sizeof(COMPLEX)*(4*poly_fmult2_len(deg) - 1);
-}
-
-static inline INT poly_fmult2(
+inline INT poly_fmult_two_polys(
     const UINT deg,
-    COMPLEX *p1, 
-    COMPLEX *p2,
-    COMPLEX *result,
+    COMPLEX const * const p1, 
+    COMPLEX const * const p2,
+    COMPLEX * const result,
     fft_wrapper_plan_t plan_fwd,
     fft_wrapper_plan_t plan_inv,
-    COMPLEX * buf0,
-    COMPLEX * buf1,
-    COMPLEX * buf2,
-    INT add_flag)
+    COMPLEX * const buf0,
+    COMPLEX * const buf1,
+    COMPLEX * const buf2,
+    const INT add_flag)
 {
     UINT i, len;
     INT ret_code = SUCCESS;
 
     // Prepare buffers
-    len = poly_fmult2_len(deg);
+    len = poly_fmult_two_polys_len(deg);
 
     // FFT of first polynomial
     for (i = 0; i <= deg; i++)
@@ -154,7 +149,7 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
     n += n_excess;
 
     // Allocate memory for for calls to poly_fmult2
-    lenmem = poly_fmult2_len(deg * n) * sizeof(COMPLEX);
+    lenmem = poly_fmult_two_polys_len(deg * n) * sizeof(COMPLEX);
     buf0 = fft_wrapper_malloc(lenmem);
     buf1 = fft_wrapper_malloc(lenmem);
     buf2 = fft_wrapper_malloc(lenmem);
@@ -167,7 +162,7 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
     while (n >= 2) {
 
         // Create FFT and IFFT config (computes twiddle factors, so reuse)
-        len = poly_fmult2_len(deg);
+        len = poly_fmult_two_polys_len(deg);
         ret_code = fft_wrapper_create_plan(&plan_fwd, len, buf0, buf1, -1);
         CHECK_RETCODE(ret_code, release_mem);
         ret_code = fft_wrapper_create_plan(&plan_inv, len, buf0, buf1, 1);
@@ -180,8 +175,8 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
         
         // Multiply all pairs of polynomials, normalize if desired
         for (i=0; i<n; i+=2) {
-            ret_code = poly_fmult2(deg, p1, p2, result, plan_fwd, plan_inv,
-                buf0, buf1, buf2, 0);
+            ret_code = poly_fmult_two_polys(deg, p1, p2, result, plan_fwd,
+                plan_inv, buf0, buf1, buf2, 0);
             CHECK_RETCODE(ret_code, release_mem);
 
             if (W_ptr != NULL)
@@ -214,6 +209,62 @@ release_mem:
     fft_wrapper_free(buf0);
     fft_wrapper_free(buf1);
     fft_wrapper_free(buf2);
+    return ret_code;
+}
+
+inline INT poly_fmult_two_polys2x2(const UINT deg,
+    COMPLEX const * const p1_11,
+    const UINT p1_stride,
+    COMPLEX const * const p2_11,
+    const UINT p2_stride,
+    COMPLEX * const result_11,
+    const UINT result_stride,
+    fft_wrapper_plan_t plan_fwd,
+    fft_wrapper_plan_t plan_inv,
+    COMPLEX * const buf0,
+    COMPLEX * const buf1,
+    COMPLEX * const buf2)
+{
+    UINT ret_code;
+
+    COMPLEX const * const p1_12 = p1_11 + p1_stride;
+    COMPLEX const * const p1_21 = p1_12 + p1_stride;
+    COMPLEX const * const p1_22 = p1_21 + p1_stride;
+
+    COMPLEX const * const p2_12 = p2_11 + p2_stride;
+    COMPLEX const * const p2_21 = p2_12 + p2_stride;
+    COMPLEX const * const p2_22 = p2_21 + p2_stride;
+
+    COMPLEX * const result_12 = result_11 + result_stride;
+    COMPLEX * const result_21 = result_12 + result_stride;
+    COMPLEX * const result_22 = result_21 + result_stride;
+
+    ret_code = poly_fmult_two_polys(deg, p1_11, p2_11, result_11,
+        plan_fwd, plan_inv, buf0, buf1, buf2, 0);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = poly_fmult_two_polys(deg, p1_12, p2_21, result_11,
+        plan_fwd, plan_inv, buf0, buf1, buf2, 1);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = poly_fmult_two_polys(deg, p1_11, p2_12, result_12,
+        plan_fwd, plan_inv, buf0, buf1, buf2, 0);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = poly_fmult_two_polys(deg, p1_12, p2_22, result_12,
+        plan_fwd, plan_inv, buf0, buf1, buf2, 1);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = poly_fmult_two_polys(deg, p1_21, p2_11, result_21,
+        plan_fwd, plan_inv, buf0, buf1, buf2, 0);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = poly_fmult_two_polys(deg, p1_22, p2_21, result_21,
+        plan_fwd, plan_inv, buf0, buf1, buf2, 1);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = poly_fmult_two_polys(deg, p1_21, p2_12, result_22,
+        plan_fwd, plan_inv, buf0, buf1, buf2, 0);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = poly_fmult_two_polys(deg, p1_22, p2_22, result_22,
+        plan_fwd, plan_inv, buf0, buf1, buf2, 1);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+leave_fun:
     return ret_code;
 }
 
@@ -309,7 +360,7 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
         p12 = p12_pad + n*(deg + 1);
         p21 = p21_pad + n*(deg + 1);
         p22 = p22_pad + n*(deg + 1);
-        for (i = 0; !(i >= n_excess); i++) { // "<" does not work because of UINT
+        for (i = 0; !(i >= n_excess); i++) {
             // We pad with z^deg*[1 0; 0 1]
             p11[0] = 1.0;
             p12[0] = 0.0;
@@ -335,7 +386,7 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
     }
     
     // Allocate memory for for calls to poly_fmult2
-    lenmem = poly_fmult2_len(deg * n) * sizeof(COMPLEX);
+    lenmem = poly_fmult_two_polys_len(deg * n) * sizeof(COMPLEX);
     buf0 = fft_wrapper_malloc(lenmem);
     buf1 = fft_wrapper_malloc(lenmem);
     buf2 = fft_wrapper_malloc(lenmem);
@@ -344,11 +395,13 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
         goto release_mem;
     }
 
+    const UINT p_stride = n*(deg + 1);
+
     // Main loop, n is the current number of polynomials, deg is their degree
     while (n >= 2) {
 
         // Create FFT and IFFT config (computes twiddle factors, so reuse)
-        len = poly_fmult2_len(deg);
+        len = poly_fmult_two_polys_len(deg);
         ret_code = fft_wrapper_create_plan(&plan_fwd, len, buf0, buf1, -1);
         CHECK_RETCODE(ret_code, release_mem);
         ret_code = fft_wrapper_create_plan(&plan_inv, len, buf0, buf2, 1);
@@ -360,45 +413,18 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
         or = 0;
 
         // Setup pointers to the individual polynomials in result
+        const UINT r_stride = (n/2)*(2*deg+1);
         r11 = result;
-        r12 = r11 + (n/2)*(2*deg+1);
-        r21 = r12 + (n/2)*(2*deg+1);
-        r22 = r21 + (n/2)*(2*deg+1);
+        r12 = r11 + r_stride;
+        r21 = r12 + r_stride;
+        r22 = r21 + r_stride;
 
         // Multiply all pairs of polynomials, normalize if desired
         for (i=0; i<n; i+=2) {
 
-            // Multiply current pair of 2x2 matrix-valued polynomials
-            ret_code = poly_fmult2(deg, p11+o1, p11+o2, r11+or,
-                plan_fwd, plan_inv, buf0, buf1, buf2, 0);
-            CHECK_RETCODE(ret_code, release_mem);
-
-            ret_code = poly_fmult2(deg, p12+o1, p21+o2, r11+or,
-                    plan_fwd, plan_inv, buf0, buf1, buf2, 1);
-            CHECK_RETCODE(ret_code, release_mem);
-
-            ret_code = poly_fmult2(deg, p11+o1, p12+o2, r12+or,
-                    plan_fwd, plan_inv, buf0, buf1, buf2, 0);
-            CHECK_RETCODE(ret_code, release_mem);
-
-            ret_code = poly_fmult2(deg, p12+o1, p22+o2, r12+or,
-                    plan_fwd, plan_inv, buf0, buf1, buf2, 1);
-            CHECK_RETCODE(ret_code, release_mem);
-
-            ret_code = poly_fmult2(deg, p21+o1, p11+o2, r21+or,
-                    plan_fwd, plan_inv, buf0, buf1, buf2, 0);
-            CHECK_RETCODE(ret_code, release_mem);
-
-            ret_code = poly_fmult2(deg, p22+o1, p21+o2, r21+or,
-                    plan_fwd, plan_inv, buf0, buf1, buf2, 1);
-            CHECK_RETCODE(ret_code, release_mem);
-
-            ret_code = poly_fmult2(deg, p21+o1, p12+o2, r22+or,
-                    plan_fwd, plan_inv, buf0, buf1, buf2, 0);
-            CHECK_RETCODE(ret_code, release_mem);
-
-            ret_code = poly_fmult2(deg, p22+o1, p22+o2, r22+or,
-                    plan_fwd, plan_inv, buf0, buf1, buf2, 1);
+            ret_code = poly_fmult_two_polys2x2(deg, p+o1, p_stride, p+o2,
+                p_stride, result+or, r_stride, plan_fwd, plan_inv, buf0, buf1,
+                buf2);
             CHECK_RETCODE(ret_code, release_mem);
 
             // Normalize if desired
