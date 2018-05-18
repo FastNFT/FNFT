@@ -54,7 +54,7 @@ ylabel('q(t)');
 legend('Real part', 'Imaginary part');
 
 figure;
-plot(t, real(contspec), t, imag(contspec));
+plot(xi, real(contspec), xi, imag(contspec));
 title('Continuous spectrum');
 xlabel('\xi');
 ylabel('r(\xi)');

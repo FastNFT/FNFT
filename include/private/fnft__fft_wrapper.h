@@ -26,27 +26,8 @@
  * directly included in the header file for speed.
  */
 
-#ifndef FNFT__FFT_WRAPPER_H
-#define FNFT__FFT_WRAPPER_H
-
-#include "fnft.h"
 #include "fnft__errwarn.h"
-#include "fnft__misc.h"
-#include "kiss_fft.h"
-
-/**
- * @brief Stores information needed by \link fnft__fft_wrapper_execute_plan
- * \endlink to perform a (inverse) FFT.
- * @ingroup fft_wrapper
- */
-#ifdef HAVE_FFTW3
-#include <fftw3.h>
-typedef fftw_plan fnft__fft_wrapper_plan_t;
-#else
-typedef kiss_fft_cfg fnft__fft_wrapper_plan_t;
-#endif
-
-#endif
+#include "fnft__fft_wrapper_plan_t.h"
 
 /**
  * @brief Next valid number of samples for the FFT routines.
@@ -218,7 +199,6 @@ static inline void fnft__fft_wrapper_free(void * ptr)
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #ifndef FNFT__FFT_WRAPPER_SHORT_NAMES
 #define FNFT__FFT_WRAPPER_SHORT_NAMES
-#define fft_wrapper_plan_t fnft__fft_wrapper_plan_t
 #define fft_wrapper_next_fft_length(...) fnft__fft_wrapper_next_fft_length(__VA_ARGS__)
 #define fft_wrapper_safe_plan_init(...) fnft__fft_wrapper_safe_plan_init(__VA_ARGS__)
 #define fft_wrapper_create_plan(...) fnft__fft_wrapper_create_plan(__VA_ARGS__)
