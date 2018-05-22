@@ -185,10 +185,10 @@ start_pos_2:
     
         } else if (s[i].deg == 1) { // base case
     
-            COMPLEX const * const T_11 = s[i].T;
-            COMPLEX const * const T_21 = T_11 + 2*s[i].T_stride;
+            COMPLEX const * const T_12 = s[i].T + s[i].T_stride;
+            COMPLEX const * const T_22 = T_12 + 2*s[i].T_stride;
 
-            const COMPLEX Q = -kappa*CONJ(T_21[1] / T_11[1]);
+            const COMPLEX Q = (T_12[1] / T_22[1]);
             const REAL scl_den = 1.0 + kappa*CABS(Q)*CABS(Q);
             if (scl_den <= 0.0) {
                 ret_code = E_OTHER("The step size eps_t is not small enough. Use more samples.");
@@ -201,14 +201,14 @@ start_pos_2:
             COMPLEX * const Ti_21 = Ti_12 + s[i].Ti_stride;
             COMPLEX * const Ti_22 = Ti_21 + s[i].Ti_stride;
 
-            s[i].Ti[0] = scl;
-            s[i].Ti[1] = 0.0;
-            Ti_12[0] = -scl*Q;
-            Ti_12[1] = 0.0;
-            Ti_21[0] = 0.0;
-            Ti_21[1] = scl*kappa*CONJ(Q);
-            Ti_22[0] = 0.0;
-            Ti_22[1] = scl;
+            s[i].Ti[0] = 0.0;
+            s[i].Ti[1] = scl;
+            Ti_12[0] = 0.0;
+            Ti_12[1] = -scl*Q;
+            Ti_21[0] = scl*kappa*CONJ(Q);
+            Ti_21[1] = 0.0;
+            Ti_22[0] = scl;
+            Ti_22[1] = 0.0;
 
             if (discretization == fnft_nse_discretization_2SPLIT2_MODAL) {
 
