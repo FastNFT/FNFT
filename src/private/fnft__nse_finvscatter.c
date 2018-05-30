@@ -217,11 +217,7 @@ start_pos_2:
             } else if (discretization == fnft_nse_discretization_2SPLIT2A) {
 
                 const REAL Qabs = CABS(Q);
-                if (Qabs >= FNFT_PI) {
-                    ret_code = E_OTHER("The step size eps_t is not small enough. Use more samples.");
-                    goto leave_fun;
-                }
-                *s[i].q = atan(Qabs)*CEXP(I*CARG(Q))/eps_t;
+                *s[i].q = ATAN(Qabs)*CEXP(I*CARG(Q))/eps_t;
 
             } else { // discretization is unknown or not supported
 
