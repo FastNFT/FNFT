@@ -47,7 +47,7 @@ INT poly_specfact(const UINT deg,
     COMPLEX * const buf_in = fft_wrapper_malloc(M * sizeof(COMPLEX));
     COMPLEX * const buf_out = fft_wrapper_malloc(M * sizeof(COMPLEX));
     COMPLEX * const buf_x = fft_wrapper_malloc(M * sizeof(COMPLEX));
-    if (buf_in == NULL || buf_out == NULL) {
+    if (buf_in == NULL || buf_out == NULL || buf_x == NULL) {
         ret_code = E_NOMEM;
         goto leave_fun;
     }
