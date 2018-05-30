@@ -35,7 +35,8 @@ void misc_print_buf(INT len, COMPLEX *buf, char* varname)
     printf("];\n");
 }
 
-REAL misc_rel_err(INT len, COMPLEX *vec_numer, COMPLEX *vec_exact)
+REAL misc_rel_err(const INT len, COMPLEX const * const vec_numer,
+    COMPLEX const * const vec_exact)
 {
     INT i;
     double n = 0.0, d = 0.0;

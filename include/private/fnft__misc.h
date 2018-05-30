@@ -49,8 +49,8 @@ void fnft__misc_print_buf(FNFT_INT len, FNFT_COMPLEX *buf, char *varname);
  * @param[in] vec_exact Complex array of exact result of length len.
  * @return Returns the real valued relative error err.
  */
-FNFT_REAL fnft__misc_rel_err(FNFT_INT len, FNFT_COMPLEX *vec_numer,
-    FNFT_COMPLEX *vec_exact);
+FNFT_REAL fnft__misc_rel_err(const FNFT_INT len,
+    FNFT_COMPLEX const * const vec_numer, FNFT_COMPLEX const * const vec_exact);
 
 /**
  * @brief Hausdorff distance between two vectors.
