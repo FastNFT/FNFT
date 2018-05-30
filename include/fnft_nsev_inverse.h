@@ -23,9 +23,15 @@
 #include "fnft.h"
 #include "fnft_nse_discretization_t.h"
 
+typedef enum {
+    fnft_nsev_inverse_contspec_inversion_method_REFL_COEFF,
+    fnft_nsev_inverse_contspec_inversion_method_B_FROM_A,
+    fnft_nsev_inverse_contspec_inversion_method_B_FROM_A_WO_SPECFACT
+} fnft_nsev_inverse_contspec_inversion_method_t;
+
 typedef struct {
     fnft_nse_discretization_t discretization;
-    FNFT_UINT oversampling_factor;
+    fnft_nsev_inverse_contspec_inversion_method_t contspec_inversion_method;
 } fnft_nsev_inverse_opts_t;
 
 fnft_nsev_inverse_opts_t fnft_nsev_inverse_default_opts();
@@ -48,6 +54,6 @@ FNFT_INT fnft_nsev_inverse(
     FNFT_COMPLEX * const q,
     FNFT_REAL const * const T,
     const FNFT_INT kappa,
-    fnft_nsev_inverse_opts_t *opts);
+    fnft_nsev_inverse_opts_t *opts_ptr);
 
 #endif

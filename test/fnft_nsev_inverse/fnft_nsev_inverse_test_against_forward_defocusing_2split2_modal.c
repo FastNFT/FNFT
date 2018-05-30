@@ -22,25 +22,54 @@
 int main()
 {
     const INT kappa = -1;
-    const nse_discretization_t discretization =
-        nse_discretization_2SPLIT2_MODAL;
     UINT M;
     REAL error_bound;
-    INT ret_code;
+    INT ret_code = SUCCESS;
+
+    fnft_nsev_inverse_opts_t opts = fnft_nsev_inverse_default_opts();
+    opts.discretization = nse_discretization_2SPLIT2_MODAL;
+    opts.contspec_inversion_method
+        = fnft_nsev_inverse_contspec_inversion_method_REFL_COEFF;
 
     M = 10;
     error_bound = 0.017;
-    ret_code = fnft_nsev_inverse_test(M, error_bound, kappa, discretization);
-    if (ret_code != SUCCESS) {
-        return EXIT_FAILURE;
-    }
+    ret_code = fnft_nsev_inverse_test(M, error_bound, kappa, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
 
     M = 32;
     error_bound = 7.5e-9;
-    ret_code = fnft_nsev_inverse_test(M, error_bound, kappa, discretization);
-    if (ret_code != SUCCESS) {
-        return EXIT_FAILURE;
-    }
+    ret_code = fnft_nsev_inverse_test(M, error_bound, kappa, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
 
-	return EXIT_SUCCESS;
+    opts.contspec_inversion_method
+        = fnft_nsev_inverse_contspec_inversion_method_B_FROM_A;
+
+    M = 8;
+    error_bound = 0.03;
+    ret_code = fnft_nsev_inverse_test(M, error_bound, kappa, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    M = 32;
+    error_bound = 2.4e-8;
+    ret_code = fnft_nsev_inverse_test(M, error_bound, kappa, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    opts.contspec_inversion_method
+        = fnft_nsev_inverse_contspec_inversion_method_B_FROM_A_WO_SPECFACT;
+
+    M = 8;
+    error_bound = 0.044;
+    ret_code = fnft_nsev_inverse_test(M, error_bound, kappa, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    M = 32;
+    error_bound = 2.4e-8;
+    ret_code = fnft_nsev_inverse_test(M, error_bound, kappa, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+leave_fun:
+    if (ret_code == SUCCESS)
+        return EXIT_SUCCESS;
+    else
+        return EXIT_FAILURE;
 }

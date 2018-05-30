@@ -33,17 +33,20 @@ INT poly_specfact(const UINT deg,
         return E_INVALID_ARGUMENT(poly);
     if (result == NULL)
         return E_INVALID_ARGUMENT(result);
-    if (oversampling_factor == 0 || oversampling_factor%2 != 0)
+    if (oversampling_factor == 0)
         return E_INVALID_ARGUMENT(oversampling_factor);
 
     // Prepare buffers and (inverse) FFT's
 
     fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
     fft_wrapper_plan_t plan_inv = fft_wrapper_safe_plan_init();
+
+    const UINT M = fft_wrapper_next_fft_length( (deg+1)*oversampling_factor );
+    if (M%2 != 0)
+            return E_ASSERTION_FAILED;
     INT ret_code = SUCCESS;
     UINT i;
 
-    const UINT M = fft_wrapper_next_fft_length( (deg+1)*oversampling_factor );
     COMPLEX * const buf_in = fft_wrapper_malloc(M * sizeof(COMPLEX));
     COMPLEX * const buf_out = fft_wrapper_malloc(M * sizeof(COMPLEX));
     COMPLEX * const buf_x = fft_wrapper_malloc(M * sizeof(COMPLEX));

@@ -27,12 +27,14 @@
 #include <stdio.h>
 
 static INT fnft_nsev_inverse_test(const REAL error_bound,
-    const nse_discretization_t discretization)
+       fnft_nsev_inverse_opts_t * opts_ptr)
 {
 #include "fnft_nsev_inverse_test_sech_defocusing_data.inc"
 
     if (!(error_bound > 0))
         return E_INVALID_ARGUMENT(error_bound);
+    if (opts_ptr == NULL)
+        return E_INVALID_ARGUMENT(opts_ptr);
 
     INT ret_code = SUCCESS;
 
@@ -42,10 +44,8 @@ static INT fnft_nsev_inverse_test(const REAL error_bound,
        goto leave_fun;
     }
 
-    fnft_nsev_inverse_opts_t opts_inv = fnft_nsev_inverse_default_opts();
-    opts_inv.discretization = discretization;
     ret_code = fnft_nsev_inverse(M, contspec, XI, 0, NULL, NULL, D, q, T,
-        kappa, &opts_inv);
+        kappa, opts_ptr);
     CHECK_RETCODE(ret_code, leave_fun);
 
     REAL error = misc_rel_err(D, q, q_exact);

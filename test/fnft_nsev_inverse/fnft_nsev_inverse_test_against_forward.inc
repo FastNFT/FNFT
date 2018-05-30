@@ -29,7 +29,7 @@
 #include <stdio.h>
 
 static INT fnft_nsev_inverse_test(const UINT M, const REAL error_bound,
-    const INT kappa, const nse_discretization_t discretization)
+    const INT kappa, fnft_nsev_inverse_opts_t * opts_ptr)
 {
     const UINT D = 8;
     COMPLEX q_exact[8] = { 0.1, 0.1*I, 0.2, -0.2, 0.0, 0.05+0.05*I, -0.03*I,
@@ -46,7 +46,7 @@ static INT fnft_nsev_inverse_test(const UINT M, const REAL error_bound,
     INT ret_code = SUCCESS;
     UINT i;
 
-    const UINT numel = nse_fscatter_numel(D, discretization);
+    const UINT numel = nse_fscatter_numel(D, opts_ptr->discretization);
     COMPLEX * const transfer_matrix = malloc(numel * sizeof(COMPLEX));
     COMPLEX * const a_vals = malloc(M * sizeof(COMPLEX));
     COMPLEX * const b_vals = malloc(M * sizeof(COMPLEX));
@@ -58,16 +58,14 @@ static INT fnft_nsev_inverse_test(const UINT M, const REAL error_bound,
     }
 
     fnft_nsev_opts_t opts_fwd = fnft_nsev_default_opts();
-    opts_fwd.discretization = discretization;
-    ret_code = fnft_nsev_inverse_XI(D, T, M, XI, discretization);
+    opts_fwd.discretization = opts_ptr->discretization;
+    ret_code = fnft_nsev_inverse_XI(D, T, M, XI, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = fnft_nsev(D, q_exact, T, M, contspec, XI, NULL, NULL, NULL, kappa,
         &opts_fwd);
 
-    fnft_nsev_inverse_opts_t opts_inv = fnft_nsev_inverse_default_opts();
-    opts_inv.discretization = discretization;
     ret_code = fnft_nsev_inverse(M, contspec, XI, 0, NULL, NULL, D, q, T,
-        kappa, &opts_inv);
+        kappa, opts_ptr);
     CHECK_RETCODE(ret_code, leave_fun);
 
     REAL error = misc_rel_err(D, q, q_exact);
@@ -82,7 +80,7 @@ static INT fnft_nsev_inverse_test(const UINT M, const REAL error_bound,
     UINT deg;
     const REAL eps_t = (T[1] - T[0])/(D - 1);
     ret_code = nse_fscatter(D, q_exact, eps_t, kappa, transfer_matrix, &deg,
-        NULL, discretization);
+        NULL, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 
     const COMPLEX A = 1.0;
@@ -95,9 +93,8 @@ static INT fnft_nsev_inverse_test(const UINT M, const REAL error_bound,
 
     for (i=0; i<M; i++)
         contspec[i] = b_vals[i]/a_vals[i];
-
     ret_code = fnft_nsev_inverse(M, contspec, NULL, 0, NULL, NULL, D, q, T,
-        kappa, &opts_inv);
+        kappa, opts_ptr);
     CHECK_RETCODE(ret_code, leave_fun);
 
     error = misc_rel_err(D, q, q_exact);
@@ -116,4 +113,3 @@ leave_fun:
     free(contspec);
     return ret_code;
 }
-
