@@ -270,10 +270,16 @@ static inline INT tf2contspec(
     INT ret_code;
     UINT i, offset = 0;
     
-    // We reuse an unused part of the transfer matrix as buffer
-    a_vals = transfer_matrix + (deg+1);
-    if (M > deg+1)
-        return E_NOT_YET_IMPLEMENTED(M >> D, "Any M<=2*D should work. It is planned to remove this restriction in the next release.");
+    // We reuse an unused part of the transfer matrix as buffer, if possible
+    if (M <= deg+1) {
+        a_vals = transfer_matrix + (deg+1);
+    } else {
+        a_vals = malloc(M*sizeof(COMPLEX));
+        if (a_vals == NULL) {
+            ret_code = E_NOMEM;
+            goto leave_fun;
+        }
+    }
     
     // Set step sizes
     eps_t = (T[1] - T[0])/(D - 1);
@@ -282,8 +288,10 @@ static inline INT tf2contspec(
     // Retrieve some discretization-specific constants
     map_coeff = nse_discretization_mapping_coeff(opts->discretization);
     bnd_coeff = nse_discretization_boundary_coeff(opts->discretization);
-    if (map_coeff == NAN || bnd_coeff == NAN)
-        return E_INVALID_ARGUMENT(opts->discretization);
+    if (map_coeff == NAN || bnd_coeff == NAN) {
+        ret_code = E_INVALID_ARGUMENT(opts->discretization);
+        goto leave_fun;
+    }
 
     // Prepare the use of the chirp transform. The entries of the transfer
     // matrix that correspond to a and b will be evaluated on the frequency
@@ -303,18 +311,18 @@ static inline INT tf2contspec(
     case nsev_cstype_REFLECTION_COEFFICIENT:
 
         ret_code = poly_chirpz(deg, transfer_matrix, A, V, M, a_vals);
-        if (ret_code != SUCCESS)
-            return E_SUBROUTINE(ret_code);
+        CHECK_RETCODE(ret_code, leave_fun);
 
         ret_code = poly_chirpz(deg, transfer_matrix+2*(deg+1), A, V, M,result);
-        if (ret_code != SUCCESS)
-            return E_SUBROUTINE(ret_code);
+        CHECK_RETCODE(ret_code, leave_fun);
 
         phase_factor_rho = -2.0*(T[1] + eps_t*bnd_coeff);
         for (i = 0; i < M; i++) {
             xi = XI[0] + i*eps_xi;
-            if (a_vals[i] == 0.0)
-                return E_DIV_BY_ZERO;
+            if (a_vals[i] == 0.0) {
+                ret_code = E_DIV_BY_ZERO;
+                goto leave_fun;
+            }
             result[i] *= CEXP(I*xi*phase_factor_rho) / a_vals[i];
         }
 
@@ -324,13 +332,11 @@ static inline INT tf2contspec(
     case nsev_cstype_AB:
 
         ret_code = poly_chirpz(deg, transfer_matrix, A, V, M, result + offset);
-        if (ret_code != SUCCESS)
-            return E_SUBROUTINE(ret_code);
+        CHECK_RETCODE(ret_code, leave_fun);
 
         ret_code = poly_chirpz(deg, transfer_matrix+2*(deg+1), A, V, M,
             result + offset + M);
-        if (ret_code != SUCCESS)
-            return E_SUBROUTINE(ret_code);
+        CHECK_RETCODE(ret_code, leave_fun);
 
         scale = POW(2.0, W); // needed since the transfer matrix might
                                   // have been scaled by nse_fscatter
@@ -353,10 +359,14 @@ static inline INT tf2contspec(
 
     default:
 
-        return E_INVALID_ARGUMENT(opts->contspec_type);
+        ret_code = E_INVALID_ARGUMENT(opts->contspec_type);
+        goto leave_fun;
     }
     
-    return SUCCESS;
+leave_fun:
+    if (a_vals != transfer_matrix + (deg+1))
+        free(a_vals);
+    return ret_code;
 }
 
 // Auxiliary function for filtering: We assume that bound states must have
