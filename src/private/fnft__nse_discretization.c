@@ -29,15 +29,37 @@ UINT fnft__nse_discretization_degree(nse_discretization_t
         discretization)
 {
     switch (discretization) {
-        case nse_discretization_2SPLIT2A:
+           
+        case nse_discretization_2SPLIT1A:
+        case nse_discretization_2SPLIT1B:
+        case nse_discretization_2SPLIT2A: // With change of base trick
+        case nse_discretization_2SPLIT2B:
+        case nse_discretization_2SPLIT2S:
         case nse_discretization_2SPLIT2_MODAL:
             return 1;
-        case nse_discretization_2SPLIT4A:
-            return 4;
+        case nse_discretization_2SPLIT3S:
         case nse_discretization_2SPLIT4B:
             return 2;
+        case nse_discretization_2SPLIT3A:
+        case nse_discretization_2SPLIT3B:
+            return 3;
+        case nse_discretization_2SPLIT4A:
+            return 4;
+        case nse_discretization_2SPLIT6B:
+            return 6;
+        case nse_discretization_2SPLIT6A:
+        case nse_discretization_2SPLIT8B:
+            return 12;
+        case nse_discretization_2SPLIT5A:
+        case nse_discretization_2SPLIT5B:
+            return 15;
+        case nse_discretization_2SPLIT8A:
+            return 24;
+        case nse_discretization_2SPLIT7A:
+        case nse_discretization_2SPLIT7B:
+            return 105;
             
-        default:  // Unknown discretization
+        default: // Unknown discretization
             return 0;
     }
 }
@@ -52,9 +74,24 @@ REAL fnft__nse_discretization_boundary_coeff(nse_discretization_t discretization
     switch (discretization) {
         case nse_discretization_2SPLIT2_MODAL:
             return 0.0; // TODO: this value should be 0.5 for every staircase approximation that uses midpoint values.
-        case nse_discretization_2SPLIT2A:
-        case nse_discretization_2SPLIT4A:
+        case nse_discretization_2SPLIT1A:
+        case nse_discretization_2SPLIT1B:
+        case nse_discretization_2SPLIT2A: // With change of base trick
+        case nse_discretization_2SPLIT2B:
+        case nse_discretization_2SPLIT2S:
+        case nse_discretization_2SPLIT3S:
         case nse_discretization_2SPLIT4B:
+        case nse_discretization_2SPLIT3A:
+        case nse_discretization_2SPLIT3B:
+        case nse_discretization_2SPLIT4A:
+        case nse_discretization_2SPLIT6B:
+        case nse_discretization_2SPLIT6A:
+        case nse_discretization_2SPLIT8B:
+        case nse_discretization_2SPLIT5A:
+        case nse_discretization_2SPLIT5B:
+        case nse_discretization_2SPLIT8A:
+        case nse_discretization_2SPLIT7A:
+        case nse_discretization_2SPLIT7B:
             return 0.5;
             
         default: // Unknown discretization

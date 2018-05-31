@@ -349,8 +349,12 @@ static inline INT tf2contspec(
 
         scale = POW(2.0, W); // needed since the transfer matrix might
                                   // have been scaled by nse_fscatter
-        phase_factor_a =  2.0*D*eps_t + T[1] + T[0];
-        phase_factor_b = 2.0*(D-boundary_coeff)*eps_t + T[0] - T[1];
+        if (boundary_coeff == 0){
+             phase_factor_a =  2.0*D*eps_t + T[1] + T[0];
+             phase_factor_b = 2.0*D*eps_t + T[0] - T[1];}
+        else{
+       	     phase_factor_a =  eps_t*D + (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
+             phase_factor_b = eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);}
 
 
         for (i = 0; i < M; i++) {

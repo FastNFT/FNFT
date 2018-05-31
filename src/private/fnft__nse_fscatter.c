@@ -111,10 +111,10 @@ INT nse_fscatter(const UINT D, COMPLEX const * const q,
             akns_discretization = discretization_2SPLIT8B;
             break;
         case nse_discretization_2SPLIT5A:
-            akns_discretization = discretization_2SPLIT1A;
+            akns_discretization = discretization_2SPLIT5A;
             break;
         case nse_discretization_2SPLIT5B:
-            akns_discretization = discretization_2SPLIT1A;
+            akns_discretization = discretization_2SPLIT5B;
             break;
         case nse_discretization_2SPLIT8A:
             akns_discretization = discretization_2SPLIT8A;

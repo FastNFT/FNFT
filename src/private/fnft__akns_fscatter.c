@@ -135,6 +135,15 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p22[0] = 0.0;
                 p22[1] = scl;
 
+                /*p11[0] = 0.0;
+                p11[1] = scl;
+                p12[0] = scl*eps_t*q[i];
+                p12[1] = 0.0;
+                p21[0] = 0.0;
+                p21[1] = scl*eps_t*r[i];
+                p22[0] = scl;
+                p22[1] = 0.0;*/
+
                 p11 += *deg_ptr + 1;
                 p21 += *deg_ptr + 1;
                 p12 += *deg_ptr + 1;
