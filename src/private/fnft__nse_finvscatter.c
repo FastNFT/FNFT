@@ -1,6 +1,6 @@
 /*
- * This file is part of FNFT.  
- *                                                                  
+ * This file is part of FNFT.
+ *
  * FNFT is free software; you can redistribute it and/or
  * modify it under the terms of the version 2 of the GNU General
  * Public License as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *                                                                      
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
@@ -85,9 +85,9 @@ static INT nse_finvscatter_recurse(
             goto start_pos_1;
         else if (s[i].start_pos == 2)
             goto start_pos_2;
-    
+
         if (s[i].deg > 1) { // recursive case
-    
+
             // The transfer matrix for all samples is
             //
             //   T(z) = T2(z)*T1(z), where
@@ -105,7 +105,7 @@ static INT nse_finvscatter_recurse(
             //   Ti(z) = T1i(z)*T2i(z),
             //
             // where Tni(z) is the inverse of Tn(z), also up to a power of z.
-    
+
             // Allocate memory for level i if not done before
             if (s[i].T1 == NULL) {
                 s[i].T1 = malloc(4*(2*s[i].deg + 1) * sizeof(COMPLEX));
@@ -116,10 +116,10 @@ static INT nse_finvscatter_recurse(
                     goto leave_fun;
                 }
             }
-    
+
             // Step 1: Determine T2i(z) and the samples q[D/2],...,q[D-1] from
             // the lower part of T(z) with a recursive call.
-            
+
             s[i+1].deg = s[i].deg/2;
             s[i+1].T = s[i].T + s[i].deg/2;
             s[i+1].T_stride = s[i].T_stride;
@@ -134,7 +134,7 @@ static INT nse_finvscatter_recurse(
 start_pos_1:
 
             // Step 2: Determine T1(z) = T2i(z)*T(z).
-   
+
             // Allocate 1st pair of FFT plans for level i if not done before
             if (s[i].plan_fwd_1 == fft_wrapper_safe_plan_init()) {
                 create_fft_plans(s[i].deg, &s[i].plan_fwd_1, &s[i].plan_inv_1,
@@ -147,10 +147,10 @@ start_pos_1:
                 s[i].T1, 2*s[i].deg+1,
                 s[i].plan_fwd_1, s[i].plan_inv_1, buf0, buf1, buf2);
             CHECK_RETCODE(ret_code, leave_fun);
-    
+
             // Step 3: Determine T1i(z) and q[0],...,q[D/2-1] from T1(z) with
             // a recursive call.
-    
+
             s[i+1].deg = s[i].deg/2;
             s[i+1].T = s[i].T1 + s[i].deg;
             s[i+1].T_stride = 2*s[i].deg + 1;
@@ -165,7 +165,7 @@ start_pos_1:
 start_pos_2:
 
             // Step 4: Determine Ti(z) = T1i(z)*T2i(z) if requested
-            
+
             if (s[i].Ti != NULL) {
 
                 // Allocate 2nd pair of FFT plans for level i if not done
@@ -182,16 +182,17 @@ start_pos_2:
                     s[i].plan_fwd_2, s[i].plan_inv_2, buf0, buf1, buf2);
                 CHECK_RETCODE(ret_code, leave_fun);
             }
-    
+
         } else if (s[i].deg == 1) { // base case
-    
+
             COMPLEX const * const T_11 = s[i].T;
             COMPLEX const * const T_21 = T_11 + 2*s[i].T_stride;
 
             const COMPLEX Q = -kappa*CONJ(T_21[1] / T_11[1]);
-            const REAL scl_den = 1.0 + kappa*CABS(Q)*CABS(Q);
-            if (scl_den <= 0.0) {
-                ret_code = E_OTHER("The step size eps_t is not small enough. Use more samples.");
+            const REAL absQ = CABS(Q);
+            const REAL scl_den = 1.0 + kappa*absQ*absQ;
+            if (scl_den <= 0.0) { // only possible if kappa == -1
+                ret_code = E_OTHER("A reconstruced sample violates the condition |q[n]|<1.");
                 goto leave_fun;
             }
             const REAL scl = 1.0 / SQRT(scl_den);
@@ -225,14 +226,14 @@ start_pos_2:
                 goto leave_fun;
 
             }
-    
+
         } else { // deg == 0
-    
+
             ret_code = E_ASSERTION_FAILED;
             goto leave_fun;
-    
+
         }
-    
+
         i--;
     }
 

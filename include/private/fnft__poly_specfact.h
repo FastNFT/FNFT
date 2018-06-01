@@ -25,7 +25,8 @@
 FNFT_INT fnft__poly_specfact(const FNFT_UINT deg,
                              FNFT_COMPLEX const * const poly,
                              FNFT_COMPLEX * const result,
-                             const FNFT_UINT oversampling_factor);
+                             const FNFT_UINT oversampling_factor,
+                             const FNFT_INT kappa);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define poly_specfact(...) fnft__poly_specfact(__VA_ARGS__)

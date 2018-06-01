@@ -1,6 +1,6 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
+* This file is part of FNFT.
+*
 * FNFT is free software; you can redistribute it and/or
 * modify it under the terms of the version 2 of the GNU General
 * Public License as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-*                                                                      
+*
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
@@ -35,7 +35,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     double *re, *im, *csr, *csi;
     char msg[128]; // buffer for error messages
     fnft_nsev_inverse_opts_t opts;
-    int ret_code;
+    FNFT_INT ret_code;
+    FNFT_INT k;
 
     if (nlhs < 1)
         return;
@@ -54,32 +55,82 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mexErrMsgTxt("Fourth input T should be a double 1x2 vector.");
     if ( !mxIsDouble(prhs[4]) || mxGetNumberOfElements(prhs[4]) != 1 )
         mexErrMsgTxt("Fifth input kappa should be a scalar.");
-    
+
     M = mxGetNumberOfElements(prhs[0]);
     T = mxGetPr(prhs[1]);
     D = (unsigned int)mxGetScalar(prhs[2]);
     XI = mxGetPr(prhs[3]);
     kappa = (int)mxGetScalar(prhs[4]);
-    
+
     /* Check values of first four inputs */
 
-    if ( D<2 )
-        mexErrMsgTxt("Length of the first input q should be at least two.");
+    if ( M<2 )
+        mexErrMsgTxt("Length of the first input contspec should be at least two.");
     if ( T[0] >= T[1] )
         mexErrMsgTxt("T(1) >= T(2).");
     if ( XI[0] >= XI[1] )
         mexErrMsgTxt("XI(1) >= XI(2).");
+    if ( D<2 )
+        mexErrMsgTxt("D < 2.");
     if ( kappa != +1 && kappa != -1 )
         mexErrMsgTxt("Fourth input kappa should be +1.0 or -1.0.");
-    
+
     /* Default options for fnft_nsev */
 
     opts = fnft_nsev_inverse_default_opts();
-    
+
     /* Redirect FNFT error messages and warnings to Matlabs command window */
 
     fnft_errwarn_setprintf(mexPrintf);
-   
+
+    /* Check remaining inputs, if any */
+
+    for (k=5; k<nrhs; k++) {
+
+        /* Check if current input is a string as desired and convert it */
+        if ( !mxIsChar(prhs[k]) ) {
+            snprintf(msg, sizeof msg, "%uth input should be a string.",
+                     (unsigned int)(k+1));
+            goto on_error;
+        }
+        char *str = mxArrayToString(prhs[k]);
+        if ( str == NULL ) {
+            snprintf(msg, sizeof msg, "Out of memory.");
+            goto on_error;
+        }
+
+        /* Try to interpret value of string input */
+        if ( strcmp(str, "csinv_refl_coeff") == 0 ) {
+
+            opts.contspec_inversion_method =
+                fnft_nsev_inverse_contspec_inversion_method_REFL_COEFF;
+
+        } else if ( strcmp(str, "csinv_b_from_a") == 0 ) {
+
+            opts.contspec_inversion_method =
+                fnft_nsev_inverse_contspec_inversion_method_B_FROM_A;
+
+        } else if ( strcmp(str, "csinv_b_from_a_wo_specfact") == 0 ) {
+
+            opts.contspec_inversion_method =
+                fnft_nsev_inverse_contspec_inversion_method_B_FROM_A_WO_SPECFACT;
+
+        } else if ( strcmp(str, "csinv_a_from_b_iter") == 0 ) {
+
+            opts.contspec_inversion_method =
+                fnft_nsev_inverse_contspec_inversion_method_A_FROM_B_ITER;
+
+        } else if ( strcmp(str, "quiet") == 0 ) {
+
+            fnft_errwarn_setprintf(NULL);
+
+        } else {
+            snprintf(msg, sizeof msg, "%uth input has invalid value.",
+                 (unsigned int)(k+1));
+            goto on_error;
+        }
+    }
+
     /* Allocate memory */
 
     q = mxMalloc(D * sizeof(FNFT_COMPLEX));
@@ -87,32 +138,32 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         snprintf(msg, sizeof msg, "Out of memory.");
         goto on_error;
     }
-    contspec = mxMalloc(M * sizeof(FNFT_COMPLEX));      
+    contspec = mxMalloc(M * sizeof(FNFT_COMPLEX));
     if (contspec == NULL) {
         snprintf(msg, sizeof msg, "Out of memory.");
         goto on_error;
     }
-   
+
     /* Convert input */
 
     re = mxGetPr(prhs[0]);
     im = mxGetPi(prhs[0]);
     for (i=0; i<M; i++)
         contspec[i] = re[i] + I*im[i];
-    
+
     /* Call the C routine */
-    
+
     ret_code = fnft_nsev_inverse(M, contspec, XI, 0, NULL, NULL, D, q, T, kappa, &opts);
     if (ret_code != FNFT_SUCCESS) {
         snprintf(msg, sizeof msg, "fnft_nsev_inverse failed (error code %i).",
                 ret_code);
         goto on_error;
     }
-    
+
     /* Allocate memory for the output */
 
     plhs[0] = mxCreateDoubleMatrix(1, D, mxCOMPLEX);
-    
+
     /* Allocate memory for outputs and convert results */
 
     csr = mxGetPr(plhs[0]);
@@ -121,13 +172,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         csr[i] = FNFT_CREAL(q[i]);
         csi[i] = FNFT_CIMAG(q[i]);
     }
-    
+
     /* Free memory that is no longer needed */
 
     mxFree(q);
     mxFree(contspec);
     return;
-    
+
 on_error:
     mexErrMsgTxt(msg);
 }

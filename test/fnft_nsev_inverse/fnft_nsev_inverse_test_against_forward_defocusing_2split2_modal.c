@@ -67,6 +67,14 @@ int main()
     ret_code = fnft_nsev_inverse_test(M, error_bound, kappa, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
+    opts.contspec_inversion_method
+        = fnft_nsev_inverse_contspec_inversion_method_A_FROM_B_ITER;
+
+    M = 8;
+    error_bound = 1.1e-14;
+    ret_code = fnft_nsev_inverse_test(M, error_bound, kappa, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+
 leave_fun:
     if (ret_code == SUCCESS)
         return EXIT_SUCCESS;

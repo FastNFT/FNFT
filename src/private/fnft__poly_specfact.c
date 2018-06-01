@@ -25,7 +25,8 @@
 INT poly_specfact(const UINT deg,
                   COMPLEX const * const poly,
                   COMPLEX * const result,
-                  const UINT oversampling_factor)
+                  const UINT oversampling_factor,
+                  const INT kappa)
 {
     if (deg == 0)
         return E_INVALID_ARGUMENT(deg);
@@ -64,7 +65,8 @@ INT poly_specfact(const UINT deg,
     // Trigonometric Polynomials and Signal Processing Applications" by
     // B. Dumitrescu, Springer, 2007.
 
-    // Step 1: Compute x_l = log |P(w_l)| on an oversampled grid
+    // Step 1: Compute x_l = log |P(w_l)| [or x_l = 0.5*log 1+-|P(w_l)|^2)
+    // if kappa != 0] on an oversampled grid
 
     for (i=0; i<=deg; i++)
         buf_in[i] = poly[i];
@@ -73,8 +75,25 @@ INT poly_specfact(const UINT deg,
     ret_code = fft_wrapper_execute_plan(plan_fwd, buf_in, buf_out);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    for (i=0; i<M; i++)
-        buf_x[i] = CLOG( CABS(buf_out[i]) );
+    switch (kappa) {
+
+    case 0:
+        for (i=0; i<M; i++)
+            buf_x[i] = CLOG( CABS(buf_out[i]) );
+        break;
+
+    case -1:
+        for (i=0; i<M; i++) {
+            const REAL abs_buf = CABS(buf_out[i]);
+            buf_x[i] = 0.5*CLOG( 1.0 - kappa*abs_buf*abs_buf );
+        }
+        break;
+
+    default:
+
+        ret_code = E_INVALID_ARGUMENT(kappa);
+        goto leave_fun;
+    }
 
     // Step 2: Compute the Hilbert transform y_l of x_l
 
