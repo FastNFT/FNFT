@@ -1,6 +1,6 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
+* This file is part of FNFT.
+*
 * FNFT is free software; you can redistribute it and/or
 * modify it under the terms of the version 2 of the GNU General
 * Public License as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-*                                                                      
+*
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
@@ -30,7 +30,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     double * XI;
     char msg[128]; // buffer for error messages
     fnft_nsev_inverse_opts_t opts;
-    int ret_code;
+    FNFT_INT ret_code;
+    FNFT_UINT i;
 
     if (nlhs < 1)
         return;
@@ -45,7 +46,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mexErrMsgTxt("Second input T should be a double 1x2 vector.");
     if ( !mxIsDouble(prhs[2]) || mxGetNumberOfElements(prhs[2]) != 1 )
         mexErrMsgTxt("Third input M should be a scalar.");
-    
+
     D = (int)mxGetScalar(prhs[0]);
     T = mxGetPr(prhs[1]);
     M = (int)mxGetScalar(prhs[2]);
@@ -62,8 +63,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         goto on_error;
     }
 
+    if (nlhs >= 2) {
+        plhs[1] = mxCreateDoubleMatrix(1, M, mxREAL);
+        double * const xi = mxGetPr(plhs[1]);
+        const double eps_xi = (XI[1] - XI[0])/(M - 1);
+        for (i=0; i<M; i++)
+            xi[i] = XI[0] + i*eps_xi;
+    }
+
     return;
-    
+
 on_error:
     mexErrMsgTxt(msg);
 }

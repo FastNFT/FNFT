@@ -36,10 +36,9 @@ close all;
 T = [-2 2];     % Location of the 1st and last sample in the time domain
 D = 2^10;       % Desired number of samples in the time domain
 M = 2*D;        % Number of samples in the nonlinear frequency domain
-XI = mex_fnft_nsev_inverse_XI(D, T, M);
+[XI, xi] = mex_fnft_nsev_inverse_XI(D, T, M);
                 % Location of the 1st and last sample in the nonlinear
-                % frequency domain -> we currently have to use the specific
-                % values returned by mex_fnft_nsev_inverse_XI
+                % frequency domain, as well as the grid of all locations
 kappa = +1;     % Focusing nonlinear Schroedinger equation
 
 %%% Setup the reflection coefficent %%%
@@ -47,8 +46,6 @@ kappa = +1;     % Focusing nonlinear Schroedinger equation
 al = 2;
 be = -0.55;
 contspec_fun = @(xi) complex(al./(xi - be*1j));
-eps_xi = (XI(2) - XI(1))/(M - 1);
-xi = XI(1) + (0:M-1)*eps_xi;
 contspec_exact = contspec_fun(xi);
 
 %%% Compute the corresponding time domain signal numerically %%%

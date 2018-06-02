@@ -32,10 +32,9 @@ close all;
 T = [-1 1];     % Location of the 1st and last sample in the time domain
 D = 2^12;       % Desired number of samples in the time domain
 M = D;          % Number of samples in the nonlinear frequency domain
-XI = mex_fnft_nsev_inverse_XI(D, T, M);
+[XI, xi] = mex_fnft_nsev_inverse_XI(D, T, M);
                 % Location of the 1st and last sample in the nonlinear
-                % frequency domain -> we currently have to use the specific
-                % values returned by mex_fnft_nsev_inverse_XI
+                % frequency domain, as well as the grid of all locations
 kappa = -1;     % Defocusing nonlinear Schroedinger equation
 
 %%% Define the desired continuous spectrum and compute the corresponding

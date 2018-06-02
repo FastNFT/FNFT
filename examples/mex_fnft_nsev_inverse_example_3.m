@@ -32,10 +32,9 @@ M = D;          % Number of samples in the nonlinear frequency domain.
                 % Increasing M does not help in this example. In fact, it
                 % deterioates the performance of the alternative method
                 % to that of the default method.
-XI = mex_fnft_nsev_inverse_XI(D, T, M);
+[XI, xi] = mex_fnft_nsev_inverse_XI(D, T, M);
                 % Location of the 1st and last sample in the nonlinear
-                % frequency domain -> we currently have to use the specific
-                % values returned by mex_fnft_nsev_inverse_XI
+                % frequency domain, as well as the grid of all locations
 XI_plot = [-4, 4];
                 % Nonlinear frequency range used for plotting and error
                 % computation
