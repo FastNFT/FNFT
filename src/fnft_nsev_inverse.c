@@ -312,6 +312,8 @@ static inline INT transfer_matrix_from_B_from_A(
         return E_INVALID_ARGUMENT(D);
     if (M%D != 0)
         return E_INVALID_ARGUMENT(M);
+    if (M != D)
+        WARN("The performance of the B_from_A inversion method for the continuous\nspectrum is typically identical to that of the default method if M>D.\nM=D sometimes gives better results for this method.")
     if (D != deg)
         return E_ASSERTION_FAILED;
 
@@ -445,7 +447,8 @@ static inline INT transfer_matrix_from_A_from_B_iter(
     const INT kappa,
     const UINT max_iter)
 {
-    fft_wrapper_plan_t plan = fft_wrapper_safe_plan_init();
+    fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
+    fft_wrapper_plan_t plan_inv = fft_wrapper_safe_plan_init();
     INT ret_code = SUCCESS;
     UINT i, iter;
 
@@ -458,7 +461,7 @@ static inline INT transfer_matrix_from_A_from_B_iter(
     if (kappa != -1)
         return E_INVALID_ARGUMENT(kappa);
 
-    // Allocate some memory
+    // Allocate some memory and initial (inverse) FFT plans
     COMPLEX * const contspec_reordered = fft_wrapper_malloc(M * sizeof(COMPLEX));
     COMPLEX * const fft_in = fft_wrapper_malloc(M * sizeof(COMPLEX));
     COMPLEX * const fft_out = fft_wrapper_malloc(M * sizeof(COMPLEX));
@@ -469,6 +472,11 @@ static inline INT transfer_matrix_from_A_from_B_iter(
         ret_code = E_NOMEM;
         goto leave_fun;
     }
+
+    ret_code = fft_wrapper_create_plan(&plan_fwd, D, fft_in, b_coeffs, -1);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = fft_wrapper_create_plan(&plan_inv, D, fft_in, fft_out, +1);
+    CHECK_RETCODE(ret_code, leave_fun);
 
     // Remove phase factors due to initial conditions from contspec,
     // reorder if necessary
@@ -503,11 +511,7 @@ static inline INT transfer_matrix_from_A_from_B_iter(
             fft_in[i] = q / SQRT( 1.0 + kappa*q_abs*q_abs ) / D;
         }
 
-        ret_code = fft_wrapper_create_plan(&plan, D, fft_in, b_coeffs, -1);
-        CHECK_RETCODE(ret_code, leave_fun);
-        ret_code = fft_wrapper_execute_plan(plan, fft_in, b_coeffs);
-        CHECK_RETCODE(ret_code, leave_fun);
-        ret_code = fft_wrapper_destroy_plan(&plan);
+        ret_code = fft_wrapper_execute_plan(plan_fwd, fft_in, b_coeffs);
         CHECK_RETCODE(ret_code, leave_fun);
         for (i=0; i<D/2; i++) {
             const COMPLEX tmp = b_coeffs[i];
@@ -518,17 +522,13 @@ static inline INT transfer_matrix_from_A_from_B_iter(
         // Construct the coefficients of A(z)
 
         ret_code = poly_specfact(D-1, b_coeffs, a_coeffs, 32, kappa);
+        CHECK_RETCODE(ret_code, leave_fun);
 
         // Update the phases of the continuous spectrum
 
         for (i=0; i<D; i++)
             fft_in[i] = a_coeffs[D - 1 - i];
-        CHECK_RETCODE(ret_code, leave_fun);
-        ret_code = fft_wrapper_create_plan(&plan, D, fft_in, fft_out, +1);
-        CHECK_RETCODE(ret_code, leave_fun);
-        ret_code = fft_wrapper_execute_plan(plan, fft_in, fft_out);
-        CHECK_RETCODE(ret_code, leave_fun);
-        ret_code = fft_wrapper_destroy_plan(&plan);
+        ret_code = fft_wrapper_execute_plan(plan_inv, fft_in, fft_out);
         CHECK_RETCODE(ret_code, leave_fun);
 
         REAL cur_phase_change = 0.0;
@@ -546,7 +546,7 @@ static inline INT transfer_matrix_from_A_from_B_iter(
                 contspec_reordered[i] = contspec[i] * CEXP(I*fft_out[i]);
         }
 
-        // Stop iterating if the phases stop changing.
+        // Stop iterating if the phases stop changing or the correctios stop decreasing.
 
         const REAL cur_phase_change_diff = FABS( cur_phase_change - prev_phase_change );
         if (cur_phase_change_diff < 10*FNFT_EPSILON)
@@ -576,6 +576,7 @@ leave_fun:
     fft_wrapper_free(fft_out);
     fft_wrapper_free(a_coeffs);
     fft_wrapper_free(b_coeffs);
-    fft_wrapper_destroy_plan(&plan);
+    fft_wrapper_destroy_plan(&plan_fwd);
+    fft_wrapper_destroy_plan(&plan_inv);
     return ret_code;
 }
