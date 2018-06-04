@@ -215,6 +215,38 @@ leave_fun:
     return ret_code;
 }
 
+// This auxiliary function removes the phase factors that result from
+// the boundary conditions from the continuous spectrum.
+// It furthermore creates a reordered version of the corrected spectrum
+// that is compatible with the ordering used by the FFT.
+static inline void remove_boundary_conds_and_reorder_for_fft(
+    const UINT M,
+    COMPLEX * const contspec,
+    COMPLEX * const contspec_reordered,
+    REAL const * const XI,
+    const UINT D,
+    REAL const * const T,
+    const REAL bnd_coeff)
+{
+    UINT i;
+    if (XI != NULL) {
+        const REAL eps_t = (T[1] - T[0]) / (D - 1);
+        const REAL eps_xi = (XI[1] - XI[0]) / (M - 1);
+        const REAL phase_factor_rho = -2.0*(T[1] + eps_t*bnd_coeff);
+        for (i=0; i<M; i++) {
+            const REAL xi = XI[0] + i*eps_xi;
+            contspec[i] *= CEXP(-I*xi*phase_factor_rho);
+        }
+        for (i=0; i<=M/2; i++)
+            contspec_reordered[i] = contspec[i + (M/2 - 1)];
+        for (i=M/2+1; i<M; i++)
+            contspec_reordered[i] = contspec[i - (M/2 + 1)];
+    } else {
+    for (i=0; i<M; i++)
+        contspec_reordered[i] = contspec[i];
+    }
+}
+
 // This auxiliary function builds a transfer matrix in which B(z) is build from
 // the FFT of the reflection coefficient and A(z)=1. See, e.g., Skaar et al,
 // J Quantum Electron 37(2), 2001.
@@ -234,50 +266,37 @@ static inline INT transfer_matrix_from_reflection_coefficient(
     const REAL bnd_coeff,
     const INT kappa)
 {
+    fft_wrapper_plan_t plan = fft_wrapper_safe_plan_init();
     INT ret_code = SUCCESS;
     UINT i;
 
     // Allocate some memory
 
-    COMPLEX * const contspec_reordered = malloc(M * sizeof(COMPLEX));
-    COMPLEX * const b_coeffs = malloc(M * sizeof(COMPLEX));
+    COMPLEX * const contspec_reordered = fft_wrapper_malloc(M * sizeof(COMPLEX));
+    COMPLEX * const b_coeffs = fft_wrapper_malloc(M * sizeof(COMPLEX));
     if (contspec_reordered == NULL || b_coeffs == NULL) {
         ret_code = E_NOMEM;
         goto leave_fun;
     }
 
-    // Construct the coefficients of B(z) from the FFT of the reflection
-    // coefficient on an oversampled grid. Excess coefficients will be ignored.
+    // Construct the polynomial B(z) that interpolates the given continuous
+    // spectrum using a M-point FFT. Only the first deg+1 coefficients will
+    // later be used to build the transfer matrix. Note that the order of
+    // the computed coefficients is reversed.
 
-    if (XI != NULL) {
-        const REAL eps_t = (T[1] - T[0]) / (D - 1);
-        const REAL eps_xi = (XI[1] - XI[0]) / (M - 1);
-        const REAL phase_factor_rho = -2.0*(T[1] + eps_t*bnd_coeff);
-        for (i=0; i<M; i++) {
-            const REAL xi = XI[0] + i*eps_xi;
-            contspec[i] *= CEXP(-I*xi*phase_factor_rho);
-        }
-        for (i=0; i<=M/2; i++)
-            contspec_reordered[M-1-i] = contspec[i + (M/2 - 1)];
-        for (i=M/2+1; i<M; i++)
-            contspec_reordered[M-1-i] = contspec[i - (M/2 + 1)];
-    } else {
-        for (i=0; i<M; i++)
-            contspec_reordered[M-1-i] = contspec[i];
-    }
-
-    COMPLEX A = CEXP(-2.0*FNFT_PI*I/M);
-    COMPLEX W = CEXP(2.0*FNFT_PI*I/M);
-    ret_code = poly_chirpz(M-1, contspec_reordered, A, W, M, b_coeffs);
+    remove_boundary_conds_and_reorder_for_fft(M, contspec, contspec_reordered,
+                                              XI, D, T, bnd_coeff);
+    ret_code = fft_wrapper_create_plan(&plan, M, contspec_reordered, b_coeffs, -1);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = fft_wrapper_execute_plan(plan, contspec_reordered, b_coeffs);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    // Build the transfer matrix with B(z) build from the coefficients
-    // computed above and A(z)=0.
+    // Build the transfer matrix with B(z) computed above and A(z)=0.
 
     for (i=0; i<=deg; i++) {
         transfer_matrix[i] = 0.0;
-        transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[deg-i]/M);
-        transfer_matrix[2*(deg+1) + i] = b_coeffs[M-(deg+1) + i]/M;
+        transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[M-1-deg+i]/M);
+        transfer_matrix[2*(deg+1) + i] = b_coeffs[deg - i]/M;
         transfer_matrix[3*(deg+1) + i] = 0.0;
     }
 
@@ -287,8 +306,9 @@ static inline INT transfer_matrix_from_reflection_coefficient(
     transfer_matrix[3*(deg+1)] = 1.0;
 
 leave_fun:
-    free(contspec_reordered);
-    free(b_coeffs);
+    fft_wrapper_destroy_plan(&plan);
+    fft_wrapper_free(contspec_reordered);
+    fft_wrapper_free(b_coeffs);
     return ret_code;
 }
 
@@ -331,31 +351,18 @@ static inline INT transfer_matrix_from_B_from_A(
     // Remove phase factors due to initial conditions from contspec,
     // reorder if necessary
 
-    if (XI != NULL) {
-        const REAL eps_t = (T[1] - T[0]) / (D - 1);
-        const REAL eps_xi = (XI[1] - XI[0]) / (M - 1);
-        const REAL phase_factor_rho = -2.0*(T[1] + eps_t*bnd_coeff);
-        for (i=0; i<M; i++) {
-            const REAL xi = XI[0] + i*eps_xi;
-            contspec[i] *= CEXP(-I*xi*phase_factor_rho);
-        }
-        for (i=0; i<=M/2; i++)
-            contspec_reordered[i] = contspec[i + (M/2 - 1)];
-        for (i=M/2+1; i<M; i++)
-            contspec_reordered[i] = contspec[i - (M/2 + 1)];
-    } else {
-        for (i=0; i<M; i++)
-            contspec_reordered[i] = contspec[i];
-    }
+    remove_boundary_conds_and_reorder_for_fft(M, contspec, contspec_reordered,
+                                              XI, D, T, bnd_coeff);
 
-    // Construct the coefficients of A(z)
+    // Construct the polynomial A(z) that interpolates 1/sqrt(1+kappa*|qhat(xi)|^2)
+    // spectrum (probably subsampled) using a D-point FFT. Note that the order
+    // of the computed coefficients is reversed.
 
     const UINT oversampling_factor = M/D;
     for (i=0; i<D; i++) {
-        const REAL q_abs = CABS( contspec_reordered[i*oversampling_factor] );
-        fft_in[i] = 1 / SQRT( 1.0 + kappa*q_abs*q_abs ) / D;
+        const REAL qhat_abs = CABS( contspec_reordered[i*oversampling_factor] );
+        fft_in[i] = 1 / SQRT( 1.0 + kappa*qhat_abs*qhat_abs ) / D;
     }
-
     ret_code = fft_wrapper_create_plan(&plan, D, fft_in, fft_out, -1);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = fft_wrapper_execute_plan(plan, fft_in, fft_out);
@@ -363,8 +370,9 @@ static inline INT transfer_matrix_from_B_from_A(
     ret_code = fft_wrapper_destroy_plan(&plan);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    if (skip_spectral_factorization_flag == 0) {
+    // If desired, perform a spectral factorization to make A(z) minimum phase.
 
+    if (skip_spectral_factorization_flag == 0) {
         for (i=0; i<D/2; i++) {
             const COMPLEX tmp = fft_out[i];
             fft_out[i] = fft_out[D - 1 - i];
@@ -372,12 +380,9 @@ static inline INT transfer_matrix_from_B_from_A(
         }
         ret_code = poly_specfact(D-1, fft_out, a_coeffs, oversampling_factor, 0);
         CHECK_RETCODE(ret_code, leave_fun);
-
     } else {
-
         for (i=0; i<D; i++)
             a_coeffs[i] = fft_out[D - 1 - i];
-
     }
 
     // Construct the coefficients of B(z)
@@ -481,22 +486,8 @@ static inline INT transfer_matrix_from_A_from_B_iter(
     // Remove phase factors due to initial conditions from contspec,
     // reorder if necessary
 
-    if (XI != NULL) {
-        const REAL eps_t = (T[1] - T[0]) / (D - 1);
-        const REAL eps_xi = (XI[1] - XI[0]) / (M - 1);
-        const REAL phase_factor_rho = -2.0*(T[1] + eps_t*bnd_coeff);
-        for (i=0; i<M; i++) {
-            const REAL xi = XI[0] + i*eps_xi;
-            contspec[i] *= CEXP(-I*xi*phase_factor_rho);
-        }
-        for (i=0; i<=M/2; i++)
-            contspec_reordered[i] = contspec[i + (M/2 - 1)];
-        for (i=M/2+1; i<M; i++)
-            contspec_reordered[i] = contspec[i - (M/2 + 1)];
-    } else {
-        for (i=0; i<M; i++)
-            contspec_reordered[i] = contspec[i];
-    }
+    remove_boundary_conds_and_reorder_for_fft(M, contspec, contspec_reordered,
+                                              XI, D, T, bnd_coeff);
 
     REAL prev_phase_change = FNFT_INF;
     REAL prev_phase_change_diff = FNFT_INF;
