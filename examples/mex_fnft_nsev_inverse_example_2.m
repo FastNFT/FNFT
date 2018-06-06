@@ -16,10 +16,10 @@
 % Sander Wahls (TU Delft) 2018.
 
 % The fast inverse nonlinear Fourier transform routine
-% mex_finft_nsev_inverse supports different methods to invert the
-% continuous spectrum. The default method is usually fine, but sometimes
-% an alternative method can give better results. This example illustrates
-% such a situation in the defocusing case.
+% mex_finft_nsev_inverse supports two different methods to invert the
+% continuous spectrum in the defocusing case. The default method is usually
+% fine, but sometimes the alternative method can give better results.
+% This example illustrates such a situation.
 %
 % The example used here is given in the paper
 % Frumin et al., J. Opt. Soc. Am. B 32(2), 2015.
@@ -30,56 +30,52 @@ close all;
 %%% Setup parameters %%%
 
 T = [-1 1];     % Location of the 1st and last sample in the time domain
-D = 2^12;       % Desired number of samples in the time domain
-M = D;          % Number of samples in the nonlinear frequency domain
-[XI, xi] = mex_fnft_nsev_inverse_XI(D, T, M);
-                % Location of the 1st and last sample in the nonlinear
-                % frequency domain, as well as the grid of all locations
+D = 2^10;       % Desired number of samples in the time domain
 kappa = -1;     % Defocusing nonlinear Schroedinger equation
-
-%%% Define the desired continuous spectrum and compute the corresponding
-% time domain signal numerically using two different methods %%%
-
-try
-    eps_xi = (XI(2) - XI(1))/(M - 1);
-    Q = 5;
-    GAM = 1/25;
-    F = 1.5;
-    xi = XI(1) + (0:(M-1))*eps_xi;
-    cgamma = @(z) double(gamma(sym(z)));
-    d = 0.5 + 1i*(xi*GAM-F);
-    fp = 0.5 - 1i*(xi*GAM+sqrt(F^2+Q^2));
-    fm = 0.5 - 1i*(xi*GAM-sqrt(F^2+Q^2));
-    gp = 1 - 1i*(F+sqrt(F^2+Q^2));
-    gm = 1 - 1i*(F-sqrt(F^2+Q^2));
-    contspec_exact = -2^(-2i*F)*Q*cgamma(d).*cgamma(fm).* ...
-        cgamma(fp)./(cgamma(conj(d)).*cgamma(gm).*cgamma(gp));
-catch
-    error('This example requires the Symbolic Math Toolbox in order to compute the complex gamma function.');
-end
-
-q_via_default_method = mex_fnft_nsev_inverse(contspec_exact, T, D, ...
-    XI, kappa);
-q_via_alternative_method = mex_fnft_nsev_inverse(contspec_exact, T, D, ...
-    XI, kappa, 'csinv_a_from_b_iter');
-
-%%% Compute the exact solution of the problem and determine errors %%%
 
 eps_t = (T(2) - T(1))/(D - 1);
 t = T(1) + (0:D-1)*eps_t;
-q_exact = -conj(Q/GAM*sech(t/GAM).^(1-2j*F));
+
+%%% Define the desired continuous spectrum and compute the corresponding
+% time domain signal numerically using the default method %%%
+
+M = 2*D;        % Number of samples in the nonlinear frequency domain
+[XI, xi] = mex_fnft_nsev_inverse_XI(D, T, M);
+                % Location of the 1st and last sample in the nonlinear
+                % frequency domain, as well as the grid of all locations
+
+fprintf('Computing exact solution symbolically - please wait ...');                
+[q_exact, contspec_exact] = ...
+    mex_fnft_nsev_inverse_example_2_exact_solution(t, xi);
+fprintf('done\n');     
+
+q_via_default_method = mex_fnft_nsev_inverse(contspec_exact, T, D, ...
+    XI, kappa);
 
 error_default_method = ...
     norm(q_exact - q_via_default_method)/norm(q_exact)
+
+%%% Recompute the desired continuous spectrum (different grid) and compute
+% the corresponding time domain signal numerically using the alternative
+% method %%%
+
+M = D;          % The alternative method does not support oversampling
+[XI, xi] = mex_fnft_nsev_inverse_XI(D, T, M);
+
+fprintf('Computing exact solution symbolically - please wait ...');                
+[q_exact, contspec_exact] = ...
+    mex_fnft_nsev_inverse_example_2_exact_solution(t, xi);
+fprintf('done\n');     
+
+q_via_alternative_method = mex_fnft_nsev_inverse(...
+    contspec_exact, T, D, XI, kappa, 'csinv_a_from_b_iter');
+
 error_alternative_method = ...
     norm(q_exact - q_via_alternative_method)/norm(q_exact)
 
 %%% Plot results %%%
 
 fig = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
-
-eps_t = (T(2) - T(1))/(D - 1);
-t = T(1) + (0:D-1)*eps_t;
 
 subplot(1,2,1);
 semilogy(t, abs(q_via_default_method), t, abs(q_via_alternative_method),...

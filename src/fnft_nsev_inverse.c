@@ -33,7 +33,7 @@
 
 static fnft_nsev_inverse_opts_t default_opts = {
     .discretization = nse_discretization_2SPLIT2A,
-    .contspec_inversion_method = fnft_nsev_inverse_contspec_inversion_method_REFL_COEFF,
+    .contspec_inversion_method = fnft_nsev_inverse_csinv_REFLECTION_COEFFICIENT,
     .max_iter = 100
 };
 
@@ -77,17 +77,6 @@ static inline INT transfer_matrix_from_reflection_coefficient(
     COMPLEX * const transfer_matrix,
     const REAL bnd_coeff,
     const INT kappa);
-static inline INT transfer_matrix_from_B_from_A(
-    const UINT M,
-    COMPLEX * const contspec,
-    REAL const * const XI,
-    const UINT D,
-    REAL const * const T,
-    const UINT deg,
-    COMPLEX * const transfer_matrix,
-    const REAL bnd_coeff,
-    const INT kappa,
-    const INT skip_spectral_factorization_flag);
 static inline INT transfer_matrix_from_A_from_B_iter(
     const UINT M,
     COMPLEX * const contspec,
@@ -163,33 +152,19 @@ INT fnft_nsev_inverse(
         goto leave_fun;
     }
 
-    INT skip_spectral_factorization_flag = 0;
-
     // Step 1: Construct the transfer matrix from the provided representation
     // of the continuous spectrum.
 
     switch (opts_ptr->contspec_inversion_method) {
 
-    case fnft_nsev_inverse_contspec_inversion_method_REFL_COEFF:
+    case fnft_nsev_inverse_csinv_REFLECTION_COEFFICIENT:
 
         ret_code = transfer_matrix_from_reflection_coefficient(
             M, contspec, XI, D, T, deg, transfer_matrix, bnd_coeff, kappa);
         CHECK_RETCODE(ret_code, leave_fun);
         break;
 
-    case fnft_nsev_inverse_contspec_inversion_method_B_FROM_A_WO_SPECFACT:
-
-        skip_spectral_factorization_flag = 1;
-        // fallthrough
-    case fnft_nsev_inverse_contspec_inversion_method_B_FROM_A:
-
-        ret_code = transfer_matrix_from_B_from_A(
-            M, contspec, XI, D, T, deg, transfer_matrix, bnd_coeff, kappa,
-            skip_spectral_factorization_flag);
-        CHECK_RETCODE(ret_code, leave_fun);
-        break;
-
-    case fnft_nsev_inverse_contspec_inversion_method_A_FROM_B_ITER:
+    case fnft_nsev_inverse_csinv_A_FROM_B_ITER:
 
         ret_code = transfer_matrix_from_A_from_B_iter(
             M, contspec, XI, D, T, deg, transfer_matrix, bnd_coeff, kappa,
@@ -312,134 +287,8 @@ leave_fun:
     return ret_code;
 }
 
-static inline INT transfer_matrix_from_B_from_A(
-    const UINT M,
-    COMPLEX * const contspec,
-    REAL const * const XI,
-    const UINT D,
-    REAL const * const T,
-    const UINT deg,
-    COMPLEX * const transfer_matrix,
-    const REAL bnd_coeff,
-    const INT kappa,
-    const INT skip_spectral_factorization_flag)
-{
-    fft_wrapper_plan_t plan = fft_wrapper_safe_plan_init();
-    INT ret_code = SUCCESS;
-    UINT i;
-
-    if (D < 2 || (D&(D-1)) != 0)
-        return E_INVALID_ARGUMENT(D);
-    if (M%D != 0)
-        return E_INVALID_ARGUMENT(M);
-    if (M != D)
-        WARN("The performance of the B_from_A inversion method for the continuous\nspectrum is typically identical to that of the default method if M>D.\nM=D sometimes gives better results for this method.")
-    if (D != deg)
-        return E_ASSERTION_FAILED;
-
-    // Allocate some memory
-    COMPLEX * const contspec_reordered = fft_wrapper_malloc(M * sizeof(COMPLEX));
-    COMPLEX * const fft_in = fft_wrapper_malloc(M * sizeof(COMPLEX));
-    COMPLEX * const fft_out = fft_wrapper_malloc(M * sizeof(COMPLEX));
-    COMPLEX * const a_coeffs = fft_wrapper_malloc(D * sizeof(COMPLEX));
-    if (contspec_reordered == NULL || fft_in == NULL || fft_out == NULL
-    || a_coeffs == NULL) {
-        ret_code = E_NOMEM;
-        goto leave_fun;
-    }
-
-    // Remove phase factors due to initial conditions from contspec,
-    // reorder if necessary
-
-    remove_boundary_conds_and_reorder_for_fft(M, contspec, contspec_reordered,
-                                              XI, D, T, bnd_coeff);
-
-    // Construct the polynomial A(z) that interpolates 1/sqrt(1+kappa*|qhat(xi)|^2)
-    // spectrum (probably subsampled) using a D-point FFT. Note that the order
-    // of the computed coefficients is reversed.
-
-    const UINT oversampling_factor = M/D;
-    for (i=0; i<D; i++) {
-        const REAL qhat_abs = CABS( contspec_reordered[i*oversampling_factor] );
-        fft_in[i] = 1 / SQRT( 1.0 + kappa*qhat_abs*qhat_abs ) / D;
-    }
-    ret_code = fft_wrapper_create_plan(&plan, D, fft_in, fft_out, -1);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = fft_wrapper_execute_plan(plan, fft_in, fft_out);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = fft_wrapper_destroy_plan(&plan);
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    // If desired, perform a spectral factorization to make A(z) minimum phase.
-
-    if (skip_spectral_factorization_flag == 0) {
-        for (i=0; i<D/2; i++) {
-            const COMPLEX tmp = fft_out[i];
-            fft_out[i] = fft_out[D - 1 - i];
-            fft_out[D - 1 - i] = tmp;
-        }
-        ret_code = poly_specfact(D-1, fft_out, a_coeffs, oversampling_factor, 0);
-        CHECK_RETCODE(ret_code, leave_fun);
-    } else {
-        for (i=0; i<D; i++)
-            a_coeffs[i] = fft_out[D - 1 - i];
-    }
-
-    // Construct the coefficients of B(z)
-
-    for (i=0; i<D; i++)
-        fft_in[i] = a_coeffs[D - 1 - i];
-    for (i=D; i<M; i++)
-        fft_in[i] = 0;
-
-    ret_code = fft_wrapper_create_plan(&plan, M, fft_in, fft_out, +1);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = fft_wrapper_execute_plan(plan, fft_in, fft_out);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = fft_wrapper_destroy_plan(&plan);
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    for (i=0; i<M; i++)
-        fft_in[i] = contspec_reordered[i] * fft_out[i] / M;
-
-    ret_code = fft_wrapper_create_plan(&plan, M, fft_in, fft_out, -1);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = fft_wrapper_execute_plan(plan, fft_in, fft_out);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = fft_wrapper_destroy_plan(&plan);
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    for (i=0; i<D/2; i++) {
-        const COMPLEX tmp = fft_out[i];
-        fft_out[i] = fft_out[D - 1 - i];
-        fft_out[D - 1 - i] = tmp;
-    }
-    COMPLEX const * const b_coeffs = fft_out;
-
-    // Build the tranfer matrix
-
-    for (i=0; i<D; i++) {
-        transfer_matrix[1 + i] = a_coeffs[i];
-        transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[D-1 - i]);
-        transfer_matrix[2*(deg+1) + 1 + i] = b_coeffs[i];
-        transfer_matrix[3*(deg+1) + i] = a_coeffs[D-1 - i];
-    }
-    transfer_matrix[0] = 0.0;
-    transfer_matrix[2*(deg+1) - 1] = 0.0;
-    transfer_matrix[2*(deg+1)] = 0.0;
-    transfer_matrix[4*(deg+1) - 1] = 0.0;
-
-leave_fun:
-    fft_wrapper_free(contspec_reordered);
-    fft_wrapper_free(fft_in);
-    fft_wrapper_free(fft_out);
-    fft_wrapper_free(a_coeffs);
-    fft_wrapper_destroy_plan(&plan);
-    return ret_code;
-}
-
-// This auxiliary function build a transfer matrix using Algorithm 1 in
-//
+// This auxiliary function builds a transfer matrix using Algorithm 1 in
+// http://arxiv.org/abs/1607.01305v2
 static inline INT transfer_matrix_from_A_from_B_iter(
     const UINT M,
     COMPLEX * const contspec,
@@ -467,6 +316,7 @@ static inline INT transfer_matrix_from_A_from_B_iter(
         return E_INVALID_ARGUMENT(kappa);
 
     // Allocate some memory and initial (inverse) FFT plans
+
     COMPLEX * const contspec_reordered = fft_wrapper_malloc(M * sizeof(COMPLEX));
     COMPLEX * const fft_in = fft_wrapper_malloc(M * sizeof(COMPLEX));
     COMPLEX * const fft_out = fft_wrapper_malloc(M * sizeof(COMPLEX));
@@ -495,9 +345,8 @@ static inline INT transfer_matrix_from_A_from_B_iter(
 
         // Construct the coefficients of B(z)
 
-        const UINT oversampling_factor = M/D;
         for (i=0; i<D; i++) {
-            const COMPLEX q = contspec_reordered[i*oversampling_factor];
+            const COMPLEX q = contspec_reordered[i];
             const REAL q_abs = CABS(q);
             fft_in[i] = q / SQRT( 1.0 + kappa*q_abs*q_abs ) / D;
         }
@@ -525,7 +374,7 @@ static inline INT transfer_matrix_from_A_from_B_iter(
         REAL cur_phase_change = 0.0;
         for (i=0; i<D; i++) {
             fft_out[i] = CARG( fft_out[i] );
-            cur_phase_change += FABS( fft_out[i] ) / D;
+            cur_phase_change += CABS( fft_out[i] ) / D;
         }
         if (XI != NULL) {
             for (i=0; i<=M/2; i++)

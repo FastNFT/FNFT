@@ -28,21 +28,7 @@ int main()
     opts.discretization = nse_discretization_2SPLIT2A;
 
     opts.contspec_inversion_method
-        = fnft_nsev_inverse_contspec_inversion_method_REFL_COEFF;
-
-    error_bound = 0.0015;
-    ret_code = fnft_nsev_inverse_test(error_bound, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    opts.contspec_inversion_method
-        = fnft_nsev_inverse_contspec_inversion_method_B_FROM_A;
-
-    error_bound = 0.0015;
-    ret_code = fnft_nsev_inverse_test(error_bound, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    opts.contspec_inversion_method
-        = fnft_nsev_inverse_contspec_inversion_method_B_FROM_A_WO_SPECFACT;
+        = fnft_nsev_inverse_csinv_REFLECTION_COEFFICIENT;
 
     error_bound = 0.0015;
     ret_code = fnft_nsev_inverse_test(error_bound, &opts);
