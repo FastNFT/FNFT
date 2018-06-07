@@ -29,7 +29,7 @@ int main()
     fnft_nsev_inverse_opts_t opts = fnft_nsev_inverse_default_opts();
     opts.discretization = nse_discretization_2SPLIT2_MODAL;
     opts.contspec_inversion_method
-        = fnft_nsev_inverse_csinv_REFLECTION_COEFFICIENT;
+        = fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_REFL_COEFF;
 
     M = 10;
     error_bound = 0.017;
@@ -42,7 +42,7 @@ int main()
     CHECK_RETCODE(ret_code, leave_fun);
 
     opts.contspec_inversion_method
-        = fnft_nsev_inverse_csinv_A_FROM_B_ITER;
+        = fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_AB_FROM_ITER;
 
     M = 8;
     error_bound = 1.1e-14;

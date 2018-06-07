@@ -67,8 +67,8 @@ fprintf('Computing exact solution symbolically - please wait ...');
     mex_fnft_nsev_inverse_example_2_exact_solution(t, xi);
 fprintf('done\n');     
 
-q_via_alternative_method = mex_fnft_nsev_inverse(...
-    contspec_exact, T, D, XI, kappa, 'csinv_a_from_b_iter');
+q_via_alternative_method = mex_fnft_nsev_inverse(contspec_exact, T, D, ...
+    XI, kappa, 'csmethod_tfmatrix_contains_ab_from_iter');
 
 error_alternative_method = ...
     norm(q_exact - q_via_alternative_method)/norm(q_exact)

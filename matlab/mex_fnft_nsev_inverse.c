@@ -100,15 +100,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
 
         /* Try to interpret value of string input */
-        if ( strcmp(str, "csinv_reflection_coeffient") == 0 ) {
+        if ( strcmp(str, "csmethod_tfmatrix_contains_refl_coeff") == 0 ) {
 
             opts.contspec_inversion_method =
-                fnft_nsev_inverse_csinv_REFLECTION_COEFFICIENT;
+                fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_REFL_COEFF;
 
-        } else if ( strcmp(str, "csinv_a_from_b_iter") == 0 ) {
+        } else if ( strcmp(str, "csmethod_tfmatrix_contains_ab_from_iter") == 0 ) {
 
             opts.contspec_inversion_method =
-                fnft_nsev_inverse_csinv_A_FROM_B_ITER;
+                fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_AB_FROM_ITER;
 
         } else if ( strcmp(str, "quiet") == 0 ) {
 

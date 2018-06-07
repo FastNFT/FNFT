@@ -33,7 +33,8 @@
 
 static fnft_nsev_inverse_opts_t default_opts = {
     .discretization = nse_discretization_2SPLIT2A,
-    .contspec_inversion_method = fnft_nsev_inverse_csinv_REFLECTION_COEFFICIENT,
+    .contspec_type = fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT,
+    .contspec_inversion_method = fnft_nsev_inverse_csmethod_DEFAULT,
     .max_iter = 100
 };
 
@@ -67,17 +68,7 @@ INT fnft_nsev_inverse_XI(const UINT D, REAL const * const T,
 }
 
 // Auxliary functions. Function bodies follow below.
-static inline INT transfer_matrix_from_reflection_coefficient(
-    const UINT M,
-    COMPLEX * const contspec,
-    REAL const * const XI,
-    const UINT D,
-    REAL const * const T,
-    const UINT deg,
-    COMPLEX * const transfer_matrix,
-    const REAL bnd_coeff,
-    const INT kappa);
-static inline INT transfer_matrix_from_A_from_B_iter(
+static INT transfer_matrix_from_reflection_coefficient(
     const UINT M,
     COMPLEX * const contspec,
     REAL const * const XI,
@@ -87,7 +78,7 @@ static inline INT transfer_matrix_from_A_from_B_iter(
     COMPLEX * const transfer_matrix,
     const REAL bnd_coeff,
     const INT kappa,
-    const UINT max_iter);
+    fnft_nsev_inverse_opts_t const * const opts_ptr);
 
 INT fnft_nsev_inverse(
     const UINT M,
@@ -134,7 +125,7 @@ INT fnft_nsev_inverse(
     (void) bound_states;
     (void) normconsts_or_residues;
 
-    // Initialize some values that we will need later
+    // Allocated memory and initialize values that we will need later
 
     const UINT deg = D*nse_discretization_degree(opts_ptr->discretization);
     if (deg == 0)
@@ -155,26 +146,20 @@ INT fnft_nsev_inverse(
     // Step 1: Construct the transfer matrix from the provided representation
     // of the continuous spectrum.
 
-    switch (opts_ptr->contspec_inversion_method) {
+    switch (opts_ptr->contspec_type) {
 
-    case fnft_nsev_inverse_csinv_REFLECTION_COEFFICIENT:
-
-        ret_code = transfer_matrix_from_reflection_coefficient(
-            M, contspec, XI, D, T, deg, transfer_matrix, bnd_coeff, kappa);
-        CHECK_RETCODE(ret_code, leave_fun);
-        break;
-
-    case fnft_nsev_inverse_csinv_A_FROM_B_ITER:
-
-        ret_code = transfer_matrix_from_A_from_B_iter(
-            M, contspec, XI, D, T, deg, transfer_matrix, bnd_coeff, kappa,
-            opts_ptr->max_iter);
+    case fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT:
+        ret_code = transfer_matrix_from_reflection_coefficient(M, contspec, XI,
+                                                               D, T, deg,
+                                                               transfer_matrix,
+                                                               bnd_coeff,
+                                                               kappa, opts_ptr);
         CHECK_RETCODE(ret_code, leave_fun);
         break;
 
     default:
 
-        ret_code = E_INVALID_ARGUMENT(opts_ptr->contspec_inversion_method);
+        ret_code = E_INVALID_ARGUMENT(opts_ptr->contspec_type);
         goto leave_fun;
 
     }
@@ -222,15 +207,16 @@ static inline void remove_boundary_conds_and_reorder_for_fft(
     }
 }
 
-// This auxiliary function builds a transfer matrix in which B(z) is build from
-// the FFT of the reflection coefficient and A(z)=1. See, e.g., Skaar et al,
-// J Quantum Electron 37(2), 2001.
+// This auxiliary function builds a transfer matrix from a given reflection
+// coefficient in which B(z) is build from the FFT of the reflection
+// coefficient and A(z)=1. See, e.g., Skaar et al, J Quantum Electron 37(2),
+// 2001.
 //
 // Note that if XI!=NULL, then it must be the default range returned by
 // fnft_nsev_inverse_XI. It is possible to pass XI=NULL as well. Check the file
 // fnft_nsev_inverse_test_against_forward.inc to see how contspec has to be
 // constructed in that case. (Kept for illustration purposes only.)
-static inline INT transfer_matrix_from_reflection_coefficient(
+static inline INT transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_REFL_COEFF(
     const UINT M,
     COMPLEX * const contspec,
     REAL const * const XI,
@@ -287,9 +273,11 @@ leave_fun:
     return ret_code;
 }
 
-// This auxiliary function builds a transfer matrix using Algorithm 1 in
-// http://arxiv.org/abs/1607.01305v2
-static inline INT transfer_matrix_from_A_from_B_iter(
+// This auxiliary function builds a transfer matrix from a given reflection
+// coefficient using Algorithm 1 in http://arxiv.org/abs/1607.01305v2
+// (defocusing case only).
+static inline INT
+transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_AB_FROM_ITER(
     const UINT M,
     COMPLEX * const contspec,
     REAL const * const XI,
@@ -396,6 +384,8 @@ static inline INT transfer_matrix_from_A_from_B_iter(
             break;
         prev_phase_change_diff = cur_phase_change_diff;
     }
+    if (iter == max_iter)
+        WARN("Maximum number of iterations reached when constructing transfer matrix.")
 
     // Build the tranfer matrix
 
@@ -418,5 +408,52 @@ leave_fun:
     fft_wrapper_free(b_coeffs);
     fft_wrapper_destroy_plan(&plan_fwd);
     fft_wrapper_destroy_plan(&plan_inv);
+    return ret_code;
+}
+
+// Auxiliary function. Calls the right method to build the transfer matrix
+// for the inverse scattering stage if the continuous spectrum is provided
+// in form of (samples of) a reflection coefficient.
+static INT transfer_matrix_from_reflection_coefficient(
+    const UINT M,
+    COMPLEX * const contspec,
+    REAL const * const XI,
+    const UINT D,
+    REAL const * const T,
+    const UINT deg,
+    COMPLEX * const transfer_matrix,
+    const REAL bnd_coeff,
+    const INT kappa,
+    fnft_nsev_inverse_opts_t const * const opts_ptr)
+{
+    INT ret_code = SUCCESS;
+
+    switch (opts_ptr->contspec_inversion_method) {
+
+    case fnft_nsev_inverse_csmethod_DEFAULT:
+        // fall through
+    case fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_REFL_COEFF:
+
+        ret_code = transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_REFL_COEFF(
+            M, contspec, XI, D, T, deg, transfer_matrix, bnd_coeff, kappa);
+        CHECK_RETCODE(ret_code, leave_fun);
+        break;
+
+    case fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_AB_FROM_ITER:
+
+        ret_code = transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_AB_FROM_ITER(
+            M, contspec, XI, D, T, deg, transfer_matrix, bnd_coeff, kappa,
+            opts_ptr->max_iter);
+        CHECK_RETCODE(ret_code, leave_fun);
+        break;
+
+    default:
+
+        ret_code = E_INVALID_ARGUMENT(opts_ptr->contspec_inversion_method);
+        goto leave_fun;
+
+    }
+
+leave_fun:
     return ret_code;
 }
