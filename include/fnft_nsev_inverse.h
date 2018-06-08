@@ -37,7 +37,15 @@
  *  fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT: The array contspec contains
  *  samples of \f$ b(\xi)/a(\xi) \f$ on the grid specified through the input
  *  XI to \link fnft_nsev_inverse \endlink. \n \n
- *  fnft_nsev_inverse_cstype_B_OF_TAU: TODO
+ *  fnft_nsev_inverse_cstype_B_OF_TAU: The array contspec contains samples of the
+ *  inverse Fourier transform \f${ B(\tau) = \frac{1}{2\pi}
+ *  \int_{-\infty}^\infty b(\xi) e^{j \xi \tau} d\tau }\f$ of \f$ b(\xi) \f$ at
+ *  the locations \f$ \tau_n = 2t_n \f$, \f$ n=0,1,\dots,D-1 \f$, where the
+ *  \f$ t_n \f$ are the locations at which \f$ q(t) \f$ is computed. The default
+ *  (and currently only implemented) method for this type of spectrum is described
+ *  in <a href="https://doi.org/10.1109/ECOC.2017.8346231">[Wahls 2017]</a>.
+ *  It is currently REQUIRED that the time window is symmetric, T[0]=-T[1].
+ *
  */
 typedef enum {
     fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT,
@@ -169,6 +177,7 @@ FNFT_INT fnft_nsev_inverse_XI(
  *   &quot;Fast Inverse Nonlinear Fourier Transforms for Continuous
  *   Spectra of Zakharov-Shabat Type&quot;</a>, Unpublished Preprint,
  *   arXiv:1607.01305v2 [cs.IT], Dec. 2016.
+ * - Wahls, <a href="https://doi.org/10.1109/ECOC.2017.8346231">&quot;Generation of Time-Limited Signals in the Nonlinear Fourier Domain via b-Modulation&quot;,</a> Proc. ECOC 2017.
  *
  * @param[in] M Number of samples of the continuous spectrum.
  * @param[in,out] contspec Array of length M, contains samples
@@ -184,18 +193,18 @@ FNFT_INT fnft_nsev_inverse_XI(
  * @param[in] K Ignored as inversion of discrete spectrum is not yet implemented.
  * @param[in] bound_states Ignored as inversion of discrete spectrum is not yet
  *  implemented.
- * @param[in] normconst_or_residues Ignored as inversion of discrete spectrum is
+ * @param[in] normconsts_or_residues Ignored as inversion of discrete spectrum is
  *  not yet implemented.
  * @param[in] D Number of samples of the to be generated signal q.
  * @param[out] q Array of length D. Is filled with samples
  *  \f$ q(t_n) \f$, where \f$ t_n = T[0] + n(T[1]-T[0])/(D-1) \f$
- *  and \f$n=0,1,\dots,M-1\f$, of the to-be-generated signal in ascending order
- *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{M-1}) \f$).
+ *  and \f$n=0,1,\dots,D-1\f$, of the to-be-generated signal in ascending order
+ *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$).
  * @param[in] T Array of length 2, contains the position in time of the first and
  *  of the last sample of q. It should be T[0]<T[1].
  * @param[in] kappa =+1 for the focusing nonlinear Schroedinger equation,
  *  =-1 for the defocusing one
- * @param[in] opts_ptr Pointer to a \link fnft_nsev_inverse_opts__t \endlink
+ * @param[in] opts_ptr Pointer to a \link fnft_nsev_inverse_opts_t \endlink
  *  object. The object  can be used to modify the behavior of the routine. Use
  *  the routine \link fnft_nsev_inverse_default_opts \endlink
  *  to generate such an object and modify as desired. It is also possible to

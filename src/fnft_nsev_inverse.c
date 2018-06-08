@@ -79,6 +79,16 @@ static INT transfer_matrix_from_reflection_coefficient(
     const REAL bnd_coeff,
     const INT kappa,
     fnft_nsev_inverse_opts_t const * const opts_ptr);
+static INT transfer_matrix_from_B_of_tau(
+    const UINT M,
+    COMPLEX * const contspec,
+    const UINT D,
+    REAL const * const T,
+    const UINT deg,
+    COMPLEX * const transfer_matrix,
+    const INT kappa,
+    const REAL map_coeff,
+    fnft_nsev_inverse_opts_t const * const opts_ptr);
 
 INT fnft_nsev_inverse(
     const UINT M,
@@ -138,7 +148,8 @@ INT fnft_nsev_inverse(
     }
 
     const REAL bnd_coeff = nse_discretization_boundary_coeff(opts_ptr->discretization);
-    if (bnd_coeff == NAN) {
+    const REAL map_coeff = nse_discretization_mapping_coeff(opts_ptr->discretization);
+    if (bnd_coeff == NAN || map_coeff == NAN) {
         ret_code = E_INVALID_ARGUMENT(opts_ptr->discretization);
         goto leave_fun;
     }
@@ -154,6 +165,13 @@ INT fnft_nsev_inverse(
                                                                transfer_matrix,
                                                                bnd_coeff,
                                                                kappa, opts_ptr);
+        CHECK_RETCODE(ret_code, leave_fun);
+        break;
+
+    case fnft_nsev_inverse_cstype_B_OF_TAU:
+        ret_code = transfer_matrix_from_B_of_tau(M, contspec, D, T, deg,
+                                                 transfer_matrix, kappa,
+                                                 map_coeff, opts_ptr);
         CHECK_RETCODE(ret_code, leave_fun);
         break;
 
@@ -453,6 +471,55 @@ static INT transfer_matrix_from_reflection_coefficient(
         goto leave_fun;
 
     }
+
+leave_fun:
+    return ret_code;
+}
+
+// Auxiliary function. Builds a transfer matrix from samples of the
+// inverse Fourier transform B(tau) of b(xi). Uses the approach
+// described in https://doi.org/10.1109/ECOC.2017.8346231
+static INT transfer_matrix_from_B_of_tau(
+    const UINT M,
+    COMPLEX * const contspec,
+    const UINT D,
+    REAL const * const T,
+    const UINT deg,
+    COMPLEX * const transfer_matrix,
+    const INT kappa,
+    const REAL map_coeff,
+    fnft_nsev_inverse_opts_t const * const opts_ptr)
+{
+    if (M != D)
+        return E_INVALID_ARGUMENT(M);
+    if (T[0] != -T[1])
+        return E_INVALID_ARGUMENT(T);
+    if (opts_ptr->contspec_inversion_method
+    != fnft_nsev_inverse_csmethod_DEFAULT)
+        return E_INVALID_ARGUMENT(opts_ptr->contspec_inversion_method);
+
+    INT ret_code = SUCCESS;
+    UINT i;
+
+    COMPLEX * const b_coeffs = transfer_matrix + 2*(deg+1) + 1;
+    const REAL eps_t = (T[1] - T[0])/(D - 1);
+    for (i=0; i<D; i++)
+        b_coeffs[i] = map_coeff*eps_t*contspec[i];
+    b_coeffs[0] *= 0.5;
+    b_coeffs[D-1] *= 0.5;
+
+    COMPLEX * const a_coeffs = transfer_matrix + 1;
+    ret_code = poly_specfact(D-1, b_coeffs, a_coeffs, 8, kappa);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    for (i=0; i<D; i++) {
+        transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[D-1 - i]);
+        transfer_matrix[3*(deg+1) + i] = a_coeffs[D-1 - i];
+    }
+    transfer_matrix[0] = 0.0;
+    transfer_matrix[2*(deg+1) - 1] = 0.0;
+    transfer_matrix[2*(deg+1)] = 0.0;
+    transfer_matrix[4*(deg+1) - 1] = 0.0;
 
 leave_fun:
     return ret_code;

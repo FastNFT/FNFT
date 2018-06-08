@@ -100,7 +100,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
 
         /* Try to interpret value of string input */
-        if ( strcmp(str, "csmethod_tfmatrix_contains_refl_coeff") == 0 ) {
+        if ( strcmp(str, "cstype_reflection_coefficient") == 0 ) {
+
+            opts.contspec_type =
+                fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT;
+
+        } else if ( strcmp(str, "cstype_B_of_tau") == 0 ) {
+
+            opts.contspec_type = fnft_nsev_inverse_cstype_B_OF_TAU;
+
+        } else if ( strcmp(str, "csmethod_tfmatrix_contains_refl_coeff") == 0 ) {
 
             opts.contspec_inversion_method =
                 fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_REFL_COEFF;
@@ -109,6 +118,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
             opts.contspec_inversion_method =
                 fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_AB_FROM_ITER;
+
+        } else if ( strcmp(str, "discr_modal") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT2_MODAL;
 
         } else if ( strcmp(str, "quiet") == 0 ) {
 
