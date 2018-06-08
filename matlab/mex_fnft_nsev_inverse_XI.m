@@ -1,19 +1,19 @@
 % MEX_FNFT_NSEV_INVERSE Provides the range in the nonlinear frequency
 % domain that has to be used with MEX_FNFT_NSEV_INVERSE.
 %
-%   q = MEX_FNFT_NSEV_XI(contspec, T, D, XI, kappa);
+%   [XI xi] = MEX_FNFT_NSEV_XI(D, T, M);
 %
 % DESCRIPTION
 %   Provides an interface to the C routine fnft_nsev_inverse.
 %
 % INPUTS
-%   T               Real 1x2 vector
 %   D               Real scalar, must be a positive power of two
-%   XI              Real 1x2 vector
-%   kappa           +1.0 or -1.0
+%   T               Real 1x2 vector
+%   M               Real scalar, must be a positive power of two
 %
 % OUTPUTS
-%   q               Complex row vector of length D
+%   XI              Real 1x2 vector
+%   xi              Real 1xM vector, a grid from XI(1) to XI(2)
 
 % This file is part of FNFT.  
 %                                                                  
