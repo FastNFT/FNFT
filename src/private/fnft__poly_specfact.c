@@ -75,25 +75,41 @@ INT poly_specfact(const UINT deg,
     ret_code = fft_wrapper_execute_plan(plan_fwd, buf_in, buf_out);
     CHECK_RETCODE(ret_code, leave_fun);
 
+    const REAL tol = SQRT(FNFT_EPSILON);
+    INT warn_flag = 0;
     switch (kappa) {
-
     case 0:
-        for (i=0; i<M; i++)
-            buf_x[i] = CLOG( CABS(buf_out[i]) );
+        for (i=0; i<M; i++) {
+            const REAL abs_buf = CABS(buf_out[i]);
+            if (abs_buf < tol)
+                warn_flag = 1;
+            buf_x[i] = CLOG(abs_buf);
+        }
         break;
 
     case -1:
         for (i=0; i<M; i++) {
-            const REAL abs_buf = CABS(buf_out[i]);
-            buf_x[i] = 0.5*CLOG( 1.0 - kappa*abs_buf*abs_buf );
+            REAL abs_buf = CABS(buf_out[i]);
+            buf_x[i] = 0.5*CLOG(1.0 + abs_buf*abs_buf);
+        }
+        break;
+
+    case +1:
+        for (i=0; i<M; i++) {
+            REAL abs2_buf = CABS(buf_out[i]);
+            abs2_buf *= abs2_buf;
+            if (abs2_buf > 1.0 - tol)
+                warn_flag = 1;
+            buf_x[i] = 0.5*CLOG(1.0 - kappa*abs2_buf);
         }
         break;
 
     default:
-
         ret_code = E_INVALID_ARGUMENT(kappa);
         goto leave_fun;
     }
+    if (warn_flag != 0)
+        WARN("Ill-posed spectral factorization problem.");
 
     // Step 2: Compute the Hilbert transform y_l of x_l
 
