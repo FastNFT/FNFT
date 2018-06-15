@@ -28,14 +28,12 @@
 #include "fnft__fft_wrapper.h"
 #include "fnft__poly_specfact.h"
 
-#include "fnft__misc.h"
-#include <stdio.h>
-
 static fnft_nsev_inverse_opts_t default_opts = {
     .discretization = nse_discretization_2SPLIT2A,
     .contspec_type = fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT,
     .contspec_inversion_method = fnft_nsev_inverse_csmethod_DEFAULT,
-    .max_iter = 100
+    .max_iter = 100,
+    .oversampling_factor = 8
 };
 
 fnft_nsev_inverse_opts_t fnft_nsev_inverse_default_opts()
@@ -207,34 +205,25 @@ static inline void remove_boundary_conds_and_reorder_for_fft(
     const REAL bnd_coeff)
 {
     UINT i;
-    if (XI != NULL) {
-        const REAL eps_t = (T[1] - T[0]) / (D - 1);
-        const REAL eps_xi = (XI[1] - XI[0]) / (M - 1);
-        const REAL phase_factor_rho = -2.0*(T[1] + eps_t*bnd_coeff);
-        for (i=0; i<M; i++) {
-            const REAL xi = XI[0] + i*eps_xi;
-            contspec[i] *= CEXP(-I*xi*phase_factor_rho);
-        }
-        for (i=0; i<=M/2; i++)
-            contspec_reordered[i] = contspec[i + (M/2 - 1)];
-        for (i=M/2+1; i<M; i++)
-            contspec_reordered[i] = contspec[i - (M/2 + 1)];
-    } else {
-    for (i=0; i<M; i++)
-        contspec_reordered[i] = contspec[i];
+    const REAL eps_t = (T[1] - T[0]) / (D - 1);
+    const REAL eps_xi = (XI[1] - XI[0]) / (M - 1);
+    const REAL phase_factor_rho = -2.0*(T[1] + eps_t*bnd_coeff);
+    for (i=0; i<M; i++) {
+        const REAL xi = XI[0] + i*eps_xi;
+        contspec[i] *= CEXP(-I*xi*phase_factor_rho);
     }
+    for (i=0; i<=M/2; i++)
+        contspec_reordered[i] = contspec[i + (M/2 - 1)];
+    for (i=M/2+1; i<M; i++)
+        contspec_reordered[i] = contspec[i - (M/2 + 1)];
 }
 
 // This auxiliary function builds a transfer matrix from a given reflection
 // coefficient in which B(z) is build from the FFT of the reflection
 // coefficient and A(z)=1. See, e.g., Skaar et al, J Quantum Electron 37(2),
 // 2001.
-//
-// Note that if XI!=NULL, then it must be the default range returned by
-// fnft_nsev_inverse_XI. It is possible to pass XI=NULL as well. Check the file
-// fnft_nsev_inverse_test_against_forward.inc to see how contspec has to be
-// constructed in that case. (Kept for illustration purposes only.)
-static inline INT transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_REFL_COEFF(
+static inline INT
+transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_REFL_COEFF(
     const UINT M,
     COMPLEX * const contspec,
     REAL const * const XI,
@@ -265,7 +254,8 @@ static inline INT transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_
 
     remove_boundary_conds_and_reorder_for_fft(M, contspec, contspec_reordered,
                                               XI, D, T, bnd_coeff);
-    ret_code = fft_wrapper_create_plan(&plan, M, contspec_reordered, b_coeffs, -1);
+    ret_code = fft_wrapper_create_plan(&plan, M, contspec_reordered, b_coeffs,
+                                       -1);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = fft_wrapper_execute_plan(plan, contspec_reordered, b_coeffs);
     CHECK_RETCODE(ret_code, leave_fun);
@@ -382,19 +372,15 @@ transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_AB_FROM_ITER(
             fft_out[i] = CARG( fft_out[i] );
             cur_phase_change += CABS( fft_out[i] ) / D;
         }
-        if (XI != NULL) {
-            for (i=0; i<=M/2; i++)
-                contspec_reordered[i] = contspec[i + (M/2 - 1)] * CEXP(I*fft_out[i]);
-            for (i=M/2+1; i<M; i++)
-                contspec_reordered[i] = contspec[i - (M/2 + 1)] * CEXP(I*fft_out[i]);
-        } else {
-            for (i=0; i<M; i++)
-                contspec_reordered[i] = contspec[i] * CEXP(I*fft_out[i]);
-        }
+        for (i=0; i<=M/2; i++)
+            contspec_reordered[i] = contspec[i+(M/2-1)]*CEXP(I*fft_out[i]);
+        for (i=M/2+1; i<M; i++)
+            contspec_reordered[i] = contspec[i-(M/2+1)]*CEXP(I*fft_out[i]);
 
         // Stop iterating if the phases stop changing or the correctios stop decreasing.
 
-        const REAL cur_phase_change_diff = FABS( cur_phase_change - prev_phase_change );
+        const REAL cur_phase_change_diff =
+            FABS( cur_phase_change - prev_phase_change );
         if (cur_phase_change_diff < 10*FNFT_EPSILON)
             break;
         prev_phase_change = cur_phase_change;
@@ -444,6 +430,9 @@ static INT transfer_matrix_from_reflection_coefficient(
     const INT kappa,
     fnft_nsev_inverse_opts_t const * const opts_ptr)
 {
+    if (XI == NULL)
+        return E_INVALID_ARGUMENT(XI);
+
     INT ret_code = SUCCESS;
 
     switch (opts_ptr->contspec_inversion_method) {
@@ -509,7 +498,8 @@ static INT transfer_matrix_from_B_of_tau(
     b_coeffs[D-1] *= 0.5;
 
     COMPLEX * const a_coeffs = transfer_matrix + 1;
-    ret_code = poly_specfact(D-1, b_coeffs, a_coeffs, 8, kappa);
+    ret_code = poly_specfact(D-1, b_coeffs, a_coeffs,
+                             opts_ptr->oversampling_factor, kappa);
     CHECK_RETCODE(ret_code, leave_fun);
 
     for (i=0; i<D; i++) {

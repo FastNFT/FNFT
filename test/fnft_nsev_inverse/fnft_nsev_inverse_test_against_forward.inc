@@ -77,35 +77,6 @@ static INT fnft_nsev_inverse_test(const UINT M, const REAL error_bound,
         goto leave_fun;
     }
 
-    UINT deg;
-    const REAL eps_t = (T[1] - T[0])/(D - 1);
-    ret_code = nse_fscatter(D, q_exact, eps_t, kappa, transfer_matrix, &deg,
-        NULL, opts_ptr->discretization);
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    const COMPLEX A = 1.0;
-    const COMPLEX W = CEXP(2.0*I*FNFT_PI/M);
-    ret_code = poly_chirpz(deg, transfer_matrix, A, W, M, a_vals);
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    ret_code = poly_chirpz(deg, transfer_matrix+2*(deg+1), A, W, M, b_vals);
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    for (i=0; i<M; i++)
-        contspec[i] = b_vals[i]/a_vals[i];
-    ret_code = fnft_nsev_inverse(M, contspec, NULL, 0, NULL, NULL, D, q, T,
-        kappa, opts_ptr);
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    error = misc_rel_err(D, q, q_exact);
-#ifdef DEBUG
-    printf("error = %g\n", error);
-#endif
-    if (!(error < error_bound)) {
-        ret_code = E_TEST_FAILED;
-        goto leave_fun;
-    }
-
 leave_fun:
     free(transfer_matrix);
     free(a_vals);

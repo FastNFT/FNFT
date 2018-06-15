@@ -108,12 +108,18 @@ typedef enum {
  * @var fnft_nsev_inverse_opts_t::max_iter
  *  Determines the maximum number of iterations in iterative methods
  *  for the inversion of the continuous spectrum.
+ *
+ * @var fnft_nsev_inverse_opts_t::oversampling_factor
+ *  The oversampling factor used when calling
+ * \link fnft__poly_specfact \endlink internally. (Not all methods
+ * compute a spectral factorization). Should be at least one.
  */
 typedef struct {
     fnft_nse_discretization_t discretization;
     fnft_nsev_inverse_cstype_t contspec_type;
     fnft_nsev_inverse_csmethod_t contspec_inversion_method;
     FNFT_UINT max_iter;
+    FNFT_UINT oversampling_factor;
 } fnft_nsev_inverse_opts_t;
 
 /**

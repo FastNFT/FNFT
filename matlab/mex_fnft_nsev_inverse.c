@@ -41,7 +41,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (nlhs < 1)
         return;
 
-    /* Check types and dimensions of the first four inputs: contspec, XI, D, T, kappa */
+    /* Check types and dimensions of the first four inputs: contspec, XI, D, T,
+       kappa */
 
     if (nrhs < 5)
         mexErrMsgTxt("At least five inputs expected.");
@@ -109,12 +110,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
             opts.contspec_type = fnft_nsev_inverse_cstype_B_OF_TAU;
 
-        } else if ( strcmp(str, "csmethod_tfmatrix_contains_refl_coeff") == 0 ) {
+        } else if ( strcmp(str, "csmethod_tfmatrix_contains_refl_coeff") == 0 ){
 
             opts.contspec_inversion_method =
                 fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_REFL_COEFF;
 
-        } else if ( strcmp(str, "csmethod_tfmatrix_contains_ab_from_iter") == 0 ) {
+        } else if ( strcmp(str, "csmethod_tfmatrix_contains_ab_from_iter") == 0){
 
             opts.contspec_inversion_method =
                 fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_AB_FROM_ITER;
@@ -122,6 +123,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "discr_modal") == 0 ) {
 
             opts.discretization = fnft_nse_discretization_2SPLIT2_MODAL;
+
+        } else if ( strcmp(str, "oversampling_factor") == 0 ) {
+
+            /* Extract desired oversampling factor */
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+                 || mxGetNumberOfElements(prhs[k+1]) != 1
+                 || mxGetScalar(prhs[k+1]) < 1 ) {
+                snprintf(msg, sizeof msg, "'oversampling_factor' should be followed by a positive natural number.");
+                goto on_error;
+            }
+            opts.oversampling_factor = (FNFT_UINT)mxGetScalar(prhs[k+1]);
+
 
         } else if ( strcmp(str, "quiet") == 0 ) {
 
