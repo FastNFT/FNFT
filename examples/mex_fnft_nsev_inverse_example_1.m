@@ -1,5 +1,5 @@
-% This file is part of FNFT.  
-%                                                                  
+% This file is part of FNFT.
+%
 % FNFT is free software; you can redistribute it and/or
 % modify it under the terms of the version 2 of the GNU General
 % Public License as published by the Free Software Foundation.
@@ -8,7 +8,7 @@
 % but WITHOUT ANY WARRANTY; without even the implied warranty of
 % MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 % GNU General Public License for more details.
-%                                                                      
+%
 % You should have received a copy of the GNU General Public License
 % along with this program. If not, see <http://www.gnu.org/licenses/>.
 %
@@ -18,11 +18,11 @@
 % This examples demonstrates how the inverse nonlinear Fourier transform
 % with respect to the nonlinear Schroedinger equation with vanishing
 % boundary conditions can be computed using mex_fnft_nsev_inverse.
-% 
+%
 % The signal is a truncated soliton pulse given in Rourke and Morris,
 % Phys. Rev. A 46(7), 1992, https://doi.org/10.1103/PhysRevA.46.3631
 %
-% Note that this is a difficult test case since the time domain signal is 
+% Note that this is a difficult test case since the time domain signal is
 % discontinuous and the reflection coefficient decays slowly.
 %
 % The signal has no bound states for the parameters used below, which are
@@ -71,7 +71,7 @@ q_exact = (t <= 0).*-2.0j*gam*al/abs(al).*sech(2*gam*t + atanh(be/gam));
 fig = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
 
 subplot(2,2,1);
-plot(t, abs(q), t, abs(q), '--k');
+plot(t, abs(q), t, abs(q_exact), '--k');
 xlabel('t');
 ylabel('|q(t)|');
 legend('Numerically', 'Exact solution');
