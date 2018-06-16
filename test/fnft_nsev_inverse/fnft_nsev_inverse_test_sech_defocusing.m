@@ -1,10 +1,14 @@
-% This Matlab script generates the file
-% fnft_nsev_inverse_test_sech_defocusing.inc
+% This Matlab script generates the files
+% fnft_nsev_inverse_test_sech_defocusing_....inc
 
 clear all;
 
+for D=[2048 4096]
+    fnft_nsev_inverse_test_sech_defocusing_aux(D);
+end
+
+function fnft_nsev_inverse_test_sech_defocusing_aux(D, filename)
 T = 2.0*[-1 1.1];
-D = 2048; 
 M = 2*D;
 XI = mex_fnft_nsev_inverse_XI(D, T, M);
 
@@ -27,12 +31,12 @@ eps_t = (T(2) - T(1))/(D - 1);
 t = T(1) + (0:D-1)*eps_t;
 q_exact = -conj(Q/GAM*sech(t/GAM).^(1-2j*F));
 
-fileID = fopen('fnft_nsev_inverse_test_sech_defocusing_data.inc', 'w');
-fprintf(fileID, 'const INT kappa = %d;\n', kappa);
-fprintf(fileID, 'const UINT D = %d; \nconst UINT M = %d;\n', D, M);
-fprintf(fileID, 'const REAL T[2] = {%.17g, %.17g};\n', T(1), T(2));
-fprintf(fileID, 'const REAL XI[2] = {%.17g, %.17g};\n', XI(1), XI(2));
-fprintf(fileID, 'const COMPLEX q_exact[%d] = {\n', D);
+filename = sprintf('fnft_nsev_inverse_test_sech_defocusing_data_%d.inc',D);
+fileID = fopen(filename, 'w');
+fprintf(fileID, 'const UINT M_%d = %d;\n', D, M);
+fprintf(fileID, 'const REAL T_%d[2] = {%.17g, %.17g};\n', D, T(1), T(2));
+fprintf(fileID, 'const REAL XI_%d[2] = {%.17g, %.17g};\n', D, XI(1), XI(2));
+fprintf(fileID, 'const COMPLEX q_exact_%d[%d] = {\n', D, D);
 for n = 1:D
     fprintf(fileID, '    %.17g + %.17g*I', real(q_exact(n)), imag(q_exact(n)));
     if n<D
@@ -41,7 +45,7 @@ for n = 1:D
         fprintf(fileID, ' };\n');
     end
 end
-fprintf(fileID, 'COMPLEX contspec[%d] = {\n', M);
+fprintf(fileID, 'COMPLEX contspec_%d[%d] = {\n', D, M);
 for n = 1:M
     fprintf(fileID, '    %.17g + %.17g*I', real(contspec_exact(n)), imag(contspec_exact(n)));
     if n<M
@@ -51,3 +55,4 @@ for n = 1:M
     end
 end
 fclose(fileID);
+end

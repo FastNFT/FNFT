@@ -29,30 +29,45 @@
 static INT fnft_nsev_inverse_test(const REAL error_bound,
        fnft_nsev_inverse_opts_t * opts_ptr)
 {
-#include "fnft_nsev_inverse_test_sech_defocusing_data.inc"
+#include "fnft_nsev_inverse_test_sech_defocusing_data_2048.inc"
+#include "fnft_nsev_inverse_test_sech_defocusing_data_4096.inc"
 
     if (!(error_bound > 0))
         return E_INVALID_ARGUMENT(error_bound);
     if (opts_ptr == NULL)
         return E_INVALID_ARGUMENT(opts_ptr);
 
+    const INT kappa = -1;
     INT ret_code = SUCCESS;
 
-    COMPLEX * const q = malloc(D * sizeof(COMPLEX)) ;
+    COMPLEX * const q = malloc(4096 * sizeof(COMPLEX)) ;
     if (q == NULL) {
        ret_code = E_NOMEM;
        goto leave_fun;
     }
 
-    ret_code = fnft_nsev_inverse(M, contspec, XI, 0, NULL, NULL, D, q, T,
-        kappa, opts_ptr);
+    ret_code = fnft_nsev_inverse(M_2048, contspec_2048, XI_2048, 0, NULL, NULL,
+        2048, q, T_2048, kappa, opts_ptr);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    REAL error = misc_rel_err(D, q, q_exact);
+    REAL error = misc_rel_err(2048, q, q_exact_2048);
 #ifdef DEBUG
     printf("error = %g\n", error);
 #endif
     if (!(error < error_bound)) {
+        ret_code = E_TEST_FAILED;
+        goto leave_fun;
+    }
+
+    ret_code = fnft_nsev_inverse(M_4096, contspec_4096, XI_4096, 0, NULL, NULL,
+                                 4096, q, T_4096, kappa, opts_ptr);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    error = misc_rel_err(4096, q, q_exact_4096);
+#ifdef DEBUG
+    printf("error = %g\n", error);
+#endif
+    if (!(error < error_bound/4)) {
         ret_code = E_TEST_FAILED;
         goto leave_fun;
     }
