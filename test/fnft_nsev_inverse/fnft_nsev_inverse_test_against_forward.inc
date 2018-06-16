@@ -44,7 +44,6 @@ static INT fnft_nsev_inverse_test(const UINT M, const REAL error_bound,
         return E_INVALID_ARGUMENT(error_bound);
 
     INT ret_code = SUCCESS;
-    UINT i;
 
     const UINT numel = nse_fscatter_numel(D, opts_ptr->discretization);
     COMPLEX * const transfer_matrix = malloc(numel * sizeof(COMPLEX));
@@ -61,8 +60,8 @@ static INT fnft_nsev_inverse_test(const UINT M, const REAL error_bound,
     opts_fwd.discretization = opts_ptr->discretization;
     ret_code = fnft_nsev_inverse_XI(D, T, M, XI, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = fnft_nsev(D, q_exact, T, M, contspec, XI, NULL, NULL, NULL, kappa,
-        &opts_fwd);
+    ret_code = fnft_nsev(D, q_exact, T, M, contspec, XI, NULL, NULL, NULL,
+                         kappa, &opts_fwd);
 
     ret_code = fnft_nsev_inverse(M, contspec, XI, 0, NULL, NULL, D, q, T,
         kappa, opts_ptr);
