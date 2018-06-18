@@ -1,6 +1,6 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
+* This file is part of FNFT.
+*
 * FNFT is free software; you can redistribute it and/or
 * modify it under the terms of the version 2 of the GNU General
 * Public License as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-*                                                                      
+*
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
@@ -30,14 +30,18 @@
  *
  * The library is separated into a public ("fnft_" prefix) and a private part
  * ("fnft__" prefix). \n\n
- * To get started, read the module \ref fnft and try the examples in the
- * examples directory.
+ * To get started, read the modules \ref fnft and \ref fnft_inverse, and try
+ * the examples in the examples directory.
  */
 
 /* Define groups for Doxygen documentation */
 
 /**
  * \defgroup fnft Fast nonlinear Fourier transforms
+ */
+
+/**
+ * \defgroup fnft_inverse Fast inverse nonlinear Fourier transforms
  */
 
 /**
@@ -69,7 +73,7 @@
  * corresponding error code. For example:
  * \n \n
  * if (pointer == NULL) \n
- * 	return FNFT__E_NOMEM; \n
+ *  return FNFT__E_NOMEM; \n
  * \n
  * The function that prints the errors can be changed using
  * \link fnft_errwarn_setprintf \endlink.
@@ -98,4 +102,3 @@
  */
 
 #endif
-

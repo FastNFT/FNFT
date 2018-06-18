@@ -1,6 +1,6 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
+* This file is part of FNFT.
+*
 * FNFT is free software; you can redistribute it and/or
 * modify it under the terms of the version 2 of the GNU General
 * Public License as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-*                                                                      
+*
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
@@ -31,13 +31,13 @@
 
 /**
  * Enum that specifies how the bound states are filtered. Used in
- * \link fnft_nsev_opts_t \endlink.\n \n	
+ * \link fnft_nsev_opts_t \endlink.\n \n
  * @ingroup data_types
  *  fnft_nsev_bsfilt_NONE: All detected roots of \f$ a(\lambda) \f$ are returned. \n \n
  *  fnft_nsev_bsfilt_BASIC: Only roots in the upper halfplane are returned and roots very close
  *  to each other are merged. \n \n
  *  fnft_nsev_bsfilt_FULL: Bound states in physically implausible regions are furthermore
- *  rejected. 
+ *  rejected.
  */
 typedef enum {
     fnft_nsev_bsfilt_NONE,
@@ -57,7 +57,7 @@ typedef enum {
  *  but very reliable. \n \n
  *  fnft_nsev_bsloc_NEWTON: Newton's method is used to refine a given set of initial guesses.
  *  The discretization used for the the refinement is the one due to Boffetta and Osborne.
- *  The number of iterations is specified through the field \link fnft_nsev_opts_t::niter 
+ *  The number of iterations is specified through the field \link fnft_nsev_opts_t::niter
  *  \endlink.
  *  The array bound_states passed to \link fnft_nsev \endlink
  *  should contain the initial guesses and *K_ptr should specify the number of
@@ -70,7 +70,7 @@ typedef enum {
  *  the NEWTON method by first applying the FAST_EIGENVALUE method to a
  *  subsampled version of the signal. Second these initial guesses are refined
  *  using the NEWTON method. The number of samples of the subsampled signal can
- *  be controlled using the parameter Dsub in \link fnft_nsev_opts_t \link.
+ *  be controlled using the parameter Dsub in \link fnft_nsev_opts_t \endlink.
  *  If Dsub=0, the routine automatically choosen this number such that the
  *  complexity is \f$ O(D \log^2 D + niter K D) \f$, where \f$ K \f$ is the
  *  number of bound states that survived the filtering operation of the initial
@@ -104,7 +104,7 @@ typedef enum {
 
 /**
  * Enum that specifies the type of the continuous spectrum computed by the
- * routine. Used in \link fnft_nsev_opts_t \endlink.\n \n 
+ * routine. Used in \link fnft_nsev_opts_t \endlink.\n \n
  * @ingroup data_types
  *  fnft_nsev_cstype_REFLECTION_COEFFICIENT: The array is filled with the values of
  *  \f$ b(\xi)/a(\xi) \f$ on the grid specified in the description of
@@ -112,7 +112,11 @@ typedef enum {
  *  fnft_nsev_cstype_AB: The array is filled with the values of \f$a(\xi)\f$ on the grid
  *  specified in the description of \link fnft_nsev \endlink, followed by
  *  the values of \f$ b(\xi) \f$ on the same grid. Note that the length of the
- *  array contspec passed by the user has to be 2(*M_ptr) in this case.\n\n
+ *  array contspec passed by the user has to be 2*M in this case.\n\n
+ *  fnft_nsev_cstype_BOTH: The first M values of the array are filled with the
+ *  values returned by the REFLECTION_COEFFICIENT method. They are followed by
+ *  the 2*M values returned by the AB method. Note that the length of the array
+ *  passed by the user has to be 3*M in this case.
  */
 typedef enum {
     fnft_nsev_cstype_REFLECTION_COEFFICIENT,
@@ -122,21 +126,21 @@ typedef enum {
 
 /**
  * @struct fnft_nsev_opts_t
- * @brief Stores additional options for the routine \link fnft_nsev \endlink. 
+ * @brief Stores additional options for the routine \link fnft_nsev \endlink.
  * @ingroup fnft
  * @ingroup data_types
- * 
+ *
  * Use the \link fnft_nsev_default_opts \endlink routine in order to generate
  * a new variable of this type with default options and modify as needed.
  *
  * @var fnft_nsev_opts_t::bound_state_filtering
  *  Controls how \link fnft_nsev \endlink decide whether a numerically found
- *  root of \f$ a(\lambda) \f$ is an actual bound state or not. \n 
+ *  root of \f$ a(\lambda) \f$ is an actual bound state or not. \n
  *  Should be of type \link fnft_nsev_bsfilt_t \endlink.
  *
  * @var fnft_nsev_opts_t::bound_state_localization
- *  Controls how \link fnft_nsev \endlink localizes bound states. \n 
- * Should be of type \link fnft_nsev_bsloc_t \endlink.  
+ *  Controls how \link fnft_nsev \endlink localizes bound states. \n
+ * Should be of type \link fnft_nsev_bsloc_t \endlink.
  *
  * @var fnft_nsev_opts_t::Dsub
  *   Controls how many samples are used after subsampling when bound states are
@@ -150,14 +154,13 @@ typedef enum {
  *
  * @var fnft_nsev_opts_t::discspec_type
  *  Controls how \link fnft_nsev \endlink fills the array
- *  normconsts_or_residues. \n 
+ *  normconsts_or_residues. \n
  * Should be of type \link fnft_nsev_dstype_t \endlink.
  *
  * @var fnft_nsev_opts_t::contspec_type
  *  Controls how \link fnft_nsev \endlink fills the array
- *  contspec. \n 
+ *  contspec. \n
  * Should be of type \link fnft_nsev_cstype_t \endlink.
- * 
  *
  * @var fnft_nsev_opts_t::normalization_flag
  *  Controls whether intermediate results during the fast forward scattering
@@ -171,7 +174,7 @@ typedef enum {
  */
 typedef struct {
     fnft_nsev_bsfilt_t bound_state_filtering;
-	fnft_nsev_bsloc_t bound_state_localization;
+  fnft_nsev_bsloc_t bound_state_localization;
     FNFT_UINT niter;
     FNFT_UINT Dsub;
     fnft_nsev_dstype_t discspec_type;
@@ -284,11 +287,11 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *
  * @ingroup fnft
  */
-FNFT_INT fnft_nsev(const FNFT_UINT D, FNFT_COMPLEX * const q, 
-    FNFT_REAL const * const T, const FNFT_UINT M, 
-    FNFT_COMPLEX * const contspec, FNFT_REAL const * const XI, 
-    FNFT_UINT * const K_ptr, FNFT_COMPLEX * const bound_states, 
-    FNFT_COMPLEX * const normconsts_or_residues, const FNFT_INT kappa, 
+FNFT_INT fnft_nsev(const FNFT_UINT D, FNFT_COMPLEX * const q,
+    FNFT_REAL const * const T, const FNFT_UINT M,
+    FNFT_COMPLEX * const contspec, FNFT_REAL const * const XI,
+    FNFT_UINT * const K_ptr, FNFT_COMPLEX * const bound_states,
+    FNFT_COMPLEX * const normconsts_or_residues, const FNFT_INT kappa,
     fnft_nsev_opts_t *opts);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
