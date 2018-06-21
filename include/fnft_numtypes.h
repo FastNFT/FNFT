@@ -116,6 +116,12 @@ typedef size_t FNFT_UINT;
 #define FNFT_COSH(X) cosh(X)
 
 /**
+ * Arc tangent of a \link FNFT_REAL \endlink.
+ * @ingroup numtype
+ */
+#define FNFT_ATAN(X) atan(X)
+
+/**
  * Natural logarithm of a \link FNFT_REAL \endlink.
  * @ingroup numtype
  */
@@ -266,6 +272,7 @@ typedef size_t FNFT_UINT;
 #define CLOG(X)         FNFT_CLOG(X)
 #define COS(X)          FNFT_COS(X)
 #define SIN(X)          FNFT_SIN(X)
+#define ATAN(X)         FNFT_ATAN(X)
 #define SQRT(X)         FNFT_SQRT(X)
 #define EPSILON         FNFT_EPSILON
 #define CSINH(X)        FNFT_CSINH(X)

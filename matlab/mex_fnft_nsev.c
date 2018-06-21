@@ -110,7 +110,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
         
         /* Try to interpret value of string input */
-        if ( strcmp(str, "bsloc_fasteigen") == 0 ) {
+        if ( strcmp(str, "M") == 0 ) {
+
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+                 || mxGetNumberOfElements(prhs[k+1]) != 1
+                 || mxGetScalar(prhs[k+1]) < 0.0 ) {
+                snprintf(msg, sizeof msg, "'M' should be followed by a non-negative real scalar.");
+                goto on_error;
+            }
+            M = (FNFT_UINT)mxGetScalar(prhs[k+1]);
+            k++;
+
+        } else if ( strcmp(str, "bsloc_fasteigen") == 0 ) {
             
             opts.bound_state_localization = fnft_nsev_bsloc_FAST_EIGENVALUE;
             
@@ -242,9 +253,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
    
     if (skip_contspec_flag == 0) {
         if (opts.contspec_type == fnft_nsev_cstype_AB)
-            contspec = mxMalloc(2*D * sizeof(FNFT_COMPLEX));
+            contspec = mxMalloc(2*M * sizeof(FNFT_COMPLEX));
         else
-            contspec = mxMalloc(D * sizeof(FNFT_COMPLEX));      
+            contspec = mxMalloc(M * sizeof(FNFT_COMPLEX));      
         if (contspec == NULL) {
             snprintf(msg, sizeof msg, "Out of memory.");
             goto on_error;
@@ -267,7 +278,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
 
     if (skip_normconsts_flag == 0) {
-        normconsts_or_residuals = mxMalloc(D * sizeof(FNFT_COMPLEX));
+        normconsts_or_residuals = mxMalloc(K * sizeof(FNFT_COMPLEX));
         if (normconsts_or_residuals == NULL) {
             snprintf(msg, sizeof msg, "Out of memory.");
             goto on_error;
@@ -294,9 +305,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* Allocate memory for the outputs */
 
     if (opts.contspec_type == fnft_nsev_cstype_AB)
-        plhs[0] = mxCreateDoubleMatrix(1, 2*D, mxCOMPLEX);
+        plhs[0] = mxCreateDoubleMatrix(1, 2*M, mxCOMPLEX);
     else
-        plhs[0] = mxCreateDoubleMatrix(1, D, mxCOMPLEX);
+        plhs[0] = mxCreateDoubleMatrix(1, M, mxCOMPLEX);
     
     /* Allocate memory for outputs and convert results */
 
@@ -304,12 +315,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         csr = mxGetPr(plhs[0]);
         csi = mxGetPi(plhs[0]);
         if (opts.contspec_type == fnft_nsev_cstype_AB) {
-            for (i=0; i<2*D; i++) {
+            for (i=0; i<2*M; i++) {
                 csr[i] = FNFT_CREAL(contspec[i]);
                 csi[i] = FNFT_CIMAG(contspec[i]);
             }
         } else {
-            for (i=0; i<D; i++) {
+            for (i=0; i<M; i++) {
                 csr[i] = FNFT_CREAL(contspec[i]);
                 csi[i] = FNFT_CIMAG(contspec[i]);
             }

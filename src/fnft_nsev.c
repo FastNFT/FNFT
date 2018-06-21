@@ -270,31 +270,28 @@ static inline INT tf2contspec(
     INT ret_code;
     UINT i, offset = 0;
     
-   
-    // Allocate memory
-    if (M > deg+1)
-        return E_NOT_YET_IMPLEMENTED(M >> D, "Any M<=2*D should work. It is planned to remove this restriction in the next release.");
     H11_vals = malloc(2*M * sizeof(COMPLEX));
-    if (H11_vals == NULL)
+    if (H11_vals == NULL){
         return E_NOMEM;
+        goto leave_fun;}
     H21_vals = H11_vals + M;
  
+    
+
     // Set step sizes
     eps_t = (T[1] - T[0])/(D - 1);
     eps_xi = (XI[1] - XI[0])/(M - 1);
 
-    // Retrieve some discretization-specific constants
-    //map_coeff = nse_discretization_mapping_coeff(opts->discretization);
-    //bnd_coeff = nse_discretization_boundary_coeff(opts->discretization);
-    //if (map_coeff == NAN || bnd_coeff == NAN)
-       // return E_INVALID_ARGUMENT(opts->discretization);
 
     // Determine discretization-specific coefficients
     degree1step = nse_discretization_degree(opts->discretization);
 
     boundary_coeff = nse_discretization_boundary_coeff(opts->discretization);
-    if (degree1step == NAN || boundary_coeff == NAN)
+    if (degree1step == NAN || boundary_coeff == NAN){
         return E_INVALID_ARGUMENT(opts->discretization);
+        goto leave_fun;
+    }
+
 
     // Prepare the use of the chirp transform. The entries of the transfer
     // matrix that correspond to a and b will be evaluated on the frequency
@@ -332,12 +329,13 @@ static inline INT tf2contspec(
     case nsev_cstype_REFLECTION_COEFFICIENT:
 
 
-
         phase_factor_rho = -2.0*(T[1] + eps_t*boundary_coeff);
         for (i = 0; i < M; i++) {
             xi = XI[0] + i*eps_xi;
-            if (H11_vals[i] == 0.0)
+            if (H11_vals[i] == 0.0){
                 return E_DIV_BY_ZERO;
+                goto leave_fun;
+            }
             result[i] = H21_vals[i] * CEXP(I*xi*phase_factor_rho) / H11_vals[i];
         }
 
@@ -367,13 +365,15 @@ static inline INT tf2contspec(
 
     default:
 
-        return E_INVALID_ARGUMENT(opts->contspec_type);
+        ret_code = E_INVALID_ARGUMENT(opts->contspec_type);
+        goto leave_fun;
     }
     
-    return SUCCESS;
+
 
 leave_fun:
     free(H11_vals);
+
     return ret_code;
 }
 

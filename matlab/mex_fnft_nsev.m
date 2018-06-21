@@ -18,6 +18,8 @@
 %   It is possible to provide additional inputs. These come either in the
 %   form of a single string or of a string followed by a value.
 %
+%   'M'             The length of the vector contspec. Followed by the
+%                   desired value, a positive integer.
 %   'bsloc_fasteigen'   Use fast eigenvalue method to locate bound states.
 %                   This method is very reliable, but requires O(D^2)
 %                   flops. This input is not followed by a value.
@@ -62,7 +64,8 @@
 %                   commands instead.)
 %
 % OUTPUTS
-%   contspec        Complex row vector of length D (or [] if skipped)
+%   contspec        Complex row vector of length M, the default is M=D
+%                   (or [] if skipped)
 %   bound_states    Complex row vector of length K (or [] if skipped)
 %   normconsts      Complex row vector of length K (or [] if skipped)
 
