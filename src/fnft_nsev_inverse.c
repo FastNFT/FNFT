@@ -145,7 +145,7 @@ INT fnft_nsev_inverse(
         goto leave_fun;
     }
 
-    const REAL bnd_coeff = nse_discretization_boundary_coeff(opts_ptr->discretization);
+    const REAL bnd_coeff = 0.0;//nse_discretization_boundary_coeff(opts_ptr->discretization);
     const REAL degree1step = nse_discretization_degree(opts_ptr->discretization);
     if (degree1step == NAN)
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
@@ -276,13 +276,19 @@ transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_REFL_COEFF(
 // 
 //     transfer_matrix[deg] = 1.0;
 //     transfer_matrix[3*(deg+1)] = 1.0;
-//     
+    
     for (i=0; i<=deg; i++) { //works okay
         transfer_matrix[i] = 0.0;
         transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[deg - i]/M);
         transfer_matrix[2*(deg+1) + i] = (b_coeffs[M-1-deg+i]/M);
         transfer_matrix[3*(deg+1) + i] = 0.0;
     }
+//         for (i=0; i<=deg; i++) { 
+//         transfer_matrix[i] = 0.0;
+//         transfer_matrix[1*(deg+1) + i] = (b_coeffs[deg - i]/M);
+//         transfer_matrix[2*(deg+1) + i] = -kappa*CONJ(b_coeffs[M-1-deg+i]/M);
+//         transfer_matrix[3*(deg+1) + i] = 0.0;
+//     }
 
     // Change A(z)=0 to A(z)=1.
 
@@ -419,18 +425,18 @@ transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_AB_FROM_ITER(
 //     transfer_matrix[2*(deg+1)] = 0.0;
 //     transfer_matrix[4*(deg+1) - 1] = 0.0;
         
-        for (i=0; i<D; i++) {  //conjugated but works
-            transfer_matrix[i] = a_coeffs[D-1 - i];
-            transfer_matrix[1*(deg+1) + 1 + i] = b_coeffs[i];
-            transfer_matrix[2*(deg+1) + i] = -kappa*CONJ(b_coeffs[D-1 - i]);
-            transfer_matrix[3*(deg+1) + 1 + i] = a_coeffs[i];
-        }
 //         for (i=0; i<D; i++) {  //conjugated but works
-//             transfer_matrix[i] = (a_coeffs[D-1 - i]);
-//             transfer_matrix[1*(deg+1) + 1 + i] = b_coeffs[D-1 - i];
-//             transfer_matrix[2*(deg+1) + i] = -kappa*CONJ(b_coeffs[i]);
-//             transfer_matrix[3*(deg+1) + 1 + i] = (a_coeffs[i]);
+//             transfer_matrix[i] = a_coeffs[D-1 - i];
+//             transfer_matrix[1*(deg+1) + 1 + i] = b_coeffs[i];
+//             transfer_matrix[2*(deg+1) + i] = -kappa*CONJ(b_coeffs[D-1 - i]);
+//             transfer_matrix[3*(deg+1) + 1 + i] = a_coeffs[i];
 //         }
+        for (i=0; i<D; i++) { 
+            transfer_matrix[i] = CONJ(a_coeffs[D-1 - i]);
+            transfer_matrix[1*(deg+1) + 1 + i] = -kappa*CONJ(b_coeffs[i]);
+            transfer_matrix[2*(deg+1) + i] = (b_coeffs[D-1 - i]);
+            transfer_matrix[3*(deg+1) + 1 + i] = CONJ(a_coeffs[i]);
+        }
     transfer_matrix[deg] = 0.0;
     transfer_matrix[deg+1] = 0.0;
     transfer_matrix[3*(deg+1)-1] = 0.0;
