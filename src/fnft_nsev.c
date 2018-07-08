@@ -296,10 +296,10 @@ static inline INT tf2contspec(
     // Prepare the use of the chirp transform. The entries of the transfer
     // matrix that correspond to a and b will be evaluated on the frequency
     // grid xi(i) = XI1 + i*eps_xi, where i=0,...,M-1. Since
-    // z=exp(map_coeff*j*xi*eps_t), we find that the z at which z the transfer
+    // z=exp(2.0*I*XI*eps_t/degree1step), we find that the z at which z the transfer
     // matrix has to be evaluated are given by z(i) = 1/(A * V^-i), where:
-    V = CEXP(-2.0*I*eps_xi * eps_t / degree1step );
-    A = CEXP(+2.0*I*XI[0] * eps_t / degree1step );
+    V = CEXP( 2.0*I*eps_xi * eps_t / degree1step);
+    A = CEXP(-2.0*I*XI[0] * eps_t / degree1step);
     
     ret_code = poly_chirpz(deg, transfer_matrix, A, V, M, H11_vals);
     CHECK_RETCODE(ret_code, leave_fun);
@@ -313,7 +313,7 @@ static inline INT tf2contspec(
         // first order polynomials instead of second order polynomials.
         for (i=0; i<M; i++) {
             xi = XI[0] + i*eps_xi;
-            sqrt_z = CEXP( I*xi*eps_t / degree1step);
+            sqrt_z = CEXP(I*xi*eps_t / degree1step);
             H21_vals[i] *= sqrt_z;
         }
     }
@@ -351,8 +351,8 @@ static inline INT tf2contspec(
              phase_factor_a =  2.0*D*eps_t + T[1] + T[0];
              phase_factor_b = 2.0*D*eps_t + T[0] - T[1];}
         else{
-       	     phase_factor_a =  eps_t*D + (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
-             phase_factor_b = eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);}
+       	     phase_factor_a =  -eps_t*D + (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
+             phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);}
 
 
         for (i = 0; i < M; i++) {
@@ -426,7 +426,7 @@ static inline INT tf2boundstates(
     degree1step = nse_discretization_degree(opts->discretization);
     if (degree1step == NAN)
         return E_INVALID_ARGUMENT(opts->discretization);
-    map_coeff = -2/degree1step;
+    map_coeff = 2/degree1step;
 
     // Localize bound states ...
     switch (opts->bound_state_localization) {

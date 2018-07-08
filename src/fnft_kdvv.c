@@ -168,8 +168,8 @@ static INT tf2contspec_negxi(UINT deg,
     
     // TODO: The discription above doesn't match the calculation below, while the latter gives the correct result. I think it has something to do with the naming confusion caused by evaluating the function z(xi) for xi = -xi.
     
-    V = CEXP( 2.0*I*eps_xi * eps_t / degree1step );
-    A = CEXP(-2.0*I*XI[0] * eps_t / degree1step );
+    V = CEXP(-2.0*I*eps_xi * eps_t / degree1step );
+    A = CEXP( 2.0*I*XI[0] * eps_t / degree1step );
    
 //    ret_code = poly_chirpz(deg, transfer_matrix, A, V, M, H11_vals);
 //    CHECK_RETCODE(ret_code, release_mem);
