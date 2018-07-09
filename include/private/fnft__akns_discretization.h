@@ -52,19 +52,48 @@ FNFT_UINT fnft__akns_discretization_degree(discretization_t
  *
  * The boundary coefficient is the fraction of the step size that a discretized
  * potential extends beyond the last sample. This routine returns this value
- * based on the discretization of type \link fnft_kdv_discretization_t \endlink.
+ * based on the discretization of type \link fnft_akns_discretization_t \endlink.
  * @param[in] discretization The type of discretization to be used. Should be
- * of type \link fnft_kdv_discretization_t \endlink.
+ * of type \link fnft_akns_discretization_t \endlink.
  * @returns the boundary coefficient, or NAN for discretizations not supported
- * by \link fnft__kdv_fscatter \endlink.
+ * by \link fnft__akns_fscatter \endlink.
  *
  * @ingroup akns
  */
 FNFT_REAL fnft__akns_discretization_boundary_coeff(discretization_t discretization);
 
+/**
+ * @brief This routine maps lambda from continuous-time domain to
+ * z in the discrete-time domain based on the discretization. 
+ * 
+ * This routine maps continuous-time domain value lambda to discrete-time domain value
+ * z = exp(2i*lambda*eps_t/degree1step), where degree1step is based on the discretization 
+ * of type \link fnft_akns_discretization_t \endlink.
+ *
+ * @ingroup akns
+ */
+FNFT_COMPLEX fnft__akns_lambda_to_z(const COMPLEX lambda, const REAL eps_t, discretization_t
+        discretization);
+
+/**
+ * @brief This routine maps z from the discrete-time domain to
+ * lambda in the continuous-time domain based on the discretization. 
+ * 
+ * This routine maps discrete-time domain value z to continuous-time domain value
+ * lambda = degree1step*log(z)/(2i*eps_t), where degree1step is based on the discretization 
+ * of type \link fnft_akns_discretization_t \endlink.
+ *
+ * @ingroup akns
+ */
+FNFT_COMPLEX fnft__akns_z_to_lambda(const COMPLEX z, const REAL eps_t, discretization_t
+        discretization);
+
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define akns_discretization_degree(...) fnft__akns_discretization_degree(__VA_ARGS__)
 #define akns_discretization_boundary_coeff(...) fnft__akns_discretization_boundary_coeff(__VA_ARGS__)
+#define akns_lambda_to_z(...) fnft__akns_lambda_to_z(__VA_ARGS__)
+#define akns_z_to_lambda(...) fnft__akns_z_to_lambda(__VA_ARGS__)
 #endif
 
 #endif

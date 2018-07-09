@@ -29,6 +29,7 @@
 #include "fnft__nse_fscatter.h"
 #include "fnft__nse_scatter.h"
 #include "fnft__nse_discretization.h"
+#include "fnft__akns_discretization.h"
 #include "fnft__misc.h" // for l2norm
 
 static fnft_nsev_opts_t default_opts = {
@@ -308,8 +309,8 @@ static inline INT tf2contspec(
          H21_vals);
     CHECK_RETCODE(ret_code, leave_fun);    
     
-    if (opts->discretization==nse_discretization_2SPLIT2A){
-        // Correct H12_vals for trick that implements 2split2A with
+    if (opts->discretization==nse_discretization_2SPLIT2A || opts->discretization==nse_discretization_2SPLIT2_MODAL){
+        // Correct H12_vals for trick that implements 2split2A and 2SPLIT2_MODAL with
         // first order polynomials instead of second order polynomials.
         for (i=0; i<M; i++) {
             xi = XI[0] + i*eps_xi;
@@ -347,12 +348,9 @@ static inline INT tf2contspec(
 
         scale = POW(2.0, W); // needed since the transfer matrix might
                                   // have been scaled by nse_fscatter
-        if (boundary_coeff == 0){
-             phase_factor_a =  2.0*D*eps_t + T[1] + T[0];
-             phase_factor_b = 2.0*D*eps_t + T[0] - T[1];}
-        else{
-       	     phase_factor_a =  -eps_t*D + (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
-             phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);}
+  
+       	phase_factor_a =  -eps_t*D + (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
+        phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
 
 
         for (i = 0; i < M; i++) {
@@ -465,8 +463,10 @@ static inline INT tf2boundstates(
 
             // Roots are returned in discrete-time domain -> coordinate
             // transform (from discrete-time to continuous-time domain).
-            for (i = 0; i < K; i++)
+            for (i = 0; i < K; i++){
                 buffer[i] = CLOG(buffer[i]) / (map_coeff*I*eps_t);
+                //buffer[i] = akns_z_to_lambda(buffer[i],eps_t,opts->discretization);
+		}
             
             break;
             
@@ -614,9 +614,6 @@ static inline INT refine_roots_newton(
     if (im_bound_val == NAN)
         return E_OTHER("Upper bound on imaginary part of bound states is NaN");
     
-    //map_coeff = nse_discretization_mapping_coeff(discretization);
-    //if (map_coeff == NAN)
-        //return E_INVALID_ARGUMENT(discretization);
     re_bound_val = re_bound(eps_t, discretization);
         
     // Perform iterations of Newton's method

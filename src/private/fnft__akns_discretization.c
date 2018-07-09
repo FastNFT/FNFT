@@ -89,9 +89,38 @@ REAL fnft__akns_discretization_boundary_coeff(discretization_t discretization)
         case discretization_2SPLIT7B:
         case discretization_2SPLIT8A:
         case discretization_2SPLIT8B:
+        case discretization_2SPLIT2_MODAL:
             return 0.5;
             
         default: // Unknown discretization
             return NAN;
     }
+}
+
+/**
+ * This routine maps lambda from continuous-time domain to
+ * z in the discrete-time domain based on the discretization. 
+ */
+COMPLEX fnft__akns_lambda_to_z(const COMPLEX lambda, const REAL eps_t, discretization_t
+        discretization)
+{
+    REAL degree1step;
+    degree1step = akns_discretization_degree(discretization);
+    if (degree1step == NAN)
+        return NAN;
+    return CEXP(2*I*lambda*eps_t/degree1step);        
+}
+
+/**
+ * This routine maps z from the discrete-time domain to
+ * lambda in the continuous-time domain based on the discretization. 
+ */
+COMPLEX fnft__akns_z_to_lambda(const COMPLEX z, const REAL eps_t, discretization_t
+        discretization)
+{
+    REAL degree1step;
+    degree1step = akns_discretization_degree(discretization);
+    if (degree1step == NAN)
+        return NAN;
+    return CLOG(z)/(2*I*eps_t/degree1step);      
 }

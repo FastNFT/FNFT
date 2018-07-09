@@ -126,23 +126,23 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                     scl = 1.0/CSQRT(1-eps_t*q[i]*eps_t*r[i]);
               
                 // construct the scattering matrix for the i-th sample
-                p11[0] = scl;
+                /*p11[0] = scl;
                 p11[1] = 0.0;
                 p12[0] = 0.0;
                 p12[1] = scl*eps_t*q[i];
                 p21[0] = scl*eps_t*r[i];
                 p21[1] = 0.0;
                 p22[0] = 0.0;
-                p22[1] = scl;
+                p22[1] = scl;*/
 
-                /*p11[0] = 0.0;
+                p11[0] = 0.0;
                 p11[1] = scl;
                 p12[0] = scl*eps_t*q[i];
                 p12[1] = 0.0;
                 p21[0] = 0.0;
                 p21[1] = scl*eps_t*r[i];
                 p22[0] = scl;
-                p22[1] = 0.0;*/
+                p22[1] = 0.0;
 
                 p11 += *deg_ptr + 1;
                 p21 += *deg_ptr + 1;
@@ -921,7 +921,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
     // Multiply the individual scattering matrices
     ret_code = poly_fmult2x2(deg_ptr, D, p, result, W_ptr);
     CHECK_RETCODE(ret_code, release_mem);
-    
+
 release_mem:
     free(p);
     return ret_code;
