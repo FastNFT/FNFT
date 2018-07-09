@@ -38,7 +38,7 @@ INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
      
     INT ret_code = SUCCESS;
     UINT i;
-    fnft__discretization_t akns_discretization;
+    fnft__akns_discretization_t akns_discretization;
     COMPLEX *r = NULL;
     
     // Check inputs
@@ -59,7 +59,7 @@ INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
 
     switch (discretization) {
         case nse_discretization_BO:
-            akns_discretization = discretization_BO;
+            akns_discretization = akns_discretization_BO;
             break;
                    
         default: // Unknown discretization

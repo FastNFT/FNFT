@@ -27,7 +27,7 @@
 #ifndef FNFT__AKNS_SCATTER_H
 #define FNFT__AKNS_SCATTER_H
 
-#include "fnft__discretization_t.h"
+#include "fnft__akns_discretization_t.h"
 
 
 /**
@@ -62,7 +62,7 @@
 FNFT_INT fnft__akns_scatter_matrix(const UINT D, COMPLEX const * const q, 
     COMPLEX const * const r, const REAL eps_t,
     const UINT K, COMPLEX const * const lambda,
-    COMPLEX * const result, discretization_t discretization);
+    COMPLEX * const result, akns_discretization_t discretization);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define akns_scatter_matrix(...) fnft__akns_scatter_matrix(__VA_ARGS__)

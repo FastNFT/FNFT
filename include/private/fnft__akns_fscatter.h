@@ -28,7 +28,7 @@
 #ifndef FNFT__AKNS_FSCATTER_H
 #define FNFT__AKNS_FSCATTER_H
 
-#include "fnft__discretization_t.h"
+#include "fnft__akns_discretization_t.h"
 
 /**
  * @brief Returns the length of array to be allocated based on the number
@@ -38,13 +38,13 @@
  * to be allocated based on the number of samples and discretization of type
  * discretization.
  * @param[in] D Number of samples.
- * @param[in] discretization Type of discretization from \link fnft__discretization_t \endlink.
+ * @param[in] discretization Type of discretization from \link fnft__akns_discretization_t \endlink.
  * @returns Returns the length to be allocated. Returns 0 for unknown discretizations.
  *
  * @ingroup akns
  */
 FNFT_UINT fnft__akns_fscatter_numel(FNFT_UINT D,
-                                    fnft__discretization_t discretization);
+                                    fnft__akns_discretization_t discretization);
 
 
 /**
@@ -76,15 +76,15 @@ FNFT_UINT fnft__akns_fscatter_numel(FNFT_UINT D,
  * @param[in] W_ptr Normalization flag. Polynomial coefficients are normalized
  * if W_ptr is non-zero.
  * @param[in] discretization The type of discretization to be used. Should be of type
- * \link fnft__discretization_t \endlink.
- * Check \link fnft__discretization_t \endlink for list of supported types.
+ * \link fnft__akns_discretization_t \endlink.
+ * Check \link fnft__akns_discretization_t \endlink for list of supported types.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  *
  * @ingroup akns
  */
 FNFT_INT fnft__akns_fscatter(const FNFT_UINT D, FNFT_COMPLEX const * const q, FNFT_COMPLEX const * const r, const FNFT_REAL eps_t, FNFT_COMPLEX * const result, FNFT_UINT * const deg_ptr,
-                            INT * const W_ptr, fnft__discretization_t discretization);
+                            INT * const W_ptr, fnft__akns_discretization_t discretization);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define akns_fscatter_numel(...) fnft__akns_fscatter_numel(__VA_ARGS__)

@@ -34,7 +34,7 @@ static INT akns_fscatter_test_2split1A()
     REAL scl;
     INT ret_code;
     COMPLEX *transfer_matrix = NULL;
-    discretization_t akns_discretization = discretization_2SPLIT1A;
+    akns_discretization_t akns_discretization = akns_discretization_2SPLIT1A;
     const REAL eps_t = 0.13;
     COMPLEX z[5] = {1.0+0.0*I, CEXP(I*PI/4), CEXP(I*9*PI/14), CEXP(I*4*PI/3), CEXP(I*-PI/5)};
     COMPLEX q[8], r[8];

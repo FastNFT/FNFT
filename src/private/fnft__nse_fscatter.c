@@ -25,7 +25,7 @@
 #include "fnft__poly_fmult.h"
 #include "fnft__nse_fscatter.h"
 #include "fnft__nse_discretization.h"
-#include "fnft__discretization_t.h"
+#include "fnft__akns_discretization_t.h"
 #include "fnft__misc.h"
 
 /**
@@ -50,7 +50,7 @@ INT nse_fscatter(const UINT D, COMPLEX const * const q,
 {
     INT ret_code;
     UINT i;
-    fnft__discretization_t akns_discretization;
+    fnft__akns_discretization_t akns_discretization;
     COMPLEX *r = NULL;
     
     // Check inputs
@@ -69,61 +69,61 @@ INT nse_fscatter(const UINT D, COMPLEX const * const q,
     
     switch (discretization) {
         case nse_discretization_2SPLIT2_MODAL:
-            akns_discretization = discretization_2SPLIT2_MODAL;
+            akns_discretization = akns_discretization_2SPLIT2_MODAL;
             break;
         case nse_discretization_2SPLIT1A:
-            akns_discretization = discretization_2SPLIT1A;
+            akns_discretization = akns_discretization_2SPLIT1A;
             break;
         case nse_discretization_2SPLIT1B:
-            akns_discretization = discretization_2SPLIT1B;
+            akns_discretization = akns_discretization_2SPLIT1B;
             break;
         case nse_discretization_2SPLIT2A:
-            akns_discretization = discretization_2SPLIT2A;
+            akns_discretization = akns_discretization_2SPLIT2A;
             break;
         case nse_discretization_2SPLIT2B:
-            akns_discretization = discretization_2SPLIT2B;
+            akns_discretization = akns_discretization_2SPLIT2B;
             break;
         case nse_discretization_2SPLIT2S:
-            akns_discretization = discretization_2SPLIT2S;
+            akns_discretization = akns_discretization_2SPLIT2S;
             break;
         case nse_discretization_2SPLIT3S:
-            akns_discretization = discretization_2SPLIT3S;
+            akns_discretization = akns_discretization_2SPLIT3S;
             break;
         case nse_discretization_2SPLIT4B:
-            akns_discretization = discretization_2SPLIT4B;
+            akns_discretization = akns_discretization_2SPLIT4B;
             break;
         case nse_discretization_2SPLIT3A:
-            akns_discretization = discretization_2SPLIT3A;
+            akns_discretization = akns_discretization_2SPLIT3A;
             break;
         case nse_discretization_2SPLIT3B:
-            akns_discretization = discretization_2SPLIT3B;
+            akns_discretization = akns_discretization_2SPLIT3B;
             break;
         case nse_discretization_2SPLIT4A:
-            akns_discretization = discretization_2SPLIT4A;
+            akns_discretization = akns_discretization_2SPLIT4A;
             break;
         case nse_discretization_2SPLIT6B:
-            akns_discretization = discretization_2SPLIT6B;
+            akns_discretization = akns_discretization_2SPLIT6B;
             break;
         case nse_discretization_2SPLIT6A:
-            akns_discretization = discretization_2SPLIT6A;
+            akns_discretization = akns_discretization_2SPLIT6A;
             break;
         case nse_discretization_2SPLIT8B:
-            akns_discretization = discretization_2SPLIT8B;
+            akns_discretization = akns_discretization_2SPLIT8B;
             break;
         case nse_discretization_2SPLIT5A:
-            akns_discretization = discretization_2SPLIT5A;
+            akns_discretization = akns_discretization_2SPLIT5A;
             break;
         case nse_discretization_2SPLIT5B:
-            akns_discretization = discretization_2SPLIT5B;
+            akns_discretization = akns_discretization_2SPLIT5B;
             break;
         case nse_discretization_2SPLIT8A:
-            akns_discretization = discretization_2SPLIT8A;
+            akns_discretization = akns_discretization_2SPLIT8A;
             break;
         case nse_discretization_2SPLIT7A:
-            akns_discretization = discretization_2SPLIT7A;
+            akns_discretization = akns_discretization_2SPLIT7A;
             break;
         case nse_discretization_2SPLIT7B:
-            akns_discretization = discretization_2SPLIT7B;
+            akns_discretization = akns_discretization_2SPLIT7B;
             break;
             
             

@@ -26,37 +26,37 @@
  * This routine returns the max degree d of the polynomials in a single
  * scattering matrix or zero if the discretization is unknown.
  */
-UINT fnft__akns_discretization_degree(discretization_t
+UINT fnft__akns_discretization_degree(akns_discretization_t
         discretization)
 {
     switch (discretization) {
-        case discretization_2SPLIT1A:
-        case discretization_2SPLIT1B:
-        case discretization_2SPLIT2A: // With change of base trick
-        case discretization_2SPLIT2B:
-        case discretization_2SPLIT2S:
-        case discretization_2SPLIT2_MODAL:
+        case akns_discretization_2SPLIT1A:
+        case akns_discretization_2SPLIT1B:
+        case akns_discretization_2SPLIT2A: // With change of base trick
+        case akns_discretization_2SPLIT2B:
+        case akns_discretization_2SPLIT2S:
+        case akns_discretization_2SPLIT2_MODAL:
             return 1;
-        case discretization_2SPLIT3S:
-        case discretization_2SPLIT4B:
+        case akns_discretization_2SPLIT3S:
+        case akns_discretization_2SPLIT4B:
             return 2;
-        case discretization_2SPLIT3A:
-        case discretization_2SPLIT3B:
+        case akns_discretization_2SPLIT3A:
+        case akns_discretization_2SPLIT3B:
             return 3;
-        case discretization_2SPLIT4A:
+        case akns_discretization_2SPLIT4A:
             return 4;
-        case discretization_2SPLIT6B:
+        case akns_discretization_2SPLIT6B:
             return 6;
-        case discretization_2SPLIT6A:
-        case discretization_2SPLIT8B:
+        case akns_discretization_2SPLIT6A:
+        case akns_discretization_2SPLIT8B:
             return 12;
-        case discretization_2SPLIT5A:
-        case discretization_2SPLIT5B:
+        case akns_discretization_2SPLIT5A:
+        case akns_discretization_2SPLIT5B:
             return 15;
-        case discretization_2SPLIT8A:
+        case akns_discretization_2SPLIT8A:
             return 24;
-        case discretization_2SPLIT7A:
-        case discretization_2SPLIT7B:
+        case akns_discretization_2SPLIT7A:
+        case akns_discretization_2SPLIT7B:
             return 105;
             
         default: // Unknown discretization
@@ -67,29 +67,29 @@ UINT fnft__akns_discretization_degree(discretization_t
 /**
  * This routine returns the boundary coefficient based on the discretization.
  */
-REAL fnft__akns_discretization_boundary_coeff(discretization_t discretization)
+REAL fnft__akns_discretization_boundary_coeff(akns_discretization_t discretization)
 {
 
     switch (discretization) {
-        case discretization_2SPLIT1A:
-        case discretization_2SPLIT1B:
-        case discretization_2SPLIT2A:
-        case discretization_2SPLIT2B:
-        case discretization_2SPLIT2S:
-        case discretization_2SPLIT3A:
-        case discretization_2SPLIT3B:
-        case discretization_2SPLIT3S:
-        case discretization_2SPLIT4A:
-        case discretization_2SPLIT4B:
-        case discretization_2SPLIT5A:
-        case discretization_2SPLIT5B:
-        case discretization_2SPLIT6A:
-        case discretization_2SPLIT6B:
-        case discretization_2SPLIT7A:
-        case discretization_2SPLIT7B:
-        case discretization_2SPLIT8A:
-        case discretization_2SPLIT8B:
-        case discretization_2SPLIT2_MODAL:
+        case akns_discretization_2SPLIT1A:
+        case akns_discretization_2SPLIT1B:
+        case akns_discretization_2SPLIT2A:
+        case akns_discretization_2SPLIT2B:
+        case akns_discretization_2SPLIT2S:
+        case akns_discretization_2SPLIT3A:
+        case akns_discretization_2SPLIT3B:
+        case akns_discretization_2SPLIT3S:
+        case akns_discretization_2SPLIT4A:
+        case akns_discretization_2SPLIT4B:
+        case akns_discretization_2SPLIT5A:
+        case akns_discretization_2SPLIT5B:
+        case akns_discretization_2SPLIT6A:
+        case akns_discretization_2SPLIT6B:
+        case akns_discretization_2SPLIT7A:
+        case akns_discretization_2SPLIT7B:
+        case akns_discretization_2SPLIT8A:
+        case akns_discretization_2SPLIT8B:
+        case akns_discretization_2SPLIT2_MODAL:
             return 0.5;
             
         default: // Unknown discretization
@@ -101,7 +101,7 @@ REAL fnft__akns_discretization_boundary_coeff(discretization_t discretization)
  * This routine maps lambda from continuous-time domain to
  * z in the discrete-time domain based on the discretization. 
  */
-COMPLEX fnft__akns_lambda_to_z(const COMPLEX lambda, const REAL eps_t, discretization_t
+COMPLEX fnft__akns_lambda_to_z(const COMPLEX lambda, const REAL eps_t, akns_discretization_t
         discretization)
 {
     REAL degree1step;
@@ -115,7 +115,7 @@ COMPLEX fnft__akns_lambda_to_z(const COMPLEX lambda, const REAL eps_t, discretiz
  * This routine maps z from the discrete-time domain to
  * lambda in the continuous-time domain based on the discretization. 
  */
-COMPLEX fnft__akns_z_to_lambda(const COMPLEX z, const REAL eps_t, discretization_t
+COMPLEX fnft__akns_z_to_lambda(const COMPLEX z, const REAL eps_t, akns_discretization_t
         discretization)
 {
     REAL degree1step;

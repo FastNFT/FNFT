@@ -28,7 +28,7 @@
 #ifndef FNFT__AKNS_DISCRETIZATION_H
 #define FNFT__AKNS_DISCRETIZATION_H
 
-#include "fnft__discretization_t.h"
+#include "fnft__akns_discretization_t.h"
 
 /**
  * @brief This routine returns the max degree d of the polynomials in a single
@@ -43,7 +43,7 @@
  *
  * @ingroup akns
  */
-FNFT_UINT fnft__akns_discretization_degree(discretization_t
+FNFT_UINT fnft__akns_discretization_degree(akns_discretization_t
         discretization);
 
 /**
@@ -60,7 +60,7 @@ FNFT_UINT fnft__akns_discretization_degree(discretization_t
  *
  * @ingroup akns
  */
-FNFT_REAL fnft__akns_discretization_boundary_coeff(discretization_t discretization);
+FNFT_REAL fnft__akns_discretization_boundary_coeff(akns_discretization_t discretization);
 
 /**
  * @brief This routine maps lambda from continuous-time domain to
@@ -72,7 +72,7 @@ FNFT_REAL fnft__akns_discretization_boundary_coeff(discretization_t discretizati
  *
  * @ingroup akns
  */
-FNFT_COMPLEX fnft__akns_lambda_to_z(const COMPLEX lambda, const REAL eps_t, discretization_t
+FNFT_COMPLEX fnft__akns_lambda_to_z(const COMPLEX lambda, const REAL eps_t, akns_discretization_t
         discretization);
 
 /**
@@ -85,7 +85,7 @@ FNFT_COMPLEX fnft__akns_lambda_to_z(const COMPLEX lambda, const REAL eps_t, disc
  *
  * @ingroup akns
  */
-FNFT_COMPLEX fnft__akns_z_to_lambda(const COMPLEX z, const REAL eps_t, discretization_t
+FNFT_COMPLEX fnft__akns_z_to_lambda(const COMPLEX z, const REAL eps_t, akns_discretization_t
         discretization);
 
 

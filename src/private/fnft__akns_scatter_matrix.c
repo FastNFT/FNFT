@@ -33,7 +33,7 @@
 INT akns_scatter_matrix(const UINT D, COMPLEX const * const q, 
     COMPLEX const * const r, const REAL eps_t,
     const UINT K, COMPLEX const * const lambda,
-    COMPLEX * const result, discretization_t discretization)
+    COMPLEX * const result, akns_discretization_t discretization)
 {
      
     INT ret_code = SUCCESS;
@@ -60,7 +60,7 @@ INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
     
     switch (discretization) {
         
-        case discretization_BO: // Bofetta-Osborne scheme
+        case akns_discretization_BO: // Bofetta-Osborne scheme
             
             for (neig = 0; neig < K; neig++) { // iterate over lambda
                 l = lambda[neig];

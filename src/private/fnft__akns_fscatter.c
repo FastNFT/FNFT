@@ -26,7 +26,7 @@
 #include "fnft__poly_fmult.h"
 #include "fnft__akns_fscatter.h"
 #include "fnft__akns_discretization.h"
-#include "fnft__discretization_t.h"
+#include "fnft__akns_discretization_t.h"
 #include "fnft__misc.h"
 
 /**
@@ -34,7 +34,7 @@
  * of samples and discretization.
  */
 
-UINT akns_fscatter_numel(UINT D, discretization_t discretization)
+UINT akns_fscatter_numel(UINT D, akns_discretization_t discretization)
 {
 
     const UINT deg = akns_discretization_degree(discretization);
@@ -62,7 +62,7 @@ static inline void akns_fscatter_zero_freq_scatter_matrix(COMPLEX * const M,
  */
 INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r,
                  const REAL eps_t, COMPLEX * const result, UINT * const deg_ptr,
-                 INT * const W_ptr, discretization_t discretization)
+                 INT * const W_ptr, akns_discretization_t discretization)
 {
     
     INT i, ret_code;
@@ -112,7 +112,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
     
     switch (discretization) {
 
-        case discretization_2SPLIT2_MODAL: // Modified Ablowitz-Ladik discretization
+        case akns_discretization_2SPLIT2_MODAL: // Modified Ablowitz-Ladik discretization
 
             for (i=D-1; i>=0; i--) {
                 scl = eps_t*CABS(q[i]);
@@ -153,7 +153,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             
             break;
 
-        case discretization_2SPLIT1A:
+        case akns_discretization_2SPLIT1A:
             
             e_1B = &e_Bstorage[0];
             
@@ -179,8 +179,8 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             
             break;
         
-        case discretization_2SPLIT1B: //Intentional fallthrough
-        case discretization_2SPLIT2A: //Differs by correction in fnft_kdvv.c
+        case akns_discretization_2SPLIT1B: //Intentional fallthrough
+        case akns_discretization_2SPLIT2A: //Differs by correction in fnft_kdvv.c
             
             e_1B = &e_Bstorage[0];
             
@@ -205,7 +205,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             }
             
             break;
-        case discretization_2SPLIT2B:
+        case akns_discretization_2SPLIT2B:
 
             e_0_5B = &e_Bstorage[0];
 
@@ -231,7 +231,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
 
             break;
 
-        case discretization_2SPLIT2S:
+        case akns_discretization_2SPLIT2S:
             
             e_1B = &e_Bstorage[0];
             
@@ -258,7 +258,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             
             break;
             
-        case discretization_2SPLIT3A:
+        case akns_discretization_2SPLIT3A:
 
             e_1B = &e_Bstorage[0];
             e_2B = &e_Bstorage[3];
@@ -296,7 +296,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
 
             break;
             
-        case discretization_2SPLIT3B:
+        case akns_discretization_2SPLIT3B:
 
             e_1B = &e_Bstorage[0];
             e_2B = &e_Bstorage[3];
@@ -333,7 +333,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             }
 
             break;
-        case discretization_2SPLIT3S:
+        case akns_discretization_2SPLIT3S:
             
             e_1B = &e_Bstorage[0];
             e_2B = &e_Bstorage[3];
@@ -364,7 +364,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             }
             
             break;
-        case discretization_2SPLIT4A:
+        case akns_discretization_2SPLIT4A:
 
             e_2B = &e_Bstorage[0];
             e_4B = &e_Bstorage[3];
@@ -403,7 +403,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             }
 
             break;
-        case discretization_2SPLIT4B:
+        case akns_discretization_2SPLIT4B:
 
             e_0_5B = &e_Bstorage[0];
             e_1B = &e_Bstorage[3];
@@ -435,7 +435,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
 
             break;
         
-        case discretization_2SPLIT5A:
+        case akns_discretization_2SPLIT5A:
             
             for (n=0; n<len; n++)
                 p[n] = 0.0;
@@ -488,7 +488,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             
             break;
             
-        case discretization_2SPLIT5B:
+        case akns_discretization_2SPLIT5B:
             
             for (n=0; n<len; n++)
                 p[n] = 0.0;
@@ -541,7 +541,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             
             break;
             
-        case discretization_2SPLIT6A:
+        case akns_discretization_2SPLIT6A:
             
             for (n=0; n<len; n++)
                 p[n] = 0.0;
@@ -591,7 +591,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
 
             break;
         
-        case discretization_2SPLIT6B:
+        case akns_discretization_2SPLIT6B:
 
             for (n=0; n<len; n++)
                 p[n] = 0.0;
@@ -646,7 +646,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
 
             break;
             
-        case discretization_2SPLIT7A:
+        case akns_discretization_2SPLIT7A:
 
             for (n=0; n<len; n++)
                 p[n] = 0.0;
@@ -715,7 +715,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
 
             break;
             
-        case discretization_2SPLIT7B:
+        case akns_discretization_2SPLIT7B:
 
             for (n=0; n<len; n++)
                 p[n] = 0.0;
@@ -784,7 +784,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
 
             break;
 
-        case discretization_2SPLIT8A:
+        case akns_discretization_2SPLIT8A:
             
             for (n=0; n<len; n++)
                 p[n] = 0.0;
@@ -849,7 +849,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
 
             break;
             
-        case discretization_2SPLIT8B:
+        case akns_discretization_2SPLIT8B:
             
             for (n=0; n<len; n++)
                 p[n] = 0.0;
