@@ -16,6 +16,7 @@ option(WITH_MATLAB "Build the Matlab interface" ON)
 option(MACHINE_SPECIFIC_OPTIMIZATION "Activate optimizations specific for this machine" ON)
 option(ADDRESS_SANITIZER "Enable address sanitzer for known compilers" OFF)
 option(ENABLE_FFTW "Use FFTW if it is available" OFF)
+option(BUILD_TESTS "Build tests" ON)
 
 # check for complex.h
 check_include_files(complex.h HAVE_COMPLEX_H)
@@ -133,7 +134,9 @@ if (CMAKE_Fortran_COMPILER_ID MATCHES GNU) # gfortran
 	endif()
 endif ()
 
-enable_testing()
+if (BUILD_TESTS)
+	enable_testing()
+endif()
 
 # sources
 file(GLOB SOURCES "src/*.c")
@@ -160,14 +163,16 @@ foreach (srcfile ${EXAMPLE_SOURCES})
 endforeach()
 
 # generate tests
-foreach (srcfile ${TEST_SOURCES})
-	get_filename_component(dir ${srcfile} DIRECTORY)
-	get_filename_component(test ${srcfile} NAME_WE)
-	add_executable(${test} ${srcfile})
-    target_link_libraries(${test} fnft ${LIBM} ${FFTW3_LIB})
-	add_test(NAME ${test} COMMAND ${test})
-	set_target_properties(${test} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${dir}")
-endforeach()
+if (BUILD_TESTS)
+	foreach (srcfile ${TEST_SOURCES})
+		get_filename_component(dir ${srcfile} DIRECTORY)
+		get_filename_component(test ${srcfile} NAME_WE)
+		add_executable(${test} ${srcfile})
+	    target_link_libraries(${test} fnft ${LIBM} ${FFTW3_LIB})
+		add_test(NAME ${test} COMMAND ${test})
+		set_target_properties(${test} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${dir}")
+	endforeach()
+endif()
 
 # Try to build the Matlab interface if requested
 if (WITH_MATLAB)
