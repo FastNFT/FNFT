@@ -163,10 +163,10 @@ start_pos_2:
         } else if (s[i].deg == 1) { // base case
 
 
-            COMPLEX const * const T_12 = s[i].T + s[i].T_stride;
-            COMPLEX const * const T_22 = T_12 + 2*s[i].T_stride;
+            COMPLEX const * const T_11 = s[i].T;
+            COMPLEX const * const T_21 = T_11 + 2*s[i].T_stride;
 
-            const COMPLEX Q = (T_12[1] / T_22[1]);
+            const COMPLEX Q = -kappa*CONJ(T_21[1] / T_11[1]);
 
 
             COMPLEX * const Ti_11 = s[i].Ti;
@@ -185,14 +185,14 @@ start_pos_2:
                 const REAL scl = 1.0 / SQRT(scl_den);
                 *s[i].q = Q/eps_t; 
                 
-                s[i].Ti[0] = 0.0;
-                s[i].Ti[1] = scl;
-                Ti_12[0] = 0.0;
-                Ti_12[1] = -scl*Q;
-                Ti_21[0] = scl*kappa*CONJ(Q);
-                Ti_21[1] = 0.0;
-                Ti_22[0] = scl;
-                Ti_22[1] = 0.0;
+                s[i].Ti[0] = scl;
+                s[i].Ti[1] = 0.0;
+                Ti_12[0] = -scl*Q;
+                Ti_12[1] = 0.0;
+                Ti_21[0] = 0.0;
+                Ti_21[1] = scl*kappa*CONJ(Q);
+                Ti_22[0] = 0.0;
+                Ti_22[1] = scl;
 
             } else if (discretization == fnft_nse_discretization_2SPLIT2A) {
 
@@ -214,27 +214,25 @@ start_pos_2:
 //                 M[0] = CCOS(Delta);
 //                 M[2] = ri * del;
 //                 M[1] = qi * del;
-//                 
-//                 
 // 
 //                 const COMPLEX scl = 1.0 / (M[0]*M[0] - M[1]*M[2]);
-//                 s[i].Ti[0] = 0.0;
-//                 s[i].Ti[1] = scl*M[0];
-//                 Ti_12[0] = 0.0;
-//                 Ti_12[1] = -scl*M[1];
-//                 Ti_21[0] = -scl*M[2];
-//                 Ti_21[1] = 0.0;
-//                 Ti_22[0] = scl*M[0];
-//                 Ti_22[1] = 0.0;
+//                 s[i].Ti[0] = scl*M[0];
+//                 s[i].Ti[1] = 0.0;
+//                 Ti_12[0] = -scl*M[1];
+//                 Ti_12[1] = 0.0;
+//                 Ti_21[0] = 0.0;
+//                 Ti_21[1] = -scl*M[2];
+//                 Ti_22[0] = 0.0;
+//                 Ti_22[1] = scl*M[0];
                 const REAL scl = 1.0 / SQRT(scl_den);                
-                s[i].Ti[0] = 0.0;
-                s[i].Ti[1] = scl;
-                Ti_12[0] = 0.0;
-                Ti_12[1] = -scl*Q;
-                Ti_21[0] = scl*kappa*CONJ(Q);
-                Ti_21[1] = 0.0;
-                Ti_22[0] = scl;
-                Ti_22[1] = 0.0;
+                s[i].Ti[0] = scl;
+                s[i].Ti[1] = 0.0;
+                Ti_12[0] = -scl*Q;
+                Ti_12[1] = 0.0;
+                Ti_21[0] = 0.0;
+                Ti_21[1] = scl*kappa*CONJ(Q);
+                Ti_22[0] = 0.0;
+                Ti_22[1] = scl;
 
             } else { // discretization is unknown or not supported
 

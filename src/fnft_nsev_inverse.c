@@ -74,7 +74,6 @@ static INT transfer_matrix_from_reflection_coefficient(
     REAL const * const T,
     const UINT deg,
     COMPLEX * const transfer_matrix,
-    const REAL bnd_coeff,
     const INT kappa,
     fnft_nsev_inverse_opts_t const * const opts_ptr);
 static INT transfer_matrix_from_B_of_tau(
@@ -85,7 +84,6 @@ static INT transfer_matrix_from_B_of_tau(
     const UINT deg,
     COMPLEX * const transfer_matrix,
     const INT kappa,
-    const REAL map_coeff,
     fnft_nsev_inverse_opts_t const * const opts_ptr);
 
 INT fnft_nsev_inverse(
@@ -145,15 +143,7 @@ INT fnft_nsev_inverse(
         goto leave_fun;
     }
 
-    const REAL bnd_coeff = 0.0;//nse_discretization_boundary_coeff(opts_ptr->discretization);
-    const REAL degree1step = nse_discretization_degree(opts_ptr->discretization);
-    if (degree1step == NAN)
-        return E_INVALID_ARGUMENT(opts_ptr->discretization);
-    const REAL map_coeff = 2/degree1step;
-    if (bnd_coeff == NAN || map_coeff == NAN) {
-        ret_code = E_INVALID_ARGUMENT(opts_ptr->discretization);
-        goto leave_fun;
-    }
+
 
     // Step 1: Construct the transfer matrix from the provided representation
     // of the continuous spectrum.
@@ -164,7 +154,6 @@ INT fnft_nsev_inverse(
         ret_code = transfer_matrix_from_reflection_coefficient(M, contspec, XI,
                                                                D, T, deg,
                                                                transfer_matrix,
-                                                               bnd_coeff,
                                                                kappa, opts_ptr);
         CHECK_RETCODE(ret_code, leave_fun);
         break;
@@ -172,7 +161,7 @@ INT fnft_nsev_inverse(
     case fnft_nsev_inverse_cstype_B_OF_TAU:
         ret_code = transfer_matrix_from_B_of_tau(M, contspec, D, T, deg,
                                                  transfer_matrix, kappa,
-                                                 map_coeff, opts_ptr);
+                                                 opts_ptr);
         CHECK_RETCODE(ret_code, leave_fun);
         break;
 
@@ -198,19 +187,30 @@ leave_fun:
 // the boundary conditions from the continuous spectrum.
 // It furthermore creates a reordered version of the corrected spectrum
 // that is compatible with the ordering used by the FFT.
-static inline void remove_boundary_conds_and_reorder_for_fft(
+static inline INT remove_boundary_conds_and_reorder_for_fft(
     const UINT M,
     COMPLEX * const contspec,
     COMPLEX * const contspec_reordered,
     REAL const * const XI,
     const UINT D,
     REAL const * const T,
-    const REAL bnd_coeff)
+    const nse_discretization_t discretization)
 {
     UINT i;
+    INT ret_code = SUCCESS;
     const REAL eps_t = (T[1] - T[0]) / (D - 1);
     const REAL eps_xi = (XI[1] - XI[0]) / (M - 1);
-    const REAL phase_factor_rho = -2.0*(T[1] + eps_t*bnd_coeff);
+    REAL phase_factor_rho = 0.0;
+    const REAL bnd_coeff = nse_discretization_boundary_coeff(discretization);
+    const REAL degree1step = nse_discretization_degree(discretization);
+    if (degree1step == NAN || bnd_coeff == NAN)
+        return E_INVALID_ARGUMENT(discretization);
+    if (discretization == nse_discretization_2SPLIT2A || discretization == nse_discretization_2SPLIT2_MODAL)
+        phase_factor_rho = -2.0*(T[1] + eps_t*bnd_coeff) + eps_t/degree1step;
+    else
+        phase_factor_rho = -2.0*(T[1] + eps_t*bnd_coeff);
+
+
     for (i=0; i<M; i++) {
         const REAL xi = XI[0] + i*eps_xi;
         contspec[i] *= CEXP(-I*xi*phase_factor_rho);
@@ -219,6 +219,9 @@ static inline void remove_boundary_conds_and_reorder_for_fft(
         contspec_reordered[i] = contspec[i + (M/2 - 1)];
     for (i=M/2+1; i<M; i++)
         contspec_reordered[i] = contspec[i - (M/2 + 1)];
+    
+    return ret_code;
+    
 }
 
 // This auxiliary function builds a transfer matrix from a given reflection
@@ -234,7 +237,7 @@ transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_REFL_COEFF(
     REAL const * const T,
     const UINT deg,
     COMPLEX * const transfer_matrix,
-    const REAL bnd_coeff,
+    const nse_discretization_t discretization,
     const INT kappa)
 {
     fft_wrapper_plan_t plan = fft_wrapper_safe_plan_init();
@@ -255,8 +258,9 @@ transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_REFL_COEFF(
     // later be used to build the transfer matrix. Note that the order of
     // the computed coefficients is reversed.
 
-    remove_boundary_conds_and_reorder_for_fft(M, contspec, contspec_reordered,
-                                              XI, D, T, bnd_coeff);
+    ret_code = remove_boundary_conds_and_reorder_for_fft(M, contspec, contspec_reordered,
+                                              XI, D, T, discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
     ret_code = fft_wrapper_create_plan(&plan, M, contspec_reordered, b_coeffs,
                                        -1);
     CHECK_RETCODE(ret_code, leave_fun);
@@ -265,36 +269,18 @@ transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_REFL_COEFF(
 
     // Build the transfer matrix with B(z) computed above and A(z)=0.
 
-//     for (i=0; i<=deg; i++) {
-//         transfer_matrix[i] = 0.0;
-//         transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[M-1-deg+i]/M);
-//         transfer_matrix[2*(deg+1) + i] = b_coeffs[deg - i]/M;
-//         transfer_matrix[3*(deg+1) + i] = 0.0;
-//     }
-// 
-//     // Change A(z)=0 to A(z)=1.
-// 
-//     transfer_matrix[deg] = 1.0;
-//     transfer_matrix[3*(deg+1)] = 1.0;
-    
-    for (i=0; i<=deg; i++) { //works okay
+    for (i=0; i<=deg; i++) {
         transfer_matrix[i] = 0.0;
-        transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[deg - i]/M);
-        transfer_matrix[2*(deg+1) + i] = (b_coeffs[M-1-deg+i]/M);
+        transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[M-1-deg+i]/M);
+        transfer_matrix[2*(deg+1) + i] = b_coeffs[deg - i]/M;
         transfer_matrix[3*(deg+1) + i] = 0.0;
     }
-//         for (i=0; i<=deg; i++) { 
-//         transfer_matrix[i] = 0.0;
-//         transfer_matrix[1*(deg+1) + i] = (b_coeffs[deg - i]/M);
-//         transfer_matrix[2*(deg+1) + i] = -kappa*CONJ(b_coeffs[M-1-deg+i]/M);
-//         transfer_matrix[3*(deg+1) + i] = 0.0;
-//     }
 
     // Change A(z)=0 to A(z)=1.
 
-    transfer_matrix[0] = 1.0;
-    transfer_matrix[4*(deg+1) - 1] = 1.0;    
-
+    transfer_matrix[deg] = 1.0;
+    transfer_matrix[3*(deg+1)] = 1.0;
+    
 leave_fun:
     fft_wrapper_destroy_plan(&plan);
     fft_wrapper_free(contspec_reordered);
@@ -314,7 +300,7 @@ transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_AB_FROM_ITER(
     REAL const * const T,
     const UINT deg,
     COMPLEX * const transfer_matrix,
-    const REAL bnd_coeff,
+    const nse_discretization_t discretization,
     const INT kappa,
     const UINT max_iter)
 {
@@ -353,8 +339,9 @@ transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_AB_FROM_ITER(
     // Remove phase factors due to initial conditions from contspec,
     // reorder if necessary
 
-    remove_boundary_conds_and_reorder_for_fft(M, contspec, contspec_reordered,
-                                              XI, D, T, bnd_coeff);
+    ret_code = remove_boundary_conds_and_reorder_for_fft(M, contspec, contspec_reordered,
+                                              XI, D, T, discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
 
     REAL prev_phase_change = FNFT_INF;
     REAL prev_phase_change_diff = FNFT_INF;
@@ -414,33 +401,17 @@ transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_AB_FROM_ITER(
 
     // Build the tranfer matrix
 
-//     for (i=0; i<D; i++) {
-//         transfer_matrix[1 + i] = a_coeffs[i];
-//         transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[D-1 - i]);
-//         transfer_matrix[2*(deg+1) + 1 + i] = b_coeffs[i];
-//         transfer_matrix[3*(deg+1) + i] = a_coeffs[D-1 - i];
-//     }
-//     transfer_matrix[0] = 0.0;
-//     transfer_matrix[2*(deg+1) - 1] = 0.0;
-//     transfer_matrix[2*(deg+1)] = 0.0;
-//     transfer_matrix[4*(deg+1) - 1] = 0.0;
+    for (i=0; i<D; i++) {
+        transfer_matrix[1 + i] = a_coeffs[i];
+        transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[D-1 - i]);
+        transfer_matrix[2*(deg+1) + 1 + i] = b_coeffs[i];
+        transfer_matrix[3*(deg+1) + i] = a_coeffs[D-1 - i];
+    }
+    transfer_matrix[0] = 0.0;
+    transfer_matrix[2*(deg+1) - 1] = 0.0;
+    transfer_matrix[2*(deg+1)] = 0.0;
+    transfer_matrix[4*(deg+1) - 1] = 0.0;
         
-//         for (i=0; i<D; i++) {  //conjugated but works
-//             transfer_matrix[i] = a_coeffs[D-1 - i];
-//             transfer_matrix[1*(deg+1) + 1 + i] = b_coeffs[i];
-//             transfer_matrix[2*(deg+1) + i] = -kappa*CONJ(b_coeffs[D-1 - i]);
-//             transfer_matrix[3*(deg+1) + 1 + i] = a_coeffs[i];
-//         }
-        for (i=0; i<D; i++) { 
-            transfer_matrix[i] = CONJ(a_coeffs[D-1 - i]);
-            transfer_matrix[1*(deg+1) + 1 + i] = -kappa*CONJ(b_coeffs[i]);
-            transfer_matrix[2*(deg+1) + i] = (b_coeffs[D-1 - i]);
-            transfer_matrix[3*(deg+1) + 1 + i] = CONJ(a_coeffs[i]);
-        }
-    transfer_matrix[deg] = 0.0;
-    transfer_matrix[deg+1] = 0.0;
-    transfer_matrix[3*(deg+1)-1] = 0.0;
-    transfer_matrix[3*(deg+1)] = 0.0;
 
 leave_fun:
     fft_wrapper_free(contspec_reordered);
@@ -464,7 +435,6 @@ static INT transfer_matrix_from_reflection_coefficient(
     REAL const * const T,
     const UINT deg,
     COMPLEX * const transfer_matrix,
-    const REAL bnd_coeff,
     const INT kappa,
     fnft_nsev_inverse_opts_t const * const opts_ptr)
 {
@@ -480,14 +450,14 @@ static INT transfer_matrix_from_reflection_coefficient(
     case fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_REFL_COEFF:
 
         ret_code = transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_REFL_COEFF(
-            M, contspec, XI, D, T, deg, transfer_matrix, bnd_coeff, kappa);
+            M, contspec, XI, D, T, deg, transfer_matrix, opts_ptr->discretization, kappa);
         CHECK_RETCODE(ret_code, leave_fun);
         break;
 
     case fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_AB_FROM_ITER:
 
         ret_code = transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_AB_FROM_ITER(
-            M, contspec, XI, D, T, deg, transfer_matrix, bnd_coeff, kappa,
+            M, contspec, XI, D, T, deg, transfer_matrix, opts_ptr->discretization, kappa,
             opts_ptr->max_iter);
         CHECK_RETCODE(ret_code, leave_fun);
         break;
@@ -514,7 +484,6 @@ static INT transfer_matrix_from_B_of_tau(
     const UINT deg,
     COMPLEX * const transfer_matrix,
     const INT kappa,
-    const REAL map_coeff,
     fnft_nsev_inverse_opts_t const * const opts_ptr)
 {
     if (M != D)
@@ -527,50 +496,29 @@ static INT transfer_matrix_from_B_of_tau(
 
     INT ret_code = SUCCESS;
     UINT i;
-
-//     COMPLEX * const b_coeffs = transfer_matrix + 2*(deg+1) + 1;
-//     const REAL eps_t = (T[1] - T[0])/(D - 1);
-//     for (i=0; i<D; i++)
-//         b_coeffs[i] = map_coeff*eps_t*contspec[i];
-//     b_coeffs[0] *= 0.5;
-//     b_coeffs[D-1] *= 0.5;
-// 
-//     COMPLEX * const a_coeffs = transfer_matrix + 1;
-//     ret_code = poly_specfact(D-1, b_coeffs, a_coeffs,
-//                              opts_ptr->oversampling_factor, kappa);
-//     CHECK_RETCODE(ret_code, leave_fun);
-// 
-//     for (i=0; i<D; i++) {
-//         transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[D-1 - i]);
-//         transfer_matrix[3*(deg+1) + i] = a_coeffs[D-1 - i];
-//     }
-//     transfer_matrix[0] = 0.0;
-//     transfer_matrix[2*(deg+1) - 1] = 0.0;
-//     transfer_matrix[2*(deg+1)] = 0.0;
-//     transfer_matrix[4*(deg+1) - 1] = 0.0;
-    
-    COMPLEX * const b_coeffs = transfer_matrix + 1*(deg+1) + 1;
+    const REAL degree1step = nse_discretization_degree(opts_ptr->discretization);
+    if (degree1step == NAN)
+        return E_INVALID_ARGUMENT(discretization);
+    COMPLEX * const b_coeffs = transfer_matrix + 2*(deg+1) + 1;
     const REAL eps_t = (T[1] - T[0])/(D - 1);
     for (i=0; i<D; i++)
-        b_coeffs[i] = map_coeff*eps_t*contspec[i];
+        b_coeffs[i] = 2*eps_t*contspec[i]/degree1step;
     b_coeffs[0] *= 0.5;
     b_coeffs[D-1] *= 0.5;
 
-    COMPLEX * const a_coeffs = transfer_matrix + 3*(deg+1) + 1;
+    COMPLEX * const a_coeffs = transfer_matrix + 1;
     ret_code = poly_specfact(D-1, b_coeffs, a_coeffs,
                              opts_ptr->oversampling_factor, kappa);
     CHECK_RETCODE(ret_code, leave_fun);
-        
-  
+
     for (i=0; i<D; i++) {
-        transfer_matrix[2*(deg+1) + i] = -kappa*CONJ(b_coeffs[D-1 - i]);
-        transfer_matrix[i] = a_coeffs[D-1 - i];
+        transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[D-1 - i]);
+        transfer_matrix[3*(deg+1) + i] = a_coeffs[D-1 - i];
     }
-    transfer_matrix[deg] = 0.0;
-    transfer_matrix[deg+1] = 0.0;
-    transfer_matrix[3*(deg+1)-1] = 0.0;
-    transfer_matrix[3*(deg+1)] = 0.0;
-    
+    transfer_matrix[0] = 0.0;
+    transfer_matrix[2*(deg+1) - 1] = 0.0;
+    transfer_matrix[2*(deg+1)] = 0.0;
+    transfer_matrix[4*(deg+1) - 1] = 0.0;
     
 leave_fun:
     return ret_code;
