@@ -26,14 +26,14 @@
 #include "fnft__misc.h"
 #include "fnft__errwarn.h"
 
-static INT akns_fscatter_test_2split1A()
+static INT akns_fscatter_test_2split8A()
 {
     UINT i, j, D = 8, deg, nz = 5;
     INT W = 0, *W_ptr = NULL;
     REAL scl;
     INT ret_code;
     COMPLEX *transfer_matrix = NULL;
-    akns_discretization_t akns_discretization = akns_discretization_2SPLIT1A;
+    akns_discretization_t akns_discretization = akns_discretization_2SPLIT8A;
     const REAL eps_t = 0.13;
     COMPLEX z[5] = {1.0+0.0*I, CEXP(I*PI/4), CEXP(I*9*PI/14), CEXP(I*4*PI/3), CEXP(I*-PI/5)};
     COMPLEX q[8], r[8];
@@ -48,10 +48,13 @@ static INT akns_fscatter_test_2split1A()
 //     z = zlist(i);
 //     S = eye(2);
 //     for n=1:D
-//         % Eq. 17 in P. J. Prins and S. Wahls, Higher order exponential
+//         % Eq. 24 in P. J. Prins and S. Wahls, Higher order exponential
 //         % splittings for the fast non-linear Fourier transform of the KdV
 //         % equation, to appear in Proc. of IEEE ICASSP 2018, Calgary, April 2018.
-//         U = [1,0;0,z]*expm([0,q(n);r(n),0]*eps_t);
+//         U = (1024/315)*[1,0;0,z]^3*(expm([0,q(n);r(n),0]*eps_t/4)*[1,0;0,z]^6)^3*expm([0,q(n);r(n),0]*eps_t/4)*[1,0;0,z]^3 ...
+//             -(729/280)*[1,0;0,z]^4*(expm([0,q(n);r(n),0]*eps_t/3)*[1,0;0,z]^8)^2*expm([0,q(n);r(n),0]*eps_t/3)*[1,0;0,z]^4 ...
+//             +(16/45)*[1,0;0,z]^6*expm([0,q(n);r(n),0]*eps_t/2)*[1,0;0,z]^12*expm([0,q(n);r(n),0]*eps_t/2)*[1,0;0,z]^6 ...
+//             -(1/360)*[1,0;0,z]^12*expm([0,q(n);r(n),0]*eps_t)*[1,0;0,z]^12;
 //         S = U*S;
 //     end
 //     result_exact(i) = S(1,1);
@@ -64,26 +67,26 @@ static INT akns_fscatter_test_2split1A()
 //     fprintf('%.16e + %.16e*I,\n',real(result_exact(i)),imag(result_exact(i)))
 // end
     COMPLEX result_exact[20] = {
-        -2.5364652588246678e+05 + -5.8469865460008010e+05*I,
-        1.8172276340604821e+05 + 1.0053357988921278e+06*I,
-        2.4215612869120701e+05 + -3.7470845696296528e+04*I,
-        -2.9177336621517421e+04 + -6.2260187717906101e+03*I,
-        7.5854811002973845e+04 + 4.1421024337549607e+05*I,
-        -1.1310351652489584e+05 + -2.5628499486967313e+05*I,
-        1.2336023980026194e+05 + 6.7695187557405455e+05*I,
-        1.8092169614464103e+05 + -4.7337312562227991e+04*I,
-        -2.3286507844849039e+04 + 1.5908666537643637e+03*I,
-        1.5615355097091111e+05 + 1.6707366174681979e+05*I,
-        -5.9351529942122486e+05 + 1.7179924202664592e+05*I,
-        7.3722046916358953e+05 + 6.6580749522093718e+05*I,
-        2.1914384633388979e+05 + 9.9541781338284840e+04*I,
-        2.8150430279477721e+04 + -5.2924039920050373e+03*I,
-        3.1622495294625359e+05 + -2.5680657773241587e+05*I,
-        -2.6038691672786823e+05 + 7.7154271127687563e+04*I,
-        4.9718029481306969e+05 + 4.4773588723180210e+05*I,
-        1.7413853007069416e+05 + 5.8477583173902334e+04*I,
-        2.0037173525774262e+04 + -1.0034397966738434e+04*I,
-        6.9217002671583265e+04 + -2.1012233122432570e+05*I};
+        -2.5364652588246862e+05 + -5.8469865460008185e+05*I,
+        6.5248496461951542e+09 + 7.0756507272697372e+09*I,
+        -9.7338641425550270e+09 + -3.7347957102244296e+09*I,
+        -2.2049427843689697e+10 + -2.6180438223164539e+10*I,
+        6.5157962546570420e+07 + -2.4295972449897211e+07*I,
+        -1.1310351652489761e+05 + -2.5628499486967403e+05*I,
+        -2.8304770746896200e+09 + 7.4948296064692706e+07*I,
+        -6.2491650296852016e+09 + -1.1872461292865297e+10*I,
+        -9.7714982659138412e+09 + -5.1009751989001297e+10*I,
+        -4.4595609617289320e+07 + -1.6704471323865645e+07*I,
+        -5.9351529942122707e+05 + 1.7179924202664773e+05*I,
+        -5.9623057491959763e+09 + 7.2454865762560492e+09*I,
+        -1.8008589622840471e+09 + 1.0007851338901169e+10*I,
+        -2.9111712281588634e+10 + 1.2828863288476505e+10*I,
+        -1.0068598503289243e+07 + 6.2935929141706645e+07*I,
+        -2.6038691672786948e+05 + 7.7154271127689281e+04*I,
+        -4.5054308678994119e+08 + -2.7242498190607200e+09*I,
+        -1.0232506807521317e+10 + 8.1562538994686470e+09*I,
+        -4.8051047602493446e+10 + -4.6088618832487392e+09*I,
+        3.3471303864763573e+07 + -2.8012785370724306e+07*I};
         
         i = akns_fscatter_numel(D, akns_discretization);
         if (i == 0) { // size D>=2, this means unknown discretization
@@ -121,12 +124,10 @@ static INT akns_fscatter_test_2split1A()
             }
         }
 #ifdef DEBUG
-        printf("error without normalization = %2.1e < %2.1e\n",misc_rel_err(4*nz, result, result_exact),100*EPSILON);
+        printf("error without normalization = %2.1e < %2.1e\n",misc_rel_err(4*nz, result, result_exact),250*EPSILON);
 #endif
-        if (misc_rel_err(4*nz, result, result_exact) > 100*EPSILON)
+        if (misc_rel_err(4*nz, result, result_exact) > 250*EPSILON)
             return E_TEST_FAILED;
-        
-        
         
         // with normalization
         W_ptr = &W;
@@ -155,9 +156,9 @@ static INT akns_fscatter_test_2split1A()
         }
         
 #ifdef DEBUG
-        printf("error with normalization = %2.1e < %2.1e\n",misc_rel_err(4*nz, result, result_exact),100*EPSILON);
+        printf("error with normalization = %2.1e < %2.1e\n",misc_rel_err(4*nz, result, result_exact),250*EPSILON);
 #endif
-        if (misc_rel_err(4*nz, result, result_exact) > 100*EPSILON)
+        if (misc_rel_err(4*nz, result, result_exact) > 250*EPSILON)
             return E_TEST_FAILED;
         
         
@@ -169,7 +170,7 @@ static INT akns_fscatter_test_2split1A()
 
 INT main()
 {
-    if (akns_fscatter_test_2split1A() != SUCCESS)
+    if (akns_fscatter_test_2split8A() != SUCCESS)
         return EXIT_FAILURE;
     
     return EXIT_SUCCESS;

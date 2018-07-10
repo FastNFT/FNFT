@@ -26,14 +26,14 @@
 #include "fnft__misc.h"
 #include "fnft__errwarn.h"
 
-static INT akns_fscatter_test_2split1A()
+static INT akns_fscatter_test_2split5A()
 {
     UINT i, j, D = 8, deg, nz = 5;
     INT W = 0, *W_ptr = NULL;
     REAL scl;
     INT ret_code;
     COMPLEX *transfer_matrix = NULL;
-    akns_discretization_t akns_discretization = akns_discretization_2SPLIT1A;
+    akns_discretization_t akns_discretization = akns_discretization_2SPLIT5A;
     const REAL eps_t = 0.13;
     COMPLEX z[5] = {1.0+0.0*I, CEXP(I*PI/4), CEXP(I*9*PI/14), CEXP(I*4*PI/3), CEXP(I*-PI/5)};
     COMPLEX q[8], r[8];
@@ -48,10 +48,12 @@ static INT akns_fscatter_test_2split1A()
 //     z = zlist(i);
 //     S = eye(2);
 //     for n=1:D
-//         % Eq. 17 in P. J. Prins and S. Wahls, Higher order exponential
+//         % Eq. 21 in P. J. Prins and S. Wahls, Higher order exponential
 //         % splittings for the fast non-linear Fourier transform of the KdV
 //         % equation, to appear in Proc. of IEEE ICASSP 2018, Calgary, April 2018.
-//         U = [1,0;0,z]*expm([0,q(n);r(n),0]*eps_t);
+//     U = (625/384)*[1,0;0,z]^3*(expm([0,q(n);r(n),0]*eps_t*2/5)*[1,0;0,z]^6)^2*expm([0,q(n);r(n),0]*eps_t/5)...
+//             -(81/128)*[1,0;0,z]^5*expm([0,q(n);r(n),0]*eps_t*2/3)*[1,0;0,z]^10*expm([0,q(n);r(n),0]*eps_t/3)...
+//                     +(1/192)*[1,0;0,z]^15*expm([0,q(n);r(n),0]*eps_t);
 //         S = U*S;
 //     end
 //     result_exact(i) = S(1,1);
@@ -64,26 +66,26 @@ static INT akns_fscatter_test_2split1A()
 //     fprintf('%.16e + %.16e*I,\n',real(result_exact(i)),imag(result_exact(i)))
 // end
     COMPLEX result_exact[20] = {
-        -2.5364652588246678e+05 + -5.8469865460008010e+05*I,
-        1.8172276340604821e+05 + 1.0053357988921278e+06*I,
-        2.4215612869120701e+05 + -3.7470845696296528e+04*I,
-        -2.9177336621517421e+04 + -6.2260187717906101e+03*I,
-        7.5854811002973845e+04 + 4.1421024337549607e+05*I,
-        -1.1310351652489584e+05 + -2.5628499486967313e+05*I,
-        1.2336023980026194e+05 + 6.7695187557405455e+05*I,
-        1.8092169614464103e+05 + -4.7337312562227991e+04*I,
-        -2.3286507844849039e+04 + 1.5908666537643637e+03*I,
-        1.5615355097091111e+05 + 1.6707366174681979e+05*I,
-        -5.9351529942122486e+05 + 1.7179924202664592e+05*I,
-        7.3722046916358953e+05 + 6.6580749522093718e+05*I,
-        2.1914384633388979e+05 + 9.9541781338284840e+04*I,
-        2.8150430279477721e+04 + -5.2924039920050373e+03*I,
-        3.1622495294625359e+05 + -2.5680657773241587e+05*I,
-        -2.6038691672786823e+05 + 7.7154271127687563e+04*I,
-        4.9718029481306969e+05 + 4.4773588723180210e+05*I,
-        1.7413853007069416e+05 + 5.8477583173902334e+04*I,
-        2.0037173525774262e+04 + -1.0034397966738434e+04*I,
-        6.9217002671583265e+04 + -2.1012233122432570e+05*I};
+        -2.5364652588246699e+05 + -5.8469865460007824e+05*I,
+        -1.3238175177322638e+06 + 9.3903759142736148e+05*I,
+        3.1295267691187337e+07 + -1.4652479708581217e+07*I,
+        -1.1082433303078737e+07 + -2.2103674619658113e+07*I,
+        2.2454302320924620e+04 + -7.3398620850026209e+03*I,
+        -1.1310351652489533e+05 + -2.5628499486967121e+05*I,
+        -8.9947298126998008e+05 + 7.9331024755074363e+05*I,
+        1.6799935328925792e+07 + 2.0344409800392999e+06*I,
+        6.0867619833317604e+06 + -1.2961844880561283e+07*I,
+        1.3539667046661145e+04 + 1.0192330155080941e+04*I,
+        -5.9351529942122323e+05 + 1.7179924202664659e+05*I,
+        -1.2998756216500662e+06 + -2.6023654019003967e+05*I,
+        6.8523743498926237e+05 + -3.2148739404537138e+07*I,
+        -1.8544077828463759e+07 + 1.5665131569680160e+07*I,
+        -1.0412187847991514e+04 + 2.3848954503364523e+04*I,
+        -2.6038691672786640e+05 + 7.7154271127687447e+04*I,
+        -9.7723517042954487e+05 + -8.9043121832704404e+04*I,
+        8.6261195177403018e+06 + -1.3174744261699136e+07*I,
+        -1.3771665698212173e+07 + -2.8251869131295495e+06*I,
+        -1.3751981224151354e+04 + -2.1006577888118534e+02*I};
         
         i = akns_fscatter_numel(D, akns_discretization);
         if (i == 0) { // size D>=2, this means unknown discretization
@@ -165,12 +167,12 @@ static INT akns_fscatter_test_2split1A()
             free(transfer_matrix);
             
             return SUCCESS;
-}
-
-INT main()
-{
-    if (akns_fscatter_test_2split1A() != SUCCESS)
-        return EXIT_FAILURE;
+    }
     
-    return EXIT_SUCCESS;
-}
+    INT main()
+    {
+        if (akns_fscatter_test_2split5A() != SUCCESS)
+            return EXIT_FAILURE;
+        
+        return EXIT_SUCCESS;
+    }
