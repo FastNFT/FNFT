@@ -67,11 +67,8 @@ INT nse_fscatter(const UINT D, COMPLEX const * const q,
     if (deg_ptr == NULL)
         return E_INVALID_ARGUMENT(deg_ptr);
     
-    akns_discretization = nse_discretization_to_akns_discretization(discretization);        
-    if (akns_discretization == NAN) {
-        ret_code = E_INVALID_ARGUMENT(discretization);
-        goto leave_fun;
-    }    
+    ret_code = nse_discretization_to_akns_discretization(discretization, &akns_discretization);
+    CHECK_RETCODE(ret_code, leave_fun);   
     
     r = malloc(D*sizeof(COMPLEX));
     if (r == NULL) {

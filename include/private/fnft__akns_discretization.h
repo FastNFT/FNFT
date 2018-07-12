@@ -29,6 +29,8 @@
 #define FNFT__AKNS_DISCRETIZATION_H
 
 #include "fnft__akns_discretization_t.h"
+#include "fnft__errwarn.h"
+
 
 /**
  * @brief This routine returns the max degree d of the polynomials in a single
@@ -69,15 +71,19 @@ FNFT_REAL fnft__akns_discretization_boundary_coeff(fnft__akns_discretization_t d
  * This routine maps continuous-time domain value lambda to discrete-time domain value
  * z = exp(2i*lambda*eps_t/degree1step), where degree1step is based on the discretization 
  * of type \link fnft__akns_discretization_t \endlink.
- * @param[in] lambda Complex-valued continuous-time domain spectral parameter.
+ * @param[in] n Number of values to be mapped.
  * @param[in] eps_t Real-valued discretization step-size.
+ * @param[in,out] vals Pointer to location of first element of array containing
+ * complex-valued continuous-time domain spectral parameter lambda. The values are replaced with
+ * discrete-time domain values z.
  * @param[in] discretization Discretization of type \link fnft__akns_discretization_t \endlink.
- * @returns Complex-valued discrete-time domain spectral parameter.
+ * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
+ *  defined in \link fnft_errwarn.h \endlink.
  *
  * @ingroup akns
  */
-FNFT_COMPLEX fnft__akns_lambda_to_z(const FNFT_COMPLEX lambda, const FNFT_REAL eps_t, fnft__akns_discretization_t
-        discretization);
+FNFT_INT fnft__akns_lambda_to_z(const FNFT_UINT n, const FNFT_REAL eps_t, 
+        FNFT_COMPLEX * const vals, fnft__akns_discretization_t discretization);
 
 /**
  * @brief This routine maps z from the discrete-time domain to
@@ -86,15 +92,19 @@ FNFT_COMPLEX fnft__akns_lambda_to_z(const FNFT_COMPLEX lambda, const FNFT_REAL e
  * This routine maps discrete-time domain value z to continuous-time domain value
  * lambda = degree1step*log(z)/(2i*eps_t), where degree1step is based on the discretization 
  * of type \link fnft__akns_discretization_t \endlink.
- * @param[in] z Complex-valued discrete-time domain spectral parameter.
+ * @param[in] n Number of values to be mapped.
  * @param[in] eps_t Real-valued discretization step-size.
+ * @param[in,out] vals Pointer to location of first element of array containing
+ * complex-valued discrete-time domain spectral parameter z. The values are replaced with
+ * continuous-time domain values lambda.
  * @param[in] discretization Discretization of type \link fnft__akns_discretization_t \endlink.
- * @returns lambda Complex-valued continuous-time domain spectral parameter.
- * 
+ * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
+ *  defined in \link fnft_errwarn.h \endlink.
+ *
  * @ingroup akns
  */
-FNFT_COMPLEX fnft__akns_z_to_lambda(const FNFT_COMPLEX z, const FNFT_REAL eps_t, fnft__akns_discretization_t
-        discretization);
+FNFT_INT fnft__akns_z_to_lambda(const FNFT_UINT n, const FNFT_REAL eps_t, 
+        FNFT_COMPLEX * const vals, fnft__akns_discretization_t discretization);
 
 
 #ifdef FNFT_ENABLE_SHORT_NAMES

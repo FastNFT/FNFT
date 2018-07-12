@@ -274,9 +274,9 @@ static inline INT gridsearch(const UINT D,
         }
 
         // Coordinate transform (from discrete-time to continuous-time domain)
-        for (i=0; i<K; i++)
-            roots[i] = nse_z_to_lambda(roots[i],eps_t,opts_ptr->discretization);
-
+        ret_code = nse_z_to_lambda(K, eps_t, roots, opts_ptr->discretization);
+        CHECK_RETCODE(ret_code, release_mem);
+        
         // Filter the roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
             ret_code = misc_filter(&K, roots, NULL, opts_ptr->bounding_box);
@@ -307,9 +307,9 @@ static inline INT gridsearch(const UINT D,
         }
 
         // Coordinate transform of the new roots
-        for (i=0; i<K_filtered; i++)
-            roots[i] = nse_z_to_lambda(roots[i],eps_t,opts_ptr->discretization);
-
+        ret_code = nse_z_to_lambda(K_filtered, eps_t, roots, opts_ptr->discretization);
+        CHECK_RETCODE(ret_code, release_mem);
+        
         // Filter the new roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
             ret_code = misc_filter(&K_filtered, roots, NULL,
@@ -343,9 +343,9 @@ static inline INT gridsearch(const UINT D,
         CHECK_RETCODE(ret_code, release_mem);
 
         // Coordinate transform (from discrete-time to continuous-time domain)
-        for (i=0; i<M; i++)
-            roots[i] = nse_z_to_lambda(roots[i],eps_t,opts_ptr->discretization);
-
+        ret_code = nse_z_to_lambda(M, eps_t, roots, opts_ptr->discretization);
+        CHECK_RETCODE(ret_code, release_mem);
+        
         // Filter the roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
             ret_code = misc_filter(&M, roots, NULL, opts_ptr->bounding_box);
@@ -471,9 +471,9 @@ static inline INT subsample_and_refine(const UINT D,
         CHECK_RETCODE(ret_code, release_mem);
 
         // Coordinate transform (from discrete-time to continuous-time domain)
-        for (i=0; i<deg; i++)
-            roots[i] = nse_z_to_lambda(roots[i],eps_t_sub,opts_ptr->discretization);
-
+        ret_code = nse_z_to_lambda(deg, eps_t_sub, roots, opts_ptr->discretization);
+        CHECK_RETCODE(ret_code, release_mem);
+        
         // Filter the roots
         K = deg;
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
@@ -518,9 +518,9 @@ static inline INT subsample_and_refine(const UINT D,
         CHECK_RETCODE(ret_code, release_mem);
 
         // Coordinate transform of the new roots
-        for (i=0; i<deg; i++)
-            roots[i] = nse_z_to_lambda(roots[i],eps_t_sub,opts_ptr->discretization);
-
+        ret_code = nse_z_to_lambda(deg, eps_t_sub, roots, opts_ptr->discretization);
+        CHECK_RETCODE(ret_code, release_mem);
+        
         // Filter the new roots
         K_filtered = deg;
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
@@ -575,9 +575,9 @@ static inline INT subsample_and_refine(const UINT D,
         M = deg;
 
         // Coordinate transform (from discrete-time to continuous-time domain)
-        for (i=0; i<M; i++)
-            roots[i] = nse_z_to_lambda(roots[i],eps_t_sub,opts_ptr->discretization);
-
+        ret_code = nse_z_to_lambda(M, eps_t_sub, roots, opts_ptr->discretization);
+        CHECK_RETCODE(ret_code, release_mem);
+        
         // Filter the roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
             ret_code = misc_filter(&M, roots, NULL, opts_ptr->bounding_box);

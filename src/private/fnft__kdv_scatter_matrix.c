@@ -55,11 +55,9 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
     if (result == NULL)
         return E_INVALID_ARGUMENT(result);
 
-    akns_discretization = kdv_discretization_to_akns_discretization(discretization);        
-    if (akns_discretization == NAN) {
-        ret_code = E_INVALID_ARGUMENT(discretization);
-        goto leave_fun;
-    }
+    ret_code = kdv_discretization_to_akns_discretization(discretization, &akns_discretization);
+    CHECK_RETCODE(ret_code, leave_fun);   
+    
     
     r = malloc(D*sizeof(COMPLEX));
     if (r == NULL) {

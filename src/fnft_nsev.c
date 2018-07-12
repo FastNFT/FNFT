@@ -422,7 +422,7 @@ static inline INT tf2boundstates(
     INT ret_code = SUCCESS;
 
     degree1step = nse_discretization_degree(opts->discretization);
-    if (degree1step == NAN)
+    if (degree1step == 0)
         return E_INVALID_ARGUMENT(opts->discretization);
     map_coeff = 2/degree1step;
 
@@ -463,10 +463,11 @@ static inline INT tf2boundstates(
 
             // Roots are returned in discrete-time domain -> coordinate
             // transform (from discrete-time to continuous-time domain).
-            for (i = 0; i < K; i++){
-                buffer[i] = nse_z_to_lambda(buffer[i],eps_t,opts->discretization);
-		}
-            
+//             for (i = 0; i < K; i++){
+//                 buffer[i] = nse_z_to_lambda(buffer[i],eps_t,opts->discretization);
+// 		    }
+            ret_code = nse_z_to_lambda(K, eps_t, buffer, opts->discretization);
+            CHECK_RETCODE(ret_code, leave_fun);
             break;
             
         default:
