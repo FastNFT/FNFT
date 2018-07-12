@@ -27,7 +27,7 @@
 #ifndef FNFT_NSEP_H
 #define FNFT_NSEP_H
 
-#include "fnft_nse_discretization_t.h"
+#include "fnft__nse_discretization.h"
 
 /**
  * Enum that controls how spectrum is localized. Used in

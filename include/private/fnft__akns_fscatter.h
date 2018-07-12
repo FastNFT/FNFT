@@ -28,7 +28,7 @@
 #ifndef FNFT__AKNS_FSCATTER_H
 #define FNFT__AKNS_FSCATTER_H
 
-#include "fnft__akns_discretization_t.h"
+#include "fnft__akns_discretization.h"
 
 /**
  * @brief Returns the length of array to be allocated based on the number

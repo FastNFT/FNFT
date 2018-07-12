@@ -38,7 +38,7 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
      
     INT ret_code = SUCCESS;
     UINT i;
-    fnft__akns_discretization_t akns_discretization;
+    akns_discretization_t akns_discretization;
     COMPLEX *r = NULL;
     
     // Check inputs
@@ -55,18 +55,16 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
     if (result == NULL)
         return E_INVALID_ARGUMENT(result);
 
-    switch (discretization) {
-        case kdv_discretization_BO:
-            akns_discretization = akns_discretization_BO;
-            break;
-                   
-        default: // Unknown discretization
-            return E_INVALID_ARGUMENT(discretization);
+    akns_discretization = kdv_discretization_to_akns_discretization(discretization);        
+    if (akns_discretization == NAN) {
+        ret_code = E_INVALID_ARGUMENT(discretization);
+        goto leave_fun;
     }
     
     r = malloc(D*sizeof(COMPLEX));
     if (r == NULL) {
         ret_code = E_NOMEM;
+        goto leave_fun;
     }
     
     for (i = 0; i < D; i++)
@@ -74,5 +72,8 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
 
     
     ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result, akns_discretization);
+
+leave_fun:
+    free(r);
     return ret_code;
 }

@@ -464,8 +464,7 @@ static inline INT tf2boundstates(
             // Roots are returned in discrete-time domain -> coordinate
             // transform (from discrete-time to continuous-time domain).
             for (i = 0; i < K; i++){
-                buffer[i] = CLOG(buffer[i]) / (map_coeff*I*eps_t);
-                //buffer[i] = akns_z_to_lambda(buffer[i],eps_t,opts->discretization);
+                buffer[i] = nse_z_to_lambda(buffer[i],eps_t,opts->discretization);
 		}
             
             break;

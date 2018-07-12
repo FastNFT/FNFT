@@ -28,7 +28,7 @@
 #define FNFT__NSE_FSCATTER_H
 
 
-#include "fnft_nse_discretization_t.h"
+#include "fnft__nse_discretization.h"
 #include "fnft__akns_fscatter.h"
 
 /**

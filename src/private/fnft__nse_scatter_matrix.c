@@ -21,6 +21,7 @@
 
 #include "fnft__errwarn.h"
 #include "fnft__nse_scatter.h"
+#include "fnft__nse_discretization.h"
 #include <stdio.h>
 
 /**
@@ -38,7 +39,7 @@ INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
      
     INT ret_code = SUCCESS;
     UINT i;
-    fnft__akns_discretization_t akns_discretization;
+    akns_discretization_t akns_discretization;
     COMPLEX *r = NULL;
     
     // Check inputs
@@ -57,27 +58,30 @@ INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
     if (result == NULL)
         return E_INVALID_ARGUMENT(result);
 
-    switch (discretization) {
-        case nse_discretization_BO:
-            akns_discretization = akns_discretization_BO;
-            break;
-                   
-        default: // Unknown discretization
-            return E_INVALID_ARGUMENT(discretization);
-    }
+    akns_discretization = nse_discretization_to_akns_discretization(discretization);        
+    if (akns_discretization == NAN) {
+        ret_code = E_INVALID_ARGUMENT(discretization);
+        goto leave_fun;
+    }    
     
     r = malloc(D*sizeof(COMPLEX));
     if (r == NULL) {
         ret_code = E_NOMEM;
+        goto leave_fun;
     }
     
     if (kappa == 1){
         for (i = 0; i < D; i++)
-            r[i] = -CONJ(q[i]);}
+            r[i] = -CONJ(q[i]);
+        }
     else{
         for (i = 0; i < D; i++)
-            r[i] = CONJ(q[i]);}
+            r[i] = CONJ(q[i]);
+        }
     
     ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result, akns_discretization);
+
+leave_fun:
+    free(r);
     return ret_code;
 }

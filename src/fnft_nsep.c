@@ -275,7 +275,7 @@ static inline INT gridsearch(const UINT D,
 
         // Coordinate transform (from discrete-time to continuous-time domain)
         for (i=0; i<K; i++)
-            roots[i] = CLOG(roots[i]) / (map_coeff*I*eps_t);
+            roots[i] = nse_z_to_lambda(roots[i],eps_t,opts_ptr->discretization);
 
         // Filter the roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
@@ -308,7 +308,7 @@ static inline INT gridsearch(const UINT D,
 
         // Coordinate transform of the new roots
         for (i=0; i<K_filtered; i++)
-            roots[i] = CLOG(roots[i]) / (map_coeff*I*eps_t);
+            roots[i] = nse_z_to_lambda(roots[i],eps_t,opts_ptr->discretization);
 
         // Filter the new roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
@@ -344,7 +344,7 @@ static inline INT gridsearch(const UINT D,
 
         // Coordinate transform (from discrete-time to continuous-time domain)
         for (i=0; i<M; i++)
-            roots[i] = CLOG(roots[i]) / (map_coeff*I*eps_t);
+            roots[i] = nse_z_to_lambda(roots[i],eps_t,opts_ptr->discretization);
 
         // Filter the roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
@@ -472,7 +472,7 @@ static inline INT subsample_and_refine(const UINT D,
 
         // Coordinate transform (from discrete-time to continuous-time domain)
         for (i=0; i<deg; i++)
-            roots[i] = CLOG(roots[i]) / (map_coeff*I*eps_t_sub);
+            roots[i] = nse_z_to_lambda(roots[i],eps_t_sub,opts_ptr->discretization);
 
         // Filter the roots
         K = deg;
@@ -519,7 +519,7 @@ static inline INT subsample_and_refine(const UINT D,
 
         // Coordinate transform of the new roots
         for (i=0; i<deg; i++)
-            roots[i] = CLOG(roots[i]) / (map_coeff*I*eps_t_sub);
+            roots[i] = nse_z_to_lambda(roots[i],eps_t_sub,opts_ptr->discretization);
 
         // Filter the new roots
         K_filtered = deg;
@@ -576,7 +576,7 @@ static inline INT subsample_and_refine(const UINT D,
 
         // Coordinate transform (from discrete-time to continuous-time domain)
         for (i=0; i<M; i++)
-            roots[i] = CLOG(roots[i]) / (map_coeff*I*eps_t_sub);
+            roots[i] = nse_z_to_lambda(roots[i],eps_t_sub,opts_ptr->discretization);
 
         // Filter the roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {

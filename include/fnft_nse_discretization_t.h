@@ -63,9 +63,9 @@
  * `fnft_nse_discretization_2SPLIT2_MODAL` is the normalized Ablowitz-Ladik discretization from 
  * Wahls and Poor,<a href="http://dx.doi.org/10.1109/ICASSP.2013.6638772">&quot;Introducing the fast nonlinear Fourier transform,&quot;</a> Proc. ICASSP 2013.\n 
  *
- * Used in \link fnft_nsev_opts_t \endlink.
+ * Used in \link fnft_nsev_opts_t \endlink, \link fnft_nsep_opts_t \endlink and \link fnft_nsev_inverse_opts_t \endlink.
  *
- * `fnft_nse_discretization_BO` has been taken from Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot;Computation of the direct scattering transform for the nonlinear Schroedinger  equation,&quot;</a> J. Comput. Phys. 102(2), 1992. It is supported by \link fnft__kdv_scatter.h \endlink.\n 
+ * `fnft_nse_discretization_BO` has been taken from Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot;Computation of the direct scattering transform for the nonlinear Schroedinger  equation,&quot;</a> J. Comput. Phys. 102(2), 1992. It is supported by \link fnft__nse_scatter.h \endlink.\n 
  * @ingroup data_types
  */
 typedef enum {

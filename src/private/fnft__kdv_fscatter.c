@@ -26,7 +26,7 @@
 #include "fnft__poly_fmult.h"
 #include "fnft__kdv_fscatter.h"
 #include "fnft__kdv_discretization.h"
-#include "fnft__akns_discretization_t.h"
+#include "fnft__akns_discretization.h"
 #include "fnft__misc.h"
 
 /**
@@ -62,77 +62,24 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
     if (deg_ptr == NULL)
         return E_INVALID_ARGUMENT(deg_ptr);
 
-    switch (discretization) {
-        case kdv_discretization_2SPLIT1A:
-	   akns_discretization = akns_discretization_2SPLIT1A;
-	   break;
-        case kdv_discretization_2SPLIT1B:
-	   akns_discretization = akns_discretization_2SPLIT1B;
-	   break;
-        case kdv_discretization_2SPLIT2A: 
-	   akns_discretization = akns_discretization_2SPLIT2A;
-	   break;
-        case kdv_discretization_2SPLIT2B:
-	   akns_discretization = akns_discretization_2SPLIT2B;
-	   break;
-        case kdv_discretization_2SPLIT2S:
-	   akns_discretization = akns_discretization_2SPLIT2S;
-	   break;
-        case kdv_discretization_2SPLIT3S:
-	   akns_discretization = akns_discretization_2SPLIT3S;
-	   break;
-        case kdv_discretization_2SPLIT4B:
-	   akns_discretization = akns_discretization_2SPLIT4B;
-	   break;
-        case kdv_discretization_2SPLIT3A:
-	   akns_discretization = akns_discretization_2SPLIT3A;
-	   break;
-        case kdv_discretization_2SPLIT3B:
-	   akns_discretization = akns_discretization_2SPLIT3B;
-	   break;
-        case kdv_discretization_2SPLIT4A:
-	   akns_discretization = akns_discretization_2SPLIT4A;
-	   break;
-        case kdv_discretization_2SPLIT6B:
-	   akns_discretization = akns_discretization_2SPLIT6B;
-	   break;
-        case kdv_discretization_2SPLIT6A:
-	   akns_discretization = akns_discretization_2SPLIT6A;
-	   break;
-        case kdv_discretization_2SPLIT8B:
-	   akns_discretization = akns_discretization_2SPLIT8B;
-	   break;
-        case kdv_discretization_2SPLIT5A:
-	   akns_discretization = akns_discretization_2SPLIT5A;
-	   break;
-        case kdv_discretization_2SPLIT5B:
-	   akns_discretization = akns_discretization_2SPLIT5B;
-	   break;
-        case kdv_discretization_2SPLIT8A:
-	   akns_discretization = akns_discretization_2SPLIT8A;
-	   break;
-        case kdv_discretization_2SPLIT7A:
-	   akns_discretization = akns_discretization_2SPLIT7A;
-	   break;
-        case kdv_discretization_2SPLIT7B:
-	   akns_discretization = akns_discretization_2SPLIT7B;
-	   break;
- 
-            
-        default: // Unknown discretization
-            return E_INVALID_ARGUMENT(discretization);
-    }
+    akns_discretization = kdv_discretization_to_akns_discretization(discretization);        
+    if (akns_discretization == NAN) {
+        ret_code = E_INVALID_ARGUMENT(discretization);
+        goto leave_fun;
+    } 
     
     r = malloc(D*sizeof(COMPLEX));
     if (r == NULL) {
         ret_code = E_NOMEM;
+        goto leave_fun;
     }
     
     for (i = 0; i < D; i++)
         r[i] = -1;
     
     ret_code = akns_fscatter(D, q, r, eps_t, result, deg_ptr, W_ptr, akns_discretization);
-    return ret_code;
-    
 
+leave_fun:
+    free(r);
+    return ret_code;
 }

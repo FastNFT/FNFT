@@ -19,6 +19,7 @@
 
 #define FNFT_ENABLE_SHORT_NAMES
 
+#include "fnft__errwarn.h"
 #include "fnft__poly_specfact.h"
 #include "fnft__fft_wrapper.h"
 

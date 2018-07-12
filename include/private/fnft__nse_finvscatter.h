@@ -51,10 +51,10 @@
  * @param [out] q Array with D=deg/base_deg entries in which the samples are
  *   stored, where base_deg is the output of
  *   \link fnft__nse_discretization_degree \endlink.
- * @param eps_t See \link fnft__nse_fscatter \endlink.
- * @param kappa See \link fnft__nse_fscatter \endlink.
- * @param discretization See \link fnft__nse_fscatter \endlink. Currently,
- *   only the 2SPLIT2_MODAL discretization is supported.
+ * @param[in] eps_t See \link fnft__nse_fscatter \endlink.
+ * @param[in] kappa See \link fnft__nse_fscatter \endlink.
+ * @param[in] discretization See \link fnft__nse_fscatter \endlink. Currently,
+ *   only the 2SPLIT2_MODAL and 2SPLIT2A discretizations are supported.
  */
 FNFT_INT fnft__nse_finvscatter(
     const FNFT_UINT deg,

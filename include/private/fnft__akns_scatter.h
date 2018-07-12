@@ -27,7 +27,7 @@
 #ifndef FNFT__AKNS_SCATTER_H
 #define FNFT__AKNS_SCATTER_H
 
-#include "fnft__akns_discretization_t.h"
+#include "fnft__akns_discretization.h"
 
 
 /**

@@ -27,7 +27,7 @@
 #ifndef FNFT__KDV_SCATTER_H
 #define FNFT__KDV_SCATTER_H
 
-#include "fnft_kdv_discretization_t.h"
+#include "fnft__kdv_discretization.h"
 #include "fnft__akns_scatter.h"
 
 

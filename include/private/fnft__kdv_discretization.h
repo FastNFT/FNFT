@@ -29,6 +29,7 @@
 #define FNFT__KDV_DISCRETIZATION_H
 
 #include "fnft_kdv_discretization_t.h"
+#include "fnft__akns_discretization.h"
 
 /**
  * @brief This routine returns the max degree d of the polynomials in a single
@@ -62,9 +63,65 @@ FNFT_UINT fnft__kdv_discretization_degree(fnft_kdv_discretization_t
  */
 FNFT_REAL fnft__kdv_discretization_boundary_coeff(fnft_kdv_discretization_t discretization);
 
+/**
+ * @brief This routine returns akns discretization related to the given
+ * kdv discretization.
+ *
+ * The function is used by kdv specific functions to convert discretization type from 
+ * \link fnft_kdv_discretization_t \endlink to \link fnft__akns_discretization_t \endlink.
+ * @param[in] kdv_discretization The type of kdv discretization. Should be
+ * of type \link fnft_kdv_discretization_t \endlink.
+ * returns akns_discretization The type of akns discretization. Will be
+ * of type \link fnft__akns_discretization_t \endlink.
+ *
+ * @ingroup kdv
+ */
+fnft__akns_discretization_t fnft__kdv_discretization_to_akns_discretization(fnft_kdv_discretization_t kdv_discretization);
+
+/**
+ * @brief This routine maps lambda from continuous-time domain to
+ * z in the discrete-time domain based on the discretization. 
+ * 
+ * This routine maps continuous-time domain value lambda to discrete-time domain value
+ * z = exp(2i*lambda*eps_t/degree1step), where degree1step is based on the discretization 
+ * of type \link fnft_kdv_discretization_t \endlink. Changes discretization to 
+ * \link fnft__akns_discretization_t \endlink type and calls \link fnft__akns_lambda_to_z \endlink.
+ * @param[in] lambda Complex-valued continuous-time domain spectral parameter. 
+ * @param[in] eps_t Real-valued discretization step-size.
+ * @param[in] kdv_discretization Discretization of type \link fnft_kdv_discretization_t \endlink.
+ * @returns z Complex-valued discrete-time domain spectral parameter.
+ *
+ * @ingroup kdv
+ */
+FNFT_COMPLEX fnft__kdv_lambda_to_z(const FNFT_COMPLEX lambda, const FNFT_REAL eps_t, fnft_kdv_discretization_t
+        kdv_discretization);
+
+/**
+ * @brief This routine maps z from the discrete-time domain to
+ * lambda in the continuous-time domain based on the discretization. 
+ * 
+ * This routine maps discrete-time domain value z to continuous-time domain value
+ * lambda = degree1step*log(z)/(2i*eps_t), where degree1step is based on the discretization 
+ * of type \link fnft_kdv_discretization_t \endlink. Changes discretization to 
+ * \link fnft__akns_discretization_t \endlink type and calls \link fnft__akns_z_to_lambda \endlink.
+ * @param[in] z Complex-valued discrete-time domain spectral parameter.
+ * @param[in] eps_t Real-valued discretization step-size.
+ * @param[in] kdv_discretization Discretization of type \link fnft_kdv_discretization_t \endlink.
+ * @returns lambda Complex-valued continuous-time domain spectral parameter.
+ *
+ *
+ * @ingroup kdv
+ */
+FNFT_COMPLEX fnft__kdv_z_to_lambda(const FNFT_COMPLEX z, const FNFT_REAL eps_t, fnft_kdv_discretization_t
+        kdv_discretization);
+
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define kdv_discretization_degree(...) fnft__kdv_discretization_degree(__VA_ARGS__)
 #define kdv_discretization_boundary_coeff(...) fnft__kdv_discretization_boundary_coeff(__VA_ARGS__)
+#define kdv_discretization_to_akns_discretization(...) fnft__kdv_discretization_to_akns_discretization(__VA_ARGS__)
+#define kdv_lambda_to_z(...) fnft__kdv_lambda_to_z(__VA_ARGS__)
+#define kdv_z_to_lambda(...) fnft__kdv_z_to_lambda(__VA_ARGS__)
 #endif
 
 #endif

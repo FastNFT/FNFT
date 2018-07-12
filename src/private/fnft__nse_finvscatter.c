@@ -203,11 +203,14 @@ start_pos_2:
                     goto leave_fun;
                 }
                 
-                COMPLEX Delta, del, qi, ri;
+                COMPLEX qi;
                 qi = ATAN(absQ)*CEXP(I*CARG(Q))/eps_t;;
                 *s[i].q = qi;
-                ri = -kappa*CONJ(qi);
-                
+//              COMPLEX Delta, del, ri;
+//              ri = -kappa*CONJ(qi);
+//              This is the exact inverse for 2SPLIT2A but inverse fails with this
+//              TODO : Get nsev_inverse with this.
+//              void
 //                 COMPLEX M[3];                
 //                 Delta = eps_t * CSQRT(-qi*ri);
 //                 del = eps_t * misc_CSINC(Delta);
