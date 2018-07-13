@@ -33,7 +33,7 @@
 #include "fnft__akns_fscatter.h"
 
 /**
- * @brief Returns the length of array to be allocated based on the number
+ * @brief Returns the length of transfer_matrix to be allocated based on the number
  * of samples and discretization.
  *
  * This routine returns the length to be allocated based on the number of samples and discretization of type discretization.

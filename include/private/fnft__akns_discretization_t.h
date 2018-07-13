@@ -30,8 +30,32 @@
 
 /**
  * @brief Enum that specifies discretizations used to compute nonlinear Fourier
- * transforms of systems that 
+ * transforms of systems that fit the AKNS model.
  *
+ * These discretizations are based on exponential spliting schemes, defined in
+ * Prins and Wahls, &quot;Higher order exponential splittings for the fast
+ * non-linear Fourier transform of the KdV equation,&quot;
+ * to appear in Proc. ICASSP 2018.\n
+ * `fnft__akns_discretization_2SPLIT2_MODAL` the normalized Ablowitz-Ladik 
+ * discretization Eq. 25 in Wahls and Vaibhav<a href="https://arxiv.org/pdf/1607.01305v2.pdf">&quot;
+ * Fast Inverse Nonlinear Fourier Transforms for Continuous Spectra of Zakharov-Shabat Type
+ * ,&quot;</a> Unpublished.\n 
+ * All discretizations have the notation `xSPLITyz`, where `x` is the error order 
+ * of unsplit scheme and `y` is the order of accuracy of splitting scheme. `z` is type of splitting and
+ * can be `A`, `B` or `S`, with `A` standing for schemes implemented as defined in Prins and Wahls, &quot;
+ * Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot;
+ * to appear in Proc. ICASSP 2018. `B` type of splitting are the same as 'A' with the positions of the 
+ * two terms in the splitting interchanged. 'S' is for splittings not mentioned in above reference.\n
+ * `-2S` is from G. Strang,<a href="https://link.springer.com/content/pdf/10.1007/BF00281235.pdf">&quot;
+ * Accurate partial difference methods I: Linear Cauchy problems,&quot;</a> 
+ * in Archive for Rational Mechanics and Analysis, 12(1), 392-402, Jan 1963. It is also
+ * known as the Symmetric Weighted Sequential Splitting scheme (SWSS).\n
+ *`-3S` is from Eq. 14.4 in S. Brustein and A. Mirin,<a href="https://doi.org/10.1016/0021-9991(70)90080-X">&quot;
+ * Third Order Difference Methods for Hyperbolic Equations,&quot;</a> 
+ * J. Comput. Phys., 5, 547-571, 1970.\n
+ * `fnft__akns_discretization_BO` has been taken from Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot;
+ * Computation of the direct scattering transform for the nonlinear Schroedinger  equation,&quot;</a> J. Comput. Phys. 102(2), 1992. 
+ * It is supported by \link fnft__nse_scatter.h \endlink.\n 
  * In general, discretizations with a lower degree are faster, while those with
  * a highter order of accuracy are more accurate. Therefore, the best choice is
  * normally among `-2A`, `-2B`, `-2S` `-4B`, `-6B` and `-8B`.
@@ -56,17 +80,8 @@
  * `fnft__akns_discretization_2SPLIT8A`: Degree = 24, Order of accuracy = 8\n
  * `fnft__akns_discretization_2SPLIT8B`: Degree = 12, Order of accuracy = 8
  *
- * These discretizations are based on exponential spliting schemes, defined in
- * Prins and Wahls, &quot;Higher order exponential splittings for the fast
- * non-linear Fourier transform of the KdV equation,&quot;
- * to appear in Proc. ICASSP 2018.
- * `fnft__akns_discretization_2SPLIT2_MODAL` is the normalized Ablowitz-Ladik discretization from 
- * Wahls and Poor,<a href="http://dx.doi.org/10.1109/ICASSP.2013.6638772">&quot;Introducing the fast nonlinear Fourier transform,&quot;</a> Proc. ICASSP 2013.\n 
+ * Used in \link fnft__akns_fscatter \endlink and \link fnft__akns_scatter.h \endlink .
  *
- * Used in \link fnft__akns_fscatter \endlink .
- *
- * `fnft__discretization_BO` has been taken from Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot;Computation of the direct scattering transform for the nonlinear Schroedinger  equation,&quot;</a> J. Comput. Phys. 102(2), 1992. It is supported by \link fnft__akns_scatter.h \endlink.\n 
- * 
  * @ingroup data_types
  */
 typedef enum {

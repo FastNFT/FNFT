@@ -264,9 +264,9 @@ static inline INT tf2contspec(
     fnft_nsev_opts_t * const opts)
 {
     COMPLEX *H11_vals, *H21_vals;
-    COMPLEX A, V, sqrt_z;;
+    COMPLEX A, V;
     REAL eps_t, eps_xi;
-    REAL xi, boundary_coeff, degree1step, scale;
+    REAL xi, boundary_coeff, scale;
     REAL phase_factor_rho, phase_factor_a, phase_factor_b;
     INT ret_code;
     UINT i, offset = 0;
@@ -285,10 +285,8 @@ static inline INT tf2contspec(
 
 
     // Determine discretization-specific coefficients
-    degree1step = nse_discretization_degree(opts->discretization);
-
     boundary_coeff = nse_discretization_boundary_coeff(opts->discretization);
-    if (degree1step == NAN || boundary_coeff == NAN){
+    if (boundary_coeff == NAN){
         return E_INVALID_ARGUMENT(opts->discretization);
         goto leave_fun;
     }
@@ -299,25 +297,19 @@ static inline INT tf2contspec(
     // grid xi(i) = XI1 + i*eps_xi, where i=0,...,M-1. Since
     // z=exp(2.0*I*XI*eps_t/degree1step), we find that the z at which z the transfer
     // matrix has to be evaluated are given by z(i) = 1/(A * V^-i), where:
-    V = CEXP( 2.0*I*eps_xi * eps_t / degree1step);
-    A = CEXP(-2.0*I*XI[0] * eps_t / degree1step);
-    
+    V = eps_xi;
+    ret_code = nse_lambda_to_z(1, eps_t, &V, opts->discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
+    A = -XI[0];
+    ret_code = nse_lambda_to_z(1, eps_t, &A, opts->discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
+
     ret_code = poly_chirpz(deg, transfer_matrix, A, V, M, H11_vals);
     CHECK_RETCODE(ret_code, leave_fun);
 
     ret_code = poly_chirpz(deg, transfer_matrix+2*(deg+1), A, V, M,
          H21_vals);
     CHECK_RETCODE(ret_code, leave_fun);    
-    
-    if (opts->discretization==nse_discretization_2SPLIT2A || opts->discretization==nse_discretization_2SPLIT2_MODAL){
-        // Correct H12_vals for trick that implements 2split2A and 2SPLIT2_MODAL with
-        // first order polynomials instead of second order polynomials.
-        for (i=0; i<M; i++) {
-            xi = XI[0] + i*eps_xi;
-            sqrt_z = CEXP(I*xi*eps_t / degree1step);
-            H21_vals[i] *= sqrt_z;
-        }
-    }
 
     // Compute the continuous spectrum
     switch (opts->contspec_type) {
@@ -329,8 +321,11 @@ static inline INT tf2contspec(
 
     case nsev_cstype_REFLECTION_COEFFICIENT:
 
+        
+        ret_code = nse_phase_factor_rho(eps_t, T[1], &phase_factor_rho,opts->discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
 
-        phase_factor_rho = -2.0*(T[1] + eps_t*boundary_coeff);
+
         for (i = 0; i < M; i++) {
             xi = XI[0] + i*eps_xi;
             if (H11_vals[i] == 0.0){
@@ -349,8 +344,11 @@ static inline INT tf2contspec(
         scale = POW(2.0, W); // needed since the transfer matrix might
                                   // have been scaled by nse_fscatter
   
-       	phase_factor_a =  -eps_t*D + (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
-        phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
+        ret_code = nse_phase_factor_a(eps_t, D, T, &phase_factor_a,opts->discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
+        
+        ret_code = nse_phase_factor_b(eps_t, D, T, &phase_factor_b,opts->discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
 
 
         for (i = 0; i < M; i++) {
@@ -416,7 +414,7 @@ static inline INT tf2boundstates(
     fnft_nsev_opts_t * const opts)
 {
     REAL degree1step, map_coeff;
-    UINT i, K;
+    UINT K;
     REAL bounding_box[4] = { NAN };
     COMPLEX * buffer = NULL;
     INT ret_code = SUCCESS;
@@ -463,9 +461,6 @@ static inline INT tf2boundstates(
 
             // Roots are returned in discrete-time domain -> coordinate
             // transform (from discrete-time to continuous-time domain).
-//             for (i = 0; i < K; i++){
-//                 buffer[i] = nse_z_to_lambda(buffer[i],eps_t,opts->discretization);
-// 		    }
             ret_code = nse_z_to_lambda(K, eps_t, buffer, opts->discretization);
             CHECK_RETCODE(ret_code, leave_fun);
             break;

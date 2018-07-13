@@ -32,7 +32,7 @@
 #include "fnft__akns_fscatter.h"
 
 /**
- * @brief Returns the length of vector to be allocated based on the number
+ * @brief Returns the length of transfer_matrix to be allocated based on the number
  * of samples and discretization.
  * 
  * @ingroup nse

@@ -31,7 +31,7 @@
 #include "fnft__akns_discretization.h"
 
 /**
- * @brief Returns the length of array to be allocated based on the number
+ * @brief Returns the length of transfer_matrix to be allocated based on the number
  * of samples and discretization.
  *
  * This routine returns the length

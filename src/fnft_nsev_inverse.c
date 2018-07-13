@@ -51,18 +51,19 @@ INT fnft_nsev_inverse_XI(const UINT D, REAL const * const T,
         return E_INVALID_ARGUMENT(XI);
     if (T == NULL || !(T[0] < T[1]))
         return E_INVALID_ARGUMENT(T);
-
-    const REAL degree1step = nse_discretization_degree(discretization);
-    if (degree1step == NAN)
-        return E_INVALID_ARGUMENT(discretization);
-    const REAL map_coeff = 2/degree1step;
+    
+    INT ret_code = SUCCESS;
+    COMPLEX XIC[2];
     // Note that z = exp(2.0*PI*I*i/M) = exp(map_coeff*I*xi*eps_t).
     // The range below results the same values as a normal M-point FFT,
     // but in a different order.
     const REAL eps_t = (T[1] - T[0]) / (D - 1);
-    XI[0] = CLOG( CEXP(2.0*FNFT_PI*I * (M/2 + 1)/M) ) / (map_coeff*I*eps_t);
-    XI[1] = CLOG( CEXP(2.0*FNFT_PI*I * (M/2)/M) ) / (map_coeff*I*eps_t);
-    return SUCCESS;
+    XIC[0] = CEXP(2.0*FNFT_PI*I * (M/2 + 1)/M);
+    XIC[1] = CEXP(2.0*FNFT_PI*I * (M/2)/M) ;
+    ret_code = nse_z_to_lambda(2, eps_t, &XIC[0], discretization);
+    XI[0] = CREAL(XIC[0]);
+    XI[1] = CREAL(XIC[1]);
+    return ret_code;
 }
 
 // Auxliary functions. Function bodies follow below.
@@ -201,15 +202,9 @@ static inline INT remove_boundary_conds_and_reorder_for_fft(
     const REAL eps_t = (T[1] - T[0]) / (D - 1);
     const REAL eps_xi = (XI[1] - XI[0]) / (M - 1);
     REAL phase_factor_rho = 0.0;
-    const REAL bnd_coeff = nse_discretization_boundary_coeff(discretization);
-    const REAL degree1step = nse_discretization_degree(discretization);
-    if (degree1step == NAN || bnd_coeff == NAN)
-        return E_INVALID_ARGUMENT(discretization);
-    if (discretization == nse_discretization_2SPLIT2A || discretization == nse_discretization_2SPLIT2_MODAL)
-        phase_factor_rho = -2.0*(T[1] + eps_t*bnd_coeff) + eps_t/degree1step;
-    else
-        phase_factor_rho = -2.0*(T[1] + eps_t*bnd_coeff);
-
+    ret_code = nse_phase_factor_rho(eps_t, T[1], &phase_factor_rho, discretization);
+    if (ret_code != SUCCESS)
+        return ret_code;
 
     for (i=0; i<M; i++) {
         const REAL xi = XI[0] + i*eps_xi;

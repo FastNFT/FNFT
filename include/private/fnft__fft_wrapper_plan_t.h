@@ -19,7 +19,6 @@
 
 /**
  * @file fnft__fft_wrapper_plan_t.h
- * @brief Creates plans for FFT.
  *
  * @ingroup fft_wrapper
  */

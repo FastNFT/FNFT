@@ -127,12 +127,84 @@ FNFT_INT fnft__nse_lambda_to_z(const FNFT_UINT n, const FNFT_REAL eps_t,
 FNFT_INT fnft__nse_z_to_lambda(const FNFT_UINT n, const FNFT_REAL eps_t, 
         FNFT_COMPLEX * const vals, fnft_nse_discretization_t discretization);
 
+/**
+ * @brief  This routine returns the phase factor for reflection coefficient (rho).
+ * It is required for applying boundary conditions to the transfer_matrix based on the discretization. 
+ * 
+ * This routine computes the phase correction factor for the computation of the 
+ * reflection coefficient from the transfer_matrix. phase_factor_rho = -2.0*(T1 + eps_t*boundary_coeff),
+ * where eps_t is the step-size, T1 is the time at the right-boundary and boundary_coeff is based on the
+ * discretization of type \link fnft_nse_discretization_t \endlink.  Only for fnft_nse_discretization_2SPLIT2A
+ * and fnft_nse_discretization_2SPLIT2_MODAL, phase_factor_rho = -2.0*(T1 + eps_t*boundary_coeff)+eps_t/degree1step
+ * where degree1step is based on the discretization of type \link fnft_nse_discretization_t \endlink. 
+ * @param[in] eps_t Real-valued discretization step-size.
+ * @param[in] T1 Real-valued time at the right-boundary.
+ * @param[in,out] phase_factor_rho Pointer to real-valued variable where the computed phase factor will be stored.
+ * @param[in] nse_discretization Discretization of type \link fnft_nse_discretization_t \endlink.
+ * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
+ *  defined in \link fnft_errwarn.h \endlink.
+ *
+ * @ingroup nse
+ */
+FNFT_INT fnft__nse_phase_factor_rho(const FNFT_REAL eps_t, const FNFT_REAL T1,
+        FNFT_REAL * const phase_factor_rho, fnft_nse_discretization_t nse_discretization);
+
+/**
+ * @brief  This routine returns the phase factor for a coefficient.
+ * It is required for applying boundary conditions to the transfer_matrix based on the discretization. 
+ * 
+ * This routine computes the phase correction factor for the computation of the 
+ * a coefficient from the transfer_matrix. phase_factor_a = -eps_t*D + (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff),
+ * where eps_t is the step-size, D is the number of samples used to build the transfer_matrix, 
+ * T is the 2-element time vector defining the signal support and boundary_coeff is based on the
+ * discretization of type \link fnft_nse_discretization_t \endlink.
+ * @param[in] eps_t Real-valued discretization step-size.
+ * @param[in] D Positive interger number of samples used to build transfer_matrix.
+ * @param[in] T Real-valued 2-element time vector defining the signal support.
+ * @param[in,out] phase_factor_a Pointer to real-valued variable where the computed phase factor will be stored.
+ * @param[in] nse_discretization Discretization of type \link fnft_nse_discretization_t \endlink.
+ * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
+ *  defined in \link fnft_errwarn.h \endlink.
+ *
+ * @ingroup nse
+ */
+FNFT_INT fnft__nse_phase_factor_a(const FNFT_REAL eps_t, const FNFT_UINT D, FNFT_REAL const * const T,
+        FNFT_REAL * const phase_factor_a, fnft_nse_discretization_t nse_discretization);
+
+/**
+ * @brief  This routine returns the phase factor for b coefficient.
+ * It is required for applying boundary conditions to the transfer_matrix based on the discretization. 
+ * 
+ * This routine computes the phase correction factor for the computation of the 
+ * a coefficient from the transfer_matrix. phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff),
+ * where eps_t is the step-size, D is the number of samples used to build the transfer_matrix, 
+ * T is the 2-element time vector defining the signal support and boundary_coeff is based on the
+ * discretization of type \link fnft_nse_discretization_t \endlink.  Only for fnft_nse_discretization_2SPLIT2A
+ * and fnft_nse_discretization_2SPLIT2_MODAL, phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff)+ eps_t/degree1step
+ * where degree1step is based on the discretization of type \link fnft_nse_discretization_t \endlink. 
+ * @param[in] eps_t Real-valued discretization step-size.
+ * @param[in] D Positive interger number of samples used to build transfer_matrix.
+ * @param[in] T Real-valued 2-element time vector defining the signal support.
+ * @param[in,out] phase_factor_b Pointer to real-valued variable where the computed phase factor will be stored.
+ * @param[in] nse_discretization Discretization of type \link fnft_nse_discretization_t \endlink.
+ * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
+ *  defined in \link fnft_errwarn.h \endlink.
+ *
+ * @ingroup nse
+ */
+FNFT_INT fnft__nse_phase_factor_b(const FNFT_REAL eps_t, const FNFT_UINT D, FNFT_REAL const * const T,
+        FNFT_REAL * const phase_factor_b, fnft_nse_discretization_t nse_discretization);
+        
+        
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define nse_discretization_degree(...) fnft__nse_discretization_degree(__VA_ARGS__)
 #define nse_discretization_boundary_coeff(...) fnft__nse_discretization_boundary_coeff(__VA_ARGS__)
 #define nse_discretization_to_akns_discretization(...) fnft__nse_discretization_to_akns_discretization(__VA_ARGS__)
 #define nse_lambda_to_z(...) fnft__nse_lambda_to_z(__VA_ARGS__)
 #define nse_z_to_lambda(...) fnft__nse_z_to_lambda(__VA_ARGS__)
+#define nse_phase_factor_rho(...) fnft__nse_phase_factor_rho(__VA_ARGS__)
+#define nse_phase_factor_a(...) fnft__nse_phase_factor_a(__VA_ARGS__)
+#define nse_phase_factor_b(...) fnft__nse_phase_factor_b(__VA_ARGS__)
 #endif
 
 #endif
