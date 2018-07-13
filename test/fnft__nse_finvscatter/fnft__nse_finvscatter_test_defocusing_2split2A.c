@@ -22,7 +22,7 @@
 int main()
 {
     const INT kappa = -1;
-    const REAL error_bound = 80470.0*FNFT_EPSILON;
+    const REAL error_bound = 80650.0*FNFT_EPSILON;
     const nse_discretization_t discretization
         = fnft_nse_discretization_2SPLIT2A;
 
