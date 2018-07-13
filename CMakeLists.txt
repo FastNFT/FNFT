@@ -1,3 +1,21 @@
+# This file is part of FNFT.
+#
+# FNFT is free software; you can redistribute it and/or
+# modify it under the terms of the version 2 of the GNU General
+# Public License as published by the Free Software Foundation.
+#
+# FNFT is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Contributors:
+# Sander Wahls (TU Delft) 2017-2018.
+# Marius Brehler (TU Dortmund) 2018.
+
 cmake_minimum_required(VERSION 3.5)
 project(fnft C)
 
@@ -16,6 +34,7 @@ option(WITH_MATLAB "Build the Matlab interface" ON)
 option(MACHINE_SPECIFIC_OPTIMIZATION "Activate optimizations specific for this machine" ON)
 option(ADDRESS_SANITIZER "Enable address sanitzer for known compilers" OFF)
 option(ENABLE_FFTW "Use FFTW if it is available" OFF)
+option(BUILD_TESTS "Build tests" ON)
 
 # check for complex.h
 check_include_files(complex.h HAVE_COMPLEX_H)
@@ -133,7 +152,9 @@ if (CMAKE_Fortran_COMPILER_ID MATCHES GNU) # gfortran
 	endif()
 endif ()
 
-enable_testing()
+if (BUILD_TESTS)
+	enable_testing()
+endif()
 
 # sources
 file(GLOB SOURCES "src/*.c")
@@ -160,14 +181,16 @@ foreach (srcfile ${EXAMPLE_SOURCES})
 endforeach()
 
 # generate tests
-foreach (srcfile ${TEST_SOURCES})
-	get_filename_component(dir ${srcfile} DIRECTORY)
-	get_filename_component(test ${srcfile} NAME_WE)
-	add_executable(${test} ${srcfile})
-    target_link_libraries(${test} fnft ${LIBM} ${FFTW3_LIB})
-	add_test(NAME ${test} COMMAND ${test})
-	set_target_properties(${test} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${dir}")
-endforeach()
+if (BUILD_TESTS)
+	foreach (srcfile ${TEST_SOURCES})
+		get_filename_component(dir ${srcfile} DIRECTORY)
+		get_filename_component(test ${srcfile} NAME_WE)
+		add_executable(${test} ${srcfile})
+	    target_link_libraries(${test} fnft ${LIBM} ${FFTW3_LIB})
+		add_test(NAME ${test} COMMAND ${test})
+		set_target_properties(${test} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${dir}")
+	endforeach()
+endif()
 
 # Try to build the Matlab interface if requested
 if (WITH_MATLAB)
