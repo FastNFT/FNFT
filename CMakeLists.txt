@@ -59,11 +59,15 @@ endif()
 
 # check if thread local storage is available
 check_c_source_compiles("_Thread_local int g; int main() { g = 1; return g; }" HAVE__THREAD_LOCAL)
-if (NOT HAVE__THREAD_LOCAL)
-	check_c_source_compiles("__thread int g; int main() { g = 1; return g; }" HAVE___THREAD)
-	if (NOT HAVE___THREAD)
-		message(WARNING "Thread local storage is not available. fnft_errwarn_setprintf will not be thread-safe.")
-	endif()
+if (NOT HAVE__THREAD_LOCAL OR CMAKE_COMPILER_IS_GNUCC)
+    if (CMAKE_COMPILER_IS_GNUCC) # gcc
+        message("Disabling ‘_Thread_local’ since ISO C99 does not support it")
+        set(HAVE__THREAD_LOCAL 0)
+    endif()
+    check_c_source_compiles("__thread int g; int main() { g = 1; return g; }" HAVE___THREAD)
+    if (NOT HAVE___THREAD)
+        message(WARNING "Thread local storage is not available. fnft_errwarn_setprintf will not be thread-safe.")
+    endif()
 endif()
 
 # check if FFTW3 is available
