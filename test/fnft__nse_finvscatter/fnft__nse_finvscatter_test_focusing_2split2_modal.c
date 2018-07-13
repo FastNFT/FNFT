@@ -24,9 +24,9 @@ int main()
     const INT kappa = +1;
     const REAL error_bound
 #ifdef HAVE_FFTW3
-        = 31.0*FNFT_EPSILON;
+        = 36.0*FNFT_EPSILON;
 #else
-        = 1126.0*FNFT_EPSILON;
+        = 1150.0*FNFT_EPSILON;
 #endif    
     const nse_discretization_t discretization
         = fnft_nse_discretization_2SPLIT2_MODAL;

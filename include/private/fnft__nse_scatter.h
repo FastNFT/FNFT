@@ -27,7 +27,8 @@
 #ifndef FNFT__NSE_SCATTER_H
 #define FNFT__NSE_SCATTER_H
 
-#include "fnft_nse_discretization_t.h"
+#include "fnft__nse_discretization.h"
+#include "fnft__akns_scatter.h"
 
 /**
  * @brief Computes \f$a(\lambda)\f$, \f$ a'(\lambda) = \frac{\partial a(\lambda)}{\partial \lambda}\f$

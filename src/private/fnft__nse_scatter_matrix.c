@@ -15,12 +15,13 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
-* Shrinivas Chimmalgi (TU Delft) 2017.
+* Shrinivas Chimmalgi (TU Delft) 2017-2018.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft__errwarn.h"
 #include "fnft__nse_scatter.h"
+#include "fnft__nse_discretization.h"
 #include <stdio.h>
 
 /**
@@ -37,10 +38,9 @@ INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
 {
      
     INT ret_code = SUCCESS;
-    UINT  neig;
-    INT n, c1, c2, c3;
-    COMPLEX l, qn, qnc, ks, k, sum=0, TM[4][4], ch,
-                         chi, sh, u1, ud1, ud2;
+    UINT i;
+    akns_discretization_t akns_discretization;
+    COMPLEX *r = NULL;
     
     // Check inputs
     if (D == 0)
@@ -57,71 +57,28 @@ INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
         return E_INVALID_ARGUMENT(lambda);
     if (result == NULL)
         return E_INVALID_ARGUMENT(result);
+
+    ret_code = nse_discretization_to_akns_discretization(discretization, &akns_discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
     
-    switch (discretization) {
-        
-        case nse_discretization_BO: // Bofetta-Osborne scheme
-            
-            for (neig = 0; neig < K; neig++) { // iterate over lambda
-                l = lambda[neig];
-                
-                COMPLEX T[4][4] =
-                    { {1,0,0,0}, {0,1,0,0},{0,0,1,0},{0,0,0,1} };
-                COMPLEX U[4][4] = {{ 0 }};
-               
-                for (n = D-1; n >= 0; n--){
-                    qn = q[n];
-                    qnc = CONJ(qn);
-                    ks = (-kappa * (CABS(qn)*CABS(qn))-(l*l));
-                    k = CSQRT(ks);
-                    ch = CCOSH(k*eps_t);
-                    chi = ch/ks;
-                    sh = CSINH(k*eps_t)/k;
-                    u1 = l*sh*I;
-                    ud1 = eps_t*l*l*chi*I;
-                    ud2 = l*(eps_t*ch-sh)/ks;
-                    
-                    U[0][0] = ch-u1;
-                    U[0][1] = qn*sh;
-                    U[1][0] = -kappa * qnc*sh;
-                    U[1][1] = ch + u1;
-                    U[2][0] = ud1-(l*eps_t+I+(l*l*I)/ks)*sh;
-                    U[2][1] = -qn*ud2;
-                    U[3][0] = kappa * qnc*ud2;
-                    U[3][1] = -ud1-(l*eps_t-I-(l*l*I)/ks)*sh;
-                    U[2][2] = ch-u1;
-                    U[2][3] = qn*sh;
-                    U[3][2] = -kappa * qnc*sh;
-                    U[3][3] = ch+u1;
-                    for (c1 = 0; c1 < 4; c1++) {
-                        for (c2 = 0; c2 < 4; c2++) {
-                            for (c3 = 0; c3 < 4; c3++) {
-                                sum = sum + T[c1][c3]*U[c3][c2];
-                            }
-                            TM[c1][c2] = sum;
-                            sum = 0;
-                        }
-                    }
-                    for (c1 = 0; c1 < 4; c1++) {
-                        for (c2 = 0; c2 < 4; c2++)
-                            T[c1][c2] = TM[c1][c2];
-                    }
-                }
-               
-		        result[neig*8] = T[0][0];
-		        result[neig*8 + 1] = T[0][1];
-		        result[neig*8 + 2] = T[1][0];
-		        result[neig*8 + 3] = T[1][1];
-		        result[neig*8 + 4] = T[2][0];
-		        result[neig*8 + 5] = T[2][1];
-		        result[neig*8 + 6] = T[3][0];
-		        result[neig*8 + 7] = T[3][1];
-            }
-            break;
-            
-        default: // Unknown discretization
-            
-            ret_code = E_INVALID_ARGUMENT(discretization);
+    r = malloc(D*sizeof(COMPLEX));
+    if (r == NULL) {
+        ret_code = E_NOMEM;
+        goto leave_fun;
     }
+    
+    if (kappa == 1){
+        for (i = 0; i < D; i++)
+            r[i] = -CONJ(q[i]);
+        }
+    else{
+        for (i = 0; i < D; i++)
+            r[i] = CONJ(q[i]);
+        }
+    
+    ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result, akns_discretization);
+
+leave_fun:
+    free(r);
     return ret_code;
 }

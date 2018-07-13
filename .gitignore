@@ -21,8 +21,12 @@
 # Ignore MacOS hidden files in subdirectories
 /**/*.DS_Store
 
-# Ignore mex files in matlab subdirectory
-/matlab/*.mexmaci64
+# Ignore mex and dSYM files in matlab subdirectory and deeper
+/matlab/**/*.mexmaci64
+/matlab/**/*.mexa64
+/matlab/**/*.mexw32
+/matlab/**/*.mexw64
+/matlab/**/*.dSYM
 
 # Unignore file types (including in subdirectories)
 !/**/*.c

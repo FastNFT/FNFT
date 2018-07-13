@@ -70,6 +70,8 @@ INT fnft_kdvv(const UINT D,
     REAL eps_t;
     UINT deg;
     INT ret_code = SUCCESS;
+    INT W = 0, *W_ptr = NULL;
+    (void) W; //To prevent complier warnings
 
     // Check inputs
     if (D < 2)
@@ -104,12 +106,9 @@ INT fnft_kdvv(const UINT D,
 
     // Compute the transfer matrix 
     ret_code = kdv_fscatter(D, u, eps_t, transfer_matrix, &deg,
-        opts_ptr->discretization);
-    if (ret_code != SUCCESS) {
-        ret_code = E_SUBROUTINE(ret_code);
-        goto release_mem;
-    }
-    // print_buf2(4*(deg+1), transfer_matrix, "TM");
+        W_ptr, opts_ptr->discretization);
+    CHECK_RETCODE(ret_code, release_mem);
+
 
     // Compute the continuous spectrum
     ret_code = tf2contspec_negxi(deg, transfer_matrix, T, D, XI, M,
@@ -167,11 +166,9 @@ static INT tf2contspec_negxi(UINT deg,
     // xi(i) = -(XI1 + i*eps_xi), where i=0,...,M-1.
     // Since z=exp(2*j*xi*eps_t/degree1step), we find that the z at which z the
     // transfer matrix has to be evaluated are given by z(i)=1/(A*V^-i), where:
-    
-    // TODO: The discription above doesn't match the calculation below, while the latter gives the correct result. I think it has something to do with the naming confusion caused by evaluating the function z(xi) for xi = -xi.
-    
-    V = CEXP( 2.0*I*eps_xi * eps_t / degree1step );
-    A = CEXP(-2.0*I*XI[0] * eps_t / degree1step );
+       
+    V = CEXP(-2.0*I*eps_xi * eps_t / degree1step );
+    A = CEXP( 2.0*I*XI[0] * eps_t / degree1step );
    
 //    ret_code = poly_chirpz(deg, transfer_matrix, A, V, M, H11_vals);
 //    CHECK_RETCODE(ret_code, release_mem);

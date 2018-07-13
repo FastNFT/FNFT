@@ -19,6 +19,7 @@
 
 /**
  * @file fnft__misc.h
+ * @brief Miscellaneous functions used in the FNFT library.
  * @ingroup misc
  */
 

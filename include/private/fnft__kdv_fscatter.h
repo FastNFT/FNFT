@@ -29,16 +29,14 @@
 #ifndef FNFT__KDV_FSCATTER_H
 #define FNFT__KDV_FSCATTER_H
 
-#include "fnft_kdv_discretization_t.h"
+#include "fnft__kdv_discretization.h"
+#include "fnft__akns_fscatter.h"
 
 /**
- * @brief Returns the length of array to be allocated based on the number
+ * @brief Returns the length of transfer_matrix to be allocated based on the number
  * of samples and discretization.
  *
- * This routine returns the length
- * `4*D*(kdv_discretization_degree(discretization) + 1)`
- * to be allocated based on the number of samples and discretization of type
- * discretization.
+ * This routine returns the length to be allocated based on the number of samples and discretization of type discretization.
  * @param[in] D Number of samples.
  * @param[in] discretization Type of discretization from \link fnft_kdv_discretization_t \endlink.
  * @returns Returns the length to be allocated. Returns 0 for unknown discretizations.
@@ -94,6 +92,8 @@ FNFT_INT fnft__kdv_fscatter_zero_freq_scatter_matrix(FNFT_COMPLEX *M,
  * with `malloc(kdv_fscatter_numel(D,discretization)*sizeof(COMPLEX))`.
  * @param[out] deg_ptr Pointer to variable containing degree of the discretization.
  * Determined based on discretization by \link fnft__kdv_discretization_degree \endlink.
+ * @param[in] W_ptr Normalization flag. Polynomial coefficients are normalized
+ * if W_ptr is non-zero.
  * @param[in] discretization The type of discretization to be used. Should be of type
  * \link fnft_kdv_discretization_t \endlink.
  * Check \link fnft_kdv_discretization_t \endlink for list of supported types.
@@ -104,7 +104,7 @@ FNFT_INT fnft__kdv_fscatter_zero_freq_scatter_matrix(FNFT_COMPLEX *M,
  */
 FNFT_INT fnft__kdv_fscatter(const FNFT_UINT D, FNFT_COMPLEX const * const q,
                  const FNFT_REAL eps_t, FNFT_COMPLEX * const result, FNFT_UINT * const deg_ptr,
-                            fnft_kdv_discretization_t discretization);
+                            INT * const W_ptr, fnft_kdv_discretization_t discretization);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define kdv_fscatter_numel(...) fnft__kdv_fscatter_numel(__VA_ARGS__)

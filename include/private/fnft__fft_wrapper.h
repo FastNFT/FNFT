@@ -19,6 +19,8 @@
 
 /**
  * @file fnft__fft_wrapper.h
+ * @brief Wraps underlying FFT library.
+ * 
  * @ingroup fft_wrapper
  *
  * Wraps a FFT library (currently either KISS FFT or, if HAVE_FFTW3 is set by
@@ -26,8 +28,8 @@
  * directly included in the header file for speed.
  */
 
-#include "fnft__errwarn.h"
 #include "fnft__fft_wrapper_plan_t.h"
+#include "fnft__errwarn.h"
 
 /**
  * @brief Next valid number of samples for the FFT routines.
@@ -114,7 +116,7 @@ static inline FNFT_INT fnft__fft_wrapper_create_plan(
  * @param[in] in Input buffer, not neccessarily the same that was used
  *   when creating the plan. The length however has to be the same. Create
  *   with \link fnft__fft_wrapper_malloc \endlink to ensure correct alignment.
- * @param[out] in Output buffer, not neccessarily the same that was used
+ * @param[out] out Output buffer, not neccessarily the same that was used
  *   when creating the plan. The length however has to be the same. Create
  *   with \link fnft__fft_wrapper_malloc \endlink to ensure correct alignment.
  * @return FFT_SUCCESS or an error code.

@@ -35,5 +35,8 @@ int main()
     CHECK_RETCODE(ret_code, leave_fun);
 
 leave_fun:
-    return SUCCESS;
+    if (ret_code == SUCCESS)
+        return EXIT_SUCCESS;
+    else
+        return EXIT_FAILURE;
 }

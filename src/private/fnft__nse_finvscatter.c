@@ -162,40 +162,58 @@ start_pos_2:
 
         } else if (s[i].deg == 1) { // base case
 
+
             COMPLEX const * const T_11 = s[i].T;
             COMPLEX const * const T_21 = T_11 + 2*s[i].T_stride;
 
             const COMPLEX Q = -kappa*CONJ(T_21[1] / T_11[1]);
-            const REAL absQ = CABS(Q);
-            const REAL scl_den = 1.0 + kappa*absQ*absQ;
-            if (scl_den <= 0.0) { // only possible if kappa == -1
-                ret_code = E_OTHER("A reconstruced sample violates the condition |q[n]|<1.");
-                goto leave_fun;
-            }
-            const REAL scl = 1.0 / SQRT(scl_den);
+
 
             COMPLEX * const Ti_11 = s[i].Ti;
             COMPLEX * const Ti_12 = Ti_11 + s[i].Ti_stride;
             COMPLEX * const Ti_21 = Ti_12 + s[i].Ti_stride;
             COMPLEX * const Ti_22 = Ti_21 + s[i].Ti_stride;
 
-            s[i].Ti[0] = scl;
-            s[i].Ti[1] = 0.0;
-            Ti_12[0] = -scl*Q;
-            Ti_12[1] = 0.0;
-            Ti_21[0] = 0.0;
-            Ti_21[1] = scl*kappa*CONJ(Q);
-            Ti_22[0] = 0.0;
-            Ti_22[1] = scl;
-
             if (discretization == fnft_nse_discretization_2SPLIT2_MODAL) {
-
-                *s[i].q = Q/eps_t;
+                            
+                const REAL absQ = CABS(Q);
+                const REAL scl_den = 1.0 + kappa*absQ*absQ;
+                if (scl_den <= 0.0) { // only possible if kappa == -1
+                    ret_code = E_OTHER("A reconstruced sample violates the condition |q[n]|<1.");
+                    goto leave_fun;
+                }
+                const REAL scl = 1.0 / SQRT(scl_den);
+                *s[i].q = Q/eps_t; 
+                
+                s[i].Ti[0] = scl;
+                s[i].Ti[1] = 0.0;
+                Ti_12[0] = -scl*Q;
+                Ti_12[1] = 0.0;
+                Ti_21[0] = 0.0;
+                Ti_21[1] = scl*kappa*CONJ(Q);
+                Ti_22[0] = 0.0;
+                Ti_22[1] = scl;
 
             } else if (discretization == fnft_nse_discretization_2SPLIT2A) {
 
-                const REAL Qabs = CABS(Q);
-                *s[i].q = ATAN(Qabs)*CEXP(I*CARG(Q))/eps_t;
+                const REAL absQ = CABS(Q);
+                const REAL scl_den = 1.0 + kappa*absQ*absQ;
+                if (scl_den <= 0.0) { // only possible if kappa == -1
+                    ret_code = E_OTHER("A reconstruced sample violates the condition |q[n]|<1.");
+                    goto leave_fun;
+                }
+                
+                *s[i].q = ATAN(absQ)*CEXP(I*CARG(Q))/eps_t;
+                
+                const REAL scl = 1.0 / SQRT(scl_den);                
+                s[i].Ti[0] = scl;
+                s[i].Ti[1] = 0.0;
+                Ti_12[0] = -scl*Q;
+                Ti_12[1] = 0.0;
+                Ti_21[0] = 0.0;
+                Ti_21[1] = scl*kappa*CONJ(Q);
+                Ti_22[0] = 0.0;
+                Ti_22[1] = scl;
 
             } else { // discretization is unknown or not supported
 
