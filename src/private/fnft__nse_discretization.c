@@ -29,7 +29,7 @@
 UINT fnft__nse_discretization_degree(nse_discretization_t
         nse_discretization)
 {
-    akns_discretization_t akns_discretization;
+    akns_discretization_t akns_discretization = 0;
     INT ret_code;
     UINT degree1step = 0;
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
@@ -45,7 +45,7 @@ UINT fnft__nse_discretization_degree(nse_discretization_t
  */
 REAL fnft__nse_discretization_boundary_coeff(nse_discretization_t nse_discretization)
 {
-    akns_discretization_t akns_discretization;
+    akns_discretization_t akns_discretization = 0;
     REAL bnd_coeff = NAN;
     INT ret_code;
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
@@ -136,7 +136,7 @@ INT fnft__nse_discretization_to_akns_discretization(nse_discretization_t nse_dis
 INT fnft__nse_lambda_to_z(const UINT n, const REAL eps_t, 
         COMPLEX * const vals, nse_discretization_t nse_discretization)
 {
-    akns_discretization_t akns_discretization;
+    akns_discretization_t akns_discretization = 0;
     INT ret_code = SUCCESS;
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
@@ -152,7 +152,7 @@ INT fnft__nse_lambda_to_z(const UINT n, const REAL eps_t,
 INT fnft__nse_z_to_lambda(const UINT n, const REAL eps_t, 
         COMPLEX * const vals, nse_discretization_t nse_discretization)
 {
-    akns_discretization_t akns_discretization;
+    akns_discretization_t akns_discretization = 0;
     INT ret_code = SUCCESS;
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
