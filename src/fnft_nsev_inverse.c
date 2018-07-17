@@ -32,6 +32,8 @@ static fnft_nsev_inverse_opts_t default_opts = {
     .discretization = nse_discretization_2SPLIT2A,
     .contspec_type = fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT,
     .contspec_inversion_method = fnft_nsev_inverse_csmethod_DEFAULT,
+    .discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANT,
+    .discspec_inversion_method = fnft_nsev_inverse_dsmethod_CDT,
     .max_iter = 100,
     .oversampling_factor = 8
 };
@@ -74,7 +76,7 @@ static INT transfer_matrix_from_reflection_coefficient(
     const UINT D,
     REAL const * const T,
     const UINT deg,
-    COMPLEX * const transfer_matrix,
+    COMPLEX * transfer_matrix,
     const INT kappa,
     fnft_nsev_inverse_opts_t const * const opts_ptr);
 static INT transfer_matrix_from_B_of_tau(
@@ -83,9 +85,18 @@ static INT transfer_matrix_from_B_of_tau(
     const UINT D,
     REAL const * const T,
     const UINT deg,
-    COMPLEX * const transfer_matrix,
+    COMPLEX * transfer_matrix,
     const INT kappa,
     fnft_nsev_inverse_opts_t const * const opts_ptr);
+static INT add_discrete_spectrum(
+    UINT const K,
+    COMPLEX const * const bound_states,
+    COMPLEX const * const normconsts_or_residues,
+    const UINT D,
+    COMPLEX * const q,
+    REAL const * const T,
+    fnft_nsev_inverse_opts_t const * const opts_ptr,
+    UINT const contspec_flag);
 
 INT fnft_nsev_inverse(
     const UINT M,
@@ -104,14 +115,6 @@ INT fnft_nsev_inverse(
         return E_INVALID_ARGUMENT(M);
     if (M < D)
         return E_INVALID_ARGUMENT(M);
-    if (contspec == NULL)
-        return E_INVALID_ARGUMENT(contspec);
-    if (K > 0)
-        return E_NOT_YET_IMPLEMENTED(K>0, Please pass K=0.);
-    if (bound_states != NULL)
-        return E_NOT_YET_IMPLEMENTED(bound_states!=NULL, Please pass NULL.)
-    if (normconsts_or_residues != NULL)
-        return E_NOT_YET_IMPLEMENTED(normconsts_or_residues!=NULL, Please pass NULL.)
     if (D < 2 || (D&(D - 1)) != 0)
         return E_INVALID_ARGUMENT(D);
     if (q == NULL)
@@ -120,64 +123,86 @@ INT fnft_nsev_inverse(
         return E_INVALID_ARGUMENT(T);
     if (kappa != +1 && kappa != -1)
         return E_INVALID_ARGUMENT(kappa);
+    if (K > 0 && kappa != +1)
+        return E_SANITY_CHECK_FAILED("Discrete spectrum is present only in the focussing case(kappa=1).");
+    if (K > 0 && bound_states == NULL)
+        return E_INVALID_ARGUMENT(bound_states);
+    UINT i;
+    for (i=0; i<K; i++) {
+        if (CIMAG(bound_states[i]) <= 0)
+          return E_SANITY_CHECK_FAILED("bound_states should be stricly in the upper-half complex-plane.");
+    }
+    if (K > 0 && normconsts_or_residues == NULL)
+        return E_INVALID_ARGUMENT(normconsts_or_residues);
     if (opts_ptr == NULL)
         opts_ptr = &default_opts;
     if (opts_ptr->discretization != nse_discretization_2SPLIT2A
     && opts_ptr->discretization != nse_discretization_2SPLIT2_MODAL)
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
+    if (contspec == NULL && K == 0)
+        return E_SANITY_CHECK_FAILED("Neither contspec nor discspec provided.");
 
     INT ret_code = SUCCESS;
-
-    // To avoid compiler warnings about unused variables
-    (void) bound_states;
-    (void) normconsts_or_residues;
-
-    // Allocated memory and initialize values that we will need later
-
-    const UINT deg = D*nse_discretization_degree(opts_ptr->discretization);
-    if (deg == 0)
-        return E_INVALID_ARGUMENT(discretization);
-
-    COMPLEX * const transfer_matrix = malloc(4*(deg+1) * sizeof(COMPLEX));
-    if (transfer_matrix == NULL) {
-        ret_code = E_NOMEM;
-        goto leave_fun;
-    }
-
-
-
-    // Step 1: Construct the transfer matrix from the provided representation
-    // of the continuous spectrum.
-
-    switch (opts_ptr->contspec_type) {
-
-    case fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT:
-        ret_code = transfer_matrix_from_reflection_coefficient(M, contspec, XI,
-                                                               D, T, deg,
-                                                               transfer_matrix,
-                                                               kappa, opts_ptr);
+    COMPLEX *transfer_matrix = NULL;
+    UINT contspec_flag = 0;
+    
+    if (contspec != NULL){
+        
+        contspec_flag = 1;//Used by function adding discrete spectrum
+        
+        // Allocated memory and initialize values that we will need later
+        
+        const UINT deg = D*nse_discretization_degree(opts_ptr->discretization);
+        if (deg == 0)
+            return E_INVALID_ARGUMENT(discretization);
+        
+        transfer_matrix = malloc(4*(deg+1) * sizeof(COMPLEX));
+        if (transfer_matrix == NULL) {
+            ret_code = E_NOMEM;
+            goto leave_fun;
+        }
+        
+        // Step 1: Construct the transfer matrix from the provided representation
+        // of the continuous spectrum.
+        
+        switch (opts_ptr->contspec_type) {
+            
+            case fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT:
+                ret_code = transfer_matrix_from_reflection_coefficient(M, contspec, XI,
+                        D, T, deg,
+                        transfer_matrix,
+                        kappa, opts_ptr);
+                CHECK_RETCODE(ret_code, leave_fun);
+                break;
+                
+            case fnft_nsev_inverse_cstype_B_OF_TAU:
+                ret_code = transfer_matrix_from_B_of_tau(M, contspec, D, T, deg,
+                        transfer_matrix, kappa,
+                        opts_ptr);
+                CHECK_RETCODE(ret_code, leave_fun);
+                break;
+                
+            default:
+                
+                ret_code = E_INVALID_ARGUMENT(opts_ptr->contspec_type);
+                goto leave_fun;
+                
+        }
+        
+        // Step 2: Recover the time domain signal from the transfer matrix.
+        
+        const REAL eps_t = (T[1] - T[0]) / (D - 1);
+        ret_code = nse_finvscatter(deg, transfer_matrix, q, eps_t, kappa,
+                opts_ptr->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
-        break;
-
-    case fnft_nsev_inverse_cstype_B_OF_TAU:
-        ret_code = transfer_matrix_from_B_of_tau(M, contspec, D, T, deg,
-                                                 transfer_matrix, kappa,
-                                                 opts_ptr);
-        CHECK_RETCODE(ret_code, leave_fun);
-        break;
-
-    default:
-
-        ret_code = E_INVALID_ARGUMENT(opts_ptr->contspec_type);
-        goto leave_fun;
-
     }
-
-    // Step 2: Recover the time domain signal from the transfer matrix.
-
-    const REAL eps_t = (T[1] - T[0]) / (D - 1);
-    ret_code = nse_finvscatter(deg, transfer_matrix, q, eps_t, kappa,
-        opts_ptr->discretization);
+    
+    // Availability of bound_states and normconsts_or_residues has
+    // already been checked.
+    if (K > 0){
+        ret_code = add_discrete_spectrum(K, bound_states, normconsts_or_residues,
+                D, q, T, opts_ptr, contspec_flag);
+    }
 
 leave_fun:
     free(transfer_matrix);
@@ -514,6 +539,37 @@ static INT transfer_matrix_from_B_of_tau(
     transfer_matrix[2*(deg+1) - 1] = 0.0;
     transfer_matrix[2*(deg+1)] = 0.0;
     transfer_matrix[4*(deg+1) - 1] = 0.0;
+    
+leave_fun:
+    return ret_code;
+}
+
+
+static INT add_discrete_spectrum(
+    UINT const K,
+    COMPLEX const * const bound_states,
+    COMPLEX const * const normconsts_or_residues,
+    const UINT D,
+    COMPLEX * const q,
+    REAL const * const T,
+    fnft_nsev_inverse_opts_t const * const opts_ptr,
+    UINT const contspec_flag)
+    {
+    if (K <= 0)
+        return E_INVALID_ARGUMENT(K);
+    if (bound_states == NULL)
+        return E_INVALID_ARGUMENT(bound_states);
+    if (normconsts_or_residues == NULL)
+        return E_INVALID_ARGUMENT(normconsts_or_residues);
+    
+    
+//     if (opts_ptr->discspec_inversion_method
+//     != fnft_nsev_inverse_csmethod_DEFAULT)
+//         return E_INVALID_ARGUMENT(opts_ptr->contspec_inversion_method);
+
+    INT ret_code = SUCCESS;
+    UINT i;
+
     
 leave_fun:
     return ret_code;
