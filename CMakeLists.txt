@@ -22,6 +22,7 @@ project(fnft C)
 set(FNFT_VERSION_MAJOR 0)
 set(FNFT_VERSION_MINOR 1)
 set(FNFT_VERSION_PATCH 1)
+set(FNFT_VERSION ${FNFT_VERSION_MAJOR}.${FNFT_VERSION_MINOR}.${FNFT_VERSION_PATCH})
 
 include(CheckIncludeFiles)
 include(CheckFunctionExists)
@@ -167,10 +168,11 @@ file(GLOB_RECURSE TEST_SOURCES "test/*_test*.c")
 # generate shared library
 add_library(fnft SHARED ${SOURCES} ${PRIVATE_SOURCES} ${KISS_FFT_SOURCES} ${EISCOR_SOURCES})
 target_link_libraries(fnft ${FFTW3_LIB})
-set_target_properties(fnft PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib")
+file(GLOB PUBLIC_HEADERS "include/*.h")
+set_target_properties(fnft PROPERTIES VERSION ${FNFT_VERSION} SOVERSION ${FNFT_VERSION_MAJOR} LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib" PUBLIC_HEADER "${PUBLIC_HEADERS}")
 
 # installation under Linux
-install(TARGETS fnft DESTINATION lib)
+install(TARGETS fnft LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include)
 
 # generate examples
 foreach (srcfile ${EXAMPLE_SOURCES})
