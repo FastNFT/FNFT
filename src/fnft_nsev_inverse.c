@@ -27,6 +27,8 @@
 #include "fnft__nse_finvscatter.h"
 #include "fnft__fft_wrapper.h"
 #include "fnft__poly_specfact.h"
+#include "fnft__misc.h"
+
 
 static fnft_nsev_inverse_opts_t default_opts = {
     .discretization = nse_discretization_2SPLIT2A,
@@ -98,6 +100,15 @@ static INT add_discrete_spectrum(
         fnft_nsev_inverse_opts_t const * const opts_ptr,
         UINT const contspec_flag);
 
+static INT compute_eigenfunctions(
+        UINT const K,
+        COMPLEX const * const bound_states,
+        const UINT D,
+        COMPLEX * const q,
+        REAL const * const T,
+        COMPLEX * const phi,
+        COMPLEX * const psi);
+
 INT fnft_nsev_inverse(
         const UINT M,
         COMPLEX * const contspec,
@@ -125,7 +136,7 @@ INT fnft_nsev_inverse(
         return E_INVALID_ARGUMENT(kappa);
     if (K > 0 && kappa != +1)
         return E_SANITY_CHECK_FAILED("Discrete spectrum is present only in the focussing case(kappa=1).");
-    if (K > 0 && bound_states == NULL) 
+    if (K > 0 && bound_states == NULL)
         return E_INVALID_ARGUMENT(bound_states);
     UINT i;
     for (i = 0; i < K; i++) {
@@ -565,6 +576,8 @@ static INT add_discrete_spectrum(
     COMPLEX bnd_states[K];
     COMPLEX norm_consts[K];
     COMPLEX tmp;
+    COMPLEX * phi = NULL;
+    COMPLEX * psi = NULL;
     UINT i,j;
     UINT zc_point = 0; //index of zero-crossing of time
     INT ret_code = SUCCESS;
@@ -641,7 +654,7 @@ static INT add_discrete_spectrum(
         // speed up computation and improve numerical conditioning
         // of the multi-soliton solution
         if (contspec_flag == 0){
-
+            
             COMPLEX qt, rho, rhok[K], rhoc, f;
             UINT n;
             for (n = zc_point; n < D; n++){
@@ -684,8 +697,220 @@ static INT add_discrete_spectrum(
             }
             
         }
+        else if (contspec_flag == 1){
+            
+            // Allocate memory for computing eigenfuctions
+            // In MATLAB notation
+            //phi = zeros(2,D,K)
+            //Here in C phi = [phi(1,1,1),phi(1,2,1),...,phi(1,D,1),phi(1,1,2),...
+            // phi(1,D,K), phi(2,1,1),phi(2,2,1),...,phi(2,D,1),phi(2,1,2),...
+            // phi(2,D,K)]
+            phi = malloc((D*K*2) * sizeof(COMPLEX));
+            psi = malloc((D*K*2) * sizeof(COMPLEX));
+            if (phi == NULL || psi == NULL) {
+                ret_code = E_NOMEM;
+                goto leave_fun;
+            }
+            INT sgn_fac = 1;
+            if (K%2 != 0){
+                sgn_fac = -1;
+                for (i = 0; i < K; i++)
+                    norm_consts[i] = -norm_consts[i];
+            }
+            ret_code = compute_eigenfunctions(K, bnd_states, D, q, T, phi, psi);
+            CHECK_RETCODE(ret_code, leave_fun);
+//             misc_print_buf(2*K*D, phi, "phi");
+//             misc_print_buf(2*K*D, psi, "psi");
+            COMPLEX S1[K], S2[K], phi1, phi2, psi1, psi2, beta, qn;
+            UINT n;
+            for (n = 0; n < D; n++){
+                qn = q[n];
+                for (i = 0; i < K; i++){
+                    phi1 = phi[n + i*D];
+                    phi2 = phi[n + (K+i)*D];
+                    psi1 = psi[n + i*D];
+                    psi2 = psi[n + (K+i)*D];
+                    if (i > 0){
+                        for (j = 0; j < i; j++){
+                            tmp = (bnd_states[i]-S1[j])*phi1 -S2[j]*phi2;
+                            phi2 = CONJ(S2[j])*phi1 + (bnd_states[i]-CONJ(S1[j]))*phi2;
+                            phi1 = tmp;
+                            tmp = (bnd_states[i]-S1[j])*psi1 -S2[j]*psi2;
+                            psi2 = CONJ(S2[j])*psi1 + (bnd_states[i]-CONJ(S1[j]))*psi2;
+                            psi1 = tmp;
+                        }
+                    }
+                    beta = (phi1 - norm_consts[i]*psi1)/(phi2 - norm_consts[i]*psi2);
+                    tmp = CABS(beta)*CABS(beta);
+                    S1[i] = (tmp*bnd_states[i] + CONJ(bnd_states[i]))/(1 + tmp);
+                    S2[i] = (2*I*CIMAG(bnd_states[i])*beta)/(1 + tmp);
+                    qn = qn - 2*I*S2[i];
+                }
+                q[n] = sgn_fac*qn;
+            }
+        }
     }
     leave_fun:
         free(t);
+        free(phi);
+        free(psi);
         return ret_code;
+}
+
+static INT compute_eigenfunctions(
+        UINT const K,
+        COMPLEX const * const bound_states,
+        const UINT D,
+        COMPLEX * const q,
+        REAL const * const T,
+        COMPLEX * phi,
+        COMPLEX * psi)
+{
+    INT ret_code = SUCCESS;
+    UINT i, n;
+    COMPLEX * phi1_ptr, * phi2_ptr;
+    COMPLEX * psi1_ptr, * psi2_ptr;
+    COMPLEX l, ks, k, scl, ch, sh, u1, tmp1, tmp2;
+//     COMPLEX U[2][2] = {{ 0 }};
+    const REAL eps_t = ((T[1] - T[0])/(D - 1))/2; //Note this is half of the
+    // time-step defined elsewhere
+    // computing-phi
+    for (i = 0; i < K; i++) { // iterate over bound_states
+        l = bound_states[i];
+        // Assign local pointers
+        phi1_ptr = phi + i*D;
+        phi2_ptr = phi1_ptr + K*D;
+        //Apply boundary condition
+        phi1_ptr[0] = CEXP(-I*l*T[0]);
+        phi2_ptr[0] = 0.0;
+        for (n = 1; n < D; n++){
+            //First half-step
+            ks = (-(CABS(q[n-1])*CABS(q[n-1]))-(l*l));
+            k = CSQRT(ks);
+            ch = CCOSH(k*eps_t);
+            sh = CSINH(k*eps_t)/k;
+            u1 = l*sh*I;
+            
+            if (ks != 0){
+//                 U[0][0] = ch-u1;
+//                 U[0][1] = q[n]*sh;
+//                 U[1][0] = -CONJ(q[n])*sh;
+//                 U[1][1] = ch + u1;
+//
+                phi1_ptr[n] = (ch-u1)*phi1_ptr[n-1] + (q[n-1]*sh)*phi2_ptr[n-1];
+                phi2_ptr[n] = (-CONJ(q[n-1])*sh)*phi1_ptr[n-1] + (ch + u1)*phi2_ptr[n-1];
+            }
+            else{
+//                 U[0][0] = 1;
+//                 U[0][1] = 0;
+//                 U[1][0] = 0;
+//                 U[1][1] = 1;
+                phi1_ptr[n] = phi1_ptr[n-1];
+                phi2_ptr[n] = phi2_ptr[n-1];
+            }
+//             phi1_ptr[n] = U[0][0]*phi1_ptr[n-1] + U[0][1]*phi2_ptr[n-1];
+//             phi2_ptr[n] = U[1][0]*phi1_ptr[n-1] + U[1][1]*phi2_ptr[n-1];
+            
+            //Second half-step
+            ks = (-(CABS(q[n])*CABS(q[n]))-(l*l));
+            k = CSQRT(ks);
+            ch = CCOSH(k*eps_t);
+            sh = CSINH(k*eps_t)/k;
+            u1 = l*sh*I;
+            
+            if (ks != 0){
+//                 U[0][0] = ch-u1;
+//                 U[0][1] = q[n]*sh;
+//                 U[1][0] = -CONJ(q[n])*sh;
+//                 U[1][1] = ch + u1;
+                tmp1 = (ch-u1)*phi1_ptr[n] + (q[n]*sh)*phi2_ptr[n];
+                tmp2 = (-CONJ(q[n])*sh)*phi1_ptr[n] + (ch + u1)*phi2_ptr[n];
+                phi1_ptr[n] = tmp1;
+                phi2_ptr[n] = tmp2;
+            }
+//             else{
+// //                 U[0][0] = 1;
+// //                 U[0][1] = 0;
+// //                 U[1][0] = 0;
+// //                 U[1][1] = 1;
+//                             phi1_ptr[n] = phi1_ptr[n];
+//             phi2_ptr[n] = phi2_ptr[n-1];
+//             }
+//             tmp1 = U[0][0]*phi1_ptr[n] + U[0][1]*phi2_ptr[n];
+//             tmp2 = U[1][0]*phi1_ptr[n] + U[1][1]*phi2_ptr[n];
+//             phi1_ptr[n] = tmp1;
+//             phi2_ptr[n] = tmp2;
+        }
+    }
+    // computing-psi
+    for (i = 0; i < K; i++) { // iterate over bound_states
+        l = bound_states[i];
+        // Assign local pointers
+        psi1_ptr = psi + i*D;
+        psi2_ptr = psi1_ptr + K*D;
+        //Apply boundary condition
+        psi1_ptr[D-1] = 0.0;
+        psi2_ptr[D-1] = CEXP(I*l*T[1]);
+        for (n = D-1; n > 0; n--){
+            //First half-step
+            ks = (-(CABS(q[n])*CABS(q[n]))-(l*l));
+            k = CSQRT(ks);
+            ch = CCOSH(k*eps_t);
+            sh = CSINH(k*eps_t)/k;
+            u1 = l*sh*I;
+            
+            if (ks != 0){
+//                 U[0][0] = ch-u1;
+//                 U[0][1] = q[n]*sh;
+//                 U[1][0] = -CONJ(q[n])*sh;
+//                 U[1][1] = ch + u1;
+                scl = ((ch-u1)*(ch + u1))-(( -CONJ(q[n])*sh)*(q[n]*sh));
+                psi1_ptr[n-1] = ((ch + u1)*psi1_ptr[n] + (-q[n]*sh)*psi2_ptr[n])/scl;
+                psi2_ptr[n-1] = ((CONJ(q[n])*sh)*psi1_ptr[n] + (ch - u1)*psi2_ptr[n])/scl;
+            }
+            else{
+//                 U[0][0] = 1;
+//                 U[0][1] = 0;
+//                 U[1][0] = 0;
+//                 U[1][1] = 1;
+                psi1_ptr[n-1] = psi1_ptr[n];
+                psi2_ptr[n-1] = psi2_ptr[n];
+            }
+//             phi1_ptr[n] = U[0][0]*phi1_ptr[n-1] + U[0][1]*phi2_ptr[n-1];
+//             phi2_ptr[n] = U[1][0]*phi1_ptr[n-1] + U[1][1]*phi2_ptr[n-1];
+            
+            //Second half-step
+            ks = (-(CABS(q[n-1])*CABS(q[n-1]))-(l*l));
+            k = CSQRT(ks);
+            ch = CCOSH(k*eps_t);
+            sh = CSINH(k*eps_t)/k;
+            u1 = l*sh*I;
+            
+            if (ks != 0){
+//                 U[0][0] = ch-u1;
+//                 U[0][1] = q[n]*sh;
+//                 U[1][0] = -CONJ(q[n])*sh;
+//                 U[1][1] = ch + u1;
+                scl = ((ch-u1)*(ch + u1))-(( -CONJ(q[n-1])*sh)*(q[n-1]*sh));
+                tmp1 = (ch + u1)*psi1_ptr[n-1] + (-q[n-1]*sh)*psi2_ptr[n-1];
+                tmp2 = (CONJ(q[n-1])*sh)*psi1_ptr[n-1] + (ch - u1)*psi2_ptr[n-1];
+                psi1_ptr[n-1] = tmp1;
+                psi2_ptr[n-1] = tmp2;
+            }
+//             else{
+// //                 U[0][0] = 1;
+// //                 U[0][1] = 0;
+// //                 U[1][0] = 0;
+// //                 U[1][1] = 1;
+//                             phi1_ptr[n] = phi1_ptr[n];
+//             phi2_ptr[n] = phi2_ptr[n-1];
+//             }
+//             tmp1 = U[0][0]*phi1_ptr[n] + U[0][1]*phi2_ptr[n];
+//             tmp2 = U[1][0]*phi1_ptr[n] + U[1][1]*phi2_ptr[n];
+//             phi1_ptr[n] = tmp1;
+//             phi2_ptr[n] = tmp2;
+        }
+    }
+    return ret_code;
+    
 }
