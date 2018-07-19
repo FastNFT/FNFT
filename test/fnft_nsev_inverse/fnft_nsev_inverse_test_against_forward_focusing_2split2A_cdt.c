@@ -66,7 +66,7 @@ int main()
     fnft_nsev_inverse_opts_t opts_inv = fnft_nsev_inverse_default_opts();
     opts_inv.discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANT;
     opts_inv.discspec_inversion_method
-            = fnft_nsev_inverse_dsmethod_CDT;
+            = fnft_nsev_inverse_dsmethod_DEFAULT;
     opts_inv.discretization = nse_discretization_2SPLIT2A;
     opts_inv.contspec_inversion_method
             = fnft_nsev_inverse_csmethod_DEFAULT;

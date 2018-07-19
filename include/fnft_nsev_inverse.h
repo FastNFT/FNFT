@@ -109,7 +109,9 @@ typedef enum {
  *  Unpublished, 2016]</a> have been implemented.\n\n
  */
 typedef enum {
-    fnft_nsev_inverse_dsmethod_CDT
+    fnft_nsev_inverse_dsmethod_MULTISOLITON_CDT,
+    fnft_nsev_inverse_dsmethod_ADDSOLITON_CDT,
+    fnft_nsev_inverse_dsmethod_DEFAULT
 } fnft_nsev_inverse_dsmethod_t;
 
 /**

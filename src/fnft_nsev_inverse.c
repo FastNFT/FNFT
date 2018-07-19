@@ -35,7 +35,7 @@ static fnft_nsev_inverse_opts_t default_opts = {
     .contspec_type = fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT,
     .contspec_inversion_method = fnft_nsev_inverse_csmethod_DEFAULT,
     .discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANT,
-    .discspec_inversion_method = fnft_nsev_inverse_dsmethod_CDT,
+    .discspec_inversion_method = fnft_nsev_inverse_dsmethod_DEFAULT,
     .max_iter = 100,
     .oversampling_factor = 8
 };
@@ -97,8 +97,7 @@ static INT add_discrete_spectrum(
         const UINT D,
         COMPLEX * const q,
         REAL const * const T,
-        fnft_nsev_inverse_opts_t const * const opts_ptr,
-        UINT const contspec_flag);
+        fnft_nsev_inverse_opts_t const * const opts_ptr);
 
 static INT compute_eigenfunctions(
         UINT const K,
@@ -135,89 +134,90 @@ INT fnft_nsev_inverse(
     if (kappa != +1 && kappa != -1)
         return E_INVALID_ARGUMENT(kappa);
     if (K > 0 && kappa != +1)
-        return E_SANITY_CHECK_FAILED("Discrete spectrum is present only in the focussing case(kappa=1).");
-    if (K > 0 && bound_states == NULL)
-        return E_INVALID_ARGUMENT(bound_states);
-    UINT i;
-    for (i = 0; i < K; i++) {
-        if (CIMAG(bound_states[i]) <= 0)
-            return E_SANITY_CHECK_FAILED("bound_states should be stricly in the upper-half complex-plane.");
-    }
-    if (K > 0 && normconsts_or_residues == NULL)
-        return E_INVALID_ARGUMENT(normconsts_or_residues);
-    if (opts_ptr == NULL)
-        opts_ptr = &default_opts;
-    if (opts_ptr->discretization != nse_discretization_2SPLIT2A
-            && opts_ptr->discretization != nse_discretization_2SPLIT2_MODAL)
-        return E_INVALID_ARGUMENT(opts_ptr->discretization);
-    if (contspec == NULL && K == 0)
-        return E_SANITY_CHECK_FAILED("Neither contspec nor discspec provided.");
-    
-    INT ret_code = SUCCESS;
-    COMPLEX *transfer_matrix = NULL;
-    UINT contspec_flag = 0;
-    
-    if (contspec != NULL){
-        
-        contspec_flag = 1;//Used by function adding discrete spectrum
-        
-        // Allocated memory and initialize values that we will need later
-        
-        const UINT deg = D*nse_discretization_degree(opts_ptr->discretization);
-        if (deg == 0)
-            return E_INVALID_ARGUMENT(discretization);
-        
-        transfer_matrix = malloc(4*(deg+1) * sizeof(COMPLEX));
-        if (transfer_matrix == NULL) {
-            ret_code = E_NOMEM;
-            goto leave_fun;
+        return E_SANITY_CHECK_FAILED(Discrete spectrum is present only in the focussing case(kappa=1).);
+        if (K > 0 && bound_states == NULL)
+            return E_INVALID_ARGUMENT(bound_states);
+        UINT i;
+        for (i = 0; i < K; i++) {
+            if (CIMAG(bound_states[i]) <= 0)
+                return E_SANITY_CHECK_FAILED(bound_states should be stricly in the upper-half complex-plane.);
         }
+        if (K > 0 && normconsts_or_residues == NULL)
+            return E_INVALID_ARGUMENT(normconsts_or_residues);
+        if (opts_ptr == NULL)
+            opts_ptr = &default_opts;
+        if (opts_ptr->discretization != nse_discretization_2SPLIT2A
+                && opts_ptr->discretization != nse_discretization_2SPLIT2_MODAL)
+            return E_INVALID_ARGUMENT(opts_ptr->discretization);
+        if (contspec == NULL && K == 0)
+            return E_SANITY_CHECK_FAILED(Neither contspec nor discspec provided.);
         
-        // Step 1: Construct the transfer matrix from the provided representation
-        // of the continuous spectrum.
+        INT ret_code = SUCCESS;
+        COMPLEX *transfer_matrix = NULL;
         
-        switch (opts_ptr->contspec_type) {
+        if (contspec != NULL){
             
-            case fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT:
-                ret_code = transfer_matrix_from_reflection_coefficient(M, contspec, XI,
-                        D, T, deg,
-                        transfer_matrix,
-                        kappa, opts_ptr);
-                CHECK_RETCODE(ret_code, leave_fun);
-                break;
-                
-            case fnft_nsev_inverse_cstype_B_OF_TAU:
-                ret_code = transfer_matrix_from_B_of_tau(M, contspec, D, T, deg,
-                        transfer_matrix, kappa,
-                        opts_ptr);
-                CHECK_RETCODE(ret_code, leave_fun);
-                break;
-                
-            default:
-                
-                ret_code = E_INVALID_ARGUMENT(opts_ptr->contspec_type);
+            opts_ptr->discspec_inversion_method = fnft_nsev_inverse_dsmethod_ADDSOLITON_CDT;
+            
+            // Allocated memory and initialize values that we will need later
+            const UINT deg = D*nse_discretization_degree(opts_ptr->discretization);
+            if (deg == 0)
+                return E_INVALID_ARGUMENT(discretization);
+            
+            transfer_matrix = malloc(4*(deg+1) * sizeof(COMPLEX));
+            if (transfer_matrix == NULL) {
+                ret_code = E_NOMEM;
                 goto leave_fun;
+            }
+            
+            // Step 1: Construct the transfer matrix from the provided representation
+            // of the continuous spectrum.
+            
+            switch (opts_ptr->contspec_type) {
                 
+                case fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT:
+                    ret_code = transfer_matrix_from_reflection_coefficient(M, contspec, XI,
+                            D, T, deg,
+                            transfer_matrix,
+                            kappa, opts_ptr);
+                    CHECK_RETCODE(ret_code, leave_fun);
+                    break;
+                    
+                case fnft_nsev_inverse_cstype_B_OF_TAU:
+                    ret_code = transfer_matrix_from_B_of_tau(M, contspec, D, T, deg,
+                            transfer_matrix, kappa,
+                            opts_ptr);
+                    CHECK_RETCODE(ret_code, leave_fun);
+                    break;
+                    
+                default:
+                    
+                    ret_code = E_INVALID_ARGUMENT(opts_ptr->contspec_type);
+                    goto leave_fun;
+                    
+            }
+            
+            // Step 2: Recover the time domain signal from the transfer matrix.
+            
+            const REAL eps_t = (T[1] - T[0]) / (D - 1);
+            ret_code = nse_finvscatter(deg, transfer_matrix, q, eps_t, kappa,
+                    opts_ptr->discretization);
+            CHECK_RETCODE(ret_code, leave_fun);
         }
         
-        // Step 2: Recover the time domain signal from the transfer matrix.
+        // Availability of bound_states and normconsts_or_residues has
+        // already been checked.
+        if (K > 0){
+            
+            if (opts_ptr->discspec_inversion_method == fnft_nsev_inverse_dsmethod_DEFAULT)
+                opts_ptr->discspec_inversion_method = fnft_nsev_inverse_dsmethod_MULTISOLITON_CDT;
+            ret_code = add_discrete_spectrum(K, bound_states, normconsts_or_residues,
+                    D, q, T, opts_ptr);
+        }
         
-        const REAL eps_t = (T[1] - T[0]) / (D - 1);
-        ret_code = nse_finvscatter(deg, transfer_matrix, q, eps_t, kappa,
-                opts_ptr->discretization);
-        CHECK_RETCODE(ret_code, leave_fun);
-    }
-    
-    // Availability of bound_states and normconsts_or_residues has
-    // already been checked.
-    if (K > 0){
-        ret_code = add_discrete_spectrum(K, bound_states, normconsts_or_residues,
-                D, q, T, opts_ptr, contspec_flag);
-    }
-    
-    leave_fun:
-        free(transfer_matrix);
-        return ret_code;
+        leave_fun:
+            free(transfer_matrix);
+            return ret_code;
 }
 
 // This auxiliary function removes the phase factors that result from
@@ -563,8 +563,7 @@ static INT add_discrete_spectrum(
         const UINT D,
         COMPLEX * const q,
         REAL const * const T,
-        fnft_nsev_inverse_opts_t const * const opts_ptr,
-        UINT const contspec_flag)
+        fnft_nsev_inverse_opts_t const * const opts_ptr)
 {
     if (K <= 0)
         return E_INVALID_ARGUMENT(K);
@@ -573,8 +572,10 @@ static INT add_discrete_spectrum(
     if (normconsts_or_residues == NULL)
         return E_INVALID_ARGUMENT(normconsts_or_residues);
     
-    COMPLEX bnd_states[K];
-    COMPLEX norm_consts[K];
+    COMPLEX * bnd_states = NULL;
+    COMPLEX * norm_consts = NULL;
+    COMPLEX * bnd_states_conj = NULL;
+    COMPLEX * bnd_states_diff = NULL;
     COMPLEX tmp;
     COMPLEX * phi = NULL;
     COMPLEX * psi = NULL;
@@ -584,7 +585,13 @@ static INT add_discrete_spectrum(
     REAL * t = NULL;
     REAL const eps_t = (T[1] - T[0])/(D-1);
     t = malloc(D * sizeof(REAL));
-    if (t == NULL) {
+    bnd_states = malloc(K * sizeof(COMPLEX));
+    norm_consts = malloc(K * sizeof(COMPLEX));
+    bnd_states_conj = malloc(K * sizeof(COMPLEX));
+    bnd_states_diff = malloc(K * sizeof(COMPLEX));
+    if (t == NULL || bnd_states == NULL ||
+            bnd_states_conj == NULL || bnd_states_diff == NULL ||
+            norm_consts == NULL) {
         ret_code = E_NOMEM;
         goto leave_fun;
     }
@@ -620,140 +627,142 @@ static INT add_discrete_spectrum(
     //Checking for multiplicity of bound_states.
     for (i = 0; i < K-1; i++){
         if (bnd_states[i+1] == bnd_states[i]){
-            ret_code = E_SANITY_CHECK_FAILED("Bound_states should be simple (multiplicity should be 1).");
+            ret_code = E_SANITY_CHECK_FAILED(Bound_states should be simple (multiplicity should be 1).);
             goto leave_fun;
         }
     }
     
-    if (opts_ptr->discspec_inversion_method == fnft_nsev_inverse_dsmethod_CDT){
-        
-        //Computing few values which will be used repeatdely in the code below
-        COMPLEX bnd_states_conj[K];
-        COMPLEX bnd_states_diff[K];
-        
+    
+    
+    //Computing few values which will be used repeatdely in the code below
+   
+    for (i = 0; i < K; i++){
+        bnd_states_conj[i] = CONJ(bnd_states[i]);
+        bnd_states_diff[i] = 2*I*CIMAG(bnd_states[i]);
+    }
+    //CDT works with norming constants so residues need to be converted to
+    // norming constants
+    if (opts_ptr->discspec_type == fnft_nsev_inverse_dstype_RESIDUE){
         for (i = 0; i < K; i++){
-            bnd_states_conj[i] = CONJ(bnd_states[i]);
-            bnd_states_diff[i] = 2*I*CIMAG(bnd_states[i]);
-        }
-        //CDT works with norming constants so residues need to be converted to
-        // norming constants
-        if (opts_ptr->discspec_type == fnft_nsev_inverse_dstype_RESIDUE){
-            for (i = 0; i < K; i++){
-                tmp = 1;
-                for (j = 0; j < K; j++){
-                    if (j != i){
-                        tmp = tmp*(bnd_states[i]-bnd_states[j])/(bnd_states[i]-CONJ(bnd_states[j]));
-                    }
+            tmp = 1;
+            for (j = 0; j < K; j++){
+                if (j != i){
+                    tmp = tmp*(bnd_states[i]-bnd_states[j])/(bnd_states[i]-CONJ(bnd_states[j]));
                 }
-                norm_consts[i]=(norm_consts[i]/bnd_states_diff[i])*tmp;
             }
-            
+            norm_consts[i]=(norm_consts[i]/bnd_states_diff[i])*tmp;
         }
         
-        // In absence of contspec some tricks can be used to
-        // speed up computation and improve numerical conditioning
-        // of the multi-soliton solution
-        if (contspec_flag == 0){
-            
-            COMPLEX qt, rho, rhok[K], rhoc, f;
-            UINT n;
-            for (n = zc_point; n < D; n++){
-                qt = 0.0;
-                for (i = 0; i < K; i++){
-                    rhok[i] = norm_consts[i]*CEXP(2*I*bnd_states[i]*t[n]);
-                }
-                for (i = 0; i < K; i++){
-                    rho = rhok[i];
-                    rhoc = CONJ(rho);
-                    f = bnd_states_diff[i]/(1+CABS(rho)*CABS(rho));
-                    qt = qt + 2*rhoc*f*I;
-                    for (j = i+1; j < K; j++){
-                        rhok[j] = (((bnd_states[j]-bnd_states[i])*rhok[j]+
-                                (rhok[j]-rho)*f)/(bnd_states[j]-bnd_states_conj[i]-(1+rhoc*rhok[j])*f));
-                    }
-                }
-                q[n] = qt;
+    }
+    
+    // In absence of contspec some tricks can be used to
+    // speed up computation and improve numerical conditioning
+    // of the multi-soliton solution
+    if (opts_ptr->discspec_inversion_method == fnft_nsev_inverse_dsmethod_MULTISOLITON_CDT){
+        
+        COMPLEX qt, rho, rhok[K], rhoc, f;
+        UINT n;
+        for (n = zc_point; n < D; n++){
+            qt = 0.0;
+            for (i = 0; i < K; i++){
+                rhok[i] = norm_consts[i]*CEXP(2*I*bnd_states[i]*t[n]);
             }
-            
-            for (i = 0; i < K; i++)
-                norm_consts[i] = 1/norm_consts[i];
-            
-            for (n = 0; n < zc_point; n++){
-                qt = 0.0;
-                for (i = 0; i < K; i++){
-                    rhok[i] = norm_consts[i]*CEXP(-2*I*bnd_states[i]*t[n]);
+            for (i = 0; i < K; i++){
+                rho = rhok[i];
+                rhoc = CONJ(rho);
+                f = bnd_states_diff[i]/(1+CABS(rho)*CABS(rho));
+                qt = qt + 2*rhoc*f*I;
+                for (j = i+1; j < K; j++){
+                    rhok[j] = (((bnd_states[j]-bnd_states[i])*rhok[j]+
+                            (rhok[j]-rho)*f)/(bnd_states[j]-bnd_states_conj[i]-(1+rhoc*rhok[j])*f));
                 }
-                for (i = 0; i < K; i++){
-                    rho = rhok[i];
-                    rhoc = CONJ(rho);
-                    f = bnd_states_diff[i]/(1+CABS(rho)*CABS(rho));
-                    qt = qt + 2*rhoc*f*I;
-                    for (j = i+1; j < K; j++){
-                        rhok[j] = (((bnd_states[j]-bnd_states[i])*rhok[j]+
-                                (rhok[j]-rho)*f)/(bnd_states[j]-bnd_states_conj[i]-(1+rhoc*rhok[j])*f));
-                    }
-                }
-                q[n] = CONJ(qt);
             }
-            
+            q[n] = qt;
         }
-        else if (contspec_flag == 1){
-            
-            // Allocate memory for computing eigenfuctions
-            // In MATLAB notation
-            //phi = zeros(2,D,K)
-            //Here in C phi = [phi(1,1,1),phi(1,2,1),...,phi(1,D,1),phi(1,1,2),...
-            // phi(1,D,K), phi(2,1,1),phi(2,2,1),...,phi(2,D,1),phi(2,1,2),...
-            // phi(2,D,K)]
-            phi = malloc((D*K*2) * sizeof(COMPLEX));
-            psi = malloc((D*K*2) * sizeof(COMPLEX));
-            if (phi == NULL || psi == NULL) {
-                ret_code = E_NOMEM;
-                goto leave_fun;
+        
+        for (i = 0; i < K; i++)
+            norm_consts[i] = 1/norm_consts[i];
+        
+        for (n = 0; n < zc_point; n++){
+            qt = 0.0;
+            for (i = 0; i < K; i++){
+                rhok[i] = norm_consts[i]*CEXP(-2*I*bnd_states[i]*t[n]);
             }
-            INT sgn_fac = 1;
-            if (K%2 != 0){
-                sgn_fac = -1;
-                for (i = 0; i < K; i++)
-                    norm_consts[i] = -norm_consts[i];
+            for (i = 0; i < K; i++){
+                rho = rhok[i];
+                rhoc = CONJ(rho);
+                f = bnd_states_diff[i]/(1+CABS(rho)*CABS(rho));
+                qt = qt + 2*rhoc*f*I;
+                for (j = i+1; j < K; j++){
+                    rhok[j] = (((bnd_states[j]-bnd_states[i])*rhok[j]+
+                            (rhok[j]-rho)*f)/(bnd_states[j]-bnd_states_conj[i]-(1+rhoc*rhok[j])*f));
+                }
             }
-            ret_code = compute_eigenfunctions(K, bnd_states, D, q, T, phi, psi);
-            CHECK_RETCODE(ret_code, leave_fun);
+            q[n] = CONJ(qt);
+        }
+        
+    }
+    else if (opts_ptr->discspec_inversion_method == fnft_nsev_inverse_dsmethod_ADDSOLITON_CDT){
+        
+        // Allocate memory for computing eigenfuctions
+        // In MATLAB notation
+        //phi = zeros(2,D,K)
+        //Here in C phi = [phi(1,1,1),phi(1,2,1),...,phi(1,D,1),phi(1,1,2),...
+        // phi(1,D,K), phi(2,1,1),phi(2,2,1),...,phi(2,D,1),phi(2,1,2),...
+        // phi(2,D,K)]
+        phi = malloc((D*K*2) * sizeof(COMPLEX));
+        psi = malloc((D*K*2) * sizeof(COMPLEX));
+        if (phi == NULL || psi == NULL) {
+            ret_code = E_NOMEM;
+            goto leave_fun;
+        }
+        INT sgn_fac = 1;
+        if (K%2 != 0){
+            sgn_fac = -1;
+            for (i = 0; i < K; i++)
+                norm_consts[i] = -norm_consts[i];
+        }
+        ret_code = compute_eigenfunctions(K, bnd_states, D, q, T, phi, psi);
+        CHECK_RETCODE(ret_code, leave_fun);
 //             misc_print_buf(2*K*D, phi, "phi");
 //             misc_print_buf(2*K*D, psi, "psi");
-            COMPLEX S1[K], S2[K], phi1, phi2, psi1, psi2, beta, qn;
-            UINT n;
-            for (n = 0; n < D; n++){
-                qn = q[n];
-                for (i = 0; i < K; i++){
-                    phi1 = phi[n + i*D];
-                    phi2 = phi[n + (K+i)*D];
-                    psi1 = psi[n + i*D];
-                    psi2 = psi[n + (K+i)*D];
-                    if (i > 0){
-                        for (j = 0; j < i; j++){
-                            tmp = (bnd_states[i]-S1[j])*phi1 -S2[j]*phi2;
-                            phi2 = CONJ(S2[j])*phi1 + (bnd_states[i]-CONJ(S1[j]))*phi2;
-                            phi1 = tmp;
-                            tmp = (bnd_states[i]-S1[j])*psi1 -S2[j]*psi2;
-                            psi2 = CONJ(S2[j])*psi1 + (bnd_states[i]-CONJ(S1[j]))*psi2;
-                            psi1 = tmp;
-                        }
+        COMPLEX S1[K], S2[K], phi1, phi2, psi1, psi2, beta, qn;
+        UINT n;
+        for (n = 0; n < D; n++){
+            qn = q[n];
+            for (i = 0; i < K; i++){
+                phi1 = phi[n + i*D];
+                phi2 = phi[n + (K+i)*D];
+                psi1 = psi[n + i*D];
+                psi2 = psi[n + (K+i)*D];
+                if (i > 0){
+                    for (j = 0; j < i; j++){
+                        tmp = (bnd_states[i]-S1[j])*phi1 -S2[j]*phi2;
+                        phi2 = CONJ(S2[j])*phi1 + (bnd_states[i]-CONJ(S1[j]))*phi2;
+                        phi1 = tmp;
+                        tmp = (bnd_states[i]-S1[j])*psi1 -S2[j]*psi2;
+                        psi2 = CONJ(S2[j])*psi1 + (bnd_states[i]-CONJ(S1[j]))*psi2;
+                        psi1 = tmp;
                     }
-                    beta = (phi1 - norm_consts[i]*psi1)/(phi2 - norm_consts[i]*psi2);
-                    tmp = CABS(beta)*CABS(beta);
-                    S1[i] = (tmp*bnd_states[i] + CONJ(bnd_states[i]))/(1 + tmp);
-                    S2[i] = (2*I*CIMAG(bnd_states[i])*beta)/(1 + tmp);
-                    qn = qn - 2*I*S2[i];
                 }
-                q[n] = sgn_fac*qn;
+                beta = (phi1 - norm_consts[i]*psi1)/(phi2 - norm_consts[i]*psi2);
+                tmp = CABS(beta)*CABS(beta);
+                S1[i] = (tmp*bnd_states[i] + CONJ(bnd_states[i]))/(1 + tmp);
+                S2[i] = (2*I*CIMAG(bnd_states[i])*beta)/(1 + tmp);
+                qn = qn - 2*I*S2[i];
             }
+            q[n] = sgn_fac*qn;
         }
     }
+    
     leave_fun:
         free(t);
         free(phi);
         free(psi);
+        free(bnd_states);
+        free(bnd_states_conj);
+        free(bnd_states_diff);
+        free(norm_consts);
         return ret_code;
 }
 

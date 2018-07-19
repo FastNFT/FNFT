@@ -55,7 +55,7 @@ int main()
     fnft_nsev_inverse_opts_t opts = fnft_nsev_inverse_default_opts();
     opts.discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANT;
     opts.discspec_inversion_method
-            = fnft_nsev_inverse_dsmethod_CDT;
+            = fnft_nsev_inverse_dsmethod_MULTISOLITON_CDT;
     
     ret_code = fnft_nsev_inverse(M, NULL, XI, K, bound_states, normconsts_or_residues, D, q, T,
             1, &opts);
@@ -85,9 +85,9 @@ int main()
 
     opts.discspec_type = fnft_nsev_inverse_dstype_RESIDUE;
     opts.discspec_inversion_method
-            = fnft_nsev_inverse_dsmethod_CDT;
+            = fnft_nsev_inverse_dsmethod_MULTISOLITON_CDT;
     
-    ret_code = fnft_nsev_inverse(M, NULL, XI, 5, bound_states, normconsts_or_residues, D, q, T,
+    ret_code = fnft_nsev_inverse(M, NULL, XI, K, bound_states, normconsts_or_residues, D, q, T,
             1, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
