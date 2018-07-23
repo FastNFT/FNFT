@@ -1,6 +1,6 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
+* This file is part of FNFT.
+*
 * FNFT is free software; you can redistribute it and/or
 * modify it under the terms of the version 2 of the GNU General
 * Public License as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-*                                                                      
+*
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
@@ -23,6 +23,7 @@
 #define FNFT_VERSION_MAJOR @FNFT_VERSION_MAJOR@
 #define FNFT_VERSION_MINOR @FNFT_VERSION_MINOR@
 #define FNFT_VERSION_PATCH @FNFT_VERSION_PATCH@
+#define FNFT_VERSION_SUFFIX "@FNFT_VERSION_SUFFIX@"
 
 #cmakedefine HAVE__THREAD_LOCAL 1
 #cmakedefine HAVE___THREAD 1
@@ -30,4 +31,3 @@
 #cmakedefine HAVE_FFTW3 1
 
 #endif
-
