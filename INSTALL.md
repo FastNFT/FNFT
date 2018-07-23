@@ -49,6 +49,7 @@ To make FNFT available for all users of the system, run the commands
 
     cd ~/FNFT/build
     sudo make install
+    sudo ldconfig
 
 To uninstall FNFT, run the commands
 
