@@ -123,9 +123,9 @@ static INT akns_fscatter_test_2split6A()
             }
         }
 #ifdef DEBUG
-        printf("error without normalization = %2.1e < %2.1e\n",misc_rel_err(4*nz, result, result_exact),255*EPSILON);
+        printf("error without normalization = %2.1e < %2.1e\n",misc_rel_err(4*nz, result, result_exact),261*EPSILON);
 #endif
-        if (misc_rel_err(4*nz, result, result_exact) > 255*EPSILON)
+        if (misc_rel_err(4*nz, result, result_exact) > 261*EPSILON)
             return E_TEST_FAILED;
         
         // with normalization
@@ -155,9 +155,9 @@ static INT akns_fscatter_test_2split6A()
         }
         
 #ifdef DEBUG
-        printf("error with normalization = %2.1e < %2.1e\n",misc_rel_err(4*nz, result, result_exact),255*EPSILON);
+        printf("error with normalization = %2.1e < %2.1e\n",misc_rel_err(4*nz, result, result_exact),261*EPSILON);
 #endif
-        if (misc_rel_err(4*nz, result, result_exact) > 255*EPSILON)
+        if (misc_rel_err(4*nz, result, result_exact) > 261*EPSILON)
             return E_TEST_FAILED;
         
         
