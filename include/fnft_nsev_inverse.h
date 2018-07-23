@@ -27,8 +27,7 @@
 #ifndef FNFT_NSEV_INVERSE_H
 #define FNFT_NSEV_INVERSE_H
 
-
-#include "fnft__nse_discretization.h"
+#include "fnft_nse_discretization_t.h"
 
 /**
  * Enum that specifies in which form the continuous spectrum is provided.
@@ -151,7 +150,7 @@ fnft_nsev_inverse_opts_t fnft_nsev_inverse_default_opts();
  *  defined in \link fnft_errwarn.h \endlink.
  * @param[in] discretization See \link fnft__nse_finvscatter \endlink. Currently,
  *   only the 2SPLIT2_MODAL and 2SPLIT2A discretizations are supported.
- * 
+ *
  * @ingroup fnft_inverse
  */
 FNFT_INT fnft_nsev_inverse_XI(
