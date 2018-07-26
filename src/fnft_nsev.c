@@ -16,6 +16,7 @@
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
  * Shrinivas Chimmalgi (TU Delft) 2017-2018.
+ * Marius Brehler (TU Dortmund) 2018.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -375,7 +376,7 @@ leave_fun:
 
 // Auxiliary function for filtering: We assume that bound states must have
 // real part in the interval [-re_bound, re_bound].
-static inline REAL re_bound(REAL eps_t, REAL map_coeff)
+static inline REAL re_bound(const REAL eps_t, const REAL map_coeff)
 {
     // At least for discretizations in which the continuous-time
     // spectral parameter lam is mapped to z=exp(map_coeff*j*lam*eps_t), we
