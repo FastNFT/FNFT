@@ -225,7 +225,7 @@ inline INT poly_fmult_two_polys2x2(const UINT deg,
     COMPLEX * const buf1,
     COMPLEX * const buf2)
 {
-    UINT ret_code;
+    INT ret_code;
 
     COMPLEX const * const p1_12 = p1_11 + p1_stride;
     COMPLEX const * const p1_21 = p1_12 + p1_stride;
