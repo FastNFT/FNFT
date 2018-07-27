@@ -54,7 +54,7 @@
  * indicates that a subroutine failed with the error code abs(ec).
  * @ingroup private_errwarn
  */
-#define FNFT__E_SUBROUTINE(ec)       FNFT__ERRMSG(-abs((FNFT_INT) ec), "Subroutine failure.")
+#define FNFT__E_SUBROUTINE(ec)       FNFT__ERRMSG(-abs(ec), "Subroutine failure.")
 
 /**
  * Macro for raising an division by zero error.
