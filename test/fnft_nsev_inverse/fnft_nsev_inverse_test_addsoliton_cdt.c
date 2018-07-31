@@ -30,7 +30,6 @@
 
 static INT nsev_inverse_test_addsoliton_cdt(UINT const D, REAL const error_bound)
 {
-    const UINT M = D+2;
     const UINT K = 3;
     COMPLEX * q_exact = NULL;
     COMPLEX * q = NULL;
@@ -60,7 +59,7 @@ static INT nsev_inverse_test_addsoliton_cdt(UINT const D, REAL const error_bound
     opts.discspec_inversion_method
             = fnft_nsev_inverse_dsmethod_ADDSOLITON_CDT;
 
-    ret_code = fnft_nsev_inverse(M, NULL, XI, K, bound_states, normconsts_or_residues, D, q, T,
+    ret_code = fnft_nsev_inverse(0, NULL, XI, K, bound_states, normconsts_or_residues, D, q, T,
             1, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
@@ -94,7 +93,7 @@ static INT nsev_inverse_test_addsoliton_cdt(UINT const D, REAL const error_bound
     opts.discspec_inversion_method
             = fnft_nsev_inverse_dsmethod_ADDSOLITON_CDT;
 
-    ret_code = fnft_nsev_inverse(M, NULL, XI, K, bound_states, normconsts_or_residues, D, q, T,
+    ret_code = fnft_nsev_inverse(0, NULL, XI, K, bound_states, normconsts_or_residues, D, q, T,
             1, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
@@ -118,11 +117,18 @@ INT main()
 
     UINT D = 512;
     REAL error_bound = 0.0029;
-    if (nsev_inverse_test_addsoliton_cdt(D, error_bound) != SUCCESS)
+    INT ret_code = SUCCESS;
+    ret_code = nsev_inverse_test_addsoliton_cdt(D, error_bound);
+    if ( ret_code != SUCCESS){
+        E_SUBROUTINE(ret_code)
         return EXIT_FAILURE;
+    }
    //Checking for quadratic error decay
-    if (nsev_inverse_test_addsoliton_cdt(D*2, error_bound/4) != SUCCESS)
+    ret_code = nsev_inverse_test_addsoliton_cdt(D*2, error_bound/4);
+    if ( ret_code != SUCCESS){
+        E_SUBROUTINE(ret_code)
         return EXIT_FAILURE;
+    }
 
     return EXIT_SUCCESS;
 }

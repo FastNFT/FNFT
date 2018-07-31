@@ -31,7 +31,6 @@
 int main()
 {
     const UINT D = 16384;
-    const UINT M = D+2;
     const UINT K = 5;
     COMPLEX * q_exact = NULL;
     COMPLEX * q = NULL;
@@ -57,7 +56,7 @@ int main()
     opts.discspec_inversion_method
             = fnft_nsev_inverse_dsmethod_MULTISOLITON_CDT;
 
-    ret_code = fnft_nsev_inverse(M, NULL, XI, K, bound_states, normconsts_or_residues, D, q, T,
+    ret_code = fnft_nsev_inverse(0, NULL, XI, K, bound_states, normconsts_or_residues, D, q, T,
             1, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
@@ -87,7 +86,7 @@ int main()
     opts.discspec_inversion_method
             = fnft_nsev_inverse_dsmethod_MULTISOLITON_CDT;
 
-    ret_code = fnft_nsev_inverse(M, NULL, XI, K, bound_states, normconsts_or_residues, D, q, T,
+    ret_code = fnft_nsev_inverse(0, NULL, XI, K, bound_states, normconsts_or_residues, D, q, T,
             1, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
