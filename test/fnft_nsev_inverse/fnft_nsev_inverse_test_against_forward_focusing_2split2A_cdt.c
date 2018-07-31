@@ -30,7 +30,7 @@
 
 int main()
 {
-    const UINT D = 512;
+    const UINT D = 256;
     const UINT M = 4*D;
     COMPLEX * q_exact = NULL;
     COMPLEX * q = NULL;
@@ -40,7 +40,7 @@ int main()
     K_ptr = &K;
     COMPLEX * bound_states = NULL;
     COMPLEX * normconsts_or_residues = NULL;
-    REAL T[2] = {-10.0, 10.0};
+    REAL T[2] = {-32.0, 32.0};
     REAL XI[2], t = 0;
     UINT i;
     INT const kappa = 1;
@@ -59,7 +59,7 @@ int main()
     //Compute q_exact
     for (i = 0; i < D; i++){
         t = T[0] + i*(T[1] - T[0])/(D - 1);
-        q_exact[i] = 2.4*misc_sech(t);//*CEXP(-6*I*t);
+        q_exact[i] = 3.4*misc_sech(t)*CEXP(-6*I*t);
     }
     
     //Setting up inverse transform options
@@ -74,7 +74,7 @@ int main()
     
     //Setting up forward transform options
     fnft_nsev_opts_t opts_fwd = fnft_nsev_default_opts();
-    opts_fwd.discretization = nse_discretization_2SPLIT2A;
+//     opts_fwd.discretization = nse_discretization_2SPLIT2A;
     
     //Obtain XI grid
     ret_code = fnft_nsev_inverse_XI(D, T, M, XI, opts_inv.discretization);
@@ -86,6 +86,13 @@ int main()
     CHECK_RETCODE(ret_code, leave_fun);
     misc_print_buf(*K_ptr, bound_states, "EV");
     misc_print_buf(*K_ptr, normconsts_or_residues, "b");
+    
+    bound_states[0] = 3+.9*I;
+    bound_states[1] = 3+1.9*I;
+    bound_states[2] = 3+2.9*I;
+    normconsts_or_residues[0] = -1;
+    normconsts_or_residues[1] = 1;
+    normconsts_or_residues[2] = -1;
     //Perform full inverse NFT
     ret_code = fnft_nsev_inverse(M, contspec, XI, *K_ptr, bound_states, normconsts_or_residues, D, q, T,
             kappa, &opts_inv);

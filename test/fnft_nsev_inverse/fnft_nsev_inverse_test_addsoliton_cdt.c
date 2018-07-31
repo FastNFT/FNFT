@@ -28,14 +28,13 @@
 #include "fnft__misc.h"
 #include <stdio.h>
 
-int main()
+static INT nsev_inverse_test_addsoliton_cdt(UINT const D, REAL const error_bound)
 {
-    const UINT D = 512;
     const UINT M = D+2;
     const UINT K = 3;
     COMPLEX * q_exact = NULL;
     COMPLEX * q = NULL;
-    COMPLEX bound_states[3] = {2.5 + 0.85*I, 2.5 + 1.85*I, 2.5 + 2.85*I};
+    COMPLEX bound_states[3] = {2.5 + 0.9*I, 2.5 + 1.9*I, 2.5 + 2.9*I};
     COMPLEX normconsts_or_residues[3] = {-1.0, 1.0, -1.0};
     REAL T[2] = {-20.0, 20.0};
     REAL XI[2];
@@ -69,7 +68,7 @@ int main()
 #ifdef DEBUG
     printf("error = %g\n", error);
 #endif
-    if (!(error < 0.029)) {
+    if (!(error < error_bound)) {
         ret_code = E_TEST_FAILED;
         goto leave_fun;
     }
@@ -103,7 +102,7 @@ int main()
 #ifdef DEBUG
     printf("error = %g\n", error);
 #endif
-    if (!(error < 0.029)) {
+    if (!(error < error_bound)) {
         ret_code = E_TEST_FAILED;
         goto leave_fun;
     }
@@ -111,8 +110,19 @@ int main()
     leave_fun:
         free(q_exact);
         free(q);
-        if (ret_code == SUCCESS)
-            return EXIT_SUCCESS;
-        else
-            return EXIT_FAILURE;
+        return ret_code;
+}
+
+INT main()
+{
+
+    UINT D = 512;
+    REAL error_bound = 0.0029;
+    if (nsev_inverse_test_addsoliton_cdt(D, error_bound) != SUCCESS)
+        return EXIT_FAILURE;
+   //Checking for quadratic error decay
+    if (nsev_inverse_test_addsoliton_cdt(D*2, error_bound/4) != SUCCESS)
+        return EXIT_FAILURE;
+    
+    return EXIT_SUCCESS;
 }

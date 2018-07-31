@@ -44,7 +44,23 @@ fnft_nsev_inverse_opts_t fnft_nsev_inverse_default_opts()
 {
     return default_opts;
 }
+/**
+ * Returns the scattering matrix for a single step at frequency zero.
+ */
+static inline void akns_fscatter_zero_freq_scatter_matrix(COMPLEX * const M,
+                                                const REAL eps_t, const COMPLEX q, const COMPLEX r)
+{   
+    // This function computes the matrix exponential
+    //   M = expm([0,q;r,0]*eps_t);
+    COMPLEX Delta, del;
+    Delta = eps_t * CSQRT(-q*r);
+    del = eps_t * misc_CSINC(Delta);
+    M[0] = CCOS(Delta);
+    M[2] = r * del;
+    M[1] = q * del;
+    
 
+}
 INT fnft_nsev_inverse_XI(const UINT D, REAL const * const T,
         const UINT M, REAL * const XI,
         const nse_discretization_t discretization)
@@ -724,8 +740,6 @@ static INT add_discrete_spectrum(
         }
         ret_code = compute_eigenfunctions(K, bnd_states, D, q, T, phi, psi);
         CHECK_RETCODE(ret_code, leave_fun);
-//             misc_print_buf(2*K*D, phi, "phi");
-//             misc_print_buf(2*K*D, psi, "psi");
         COMPLEX S1[K], S2[K], phi1, phi2, psi1, psi2, beta, qn;
         UINT n;
         for (n = 0; n < D; n++){
@@ -780,7 +794,6 @@ static INT compute_eigenfunctions(
     COMPLEX * phi1_ptr, * phi2_ptr;
     COMPLEX * psi1_ptr, * psi2_ptr;
     COMPLEX l, ks, k, scl, ch, sh, u1, tmp1, tmp2;
-//     COMPLEX U[2][2] = {{ 0 }};
     const REAL eps_t = ((T[1] - T[0])/(D - 1))/2; //Note this is half of the
     // time-step defined elsewhere
     // computing-phi
@@ -792,63 +805,34 @@ static INT compute_eigenfunctions(
         //Apply boundary condition
         phi1_ptr[0] = CEXP(-I*l*T[0]);
         phi2_ptr[0] = 0.0;
+        
+        ks = (-(CABS(q[0])*CABS(q[0]))-(l*l));
+        k = CSQRT(ks);
+        ch = CCOSH(k*eps_t);
+        sh = CSINH(k*eps_t)/k;
+        u1 = l*sh*I;
         for (n = 1; n < D; n++){
             //First half-step
-            ks = (-(CABS(q[n-1])*CABS(q[n-1]))-(l*l));
-            k = CSQRT(ks);
-            ch = CCOSH(k*eps_t);
-            sh = CSINH(k*eps_t)/k;
-            u1 = l*sh*I;
-            
             if (ks != 0){
-//                 U[0][0] = ch-u1;
-//                 U[0][1] = q[n]*sh;
-//                 U[1][0] = -CONJ(q[n])*sh;
-//                 U[1][1] = ch + u1;
-//
                 phi1_ptr[n] = (ch-u1)*phi1_ptr[n-1] + (q[n-1]*sh)*phi2_ptr[n-1];
                 phi2_ptr[n] = (-CONJ(q[n-1])*sh)*phi1_ptr[n-1] + (ch + u1)*phi2_ptr[n-1];
             }
             else{
-//                 U[0][0] = 1;
-//                 U[0][1] = 0;
-//                 U[1][0] = 0;
-//                 U[1][1] = 1;
                 phi1_ptr[n] = phi1_ptr[n-1];
                 phi2_ptr[n] = phi2_ptr[n-1];
             }
-//             phi1_ptr[n] = U[0][0]*phi1_ptr[n-1] + U[0][1]*phi2_ptr[n-1];
-//             phi2_ptr[n] = U[1][0]*phi1_ptr[n-1] + U[1][1]*phi2_ptr[n-1];
-            
             //Second half-step
             ks = (-(CABS(q[n])*CABS(q[n]))-(l*l));
             k = CSQRT(ks);
             ch = CCOSH(k*eps_t);
             sh = CSINH(k*eps_t)/k;
             u1 = l*sh*I;
-            
             if (ks != 0){
-//                 U[0][0] = ch-u1;
-//                 U[0][1] = q[n]*sh;
-//                 U[1][0] = -CONJ(q[n])*sh;
-//                 U[1][1] = ch + u1;
                 tmp1 = (ch-u1)*phi1_ptr[n] + (q[n]*sh)*phi2_ptr[n];
                 tmp2 = (-CONJ(q[n])*sh)*phi1_ptr[n] + (ch + u1)*phi2_ptr[n];
                 phi1_ptr[n] = tmp1;
                 phi2_ptr[n] = tmp2;
             }
-//             else{
-// //                 U[0][0] = 1;
-// //                 U[0][1] = 0;
-// //                 U[1][0] = 0;
-// //                 U[1][1] = 1;
-//                             phi1_ptr[n] = phi1_ptr[n];
-//             phi2_ptr[n] = phi2_ptr[n-1];
-//             }
-//             tmp1 = U[0][0]*phi1_ptr[n] + U[0][1]*phi2_ptr[n];
-//             tmp2 = U[1][0]*phi1_ptr[n] + U[1][1]*phi2_ptr[n];
-//             phi1_ptr[n] = tmp1;
-//             phi2_ptr[n] = tmp2;
         }
     }
     // computing-psi
@@ -860,64 +844,36 @@ static INT compute_eigenfunctions(
         //Apply boundary condition
         psi1_ptr[D-1] = 0.0;
         psi2_ptr[D-1] = CEXP(I*l*T[1]);
+        
+        ks = (-(CABS(q[D-1])*CABS(q[D-1]))-(l*l));
+        k = CSQRT(ks);
+        ch = CCOSH(k*eps_t);
+        sh = CSINH(k*eps_t)/k;
+        u1 = l*sh*I;
         for (n = D-1; n > 0; n--){
             //First half-step
-            ks = (-(CABS(q[n])*CABS(q[n]))-(l*l));
-            k = CSQRT(ks);
-            ch = CCOSH(k*eps_t);
-            sh = CSINH(k*eps_t)/k;
-            u1 = l*sh*I;
-            
             if (ks != 0){
-//                 U[0][0] = ch-u1;
-//                 U[0][1] = q[n]*sh;
-//                 U[1][0] = -CONJ(q[n])*sh;
-//                 U[1][1] = ch + u1;
                 scl = ((ch-u1)*(ch + u1))-(( -CONJ(q[n])*sh)*(q[n]*sh));
                 psi1_ptr[n-1] = ((ch + u1)*psi1_ptr[n] + (-q[n]*sh)*psi2_ptr[n])/scl;
                 psi2_ptr[n-1] = ((CONJ(q[n])*sh)*psi1_ptr[n] + (ch - u1)*psi2_ptr[n])/scl;
             }
             else{
-//                 U[0][0] = 1;
-//                 U[0][1] = 0;
-//                 U[1][0] = 0;
-//                 U[1][1] = 1;
                 psi1_ptr[n-1] = psi1_ptr[n];
                 psi2_ptr[n-1] = psi2_ptr[n];
             }
-//             phi1_ptr[n] = U[0][0]*phi1_ptr[n-1] + U[0][1]*phi2_ptr[n-1];
-//             phi2_ptr[n] = U[1][0]*phi1_ptr[n-1] + U[1][1]*phi2_ptr[n-1];
-            
             //Second half-step
             ks = (-(CABS(q[n-1])*CABS(q[n-1]))-(l*l));
             k = CSQRT(ks);
             ch = CCOSH(k*eps_t);
             sh = CSINH(k*eps_t)/k;
             u1 = l*sh*I;
-            
             if (ks != 0){
-//                 U[0][0] = ch-u1;
-//                 U[0][1] = q[n]*sh;
-//                 U[1][0] = -CONJ(q[n])*sh;
-//                 U[1][1] = ch + u1;
                 scl = ((ch-u1)*(ch + u1))-(( -CONJ(q[n-1])*sh)*(q[n-1]*sh));
-                tmp1 = (ch + u1)*psi1_ptr[n-1] + (-q[n-1]*sh)*psi2_ptr[n-1];
-                tmp2 = (CONJ(q[n-1])*sh)*psi1_ptr[n-1] + (ch - u1)*psi2_ptr[n-1];
+                tmp1 = ((ch + u1)*psi1_ptr[n-1] + (-q[n-1]*sh)*psi2_ptr[n-1])/scl;
+                tmp2 = ((CONJ(q[n-1])*sh)*psi1_ptr[n-1] + (ch - u1)*psi2_ptr[n-1])/scl;
                 psi1_ptr[n-1] = tmp1;
                 psi2_ptr[n-1] = tmp2;
             }
-//             else{
-// //                 U[0][0] = 1;
-// //                 U[0][1] = 0;
-// //                 U[1][0] = 0;
-// //                 U[1][1] = 1;
-//                             phi1_ptr[n] = phi1_ptr[n];
-//             phi2_ptr[n] = phi2_ptr[n-1];
-//             }
-//             tmp1 = U[0][0]*phi1_ptr[n] + U[0][1]*phi2_ptr[n];
-//             tmp2 = U[1][0]*phi1_ptr[n] + U[1][1]*phi2_ptr[n];
-//             phi1_ptr[n] = tmp1;
-//             phi2_ptr[n] = tmp2;
         }
     }
     return ret_code;
