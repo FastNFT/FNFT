@@ -27,8 +27,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     FNFT_UINT D;
     FNFT_COMPLEX * q = NULL;
     FNFT_REAL * T;
-    FNFT_UINT M;
+    FNFT_UINT M, K;
     FNFT_COMPLEX * contspec = NULL;
+    FNFT_COMPLEX * bound_states = NULL;
+    FNFT_COMPLEX * normconsts_or_residues = NULL;
     FNFT_REAL * XI;
     FNFT_INT kappa;
     FNFT_UINT i;
@@ -41,32 +43,37 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (nlhs < 1)
         return;
 
-    /* Check types and dimensions of the first four inputs: contspec, XI, D, T,
-       kappa */
+    /* Check types and dimensions of the first seven inputs: contspec, XI,
+       bound_states, normconsts_or_residues, D, T, kappa */
 
-    if (nrhs < 5)
-        mexErrMsgTxt("At least five inputs expected.");
-    if ( !mxIsComplex(prhs[0]) || mxGetM(prhs[0]) != 1)
-        mexErrMsgTxt("First input contspec should be a complex row vector. Try passing complex(q).");
+    if ( nrhs < 7 )
+        mexErrMsgTxt("At least seven inputs expected.");
+    if ( !mxIsEmpty(prhs[0]) && (!mxIsComplex(prhs[0]) || mxGetM(prhs[0]) != 1) )
+        mexErrMsgTxt("First input contspec should be a complex row vector or []. Try passing complex(contspec).");
     if ( !mxIsDouble(prhs[1]) || mxGetM(prhs[1]) != 1 || mxGetN(prhs[1]) != 2 )
         mexErrMsgTxt("Second input XI should be a double 1x2 vector.");
-    if ( !mxIsDouble(prhs[2]) || mxGetNumberOfElements(prhs[2]) != 1 )
-        mexErrMsgTxt("Second input D should be a scalar.");
-    if ( !mxIsDouble(prhs[3]) || mxGetM(prhs[2]) != 1 || mxGetN(prhs[3]) != 2 )
-        mexErrMsgTxt("Fourth input T should be a double 1x2 vector.");
+    if ( !mxIsEmpty(prhs[2]) && (!mxIsComplex(prhs[2]) || mxGetM(prhs[2]) != 1) )
+        mexErrMsgTxt("Third input bound_states should be a complex row vector or []. Try passing complex(bound_states).");
+    if ( !mxIsEmpty(prhs[3]) && (!mxIsComplex(prhs[3]) || mxGetM(prhs[3]) != 1) )
+        mexErrMsgTxt("Fourth input normconsts_or_residues should be a complex row vector or []. Try passing complex(normconsts_or_residues).");
     if ( !mxIsDouble(prhs[4]) || mxGetNumberOfElements(prhs[4]) != 1 )
-        mexErrMsgTxt("Fifth input kappa should be a scalar.");
+        mexErrMsgTxt("Fifth input D should be a scalar.");
+    if ( !mxIsDouble(prhs[5]) || mxGetM(prhs[5]) != 1 || mxGetN(prhs[5]) != 2 )
+        mexErrMsgTxt("Sixth input T should be a double 1x2 vector.");
+    if ( !mxIsDouble(prhs[6]) || mxGetNumberOfElements(prhs[6]) != 1 )
+        mexErrMsgTxt("Seventh input kappa should be a scalar.");
 
     M = mxGetNumberOfElements(prhs[0]);
-    T = mxGetPr(prhs[1]);
-    D = (unsigned int)mxGetScalar(prhs[2]);
-    XI = mxGetPr(prhs[3]);
-    kappa = (int)mxGetScalar(prhs[4]);
+    K = mxGetNumberOfElements(prhs[2]);
+    T = mxGetPr(prhs[5]);
+    D = (unsigned int)mxGetScalar(prhs[4]);
+    XI = mxGetPr(prhs[1]);
+    kappa = (int)mxGetScalar(prhs[6]);
 
     /* Check values of first four inputs */
 
-    if ( M<2 )
-        mexErrMsgTxt("Length of the first input contspec should be at least two.");
+    if ( K != mxGetNumberOfElements(prhs[3]) )
+        mexErrMsgTxt("bound_states and normconsts_or_residues should have the same lengths.");
     if ( T[0] >= T[1] )
         mexErrMsgTxt("T(1) >= T(2).");
     if ( XI[0] >= XI[1] )
@@ -86,7 +93,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     /* Check remaining inputs, if any */
 
-    for (k=5; k<nrhs; k++) {
+    for (k=7; k<nrhs; k++) {
 
         /* Check if current input is a string as desired and convert it */
         if ( !mxIsChar(prhs[k]) ) {
@@ -109,6 +116,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "cstype_B_of_tau") == 0 ) {
 
             opts.contspec_type = fnft_nsev_inverse_cstype_B_OF_TAU;
+
+        } else if ( strcmp(str, "dstype_residues") == 0 ) {
+
+            opts.contspec_type = fnft_nsev_inverse_dstype_RESIDUES;
 
         } else if ( strcmp(str, "csmethod_tfmatrix_contains_refl_coeff") == 0 ){
 
@@ -150,26 +161,37 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* Allocate memory */
 
     q = mxMalloc(D * sizeof(FNFT_COMPLEX));
-    if (q == NULL) {
-        snprintf(msg, sizeof msg, "Out of memory.");
-        goto on_error;
+    if (M>0)
+        contspec = mxMalloc(M * sizeof(FNFT_COMPLEX));
+    if (K>0) {
+        bound_states = mxMalloc(K * sizeof(FNFT_COMPLEX));
+        normconsts_or_residues = mxMalloc(K * sizeof(FNFT_COMPLEX));
     }
-    contspec = mxMalloc(M * sizeof(FNFT_COMPLEX));
-    if (contspec == NULL) {
+    if ( q == NULL || (M>0 && contspec == NULL) || (K>0 && bound_states == NULL)
+        || (K>0 && normconsts_or_residues == NULL) ) {
         snprintf(msg, sizeof msg, "Out of memory.");
         goto on_error;
     }
 
-    /* Convert input */
+    /* Convert inputs */
 
     re = mxGetPr(prhs[0]);
     im = mxGetPi(prhs[0]);
     for (i=0; i<M; i++)
         contspec[i] = re[i] + I*im[i];
+    re = mxGetPr(prhs[2]);
+    im = mxGetPi(prhs[2]);
+    for (i=0; i<K; i++)
+        bound_states[i] = re[i] + I*im[i];
+    re = mxGetPr(prhs[3]);
+    im = mxGetPi(prhs[3]);
+    for (i=0; i<K; i++)
+        normconsts_or_residues[i] = re[i] + I*im[i];
 
     /* Call the C routine */
 
-    ret_code = fnft_nsev_inverse(M, contspec, XI, 0, NULL, NULL, D, q, T, kappa, &opts);
+    ret_code = fnft_nsev_inverse(M, contspec, XI, K, bound_states,
+                                 normconsts_or_residues, D, q, T, kappa, &opts);
     if (ret_code != FNFT_SUCCESS) {
         snprintf(msg, sizeof msg, "fnft_nsev_inverse failed (error code %i).",
                 ret_code);

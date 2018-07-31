@@ -1,8 +1,11 @@
 % MEX_FNFT_NSEV_INVERSE Fast inverse nonlinear Fourier transform for the
 % nonlinear Schroedinger equation with vanishing boundaries.
 %
-%   q = MEX_FNFT_NSEV(contspec, T, D, XI, kappa);
-%   q = MEX_FNFT_NSEV(contspec, T, D, XI, kappa, OPTIONAL INPUTS);
+%   q = MEX_FNFT_NSEV_INVERSE(contspec, XI, bound_states, ...
+%                             normconsts_or_residuals, D, T, kappa);
+%   q = MEX_FNFT_NSEV_INVERSE(contspec, XI, bound_states, ...
+%                             normconsts_or_residuals, D, T, kappa, ...
+%                             OPTIONAL INPUTS);
 %
 % DESCRIPTION
 %   Provides an interface to the C routine fnft_nsev_inverse.
@@ -10,14 +13,21 @@
 % INPUTS
 %   contspec        Complex row vector of length M>=D, contains the samples
 %                   of the reflection coefficient on an equidistant grid
-%                   with end points given by XI below
-%   T               Real 1x2 vector, contains the location of the first and
-%                   the last sample in q
-%   D               Real scalar, number of time domain samples; must be a
-%                   positive power of two
+%                   with end points given by XI below. Pass [] if the continuous
+%                   spectrum is zero (i.e., a multi-soliton is desired)
 %   XI              Real 1x2 vector, contains the location of the first and
 %                   the last sample in contspec; must be computed with
 %                   MEX_FNFT_NSEV_INVERSE_XI
+%   bound_states    Complex row vector, contains the desired bound states.
+%                   Pass [] if the discrete spectrum is empty.
+%   normconsts_or_residues Complex row vector, same length as bound_states.
+%                   Contains the corresponding norming constants (default) or,
+%                   if the corresponding option is passed, residues. Pass []
+%                   if the discrete spectrum is empty.
+%   D               Real scalar, number of time domain samples; must be a
+%                   positive power of two
+%   T               Real 1x2 vector, contains the location of the first and
+%                   the last sample in q
 %   kappa           +1.0 or -1.0
 %
 % OPTIONAL INPUTS
@@ -31,6 +41,8 @@
 %                   the inverse Fourier transform B(tau) of b(xi) on the
 %                   grid tau_n=2*t_n, where the t_n are the locations at
 %                   which q(t) is computed. REQUIRES M=D and T(1)=-T(2).
+%   'dstype_residues' The array normconsts_or_residues contains residues
+%                   instead of residues (the default behavior).
 %   'csmethod_tfmatrix_contains_refl_coeff' The transfer matrix that is
 %                   build during the inversion of the reflection
 %                   coefficient contains its FFT (default). Works only in

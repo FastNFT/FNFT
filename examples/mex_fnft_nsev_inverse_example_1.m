@@ -50,7 +50,7 @@ contspec_exact = contspec_fun(xi);
 
 %%% Compute the corresponding time domain signal numerically %%%
 
-q = mex_fnft_nsev_inverse(contspec_exact, T, D, XI, kappa);
+q = mex_fnft_nsev_inverse(contspec_exact, XI, [], [], D, T, kappa);
 
 %%% Compute the reflection coefficent of the numerically determined time
 % domain signal %%%
