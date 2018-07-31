@@ -45,7 +45,7 @@ int main()
     UINT i;
     INT const kappa = 1;
     INT ret_code = SUCCESS;
-    
+
     q_exact = malloc(D * sizeof(COMPLEX));
     q = malloc(D * sizeof(COMPLEX));
     contspec = malloc(M * sizeof(COMPLEX));
@@ -61,32 +61,32 @@ int main()
         t = T[0] + i*(T[1] - T[0])/(D - 1);
         q_exact[i] = 3.4*misc_sech(t)*CEXP(-6*I*t);
     }
-    
+
     //Setting up inverse transform options
     fnft_nsev_inverse_opts_t opts_inv = fnft_nsev_inverse_default_opts();
-    opts_inv.discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANT;
+    opts_inv.discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANTS;
     opts_inv.discspec_inversion_method
             = fnft_nsev_inverse_dsmethod_DEFAULT;
     opts_inv.discretization = nse_discretization_2SPLIT2A;
     opts_inv.contspec_inversion_method
             = fnft_nsev_inverse_csmethod_DEFAULT;
-    
-    
+
+
     //Setting up forward transform options
     fnft_nsev_opts_t opts_fwd = fnft_nsev_default_opts();
 //     opts_fwd.discretization = nse_discretization_2SPLIT2A;
-    
+
     //Obtain XI grid
     ret_code = fnft_nsev_inverse_XI(D, T, M, XI, opts_inv.discretization);
     CHECK_RETCODE(ret_code, leave_fun);
-    
+
     //Perform full forward NFT
     ret_code = fnft_nsev(D, q_exact, T, M, contspec, XI, K_ptr, bound_states, normconsts_or_residues,
             kappa, &opts_fwd);
     CHECK_RETCODE(ret_code, leave_fun);
     misc_print_buf(*K_ptr, bound_states, "EV");
     misc_print_buf(*K_ptr, normconsts_or_residues, "b");
-    
+
     bound_states[0] = 3+.9*I;
     bound_states[1] = 3+1.9*I;
     bound_states[2] = 3+2.9*I;
@@ -109,7 +109,7 @@ int main()
         ret_code = E_TEST_FAILED;
         goto leave_fun;
     }
-    
+
     leave_fun:
         free(q_exact);
         free(q);

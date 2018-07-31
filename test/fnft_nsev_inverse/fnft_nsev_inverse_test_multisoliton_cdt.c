@@ -43,24 +43,24 @@ int main()
     INT ret_code;
     q_exact = malloc(D * sizeof(COMPLEX));
     q = malloc(D * sizeof(COMPLEX));
-    
+
     if (q_exact == NULL || q == NULL) {
         ret_code = E_NOMEM;
         goto leave_fun;
     }
     for (i = 0; i < D; i++)
         q_exact[i] = 5.0*misc_sech(T[0] + i*(T[1] - T[0])/(D - 1));
-    
+
     //Testing with norming constants
     fnft_nsev_inverse_opts_t opts = fnft_nsev_inverse_default_opts();
-    opts.discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANT;
+    opts.discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANTS;
     opts.discspec_inversion_method
             = fnft_nsev_inverse_dsmethod_MULTISOLITON_CDT;
-    
+
     ret_code = fnft_nsev_inverse(M, NULL, XI, K, bound_states, normconsts_or_residues, D, q, T,
             1, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    
+
     REAL error = misc_rel_err(D, q, q_exact);
 #ifdef DEBUG
     printf("error = %g\n", error);
@@ -69,7 +69,7 @@ int main()
         ret_code = E_TEST_FAILED;
         goto leave_fun;
     }
-    
+
     //Testing with residues
     //Converting norming constants to residues
     COMPLEX tmp = 0.0;
@@ -83,14 +83,14 @@ int main()
         normconsts_or_residues[i] = (normconsts_or_residues[i]*(2*I*CIMAG(bound_states[i])))/tmp;
     }
 
-    opts.discspec_type = fnft_nsev_inverse_dstype_RESIDUE;
+    opts.discspec_type = fnft_nsev_inverse_dstype_RESIDUES;
     opts.discspec_inversion_method
             = fnft_nsev_inverse_dsmethod_MULTISOLITON_CDT;
-    
+
     ret_code = fnft_nsev_inverse(M, NULL, XI, K, bound_states, normconsts_or_residues, D, q, T,
             1, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    
+
     error = misc_rel_err(D, q, q_exact);
 #ifdef DEBUG
     printf("error = %g\n", error);
@@ -99,7 +99,7 @@ int main()
         ret_code = E_TEST_FAILED;
         goto leave_fun;
     }
-    
+
     leave_fun:
         free(q_exact);
         free(q);

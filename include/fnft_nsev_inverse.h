@@ -56,17 +56,17 @@ typedef enum {
  * Enum that specifies in which form the discrete spectrum is provided.
  * Used in \link fnft_nsev_inverse_opts_t \endlink.\n \n
  * @ingroup data_types
- *  fnft_nsev_inverse_dstype_NORMING_CONSTANT: The array normconsts_or_residues contains
+ *  fnft_nsev_inverse_dstype_NORMING_CONSTANTS: The array normconsts_or_residues contains
  *  samples of \f$ b(\xi)\f$ for the values of bound_states provided as
  *  input to \link fnft_nsev_inverse \endlink. \n \n
- *  fnft_nsev_inverse_dstype_RESIDUE: The array normconsts_or_residues contains samples of the
+ *  fnft_nsev_inverse_dstype_RESIDUES: The array normconsts_or_residues contains samples of the
  *  of \f$ \frac{b(\xi)}{\partial{a(\xi)}/\partial{\xi}}\f$ for the values of bound_states provided as
  *  input to \link fnft_nsev_inverse \endlink. \n \n
  *
  */
 typedef enum {
-    fnft_nsev_inverse_dstype_NORMING_CONSTANT,
-    fnft_nsev_inverse_dstype_RESIDUE
+    fnft_nsev_inverse_dstype_NORMING_CONSTANTS,
+    fnft_nsev_inverse_dstype_RESIDUES
 } fnft_nsev_inverse_dstype_t;
 
 /**
@@ -100,12 +100,12 @@ typedef enum {
  * Enum that specifies which algorithm is used to invert the discrete
  * spectrum. Used in \link fnft_nsev_inverse_opts_t \endlink.\n \n
  * @ingroup data_types
- *  fnft_nsev_inverse_dsmethod_CDT: This implements the classical 
- *  Darboux transform <a href="https://doi.org/10.1007/BF02015338">[Lin, 
- *  J. Acta Mathematicae Applicatae Sinica (1990) 6: 308]</a>. For improving 
+ *  fnft_nsev_inverse_dsmethod_CDT: This implements the classical
+ *  Darboux transform <a href="https://doi.org/10.1007/BF02015338">[Lin,
+ *  J. Acta Mathematicae Applicatae Sinica (1990) 6: 308]</a>. For improving
  *  numerical conditioning the ideas from <a href="https://doi.org/10.1364/OFC.2016.W2A.34">
- *  [Vaibhav and Wahls, OFC 2016, paper W2A.34, Anaheim, California, March 2016]</a> and 
- *  <a href="https://arxiv.org/abs/1605.06328v1">[Aref, 
+ *  [Vaibhav and Wahls, OFC 2016, paper W2A.34, Anaheim, California, March 2016]</a> and
+ *  <a href="https://arxiv.org/abs/1605.06328v1">[Aref,
  *  Unpublished, 2016]</a> have been implemented.\n\n
  */
 typedef enum {
@@ -139,7 +139,7 @@ typedef enum {
  *  Determines which algorithm \link fnft_nsev_inverse \endlink uses to
  *  invert the continuous spectrum. \n
  *  Should be of type \link fnft_nsev_inverse_csmethod_t \endlink
- * 
+ *
  * @var fnft_nsev_inverse_opts_t::discspec_type
  *  Controls how \link fnft_nsev_inverse \endlink interprets the values in
  *  the array normconsts_or_residues. \n
@@ -200,7 +200,7 @@ fnft_nsev_inverse_opts_t fnft_nsev_inverse_default_opts();
  *  defined in \link fnft_errwarn.h \endlink.
  * @param[in] discretization See \link fnft__nse_finvscatter \endlink. Currently,
  *   only the 2SPLIT2_MODAL and 2SPLIT2A discretizations are supported.
- * 
+ *
  * @ingroup fnft_inverse
  */
 FNFT_INT fnft_nsev_inverse_XI(
@@ -235,8 +235,8 @@ FNFT_INT fnft_nsev_inverse_XI(
  *   Spectra of Zakharov-Shabat Type&quot;</a>, Unpublished Preprint,
  *   arXiv:1607.01305v2 [cs.IT], Dec. 2016.
  * - Wahls, <a href="https://doi.org/10.1109/ECOC.2017.8346231">&quot;Generation of Time-Limited Signals in the Nonlinear Fourier Domain via b-Modulation&quot;,</a> Proc. ECOC 2017.
- * - Lin, <a href="https://doi.org/10.1007/BF02015338">&quot;Evolution of the scattering 
- *   data under the classical Darboux transform for su(2) soliton systems&quot;,</a> 
+ * - Lin, <a href="https://doi.org/10.1007/BF02015338">&quot;Evolution of the scattering
+ *   data under the classical Darboux transform for su(2) soliton systems&quot;,</a>
  *   J. Acta Mathematicae Applicatae Sinica (1990) 6: 308.
  *
  * @param[in] M Number of samples of the continuous spectrum.
@@ -251,10 +251,10 @@ FNFT_INT fnft_nsev_inverse_XI(
  *  by \link fnft_nsev_inverse_XI \endlink MUST be used. It is NOT checked
  *  whether the user adheres to this requirement.
  * @param[in] K Number of discrete spectrum points.
- * @param[in] bound_states Complex array of length K. Complex roots of 
- * \f$ a(\xi) \f$ in the upper half of the complex-plane. 
- * @param[in] normconsts_or_residues Complex array of length K. Values of 
- * either the norming constants \f$ b(\xi) \f$ or the residues 
+ * @param[in] bound_states Complex array of length K. Complex roots of
+ * \f$ a(\xi) \f$ in the upper half of the complex-plane.
+ * @param[in] normconsts_or_residues Complex array of length K. Values of
+ * either the norming constants \f$ b(\xi) \f$ or the residues
  * \f$ \frac{b(\xi)}{\partial{a(\xi)}/\partial{\xi}}\f$ at the values bound_states.
  * @param[in] D Number of samples of the to be generated signal q.
  * @param[out] q Array of length D. Is filled with samples

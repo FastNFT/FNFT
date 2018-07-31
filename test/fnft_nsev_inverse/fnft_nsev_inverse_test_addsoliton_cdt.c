@@ -43,7 +43,7 @@ static INT nsev_inverse_test_addsoliton_cdt(UINT const D, REAL const error_bound
     INT ret_code;
     q_exact = malloc(D * sizeof(COMPLEX));
     q = malloc(D * sizeof(COMPLEX));
-    
+
     if (q_exact == NULL || q == NULL) {
         ret_code = E_NOMEM;
         goto leave_fun;
@@ -53,17 +53,17 @@ static INT nsev_inverse_test_addsoliton_cdt(UINT const D, REAL const error_bound
         q_exact[i] = 3.4*misc_sech(t)*CEXP(-5*I*t);
         q[i] = 0.4*misc_sech(t)*CEXP(-5*I*t);
     }
-    
+
     //Testing with norming constants
     fnft_nsev_inverse_opts_t opts = fnft_nsev_inverse_default_opts();
-    opts.discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANT;
+    opts.discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANTS;
     opts.discspec_inversion_method
             = fnft_nsev_inverse_dsmethod_ADDSOLITON_CDT;
-    
+
     ret_code = fnft_nsev_inverse(M, NULL, XI, K, bound_states, normconsts_or_residues, D, q, T,
             1, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    
+
     REAL error = misc_rel_err(D, q, q_exact);
 #ifdef DEBUG
     printf("error = %g\n", error);
@@ -72,7 +72,7 @@ static INT nsev_inverse_test_addsoliton_cdt(UINT const D, REAL const error_bound
         ret_code = E_TEST_FAILED;
         goto leave_fun;
     }
-    
+
     //Testing with residues
     //Converting norming constants to residues
     COMPLEX tmp = 0.0;
@@ -85,19 +85,19 @@ static INT nsev_inverse_test_addsoliton_cdt(UINT const D, REAL const error_bound
         }
         normconsts_or_residues[i] = (normconsts_or_residues[i]*(2*I*CIMAG(bound_states[i])))/tmp;
     }
-    
+
     for (i = 0; i < D; i++){
         t = T[0] + i*(T[1] - T[0])/(D - 1);
         q[i] = 0.4*misc_sech(t)*CEXP(-5*I*t);
     }
-    opts.discspec_type = fnft_nsev_inverse_dstype_RESIDUE;
+    opts.discspec_type = fnft_nsev_inverse_dstype_RESIDUES;
     opts.discspec_inversion_method
             = fnft_nsev_inverse_dsmethod_ADDSOLITON_CDT;
-    
+
     ret_code = fnft_nsev_inverse(M, NULL, XI, K, bound_states, normconsts_or_residues, D, q, T,
             1, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    
+
     error = misc_rel_err(D, q, q_exact);
 #ifdef DEBUG
     printf("error = %g\n", error);
@@ -106,7 +106,7 @@ static INT nsev_inverse_test_addsoliton_cdt(UINT const D, REAL const error_bound
         ret_code = E_TEST_FAILED;
         goto leave_fun;
     }
-    
+
     leave_fun:
         free(q_exact);
         free(q);
@@ -123,6 +123,6 @@ INT main()
    //Checking for quadratic error decay
     if (nsev_inverse_test_addsoliton_cdt(D*2, error_bound/4) != SUCCESS)
         return EXIT_FAILURE;
-    
+
     return EXIT_SUCCESS;
 }

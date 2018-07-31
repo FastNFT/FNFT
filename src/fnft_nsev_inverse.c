@@ -34,7 +34,7 @@ static fnft_nsev_inverse_opts_t default_opts = {
     .discretization = nse_discretization_2SPLIT2A,
     .contspec_type = fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT,
     .contspec_inversion_method = fnft_nsev_inverse_csmethod_DEFAULT,
-    .discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANT,
+    .discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANTS,
     .discspec_inversion_method = fnft_nsev_inverse_dsmethod_DEFAULT,
     .max_iter = 100,
     .oversampling_factor = 8
@@ -49,7 +49,7 @@ fnft_nsev_inverse_opts_t fnft_nsev_inverse_default_opts()
  */
 static inline void akns_fscatter_zero_freq_scatter_matrix(COMPLEX * const M,
                                                 const REAL eps_t, const COMPLEX q, const COMPLEX r)
-{   
+{
     // This function computes the matrix exponential
     //   M = expm([0,q;r,0]*eps_t);
     COMPLEX Delta, del;
@@ -58,7 +58,7 @@ static inline void akns_fscatter_zero_freq_scatter_matrix(COMPLEX * const M,
     M[0] = CCOS(Delta);
     M[2] = r * del;
     M[1] = q * del;
-    
+
 
 }
 INT fnft_nsev_inverse_XI(const UINT D, REAL const * const T,
@@ -71,7 +71,7 @@ INT fnft_nsev_inverse_XI(const UINT D, REAL const * const T,
         return E_INVALID_ARGUMENT(XI);
     if (T == NULL || !(T[0] < T[1]))
         return E_INVALID_ARGUMENT(T);
-    
+
     INT ret_code = SUCCESS;
     COMPLEX XIC[2];
     // Note that z = exp(2.0*PI*I*i/M) = exp(map_coeff*I*xi*eps_t).
@@ -137,10 +137,12 @@ INT fnft_nsev_inverse(
         const INT kappa,
         fnft_nsev_inverse_opts_t *opts_ptr)
 {
-    if (M%2 != 0)
-        return E_INVALID_ARGUMENT(M);
-    if (M < D)
-        return E_INVALID_ARGUMENT(M);
+    if (M > 0 && contspec == NULL)
+        return E_INVALID_ARGUMENT(contspec);
+    if (contspec != NULL && M%2 != 0)
+            return E_INVALID_ARGUMENT(M);
+    if (contspec != NULL && M < D)
+            return E_INVALID_ARGUMENT(M);
     if (D < 2 || (D&(D - 1)) != 0)
         return E_INVALID_ARGUMENT(D);
     if (q == NULL)
@@ -151,89 +153,89 @@ INT fnft_nsev_inverse(
         return E_INVALID_ARGUMENT(kappa);
     if (K > 0 && kappa != +1)
         return E_SANITY_CHECK_FAILED(Discrete spectrum is present only in the focussing case(kappa=1).);
-        if (K > 0 && bound_states == NULL)
-            return E_INVALID_ARGUMENT(bound_states);
-        UINT i;
-        for (i = 0; i < K; i++) {
-            if (CIMAG(bound_states[i]) <= 0)
-                return E_SANITY_CHECK_FAILED(bound_states should be stricly in the upper-half complex-plane.);
+    if (K > 0 && bound_states == NULL)
+        return E_INVALID_ARGUMENT(bound_states);
+    UINT i;
+    for (i = 0; i < K; i++) {
+        if (CIMAG(bound_states[i]) <= 0)
+            return E_SANITY_CHECK_FAILED(bound_states should be stricly in the upper-half complex-plane.);
+    }
+    if (K > 0 && normconsts_or_residues == NULL)
+        return E_INVALID_ARGUMENT(normconsts_or_residues);
+    if (opts_ptr == NULL)
+        opts_ptr = &default_opts;
+    if (opts_ptr->discretization != nse_discretization_2SPLIT2A
+            && opts_ptr->discretization != nse_discretization_2SPLIT2_MODAL)
+        return E_INVALID_ARGUMENT(opts_ptr->discretization);
+    if (contspec == NULL && K == 0)
+        return E_SANITY_CHECK_FAILED(Neither contspec nor discspec provided.);
+
+    INT ret_code = SUCCESS;
+    COMPLEX *transfer_matrix = NULL;
+
+    if (contspec != NULL){
+
+        opts_ptr->discspec_inversion_method = fnft_nsev_inverse_dsmethod_ADDSOLITON_CDT;
+
+        // Allocated memory and initialize values that we will need later
+        const UINT deg = D*nse_discretization_degree(opts_ptr->discretization);
+        if (deg == 0)
+            return E_INVALID_ARGUMENT(discretization);
+
+        transfer_matrix = malloc(4*(deg+1) * sizeof(COMPLEX));
+        if (transfer_matrix == NULL) {
+            ret_code = E_NOMEM;
+            goto leave_fun;
         }
-        if (K > 0 && normconsts_or_residues == NULL)
-            return E_INVALID_ARGUMENT(normconsts_or_residues);
-        if (opts_ptr == NULL)
-            opts_ptr = &default_opts;
-        if (opts_ptr->discretization != nse_discretization_2SPLIT2A
-                && opts_ptr->discretization != nse_discretization_2SPLIT2_MODAL)
-            return E_INVALID_ARGUMENT(opts_ptr->discretization);
-        if (contspec == NULL && K == 0)
-            return E_SANITY_CHECK_FAILED(Neither contspec nor discspec provided.);
-        
-        INT ret_code = SUCCESS;
-        COMPLEX *transfer_matrix = NULL;
-        
-        if (contspec != NULL){
-            
-            opts_ptr->discspec_inversion_method = fnft_nsev_inverse_dsmethod_ADDSOLITON_CDT;
-            
-            // Allocated memory and initialize values that we will need later
-            const UINT deg = D*nse_discretization_degree(opts_ptr->discretization);
-            if (deg == 0)
-                return E_INVALID_ARGUMENT(discretization);
-            
-            transfer_matrix = malloc(4*(deg+1) * sizeof(COMPLEX));
-            if (transfer_matrix == NULL) {
-                ret_code = E_NOMEM;
+
+        // Step 1: Construct the transfer matrix from the provided representation
+        // of the continuous spectrum.
+
+        switch (opts_ptr->contspec_type) {
+
+            case fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT:
+                ret_code = transfer_matrix_from_reflection_coefficient(M, contspec, XI,
+                        D, T, deg,
+                        transfer_matrix,
+                        kappa, opts_ptr);
+                CHECK_RETCODE(ret_code, leave_fun);
+                break;
+
+            case fnft_nsev_inverse_cstype_B_OF_TAU:
+                ret_code = transfer_matrix_from_B_of_tau(M, contspec, D, T, deg,
+                        transfer_matrix, kappa,
+                        opts_ptr);
+                CHECK_RETCODE(ret_code, leave_fun);
+                break;
+
+            default:
+
+                ret_code = E_INVALID_ARGUMENT(opts_ptr->contspec_type);
                 goto leave_fun;
-            }
-            
-            // Step 1: Construct the transfer matrix from the provided representation
-            // of the continuous spectrum.
-            
-            switch (opts_ptr->contspec_type) {
-                
-                case fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT:
-                    ret_code = transfer_matrix_from_reflection_coefficient(M, contspec, XI,
-                            D, T, deg,
-                            transfer_matrix,
-                            kappa, opts_ptr);
-                    CHECK_RETCODE(ret_code, leave_fun);
-                    break;
-                    
-                case fnft_nsev_inverse_cstype_B_OF_TAU:
-                    ret_code = transfer_matrix_from_B_of_tau(M, contspec, D, T, deg,
-                            transfer_matrix, kappa,
-                            opts_ptr);
-                    CHECK_RETCODE(ret_code, leave_fun);
-                    break;
-                    
-                default:
-                    
-                    ret_code = E_INVALID_ARGUMENT(opts_ptr->contspec_type);
-                    goto leave_fun;
-                    
-            }
-            
-            // Step 2: Recover the time domain signal from the transfer matrix.
-            
-            const REAL eps_t = (T[1] - T[0]) / (D - 1);
-            ret_code = nse_finvscatter(deg, transfer_matrix, q, eps_t, kappa,
-                    opts_ptr->discretization);
-            CHECK_RETCODE(ret_code, leave_fun);
+
         }
-        
-        // Availability of bound_states and normconsts_or_residues has
-        // already been checked.
-        if (K > 0){
-            
-            if (opts_ptr->discspec_inversion_method == fnft_nsev_inverse_dsmethod_DEFAULT)
-                opts_ptr->discspec_inversion_method = fnft_nsev_inverse_dsmethod_MULTISOLITON_CDT;
-            ret_code = add_discrete_spectrum(K, bound_states, normconsts_or_residues,
-                    D, q, T, opts_ptr);
-        }
-        
-        leave_fun:
-            free(transfer_matrix);
-            return ret_code;
+
+        // Step 2: Recover the time domain signal from the transfer matrix.
+
+        const REAL eps_t = (T[1] - T[0]) / (D - 1);
+        ret_code = nse_finvscatter(deg, transfer_matrix, q, eps_t, kappa,
+                opts_ptr->discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
+    }
+
+    // Availability of bound_states and normconsts_or_residues has
+    // already been checked.
+    if (K > 0){
+
+        if (opts_ptr->discspec_inversion_method == fnft_nsev_inverse_dsmethod_DEFAULT)
+            opts_ptr->discspec_inversion_method = fnft_nsev_inverse_dsmethod_MULTISOLITON_CDT;
+        ret_code = add_discrete_spectrum(K, bound_states, normconsts_or_residues,
+                D, q, T, opts_ptr);
+    }
+
+    leave_fun:
+        free(transfer_matrix);
+        return ret_code;
 }
 
 // This auxiliary function removes the phase factors that result from
@@ -257,7 +259,7 @@ static inline INT remove_boundary_conds_and_reorder_for_fft(
     ret_code = nse_phase_factor_rho(eps_t, T[1], &phase_factor_rho, discretization);
     if (ret_code != SUCCESS)
         return ret_code;
-    
+
     for (i=0; i<M; i++) {
         const REAL xi = XI[0] + i*eps_xi;
         contspec[i] *= CEXP(-I*xi*phase_factor_rho);
@@ -266,9 +268,9 @@ static inline INT remove_boundary_conds_and_reorder_for_fft(
         contspec_reordered[i] = contspec[i + (M/2 - 1)];
     for (i=M/2+1; i<M; i++)
         contspec_reordered[i] = contspec[i - (M/2 + 1)];
-    
+
     return ret_code;
-    
+
 }
 
 // This auxiliary function builds a transfer matrix from a given reflection
@@ -290,21 +292,21 @@ static inline INT
     fft_wrapper_plan_t plan = fft_wrapper_safe_plan_init();
     INT ret_code = SUCCESS;
     UINT i;
-    
+
     // Allocate some memory
-    
+
     COMPLEX * const contspec_reordered = fft_wrapper_malloc(M * sizeof(COMPLEX));
     COMPLEX * const b_coeffs = fft_wrapper_malloc(M * sizeof(COMPLEX));
     if (contspec_reordered == NULL || b_coeffs == NULL) {
         ret_code = E_NOMEM;
         goto leave_fun;
     }
-    
+
     // Construct the polynomial B(z) that interpolates the given continuous
     // spectrum using a M-point FFT. Only the first deg+1 coefficients will
     // later be used to build the transfer matrix. Note that the order of
     // the computed coefficients is reversed.
-    
+
     ret_code = remove_boundary_conds_and_reorder_for_fft(M, contspec, contspec_reordered,
             XI, D, T, discretization);
     CHECK_RETCODE(ret_code, leave_fun);
@@ -313,21 +315,21 @@ static inline INT
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = fft_wrapper_execute_plan(plan, contspec_reordered, b_coeffs);
     CHECK_RETCODE(ret_code, leave_fun);
-    
+
     // Build the transfer matrix with B(z) computed above and A(z)=0.
-    
+
     for (i=0; i<=deg; i++) {
         transfer_matrix[i] = 0.0;
         transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[M-1-deg+i]/M);
         transfer_matrix[2*(deg+1) + i] = b_coeffs[deg - i]/M;
         transfer_matrix[3*(deg+1) + i] = 0.0;
     }
-    
+
     // Change A(z)=0 to A(z)=1.
-    
+
     transfer_matrix[deg] = 1.0;
     transfer_matrix[3*(deg+1)] = 1.0;
-    
+
     leave_fun:
         fft_wrapper_destroy_plan(&plan);
         fft_wrapper_free(contspec_reordered);
@@ -355,7 +357,7 @@ static inline INT
     fft_wrapper_plan_t plan_inv = fft_wrapper_safe_plan_init();
     INT ret_code = SUCCESS;
     UINT i, iter;
-    
+
     if (D < 2 || (D&(D-1)) != 0)
         return E_INVALID_ARGUMENT(D);
     if (M != D)
@@ -364,9 +366,9 @@ static inline INT
         return E_ASSERTION_FAILED;
     if (kappa != -1)
         return E_INVALID_ARGUMENT(kappa);
-    
+
     // Allocate some memory and initial (inverse) FFT plans
-    
+
     COMPLEX * const contspec_reordered = fft_wrapper_malloc(M * sizeof(COMPLEX));
     COMPLEX * const fft_in = fft_wrapper_malloc(M * sizeof(COMPLEX));
     COMPLEX * const fft_out = fft_wrapper_malloc(M * sizeof(COMPLEX));
@@ -377,31 +379,31 @@ static inline INT
         ret_code = E_NOMEM;
         goto leave_fun;
     }
-    
+
     ret_code = fft_wrapper_create_plan(&plan_fwd, D, fft_in, b_coeffs, -1);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = fft_wrapper_create_plan(&plan_inv, D, fft_in, fft_out, +1);
     CHECK_RETCODE(ret_code, leave_fun);
-    
+
     // Remove phase factors due to initial conditions from contspec,
     // reorder if necessary
-    
+
     ret_code = remove_boundary_conds_and_reorder_for_fft(M, contspec, contspec_reordered,
             XI, D, T, discretization);
     CHECK_RETCODE(ret_code, leave_fun);
-    
+
     REAL prev_phase_change = FNFT_INF;
     REAL prev_phase_change_diff = FNFT_INF;
     for (iter=0; iter<max_iter; iter++) {
-        
+
         // Construct the coefficients of B(z)
-        
+
         for (i=0; i<D; i++) {
             const COMPLEX q = contspec_reordered[i];
             const REAL q_abs = CABS(q);
             fft_in[i] = q / SQRT( 1.0 + kappa*q_abs*q_abs ) / D;
         }
-        
+
         ret_code = fft_wrapper_execute_plan(plan_fwd, fft_in, b_coeffs);
         CHECK_RETCODE(ret_code, leave_fun);
         for (i=0; i<D/2; i++) {
@@ -409,19 +411,19 @@ static inline INT
             b_coeffs[i] = b_coeffs[D - 1 - i];
             b_coeffs[D - 1 - i] = tmp;
         }
-        
+
         // Construct the coefficients of A(z)
-        
+
         ret_code = poly_specfact(D-1, b_coeffs, a_coeffs, 32, kappa);
         CHECK_RETCODE(ret_code, leave_fun);
-        
+
         // Update the phases of the continuous spectrum
-        
+
         for (i=0; i<D; i++)
             fft_in[i] = a_coeffs[D - 1 - i];
         ret_code = fft_wrapper_execute_plan(plan_inv, fft_in, fft_out);
         CHECK_RETCODE(ret_code, leave_fun);
-        
+
         REAL cur_phase_change = 0.0;
         for (i=0; i<D; i++) {
             fft_out[i] = CARG( fft_out[i] );
@@ -431,9 +433,9 @@ static inline INT
             contspec_reordered[i] = contspec[i+(M/2-1)]*CEXP(I*fft_out[i]);
         for (i=M/2+1; i<M; i++)
             contspec_reordered[i] = contspec[i-(M/2+1)]*CEXP(I*fft_out[i]);
-        
+
         // Stop iterating if the phases stop changing or the correctios stop decreasing.
-        
+
         const REAL cur_phase_change_diff =
                 FABS( cur_phase_change - prev_phase_change );
         if (cur_phase_change_diff < 10*FNFT_EPSILON)
@@ -445,9 +447,9 @@ static inline INT
     }
     if (iter == max_iter)
         WARN("Maximum number of iterations reached when constructing transfer matrix.")
-        
+
         // Build the tranfer matrix
-        
+
         for (i=0; i<D; i++) {
             transfer_matrix[1 + i] = a_coeffs[i];
             transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[D-1 - i]);
@@ -458,8 +460,8 @@ static inline INT
         transfer_matrix[2*(deg+1) - 1] = 0.0;
         transfer_matrix[2*(deg+1)] = 0.0;
         transfer_matrix[4*(deg+1) - 1] = 0.0;
-        
-        
+
+
         leave_fun:
             fft_wrapper_free(contspec_reordered);
             fft_wrapper_free(fft_in);
@@ -487,35 +489,35 @@ static INT transfer_matrix_from_reflection_coefficient(
 {
     if (XI == NULL)
         return E_INVALID_ARGUMENT(XI);
-    
+
     INT ret_code = SUCCESS;
-    
+
     switch (opts_ptr->contspec_inversion_method) {
-        
+
         case fnft_nsev_inverse_csmethod_DEFAULT:
             // fall through
         case fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_REFL_COEFF:
-            
+
             ret_code = transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_REFL_COEFF(
                     M, contspec, XI, D, T, deg, transfer_matrix, opts_ptr->discretization, kappa);
             CHECK_RETCODE(ret_code, leave_fun);
             break;
-            
+
         case fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_AB_FROM_ITER:
-            
+
             ret_code = transfer_matrix_from_reflection_coefficient_TFMATRIX_CONTAINS_AB_FROM_ITER(
                     M, contspec, XI, D, T, deg, transfer_matrix, opts_ptr->discretization, kappa,
                     opts_ptr->max_iter);
             CHECK_RETCODE(ret_code, leave_fun);
             break;
-            
+
         default:
-            
+
             ret_code = E_INVALID_ARGUMENT(opts_ptr->contspec_inversion_method);
             goto leave_fun;
-            
+
     }
-    
+
     leave_fun:
         return ret_code;
 }
@@ -540,7 +542,7 @@ static INT transfer_matrix_from_B_of_tau(
     if (opts_ptr->contspec_inversion_method
             != fnft_nsev_inverse_csmethod_DEFAULT)
         return E_INVALID_ARGUMENT(opts_ptr->contspec_inversion_method);
-    
+
     INT ret_code = SUCCESS;
     UINT i;
     const REAL degree1step = nse_discretization_degree(opts_ptr->discretization);
@@ -552,12 +554,12 @@ static INT transfer_matrix_from_B_of_tau(
         b_coeffs[i] = 2*eps_t*contspec[i]/degree1step;
     b_coeffs[0] *= 0.5;
     b_coeffs[D-1] *= 0.5;
-    
+
     COMPLEX * const a_coeffs = transfer_matrix + 1;
     ret_code = poly_specfact(D-1, b_coeffs, a_coeffs,
             opts_ptr->oversampling_factor, kappa);
     CHECK_RETCODE(ret_code, leave_fun);
-    
+
     for (i=0; i<D; i++) {
         transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[D-1 - i]);
         transfer_matrix[3*(deg+1) + i] = a_coeffs[D-1 - i];
@@ -566,7 +568,7 @@ static INT transfer_matrix_from_B_of_tau(
     transfer_matrix[2*(deg+1) - 1] = 0.0;
     transfer_matrix[2*(deg+1)] = 0.0;
     transfer_matrix[4*(deg+1) - 1] = 0.0;
-    
+
     leave_fun:
         return ret_code;
 }
@@ -587,7 +589,7 @@ static INT add_discrete_spectrum(
         return E_INVALID_ARGUMENT(bound_states);
     if (normconsts_or_residues == NULL)
         return E_INVALID_ARGUMENT(normconsts_or_residues);
-    
+
     COMPLEX * bnd_states = NULL;
     COMPLEX * norm_consts = NULL;
     COMPLEX * bnd_states_conj = NULL;
@@ -621,7 +623,7 @@ static INT add_discrete_spectrum(
             j = 1;//clear flag
         }
     }
-    
+
     //Creating local copies of bound_states and normconsts_or_residues
     for (i = 0; i < K; i++){
         bnd_states[i] = bound_states[i];
@@ -647,18 +649,18 @@ static INT add_discrete_spectrum(
             goto leave_fun;
         }
     }
-    
-    
-    
+
+
+
     //Computing few values which will be used repeatdely in the code below
-   
+
     for (i = 0; i < K; i++){
         bnd_states_conj[i] = CONJ(bnd_states[i]);
         bnd_states_diff[i] = 2*I*CIMAG(bnd_states[i]);
     }
     //CDT works with norming constants so residues need to be converted to
     // norming constants
-    if (opts_ptr->discspec_type == fnft_nsev_inverse_dstype_RESIDUE){
+    if (opts_ptr->discspec_type == fnft_nsev_inverse_dstype_RESIDUES){
         for (i = 0; i < K; i++){
             tmp = 1;
             for (j = 0; j < K; j++){
@@ -668,14 +670,14 @@ static INT add_discrete_spectrum(
             }
             norm_consts[i]=(norm_consts[i]/bnd_states_diff[i])*tmp;
         }
-        
+
     }
-    
+
     // In absence of contspec some tricks can be used to
     // speed up computation and improve numerical conditioning
     // of the multi-soliton solution
     if (opts_ptr->discspec_inversion_method == fnft_nsev_inverse_dsmethod_MULTISOLITON_CDT){
-        
+
         COMPLEX qt, rho, rhok[K], rhoc, f;
         UINT n;
         for (n = zc_point; n < D; n++){
@@ -695,10 +697,10 @@ static INT add_discrete_spectrum(
             }
             q[n] = qt;
         }
-        
+
         for (i = 0; i < K; i++)
             norm_consts[i] = 1/norm_consts[i];
-        
+
         for (n = 0; n < zc_point; n++){
             qt = 0.0;
             for (i = 0; i < K; i++){
@@ -716,10 +718,10 @@ static INT add_discrete_spectrum(
             }
             q[n] = CONJ(qt);
         }
-        
+
     }
     else if (opts_ptr->discspec_inversion_method == fnft_nsev_inverse_dsmethod_ADDSOLITON_CDT){
-        
+
         // Allocate memory for computing eigenfuctions
         // In MATLAB notation
         //phi = zeros(2,D,K)
@@ -768,7 +770,7 @@ static INT add_discrete_spectrum(
             q[n] = sgn_fac*qn;
         }
     }
-    
+
     leave_fun:
         free(t);
         free(phi);
@@ -805,7 +807,7 @@ static INT compute_eigenfunctions(
         //Apply boundary condition
         phi1_ptr[0] = CEXP(-I*l*T[0]);
         phi2_ptr[0] = 0.0;
-        
+
         ks = (-(CABS(q[0])*CABS(q[0]))-(l*l));
         k = CSQRT(ks);
         ch = CCOSH(k*eps_t);
@@ -844,7 +846,7 @@ static INT compute_eigenfunctions(
         //Apply boundary condition
         psi1_ptr[D-1] = 0.0;
         psi2_ptr[D-1] = CEXP(I*l*T[1]);
-        
+
         ks = (-(CABS(q[D-1])*CABS(q[D-1]))-(l*l));
         k = CSQRT(ks);
         ch = CCOSH(k*eps_t);
@@ -877,5 +879,5 @@ static INT compute_eigenfunctions(
         }
     }
     return ret_code;
-    
+
 }
