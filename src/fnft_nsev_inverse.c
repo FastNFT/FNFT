@@ -35,7 +35,6 @@ static fnft_nsev_inverse_opts_t default_opts = {
     .contspec_type = fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT,
     .contspec_inversion_method = fnft_nsev_inverse_csmethod_DEFAULT,
     .discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANTS,
-    .discspec_inversion_method = fnft_nsev_inverse_dsmethod_DEFAULT,
     .max_iter = 100,
     .oversampling_factor = 8
 };
@@ -97,6 +96,7 @@ static INT add_discrete_spectrum(
     const UINT D,
     COMPLEX * const q,
     REAL const * const T,
+    const UINT contspec_flag,
     fnft_nsev_inverse_opts_t const * const opts_ptr);
 static INT compute_eigenfunctions(
     UINT const K,
@@ -161,12 +161,13 @@ INT fnft_nsev_inverse(
         return E_SANITY_CHECK_FAILED(Neither contspec nor discspec provided.);
 
     INT ret_code = SUCCESS;
+    INT contspec_flag = 0;
     COMPLEX *transfer_matrix = NULL;
 
     if (contspec != NULL){
-
-        opts_ptr->discspec_inversion_method = fnft_nsev_inverse_dsmethod_ADDSOLITON_CDT;
-
+        // This flag is used by the add_discrete_spectrum to select method 
+        // contspec == NULL.
+        contspec_flag = 1;
         // Allocated memory and initialize values that we will need later
         const UINT deg = D*nse_discretization_degree(opts_ptr->discretization);
         if (deg == 0)
@@ -219,13 +220,12 @@ INT fnft_nsev_inverse(
 
     // Availability of bound_states and normconsts_or_residues has
     // already been checked.
-    if (K > 0){
-
-        if (opts_ptr->discspec_inversion_method == fnft_nsev_inverse_dsmethod_DEFAULT)
-            opts_ptr->discspec_inversion_method = fnft_nsev_inverse_dsmethod_MULTISOLITON_CDT;
+    if (K > 0){      
         ret_code = add_discrete_spectrum(K, bound_states, normconsts_or_residues,
-                D, q, T, opts_ptr);
+                D, q, T, contspec_flag, opts_ptr);
+        CHECK_RETCODE(ret_code, leave_fun);
     }
+
 
     leave_fun:
         free(transfer_matrix);
@@ -575,6 +575,7 @@ static INT add_discrete_spectrum(
         const UINT D,
         COMPLEX * const q,
         REAL const * const T,
+        const UINT contspec_flag,
         fnft_nsev_inverse_opts_t const * const opts_ptr)
 {
     if (K <= 0)
@@ -644,8 +645,6 @@ static INT add_discrete_spectrum(
         }
     }
 
-
-
     //Computing few values which will be used repeatdely in the code below
 
     for (i = 0; i < K; i++){
@@ -670,7 +669,8 @@ static INT add_discrete_spectrum(
     // In absence of contspec some tricks can be used to
     // speed up computation and improve numerical conditioning
     // of the multi-soliton solution
-    if (opts_ptr->discspec_inversion_method == fnft_nsev_inverse_dsmethod_MULTISOLITON_CDT){
+    if (contspec_flag == 0 && 
+            opts_ptr->contspec_inversion_method != fnft_nsev_inverse_csmethod_USE_SEED_POTENTIAL_INSTEAD){
 
         COMPLEX qt, rho, rhok[K], rhoc, f;
         UINT n;
@@ -714,7 +714,10 @@ static INT add_discrete_spectrum(
         }
 
     }
-    else if (opts_ptr->discspec_inversion_method == fnft_nsev_inverse_dsmethod_ADDSOLITON_CDT){
+    else if ((contspec_flag == 0 && 
+            opts_ptr->contspec_inversion_method == fnft_nsev_inverse_csmethod_USE_SEED_POTENTIAL_INSTEAD) ||
+            (contspec_flag == 1 && 
+            opts_ptr->contspec_inversion_method != fnft_nsev_inverse_csmethod_USE_SEED_POTENTIAL_INSTEAD)){
 
         // Allocate memory for computing eigenfuctions
         // In MATLAB notation
@@ -764,6 +767,8 @@ static INT add_discrete_spectrum(
             q[n] = sgn_fac*qn;
         }
     }
+    else 
+        return E_INVALID_ARGUMENT(opts_ptr->contspec_inversion_method);
 
     leave_fun:
         free(t);

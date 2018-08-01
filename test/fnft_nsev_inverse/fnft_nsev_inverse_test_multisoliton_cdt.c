@@ -53,8 +53,6 @@ int main()
     //Testing with norming constants
     fnft_nsev_inverse_opts_t opts = fnft_nsev_inverse_default_opts();
     opts.discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANTS;
-    opts.discspec_inversion_method
-            = fnft_nsev_inverse_dsmethod_MULTISOLITON_CDT;
 
     ret_code = fnft_nsev_inverse(0, NULL, XI, K, bound_states, normconsts_or_residues, D, q, T,
             1, &opts);
@@ -83,8 +81,6 @@ int main()
     }
 
     opts.discspec_type = fnft_nsev_inverse_dstype_RESIDUES;
-    opts.discspec_inversion_method
-            = fnft_nsev_inverse_dsmethod_MULTISOLITON_CDT;
 
     ret_code = fnft_nsev_inverse(0, NULL, XI, K, bound_states, normconsts_or_residues, D, q, T,
             1, &opts);

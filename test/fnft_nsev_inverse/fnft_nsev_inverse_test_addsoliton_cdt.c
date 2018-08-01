@@ -56,8 +56,8 @@ static INT nsev_inverse_test_addsoliton_cdt(UINT const D, REAL const error_bound
     //Testing with norming constants
     fnft_nsev_inverse_opts_t opts = fnft_nsev_inverse_default_opts();
     opts.discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANTS;
-    opts.discspec_inversion_method
-            = fnft_nsev_inverse_dsmethod_ADDSOLITON_CDT;
+    opts.contspec_inversion_method
+            = fnft_nsev_inverse_csmethod_USE_SEED_POTENTIAL_INSTEAD;
 
     ret_code = fnft_nsev_inverse(0, NULL, XI, K, bound_states, normconsts_or_residues, D, q, T,
             1, &opts);
@@ -90,8 +90,8 @@ static INT nsev_inverse_test_addsoliton_cdt(UINT const D, REAL const error_bound
         q[i] = 0.4*misc_sech(t)*CEXP(-5*I*t);
     }
     opts.discspec_type = fnft_nsev_inverse_dstype_RESIDUES;
-    opts.discspec_inversion_method
-            = fnft_nsev_inverse_dsmethod_ADDSOLITON_CDT;
+    opts.contspec_inversion_method
+            = fnft_nsev_inverse_csmethod_USE_SEED_POTENTIAL_INSTEAD ;
 
     ret_code = fnft_nsev_inverse(0, NULL, XI, K, bound_states, normconsts_or_residues, D, q, T,
             1, &opts);

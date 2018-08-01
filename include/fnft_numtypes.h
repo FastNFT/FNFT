@@ -255,6 +255,11 @@ typedef size_t FNFT_UINT;
  */
 #define FNFT_CCOS(X) ccos(X)
 
+/**
+ * Complex arc hyperbolic tangent of a \link FNFT_COMPLEX \endlink.
+ */
+#define FNFT_ATANH(X) atanh(X)
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define REAL            FNFT_REAL
 #define COMPLEX         FNFT_COMPLEX
@@ -288,8 +293,9 @@ typedef size_t FNFT_UINT;
 #define CSQRT(X)        FNFT_CSQRT(X)
 #define CEXP(X)         FNFT_CEXP(X)
 #define CARG(X)         FNFT_CARG(X)
-#define PI        	FNFT_PI
+#define PI        	    FNFT_PI
 #define GAMMA(X)        FNFT_GAMMA(X)
+#define ATANH(X)   FNFT_ATANH(X)
 #endif
 
 #endif

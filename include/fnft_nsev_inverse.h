@@ -93,26 +93,10 @@ typedef enum {
 typedef enum {
     fnft_nsev_inverse_csmethod_DEFAULT,
     fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_REFL_COEFF,
-    fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_AB_FROM_ITER
+    fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_AB_FROM_ITER,
+    fnft_nsev_inverse_csmethod_USE_SEED_POTENTIAL_INSTEAD 
 } fnft_nsev_inverse_csmethod_t;
 
-/**
- * Enum that specifies which algorithm is used to invert the discrete
- * spectrum. Used in \link fnft_nsev_inverse_opts_t \endlink.\n \n
- * @ingroup data_types
- *  fnft_nsev_inverse_dsmethod_CDT: This implements the classical
- *  Darboux transform <a href="https://doi.org/10.1007/BF02015338">[Lin,
- *  J. Acta Mathematicae Applicatae Sinica (1990) 6: 308]</a>. For improving
- *  numerical conditioning the ideas from <a href="https://doi.org/10.1364/OFC.2016.W2A.34">
- *  [Vaibhav and Wahls, OFC 2016, paper W2A.34, Anaheim, California, March 2016]</a> and
- *  <a href="https://arxiv.org/abs/1605.06328v1">[Aref,
- *  Unpublished, 2016]</a> have been implemented.\n\n
- */
-typedef enum {
-    fnft_nsev_inverse_dsmethod_MULTISOLITON_CDT,
-    fnft_nsev_inverse_dsmethod_ADDSOLITON_CDT,
-    fnft_nsev_inverse_dsmethod_DEFAULT
-} fnft_nsev_inverse_dsmethod_t;
 
 /**
  * @struct fnft_nsev_inverse_opts_t
@@ -164,7 +148,6 @@ typedef struct {
     fnft_nsev_inverse_cstype_t contspec_type;
     fnft_nsev_inverse_csmethod_t contspec_inversion_method;
     fnft_nsev_inverse_dstype_t discspec_type;
-    fnft_nsev_inverse_dsmethod_t discspec_inversion_method;
     FNFT_UINT max_iter;
     FNFT_UINT oversampling_factor;
 } fnft_nsev_inverse_opts_t;
