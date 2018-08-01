@@ -26,6 +26,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     FNFT_UINT D;
     FNFT_COMPLEX * q = NULL;
+    FNFT_UINT q0_index = 0; // used to localize a given seed potential, if any
     FNFT_REAL * T;
     FNFT_UINT M, K;
     FNFT_COMPLEX * contspec = NULL;
@@ -121,6 +122,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
             opts.discspec_type = fnft_nsev_inverse_dstype_RESIDUES;
 
+        } else if ( strcmp(str, "dsmethod_addsoliton_cdt") == 0 ) {
+
+            opts.discspec_inversion_method =
+                fnft_nsev_inverse_dsmethod_ADDSOLITON_CDT;
+            /* Extract initial potential */
+            if ( k+1 == nrhs || !mxIsComplex(prhs[k+1])
+                 || mxGetM(prhs[k+1]) != 1 || mxGetN(prhs[k+1]) != D ) {
+                snprintf(msg, sizeof msg, "'dsmethod_addsoliton_cdt' should be followed by a complex 1xD vector. Try passing complex(q0).");
+                goto on_error;
+            }
+            if ( M > 0 ) {
+                snprintf(msg, sizeof msg, "Both contspec and an intial potential q0 have been provided. Pass contspec=[] when using dsmethod_addsoliton_cdt.");
+                goto on_error;
+            }
+            q0_index = k+1;
+            k++;
+
         } else if ( strcmp(str, "csmethod_tfmatrix_contains_refl_coeff") == 0 ){
 
             opts.contspec_inversion_method =
@@ -145,7 +163,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 goto on_error;
             }
             opts.oversampling_factor = (FNFT_UINT)mxGetScalar(prhs[k+1]);
-
+            k++;
 
         } else if ( strcmp(str, "quiet") == 0 ) {
 
@@ -187,6 +205,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     im = mxGetPi(prhs[3]);
     for (i=0; i<K; i++)
         normconsts_or_residues[i] = re[i] + I*im[i];
+    if (q0_index != 0) {
+        re = mxGetPr(prhs[q0_index]);
+        im = mxGetPi(prhs[q0_index]);
+        for (i=0; i<D; i++)
+            q[i] = re[i] + I*im[i];
+    }
 
     /* Call the C routine */
 
