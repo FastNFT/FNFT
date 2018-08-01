@@ -44,23 +44,7 @@ fnft_nsev_inverse_opts_t fnft_nsev_inverse_default_opts()
 {
     return default_opts;
 }
-/**
- * Returns the scattering matrix for a single step at frequency zero.
- */
-static inline void akns_fscatter_zero_freq_scatter_matrix(COMPLEX * const M,
-                                                const REAL eps_t, const COMPLEX q, const COMPLEX r)
-{
-    // This function computes the matrix exponential
-    //   M = expm([0,q;r,0]*eps_t);
-    COMPLEX Delta, del;
-    Delta = eps_t * CSQRT(-q*r);
-    del = eps_t * misc_CSINC(Delta);
-    M[0] = CCOS(Delta);
-    M[2] = r * del;
-    M[1] = q * del;
 
-
-}
 INT fnft_nsev_inverse_XI(const UINT D, REAL const * const T,
         const UINT M, REAL * const XI,
         const nse_discretization_t discretization)
@@ -88,41 +72,47 @@ INT fnft_nsev_inverse_XI(const UINT D, REAL const * const T,
 
 // Auxliary functions. Function bodies follow below.
 static INT transfer_matrix_from_reflection_coefficient(
-        const UINT M,
-        COMPLEX * const contspec,
-        REAL const * const XI,
-        const UINT D,
-        REAL const * const T,
-        const UINT deg,
-        COMPLEX * transfer_matrix,
-        const INT kappa,
-        fnft_nsev_inverse_opts_t const * const opts_ptr);
+    const UINT M,
+    COMPLEX * const contspec,
+    REAL const * const XI,
+    const UINT D,
+    REAL const * const T,
+    const UINT deg,
+    COMPLEX * transfer_matrix,
+    const INT kappa,
+    fnft_nsev_inverse_opts_t const * const opts_ptr);
 static INT transfer_matrix_from_B_of_tau(
-        const UINT M,
-        COMPLEX * const contspec,
-        const UINT D,
-        REAL const * const T,
-        const UINT deg,
-        COMPLEX * transfer_matrix,
-        const INT kappa,
-        fnft_nsev_inverse_opts_t const * const opts_ptr);
+    const UINT M,
+    COMPLEX * const contspec,
+    const UINT D,
+    REAL const * const T,
+    const UINT deg,
+    COMPLEX * transfer_matrix,
+    const INT kappa,
+    fnft_nsev_inverse_opts_t const * const opts_ptr);
 static INT add_discrete_spectrum(
-        UINT const K,
-        COMPLEX const * const bound_states,
-        COMPLEX const * const normconsts_or_residues,
-        const UINT D,
-        COMPLEX * const q,
-        REAL const * const T,
-        fnft_nsev_inverse_opts_t const * const opts_ptr);
-
+    UINT const K,
+    COMPLEX const * const bound_states,
+    COMPLEX const * const normconsts_or_residues,
+    const UINT D,
+    COMPLEX * const q,
+    REAL const * const T,
+    fnft_nsev_inverse_opts_t const * const opts_ptr);
 static INT compute_eigenfunctions(
-        UINT const K,
-        COMPLEX const * const bound_states,
-        const UINT D,
-        COMPLEX * const q,
-        REAL const * const T,
-        COMPLEX * const phi,
-        COMPLEX * const psi);
+    UINT const K,
+    COMPLEX const * const bound_states,
+    const UINT D,
+    COMPLEX * const q,
+    REAL const * const T,
+    COMPLEX * const phi,
+    COMPLEX * const psi);
+static INT remove_solitons_from_contspec(
+    const UINT M,
+    COMPLEX * const contspec,
+    REAL const * const XI,
+    const UINT K,
+    COMPLEX const * const bound_states,
+    fnft_nsev_inverse_opts_t const * const opts_ptr);
 
 INT fnft_nsev_inverse(
         const UINT M,
@@ -190,6 +180,10 @@ INT fnft_nsev_inverse(
 
         // Step 1: Construct the transfer matrix from the provided representation
         // of the continuous spectrum.
+
+        ret_code = remove_solitons_from_contspec(M, contspec, XI, K,
+                                                 bound_states, opts_ptr);
+        CHECK_RETCODE(ret_code, leave_fun);
 
         switch (opts_ptr->contspec_type) {
 
@@ -880,4 +874,33 @@ static INT compute_eigenfunctions(
     }
     return ret_code;
 
+}
+
+static INT remove_solitons_from_contspec(
+    const UINT M,
+    COMPLEX * const contspec,
+    REAL const * const XI,
+    const UINT K,
+    COMPLEX const * const bound_states,
+    fnft_nsev_inverse_opts_t const * const opts_ptr)
+{
+    UINT i, k;
+
+    if (K == 0) // nothing to do
+        return SUCCESS;
+
+    // b-modulation not yet supported
+    if (opts_ptr->contspec_type
+        != fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT)
+        return E_INVALID_ARGUMENT(opts_ptr->contspec_type);
+
+    const REAL eps_xi = (XI[1] - XI[0])/(M - 1);
+    for (i=0; i<M; i++) {
+        const REAL xi = XI[0] + i*eps_xi;
+        contspec[i] *= -1;
+        for (k=0; k<K; k++)
+            contspec[i] *= (xi - bound_states[k])/(xi - CONJ(bound_states[k]));
+    }
+
+    return SUCCESS;
 }
