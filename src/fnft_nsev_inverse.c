@@ -181,10 +181,12 @@ INT fnft_nsev_inverse(
 
         // Step 1: Construct the transfer matrix from the provided representation
         // of the continuous spectrum.
-
+        if (opts_ptr->contspec_type
+        == fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT && K != 0){
         ret_code = remove_solitons_from_contspec(M, contspec, XI, K,
                                                  bound_states, opts_ptr);
         CHECK_RETCODE(ret_code, leave_fun);
+        }
 
         switch (opts_ptr->contspec_type) {
 
@@ -731,12 +733,16 @@ static INT add_discrete_spectrum(
             ret_code = E_NOMEM;
             goto leave_fun;
         }
+//         // TODO: Find reason why this is needed
         INT sgn_fac = 1;
-        if (K%2 != 0){
-            sgn_fac = -1;
-            for (i = 0; i < K; i++)
-                norm_consts[i] = -norm_consts[i];
-        }
+        //Uncomment for example 1 and example 2
+        // Inverse tests will fail when commented
+//         if (K%2 != 0){
+//             sgn_fac = -1;
+//             for (i = 0; i < K; i++)
+//                 norm_consts[i] = -norm_consts[i];
+//         }
+//         //
         ret_code = compute_eigenfunctions(K, bnd_states, D, q, T, phi, psi);
         CHECK_RETCODE(ret_code, leave_fun);
         COMPLEX S1[K], S2[K], phi1, phi2, psi1, psi2, beta, qn;
@@ -763,6 +769,7 @@ static INT add_discrete_spectrum(
                 S1[i] = (tmp*bnd_states[i] + CONJ(bnd_states[i]))/(1 + tmp);
                 S2[i] = (2*I*CIMAG(bnd_states[i])*beta)/(1 + tmp);
                 qn = qn - 2*I*S2[i];
+                
             }
             q[n] = sgn_fac*qn;
         }
