@@ -735,13 +735,12 @@ static INT add_discrete_spectrum(
         }
 //         // TODO: Find reason why this is needed
         INT sgn_fac = 1;
-        //Uncomment for example 1 and example 2
-        // Inverse tests will fail when commented
-//         if (K%2 != 0){
-//             sgn_fac = -1;
-//             for (i = 0; i < K; i++)
-//                 norm_consts[i] = -norm_consts[i];
-//         }
+        if (K%2 != 0 && 
+                opts_ptr->contspec_inversion_method == fnft_nsev_inverse_csmethod_USE_SEED_POTENTIAL_INSTEAD){
+            sgn_fac = -1;
+            for (i = 0; i < K; i++)
+                norm_consts[i] = -norm_consts[i];
+        }
 //         //
         ret_code = compute_eigenfunctions(K, bnd_states, D, q, T, phi, psi);
         CHECK_RETCODE(ret_code, leave_fun);
@@ -909,7 +908,6 @@ static INT remove_solitons_from_contspec(
     const REAL eps_xi = (XI[1] - XI[0])/(M - 1);
     for (i=0; i<M; i++) {
         const REAL xi = XI[0] + i*eps_xi;
-        contspec[i] *= -1;
         for (k=0; k<K; k++)
             contspec[i] *= (xi - bound_states[k])/(xi - CONJ(bound_states[k]));
     }
