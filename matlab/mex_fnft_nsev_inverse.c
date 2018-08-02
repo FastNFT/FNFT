@@ -118,6 +118,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
             opts.contspec_type = fnft_nsev_inverse_cstype_B_OF_TAU;
 
+        } else if ( strcmp(str, "cstype_b_of_xi") == 0 ) {
+
+            opts.contspec_type = fnft_nsev_inverse_cstype_B_OF_XI;
+
         } else if ( strcmp(str, "dstype_residues") == 0 ) {
 
             opts.discspec_type = fnft_nsev_inverse_dstype_RESIDUES;

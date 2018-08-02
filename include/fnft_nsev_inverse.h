@@ -37,6 +37,9 @@
  *  fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT: The array contspec contains
  *  samples of \f$ b(\xi)/a(\xi) \f$ on the grid specified through the input
  *  XI to \link fnft_nsev_inverse \endlink. \n \n
+ *  fnft_nsev_inverse_cstype_B_OF_XI: The array contspec contains
+ *  samples of \f$ b(\xi) \f$ on the grid specified through the input
+ *  XI to \link fnft_nsev_inverse \endlink. \n \n
  *  fnft_nsev_inverse_cstype_B_OF_TAU: The array contspec contains samples of the
  *  inverse Fourier transform \f${ B(\tau) = \frac{1}{2\pi}
  *  \int_{-\infty}^\infty b(\xi) e^{j \xi \tau} d\tau }\f$ of \f$ b(\xi) \f$ at
@@ -45,10 +48,10 @@
  *  (and currently only implemented) method for this type of spectrum is described
  *  in <a href="https://doi.org/10.1109/ECOC.2017.8346231">[Wahls 2017]</a>.
  *  It is currently REQUIRED that the time window is symmetric, T[0]=-T[1].
- *
  */
 typedef enum {
     fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT,
+    fnft_nsev_inverse_cstype_B_OF_XI,
     fnft_nsev_inverse_cstype_B_OF_TAU
 } fnft_nsev_inverse_cstype_t;
 
@@ -94,7 +97,7 @@ typedef enum {
     fnft_nsev_inverse_csmethod_DEFAULT,
     fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_REFL_COEFF,
     fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_AB_FROM_ITER,
-    fnft_nsev_inverse_csmethod_USE_SEED_POTENTIAL_INSTEAD 
+    fnft_nsev_inverse_csmethod_USE_SEED_POTENTIAL_INSTEAD
 } fnft_nsev_inverse_csmethod_t;
 
 
