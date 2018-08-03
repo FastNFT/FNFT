@@ -139,9 +139,9 @@ INT fnft_nsev_inverse(
     if (M > 0 && contspec == NULL)
         return E_INVALID_ARGUMENT(contspec);
     if (contspec != NULL && M%2 != 0)
-            return E_INVALID_ARGUMENT(M);
+        return E_INVALID_ARGUMENT(M);
     if (contspec != NULL && M < D)
-            return E_INVALID_ARGUMENT(M);
+        return E_INVALID_ARGUMENT(M);
     if (D < 2 || (D&(D - 1)) != 0)
         return E_INVALID_ARGUMENT(D);
     if (q == NULL)
@@ -168,6 +168,9 @@ INT fnft_nsev_inverse(
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
     if (contspec == NULL && K == 0)
         return E_SANITY_CHECK_FAILED(Neither contspec nor discspec provided.);
+    if (XI == NULL && contspec != NULL &&
+        opts_ptr->contspec_type != fnft_nsev_inverse_cstype_B_OF_TAU)
+        return E_INVALID_ARGUMENT(XI);
 
     INT ret_code = SUCCESS;
     INT contspec_flag = 0;
@@ -193,10 +196,6 @@ INT fnft_nsev_inverse(
 
         // Step 1: Construct the transfer matrix from the provided
         // representation of the continuous spectrum.
-
-        if (opts_ptr->contspec_type
-        == fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT && K != 0){
-       }
 
         switch (opts_ptr->contspec_type) {
 

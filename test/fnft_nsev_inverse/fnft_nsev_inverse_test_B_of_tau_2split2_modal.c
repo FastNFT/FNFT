@@ -17,7 +17,7 @@
  * Sander Wahls (TU Delft) 2018.
  */
 
-#include "fnft_nsev_inverse_test_B_of_tau.inc"
+#include "fnft_nsev_inverse_test_B_of_tau_or_b_of_xi.inc"
 
 int main()
 {
@@ -30,7 +30,7 @@ int main()
     UINT D = 256;
     REAL error_bound = 0.0013;
     for (UINT i=0; i<4; i++) {
-        ret_code = fnft_nsev_inverse_test(D, error_bound, &opts);
+        ret_code = fnft_nsev_inverse_test(D, D, error_bound, &opts);
         CHECK_RETCODE(ret_code, leave_fun);
         D *= 2;
         error_bound /= 4;
