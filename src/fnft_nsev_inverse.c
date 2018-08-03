@@ -15,6 +15,7 @@
  *
  * Contributors:
  * Sander Wahls (TU Delft) 2018.
+ * Shrinivas Chimmalgi (TU Delft) 2018.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -28,7 +29,6 @@
 #include "fnft__fft_wrapper.h"
 #include "fnft__poly_specfact.h"
 #include "fnft__misc.h"
-
 
 static fnft_nsev_inverse_opts_t default_opts = {
     .discretization = nse_discretization_2SPLIT2A,
