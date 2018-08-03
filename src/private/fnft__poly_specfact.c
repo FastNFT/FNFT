@@ -44,8 +44,6 @@ INT poly_specfact(const UINT deg,
     fft_wrapper_plan_t plan_inv = fft_wrapper_safe_plan_init();
 
     const UINT M = fft_wrapper_next_fft_length( (deg+1)*oversampling_factor );
-    if (M%2 != 0)
-            return E_ASSERTION_FAILED;
     INT ret_code = SUCCESS;
     UINT i;
 
