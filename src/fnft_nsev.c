@@ -131,7 +131,6 @@ INT fnft_nsev(
 {
     COMPLEX *transfer_matrix = NULL;
     COMPLEX *qsub = NULL;
-    REAL eps_t;
     UINT deg;
     INT W = 0, *W_ptr = NULL;
     INT ret_code = SUCCESS;
@@ -173,7 +172,7 @@ INT fnft_nsev(
     }
     
     // Determine step size
-    eps_t = (T[1] - T[0])/(D - 1);
+    const REAL eps_t = (T[1] - T[0])/(D - 1);
 
     // Compute the transfer matrix
     if (opts->normalization_flag)
@@ -266,7 +265,6 @@ static inline INT tf2contspec(
 {
     COMPLEX *H11_vals, *H21_vals;
     COMPLEX A, V;
-    REAL eps_t, eps_xi;
     REAL xi, boundary_coeff, scale;
     REAL phase_factor_rho, phase_factor_a, phase_factor_b;
     INT ret_code;
@@ -281,8 +279,8 @@ static inline INT tf2contspec(
     
 
     // Set step sizes
-    eps_t = (T[1] - T[0])/(D - 1);
-    eps_xi = (XI[1] - XI[0])/(M - 1);
+    const REAL eps_t = (T[1] - T[0])/(D - 1);
+    const REAL eps_xi = (XI[1] - XI[0])/(M - 1);
 
 
     // Determine discretization-specific coefficients
@@ -589,10 +587,10 @@ static inline INT refine_roots_newton(
     UINT i, iter;
     COMPLEX a_val, b_val, aprime_val, error;
     REAL eprecision = EPSILON * 100;
-    REAL re_bound_val, im_bound_val, eps_t;
+    REAL re_bound_val, im_bound_val;
     UINT trunc_index;
     trunc_index = D;
-    eps_t = (T[1] - T[0])/(D - 1);
+    const REAL eps_t = (T[1] - T[0])/(D - 1);
     
     // Check inputs
     if (K == 0) // no bound states to refine
