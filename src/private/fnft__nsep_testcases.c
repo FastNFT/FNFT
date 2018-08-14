@@ -1,6 +1,6 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
+* This file is part of FNFT.
+*
 * FNFT is free software; you can redistribute it and/or
 * modify it under the terms of the version 2 of the GNU General
 * Public License as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-*                                                                      
+*
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
@@ -21,14 +21,15 @@
 #include "fnft__errwarn.h"
 #include "fnft__nsep_testcases.h"
 #include "fnft__misc.h" // for misc_filter
+#include "fnft__nse_discretization.h" // for nse_discretization_degree
 #ifdef DEBUG
 #include <stdio.h> // for printf
 #endif
 
 INT nsep_testcases(nsep_testcases_t tc, const UINT D,
-    COMPLEX ** const q_ptr, REAL * const T, 
+    COMPLEX ** const q_ptr, REAL * const T,
     UINT * const K_ptr, COMPLEX ** const mainspec_ptr,
-    UINT * const M_ptr, COMPLEX ** const auxspec_ptr, 
+    UINT * const M_ptr, COMPLEX ** const auxspec_ptr,
     REAL ** const sheet_indices_ptr, INT * const kappa_ptr,
     REAL * const remove_box)
 {
@@ -74,7 +75,7 @@ INT nsep_testcases(nsep_testcases_t tc, const UINT D,
 
     default:
         return E_INVALID_ARGUMENT(tc);
-    } 
+    }
 
     // Default remove_box: Nothing is removed.
     remove_box[0] = 0;
@@ -98,16 +99,16 @@ INT nsep_testcases(nsep_testcases_t tc, const UINT D,
     if (*auxspec_ptr == NULL) {
         ret_code = E_NOMEM;
         goto release_mem_3;
-    }    
+    }
     *sheet_indices_ptr = malloc((*M_ptr) * sizeof(COMPLEX));
     if (*sheet_indices_ptr == NULL) {
         ret_code = E_NOMEM;
         goto release_mem_4;
-    }   
+    }
 
     // generate test case
     switch (tc) {
-    
+
     case nsep_testcases_PLANE_WAVE_FOCUSING:
 
         T[0] = 0.0; // location of first sample and begin of period
@@ -133,7 +134,7 @@ INT nsep_testcases(nsep_testcases_t tc, const UINT D,
             (*mainspec_ptr)[i] = -1.5 + I*CSQRT(4.0 - j*j/(REAL)4.0);
             (*mainspec_ptr)[i+1] = -1.5 - I*CSQRT(4.0 - j*j/(REAL)4.0);
         }
-        
+
         // All main spectrum points are double expect for the ones with the
         // maximal imaginary part. Each of the double main spectrum points
         // traps a point from the auxiliary spectrum.
@@ -161,7 +162,7 @@ INT nsep_testcases(nsep_testcases_t tc, const UINT D,
         syms lam
         q = (1+2j)/sym(5);
         T = expm([-1j*lam q ; conj(q) 1j*lam]);
-    
+
         disp('Main spectrum');
         del = trace(T);
         ret = solve(del == 2, lam, 'ReturnConditions', true);
@@ -172,7 +173,7 @@ INT nsep_testcases(nsep_testcases_t tc, const UINT D,
         for i=1:length(ret.lam)
             [ret.lam(i) ret.conditions(i)]
         end
-    
+
         disp('Auxiliary spectrum');
         b = T(2,1);
         ret = solve(b == 0, lam, 'ReturnConditions', true);
@@ -221,7 +222,7 @@ INT nsep_testcases(nsep_testcases_t tc, const UINT D,
 
         *kappa_ptr = -1;
 
-        break; 
+        break;
 
     default: // unknown test case
 
@@ -241,7 +242,7 @@ release_mem_2:
     free(*mainspec_ptr);
 release_mem_1:
     free(*q_ptr);
-    
+
     return ret_code;
 }
 
@@ -313,7 +314,7 @@ fnft_nsep_opts_t * opts_ptr) {
         &M_exact, &auxspec_exact, &sheet_indices_exact, &kappa, remove_box);
     if (ret_code != SUCCESS)
         return E_SUBROUTINE(ret_code);
-    
+
     // Allocate memory
     if (opts_ptr == NULL) {
         default_opts = fnft_nsep_default_opts();

@@ -27,7 +27,7 @@
 #ifndef FNFT_NSEV_H
 #define FNFT_NSEV_H
 
-#include "fnft__nse_discretization.h"
+#include "fnft_nse_discretization_t.h"
 
 /**
  * Enum that specifies how the bound states are filtered. Used in

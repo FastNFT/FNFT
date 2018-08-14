@@ -15,7 +15,7 @@ For the MATLAB interface, additionally the following is needed:
 
 We use the [GNU compiler collection](https://gcc.gnu.org/) to build FNFT. The documentation is built with [Doxygen](www.doxygen.org).
 
-### Building under Linux
+## Building under Linux
 
 FNFT is mostly developed under Linux. We describe the build process for
 a fresh installation of [Ubuntu 16.04 Desktop](https://www.ubuntu.com/download/desktop).
@@ -23,7 +23,7 @@ First, install the missing tools by running the command
 
     sudo apt install git cmake gfortran doxygen
 
-in a terminal. Then, extract the source code of FNFT into a directory and change into that directory. To install (for example) in '~/FNFT', run the commands
+in a terminal. Then, extract the source code of FNFT into a directory and change into that directory. To install (for example) in `~/FNFT`, run the commands
 
     cd ~
     git clone https://github.com/FastNFT/FNFT.git
@@ -41,7 +41,28 @@ To test that everything works as expected, run the command
     make -j4 test
 
 If MATLAB is installed, the MATLAB interface should have been built
-automatically. It can be found in the 'matlab' folder.
+automatically. It can be found in the `matlab` folder.
+
+### System-wide installation
+
+To make FNFT available for all users of the system, run the commands
+
+    cd ~/FNFT/build
+    sudo make install
+    sudo ldconfig
+
+To uninstall FNFT, run the commands
+
+    cd ~/FNFT/build
+    sudo xargs rm < install_manifest.txt
+
+### Customization
+
+* FNFT can make use of the [FFTW ("Fastest Fourier Transform in the West")](http://www.fftw.org) library if available. This can result in a noticable speed up. In order to activate FFTW, pass the parameter `-DENABLE_FFTW=ON` to cmake.
+* FNFT by default uses machine-specific optimizations, which might be problematic when the library is to be run on another machine. Pass the parameter `-DMACHINE_SPECIFIC_OPIMIZATION=OFF` to cmake to turn them off.
+* During a system-wide installation, FNFT is by default installed in `/usr/local` on Unix-like systems. To change this directory, e.g., to `/usr`, pass the parameter `-DCMAKE_INSTALL_PREFIX=/usr` to cmake.
+* To avoid building the MATLAB interface, pass the parameter `-DWITH_MATLAB=OFF` to cmake.
+* To avoid building the tests, pass the parameter `-DBUILD_TESTS=OFF` to cmake.
 
 ## Building under Windows
 
@@ -110,3 +131,7 @@ in the terminal. Finally, change into the directory and build using the commands
 To test if the build was successful, run the command
 
     make -j4 test
+
+### System-wide installation and customization
+
+Please read the instructions for Linux systems above.

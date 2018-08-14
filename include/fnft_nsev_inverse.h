@@ -27,8 +27,7 @@
 #ifndef FNFT_NSEV_INVERSE_H
 #define FNFT_NSEV_INVERSE_H
 
-
-#include "fnft__nse_discretization.h"
+#include "fnft_nse_discretization_t.h"
 
 /**
  * Enum that specifies in which form the continuous spectrum is provided.
