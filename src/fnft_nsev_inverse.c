@@ -346,7 +346,16 @@ static inline INT
 
     // Build the transfer matrix with B(z) computed above and A(z)=0.
 
-    for (i=0; i<=deg; i++) {
+    // Note: If M==D, we do not have enough coefficients for b to fill the
+    // complete transfer matrix. This issue is accounted for using i0 below.
+    const UINT i0 = (deg <= M-1) ? 0 : deg - (M-1);
+    for (i=0; i<i0; i++) {
+        transfer_matrix[i] = 0.0;
+        transfer_matrix[1*(deg+1) + i] = 0.0;
+        transfer_matrix[2*(deg+1) + i] = 0.0;
+        transfer_matrix[3*(deg+1) + i] = 0.0;
+    }
+    for (i=i0; i<=deg; i++) {
         transfer_matrix[i] = 0.0;
         transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[M-1-deg+i]/M);
         transfer_matrix[2*(deg+1) + i] = b_coeffs[deg - i]/M;
