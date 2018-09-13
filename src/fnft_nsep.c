@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
+* Marius Brehler (TU Dortmund) 2018.
 */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -191,7 +192,6 @@ static inline INT gridsearch(const UINT D,
     REAL degree1step, map_coeff;
     REAL PHI[2] = { 0.0, 2.0*PI };
 	UINT deg;
-    REAL eps_t;
     INT W = 0, *W_ptr = NULL;
     UINT K, K_filtered;
     UINT M;
@@ -215,7 +215,7 @@ static inline INT gridsearch(const UINT D,
     }
 
     // Determine step size
-    eps_t = (T[1] - T[0]) / D;
+    const REAL eps_t = (T[1] - T[0]) / D;
 
     // Compute the transfer matrix
     if (opts_ptr->normalization_flag)
@@ -391,7 +391,6 @@ static inline INT subsample_and_refine(const UINT D,
     REAL tol_im;
 	UINT deg;
     UINT Dsub;
-    REAL eps_t, eps_t_sub;
     INT W = 0, *W_ptr = NULL;
     UINT K = 0, K_filtered = 0;
     UINT M = 0;
@@ -425,8 +424,8 @@ static inline INT subsample_and_refine(const UINT D,
     }
 
     // Determine step sizes
-    eps_t = (T[1] - T[0]) / D;
-    eps_t_sub = (T[1] - T[0]) / Dsub;
+    const REAL eps_t = (T[1] - T[0]) / D;
+    const REAL eps_t_sub = (T[1] - T[0]) / Dsub;
 
     // Compute the transfer matrix
     if (opts_ptr->normalization_flag)
