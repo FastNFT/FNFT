@@ -40,5 +40,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     plhs[2] = mxCreateDoubleScalar(FNFT_VERSION_PATCH);
     plhs[3] = mxCreateString(FNFT_VERSION_SUFFIX);
 
+    (void) prhs;
+
     return;
 }

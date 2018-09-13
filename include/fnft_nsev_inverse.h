@@ -90,7 +90,13 @@ typedef enum {
  *  Algorithm 1 in the unpublished preprint http://arxiv.org/abs/1607.01305v2 .
  *  The maximum number of iterations can be controlled using the max_iter
  *  field in \link fnft_nsev_inverse_opts_t \endlink. Requires M=D. Defocusing
- *  case only.
+ *  case only.\n\n
+ *  fnft_nsev_inverse_csmethod_USE_SEED_POTENTIAL_INSTEAD: This algorithm 
+ *  adds discrete spectrum over the given seed potential. It uses Boffetta and Osborne 
+ * (<a href="http://dx.doi.org/10.1016/0021-9991(92)90370-E">J. Comput. Physics 1992 </a>)
+ *  method to compute the intermediate eigenfunctions and then uses the classical
+ *  Darboux transform in <a href="https://doi.org/10.1007/BF02015338">[Lin, 
+ *  J. Acta Mathematicae Applicatae Sinica (1990) 6: 308]</a> to add the discrete spectrum.
  */
 typedef enum {
     fnft_nsev_inverse_csmethod_DEFAULT,
@@ -130,11 +136,6 @@ typedef enum {
  *  Controls how \link fnft_nsev_inverse \endlink interprets the values in
  *  the array normconsts_or_residues. \n
  *  Should be of type \link fnft_nsev_inverse_dstype_t \endlink.
- *
- * @var fnft_nsev_inverse_opts_t::discspec_inversion_method
- *  Determines which algorithm \link fnft_nsev_inverse \endlink uses to
- *  invert the discrete spectrum. \n
- *  Should be of type \link fnft_nsev_inverse_dsmethod_t \endlink
  *
  * @var fnft_nsev_inverse_opts_t::max_iter
  *  Determines the maximum number of iterations in iterative methods

@@ -30,7 +30,7 @@
 
 #include "fnft_kdv_discretization_t.h"
 #include "fnft__akns_discretization.h"
-#include "fnft__errwarn.h"
+
 
 /**
  * @brief This routine returns the max degree d of the polynomials in a single

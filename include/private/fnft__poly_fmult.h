@@ -59,6 +59,9 @@ FNFT_INT fnft__poly_fmult_two_polys_len(const FNFT_UINT deg);
  *   \endlink and \link fnft__fft_wrapper_free \endlink, respectively.
  * @param [in,out] buf1 See buf0.
  * @param [in,out] buf2 See buf0.
+ * @param [in] add_flag Flag either 0 or 1. If add_flag = 1 is 
+ * passed then the result of polynomial multiplication is added to the values already
+ * present in result. If add_flag = 0 then the values in result are overwritten.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  */
@@ -152,7 +155,7 @@ FNFT_UINT fnft__poly_fmult_numel(const FNFT_UINT deg, const FNFT_UINT n);
  *  degree of their product.
  * @param[in] n Number of polynomials.
  * @param[in,out] p Complex valued array with m entries, where m is determined
- *  using \link fnft__poly_fmult_memneeded \endlink. Upon entry, the first
+ *  using \link fnft__poly_fmult_numel \endlink. Upon entry, the first
  *  (*d+1)*n elements of this array contain the coefficients of the
  *  polynomials. Upon exit, the first *d+1 elements contain the result.
  * @param[in] W_ptr Pointer to normalization flag. 
@@ -191,7 +194,7 @@ FNFT_UINT fnft__poly_fmult2x2_numel(const FNFT_UINT deg, const FNFT_UINT n);
  * @param[in] n Number of 2x2 matrix-valued polynomials.
  * @param[in,out] p Complex valued array which holds the coefficients of 
  * the polynomials being multiplied. Should be of length m*(*d+1), where
- * m is obtained using \link fnft__poly_fmult_memneeded \endlink.
+ * m is obtained using \link fnft__poly_fmult2x2_numel \endlink.
  * WARNING: p is overwritten.
  * @param[out] result Complex valued array that holds the result of the
  * multiplication. Should be of the same size as p.
