@@ -63,7 +63,7 @@ static INT fnft_nsev_inverse_test(const UINT D, const UINT M,
     }
     REAL al = 2;
     REAL be = 0.55;
-    COMPLEX gam = CSQRT(CABS(al)*CABS(al) + be*be);
+    COMPLEX gam = CSQRT(FABS(al)*FABS(al) + be*be);
 
     //Obtain XI grid
     ret_code = fnft_nsev_inverse_XI(D, T, M, XI, opts_ptr->discretization);
@@ -82,7 +82,7 @@ static INT fnft_nsev_inverse_test(const UINT D, const UINT M,
     for (i = 0; i < D; i++){
         t = T[0] + i*(T[1] - T[0])/(D - 1);
         if (t <= 0)
-           q_exact[i] = -(2.0*I*gam*al/CABS(al))*misc_sech(2*gam*t + ATANH(be/gam));
+           q_exact[i] = -(2.0*I*gam*al/FABS(al))*misc_sech(2*gam*t + ATANH(be/gam));
         else
            q_exact[i] = 0.0;
     }
