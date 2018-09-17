@@ -62,7 +62,7 @@ INT fnft_nsev_inverse_XI(const UINT D, REAL const * const T,
     // but in a different order.
     const REAL eps_t = (T[1] - T[0]) / (D - 1);
     XIC[0] = CEXP(2.0*FNFT_PI*I * (M/2 + 1)/M);
-    XIC[1] = CEXP(2.0*FNFT_PI*I * (M/2)/M) ;
+    XIC[1] = -1.0;
     ret_code = nse_z_to_lambda(2, eps_t, &XIC[0], discretization);
     XI[0] = CREAL(XIC[0]);
     XI[1] = CREAL(XIC[1]);
