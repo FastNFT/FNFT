@@ -28,22 +28,23 @@
 #include "fnft__misc.h"
 #include <stdio.h>
 
-static INT fnft_nsev_inverse_test(const UINT D, const REAL error_bound,
-    fnft_nsev_inverse_opts_t * opts_ptr)
+static INT fnft_nsev_inverse_test(const UINT D, const UINT M,
+                                  const REAL error_bound,
+                                  fnft_nsev_inverse_opts_t * opts_ptr)
 {
+    REAL XI[2] = { -1, 1 };
+
     if (!(error_bound > 0))
         return E_INVALID_ARGUMENT(error_bound);
     if (opts_ptr == NULL)
         return E_INVALID_ARGUMENT(opts_ptr);
-    if (opts_ptr->contspec_type != fnft_nsev_inverse_cstype_B_OF_TAU)
-        return E_INVALID_ARGUMENT(opts_ptr->contspec_type);
 
     INT ret_code = SUCCESS;
     UINT i;
 
     COMPLEX * const q = malloc(D * sizeof(COMPLEX));
     COMPLEX * const q_exact = malloc(D * sizeof(COMPLEX));
-    COMPLEX * const contspec = malloc(D * sizeof(COMPLEX));
+    COMPLEX * const contspec = malloc(M * sizeof(COMPLEX));
     if (q == NULL || q_exact == NULL || contspec == NULL) {
         ret_code = E_NOMEM;
         goto leave_fun;
@@ -56,13 +57,36 @@ static INT fnft_nsev_inverse_test(const UINT D, const REAL error_bound,
     for (i=0; i<D; i++) {
         const REAL t = T[0] + i*eps_t;
         q_exact[i] = I*A*misc_sech(t - t0);
-        const REAL tau = 2*t;
-        const REAL tau0 = 2*t0;
-        contspec[i] = 1/(2*FNFT_PI)*I*sin(FNFT_PI*A)*misc_sech((tau - tau0)/2);
     }
 
-    ret_code = fnft_nsev_inverse(D, contspec, NULL, 0, NULL, NULL, D, q, T,
-        +1, opts_ptr);
+    if (opts_ptr->contspec_type == fnft_nsev_inverse_cstype_B_OF_TAU) {
+
+        for (i=0; i<D; i++) {
+            const REAL t = T[0] + i*eps_t;
+            const REAL tau = 2*t;
+            const REAL tau0 = 2*t0;
+            contspec[i] = I/(2*FNFT_PI)*sin(FNFT_PI*A)*misc_sech((tau-tau0)/2);
+        }
+
+    } else if (opts_ptr->contspec_type == fnft_nsev_inverse_cstype_B_OF_XI) {
+
+        ret_code = fnft_nsev_inverse_XI(D, T, M, XI, opts_ptr->discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
+        const REAL eps_xi = (XI[1] - XI[0])/(M - 1);
+        for (i=0; i<M; i++) {
+            const REAL xi = XI[0] + i*eps_xi;
+            contspec[i] = I*CEXP(-2*I*xi*t0)*SIN(FNFT_PI*A)/COSH(FNFT_PI*xi);
+        }
+
+    } else {
+
+        ret_code = E_INVALID_ARGUMENT(opts_ptr->contspec_type);
+        goto leave_fun;
+
+    }
+
+    ret_code = fnft_nsev_inverse(M, contspec, XI, 0, NULL, NULL, D, q, T, +1,
+                                 opts_ptr);
     CHECK_RETCODE(ret_code, leave_fun);
 
     REAL error = misc_rel_err(D, q, q_exact);

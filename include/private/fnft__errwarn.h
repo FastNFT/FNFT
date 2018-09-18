@@ -109,7 +109,7 @@
 #define E_TEST_FAILED       FNFT__E_TEST_FAILED
 #define E_OTHER(msg)        FNFT__E_OTHER(msg)
 #define E_NOT_YET_IMPLEMENTED(name,msg) FNFT__E_NOT_YET_IMPLEMENTED(name,msg)
-#define E_SANITY_CHECK_FAILED FNFT__E_SANITY_CHECK_FAILED(msg)
+#define E_SANITY_CHECK_FAILED(msg) FNFT__E_SANITY_CHECK_FAILED(msg)
 #define E_ASSERTION_FAILED  FNFT__E_ASSERTION_FAILED
 #define CHECK_RETCODE(ret_code,label) FNFT__CHECK_RETCODE(ret_code,label)
 #endif
@@ -132,7 +132,7 @@
 #define FNFT__E_INVALID_ARGUMENT_(name) "Invalid argument "#name"."
 
 /**
- * Auxiliary macro used used to to stringify the input to
+ * Auxiliary macro used to stringify the input to
  * \link FNFT__E_NOT_YET_IMPLEMENTED \endlink. Do not call directly.
  * @ingroup private_errwarn
  */
@@ -144,6 +144,7 @@
  * @ingroup private_errwarn
  */
 #define FNFT__E_SANITY_CHECK_FAILED_(msg) "Sanity check failed ("#msg")."
+
 
 /**
  * Auxiliary function that prints a formated error message using

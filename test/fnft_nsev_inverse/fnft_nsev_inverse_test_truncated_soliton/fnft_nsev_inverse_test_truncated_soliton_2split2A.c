@@ -14,27 +14,37 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2018.
+ * Shrinivas Chimmalgi (TU Delft) 2018.
  */
 
-#include "fnft_nsev_inverse_test_B_of_tau.inc"
+#include "fnft_nsev_inverse_test_truncated_soliton.inc"
+
 
 int main()
 {
+    UINT M;
+    UINT D;
+    REAL error_bound;
     INT ret_code = SUCCESS;
 
     fnft_nsev_inverse_opts_t opts = fnft_nsev_inverse_default_opts();
-    opts.discretization = nse_discretization_2SPLIT2_MODAL;
-    opts.contspec_type = fnft_nsev_inverse_cstype_B_OF_TAU;
+    opts.discretization = nse_discretization_2SPLIT2A;
+    opts.discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANTS;
 
-    UINT D = 256;
-    REAL error_bound = 0.0013;
-    for (UINT i=0; i<4; i++) {
-        ret_code = fnft_nsev_inverse_test(D, error_bound, &opts);
-        CHECK_RETCODE(ret_code, leave_fun);
-        D *= 2;
-        error_bound /= 4;
-    }
+
+    D = 512;
+    M = 4*D;
+    error_bound = 0.0033;
+    ret_code = fnft_nsev_inverse_test(D, M, error_bound, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+    
+    D = D*2;
+    M = 4*D;
+    error_bound = error_bound/2;
+    ret_code = fnft_nsev_inverse_test(D, M, error_bound, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+
 
 leave_fun:
     if (ret_code == SUCCESS)

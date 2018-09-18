@@ -38,6 +38,7 @@ static INT akns_fscatter_test_2split8B()
     COMPLEX z[5] = {1.0+0.0*I, CEXP(I*PI/4), CEXP(I*9*PI/14), CEXP(I*4*PI/3), CEXP(I*-PI/5)};
     COMPLEX q[8], r[8];
     COMPLEX result[20];
+    const REAL err_bnd = 250*EPSILON;
     // The following MATLAB code has been used to compute the values below.
 // eps_t = 0.13;
 // kappa = 1; D=8; q = (0.41*cos(1:D)+0.59j*sin(0.28*(1:D)))*50;
@@ -124,9 +125,9 @@ static INT akns_fscatter_test_2split8B()
             }
         }
 #ifdef DEBUG
-        printf("error without normalization = %2.1e < %2.1e\n",misc_rel_err(4*nz, result, result_exact),250*EPSILON);
+        printf("error without normalization = %2.1e < %2.1e\n",misc_rel_err(4*nz, result, result_exact), err_bnd);
 #endif
-        if (misc_rel_err(4*nz, result, result_exact) > 250*EPSILON)
+        if (misc_rel_err(4*nz, result, result_exact) > err_bnd)
             return E_TEST_FAILED;
         
         // with normalization
@@ -156,9 +157,9 @@ static INT akns_fscatter_test_2split8B()
         }
         
 #ifdef DEBUG
-        printf("error with normalization = %2.1e < %2.1e\n",misc_rel_err(4*nz, result, result_exact),250*EPSILON);
+        printf("error with normalization = %2.1e < %2.1e\n",misc_rel_err(4*nz, result, result_exact), err_bnd);
 #endif
-        if (misc_rel_err(4*nz, result, result_exact) > 250*EPSILON)
+        if (misc_rel_err(4*nz, result, result_exact) > err_bnd)
             return E_TEST_FAILED;
         
         

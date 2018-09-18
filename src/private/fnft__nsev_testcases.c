@@ -443,8 +443,10 @@ static INT nsev_compare_nfs(const UINT M, const UINT K1, const UINT K2,
         if (nrm > 0)
             dists[0] /= nrm;
     }
-    if (ab_1 == NULL || ab_2 == NULL || M == 0)
+    if (ab_1 == NULL || ab_2 == NULL || M == 0) {
         dists[1] = NAN;
+        dists[2] = NAN;
+    }
     else {
         // error in a
         dists[1] = 0.0;

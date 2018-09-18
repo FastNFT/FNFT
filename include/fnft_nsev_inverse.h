@@ -36,6 +36,9 @@
  *  fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT: The array contspec contains
  *  samples of \f$ b(\xi)/a(\xi) \f$ on the grid specified through the input
  *  XI to \link fnft_nsev_inverse \endlink. \n \n
+ *  fnft_nsev_inverse_cstype_B_OF_XI: The array contspec contains
+ *  samples of \f$ b(\xi) \f$ on the grid specified through the input
+ *  XI to \link fnft_nsev_inverse \endlink. \n \n
  *  fnft_nsev_inverse_cstype_B_OF_TAU: The array contspec contains samples of the
  *  inverse Fourier transform \f${ B(\tau) = \frac{1}{2\pi}
  *  \int_{-\infty}^\infty b(\xi) e^{j \xi \tau} d\tau }\f$ of \f$ b(\xi) \f$ at
@@ -44,15 +47,32 @@
  *  (and currently only implemented) method for this type of spectrum is described
  *  in <a href="https://doi.org/10.1109/ECOC.2017.8346231">[Wahls 2017]</a>.
  *  It is currently REQUIRED that the time window is symmetric, T[0]=-T[1].
- *
  */
 typedef enum {
     fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT,
+    fnft_nsev_inverse_cstype_B_OF_XI,
     fnft_nsev_inverse_cstype_B_OF_TAU
 } fnft_nsev_inverse_cstype_t;
 
 /**
- * Enum that specifies which algorithm is used to inverst the continuous
+ * Enum that specifies in which form the discrete spectrum is provided.
+ * Used in \link fnft_nsev_inverse_opts_t \endlink.\n \n
+ * @ingroup data_types
+ *  fnft_nsev_inverse_dstype_NORMING_CONSTANTS: The array normconsts_or_residues contains
+ *  samples of \f$ b(\xi)\f$ for the values of bound_states provided as
+ *  input to \link fnft_nsev_inverse \endlink. \n \n
+ *  fnft_nsev_inverse_dstype_RESIDUES: The array normconsts_or_residues contains samples of the
+ *  of \f$ \frac{b(\xi)}{\partial{a(\xi)}/\partial{\xi}}\f$ for the values of bound_states provided as
+ *  input to \link fnft_nsev_inverse \endlink. \n \n
+ *
+ */
+typedef enum {
+    fnft_nsev_inverse_dstype_NORMING_CONSTANTS,
+    fnft_nsev_inverse_dstype_RESIDUES
+} fnft_nsev_inverse_dstype_t;
+
+/**
+ * Enum that specifies which algorithm is used to invert the continuous
  * spectrum. Used in \link fnft_nsev_inverse_opts_t \endlink.\n \n
  * @ingroup data_types
  *  fnft_nsev_inverse_csmethod_DEFAULT: \link fnft_nsev_inverse \endlink
@@ -70,13 +90,21 @@ typedef enum {
  *  Algorithm 1 in the unpublished preprint http://arxiv.org/abs/1607.01305v2 .
  *  The maximum number of iterations can be controlled using the max_iter
  *  field in \link fnft_nsev_inverse_opts_t \endlink. Requires M=D. Defocusing
- *  case only.
+ *  case only.\n\n
+ *  fnft_nsev_inverse_csmethod_USE_SEED_POTENTIAL_INSTEAD: This algorithm 
+ *  adds discrete spectrum over the given seed potential. It uses Boffetta and Osborne 
+ * (<a href="http://dx.doi.org/10.1016/0021-9991(92)90370-E">J. Comput. Physics 1992 </a>)
+ *  method to compute the intermediate eigenfunctions and then uses the classical
+ *  Darboux transform in <a href="https://doi.org/10.1007/BF02015338">[Lin, 
+ *  J. Acta Mathematicae Applicatae Sinica (1990) 6: 308]</a> to add the discrete spectrum.
  */
 typedef enum {
     fnft_nsev_inverse_csmethod_DEFAULT,
     fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_REFL_COEFF,
-    fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_AB_FROM_ITER
+    fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_AB_FROM_ITER,
+    fnft_nsev_inverse_csmethod_USE_SEED_POTENTIAL_INSTEAD
 } fnft_nsev_inverse_csmethod_t;
+
 
 /**
  * @struct fnft_nsev_inverse_opts_t
@@ -104,6 +132,11 @@ typedef enum {
  *  invert the continuous spectrum. \n
  *  Should be of type \link fnft_nsev_inverse_csmethod_t \endlink
  *
+ * @var fnft_nsev_inverse_opts_t::discspec_type
+ *  Controls how \link fnft_nsev_inverse \endlink interprets the values in
+ *  the array normconsts_or_residues. \n
+ *  Should be of type \link fnft_nsev_inverse_dstype_t \endlink.
+ *
  * @var fnft_nsev_inverse_opts_t::max_iter
  *  Determines the maximum number of iterations in iterative methods
  *  for the inversion of the continuous spectrum.
@@ -117,6 +150,7 @@ typedef struct {
     fnft_nse_discretization_t discretization;
     fnft_nsev_inverse_cstype_t contspec_type;
     fnft_nsev_inverse_csmethod_t contspec_inversion_method;
+    fnft_nsev_inverse_dstype_t discspec_type;
     FNFT_UINT max_iter;
     FNFT_UINT oversampling_factor;
 } fnft_nsev_inverse_opts_t;
@@ -129,7 +163,9 @@ typedef struct {
  *  following options.\n\n
  *  discretization = fnft_nse_discretization_2SPLIT2A\n\n
  *  contspec_type = fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT\n\n
- *  contspec_inverse_method = fnft_nsev_inverse_csmethod_DEFAULT
+ *  contspec_inverse_method = fnft_nsev_inverse_csmethod_DEFAULT\n\n
+ *  discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANTS\n\n
+ *  discspec_inverse_method = fnft_nsev_inverse_dsmethod_CDT
  *
  * @ingroup fnft_inverse
  */
@@ -170,8 +206,7 @@ FNFT_INT fnft_nsev_inverse_XI(
  * for initial conditions with vanishing boundaries
  * \f[ \lim_{t\to \pm \infty }q(x_0,t) = 0 \text{ sufficiently rapidly.} \f]
  *
- * This routine is the counter part to \link fnft_nsev \endlink. The inversion
- * of discrete specturm is not yet supported. The main references are\n
+ * This routine is the counter part to \link fnft_nsev \endlink. The main references are\n
  *
  * - McClary, <a href="https://doi.org/10.1190/1.1441417">&quot;Fast
  *   Seismic Inversion&quot;</a>, Geophysis 48(10), 1983.
@@ -186,6 +221,9 @@ FNFT_INT fnft_nsev_inverse_XI(
  *   Spectra of Zakharov-Shabat Type&quot;</a>, Unpublished Preprint,
  *   arXiv:1607.01305v2 [cs.IT], Dec. 2016.
  * - Wahls, <a href="https://doi.org/10.1109/ECOC.2017.8346231">&quot;Generation of Time-Limited Signals in the Nonlinear Fourier Domain via b-Modulation&quot;,</a> Proc. ECOC 2017.
+ * - Lin, <a href="https://doi.org/10.1007/BF02015338">&quot;Evolution of the scattering
+ *   data under the classical Darboux transform for su(2) soliton systems&quot;,</a>
+ *   J. Acta Mathematicae Applicatae Sinica (1990) 6: 308.
  *
  * @param[in] M Number of samples of the continuous spectrum.
  * @param[in,out] contspec Array of length M, contains samples
@@ -198,11 +236,12 @@ FNFT_INT fnft_nsev_inverse_XI(
  *  sample of the continuous spectrum. Currently, the positions returned
  *  by \link fnft_nsev_inverse_XI \endlink MUST be used. It is NOT checked
  *  whether the user adheres to this requirement.
- * @param[in] K Ignored as inversion of discrete spectrum is not yet implemented.
- * @param[in] bound_states Ignored as inversion of discrete spectrum is not yet
- *  implemented.
- * @param[in] normconsts_or_residues Ignored as inversion of discrete spectrum is
- *  not yet implemented.
+ * @param[in] K Number of discrete spectrum points.
+ * @param[in] bound_states Complex array of length K. Complex roots of
+ * \f$ a(\xi) \f$ in the upper half of the complex-plane.
+ * @param[in] normconsts_or_residues Complex array of length K. Values of
+ * either the norming constants \f$ b(\xi) \f$ or the residues
+ * \f$ \frac{b(\xi)}{\partial{a(\xi)}/\partial{\xi}}\f$ at the values bound_states.
  * @param[in] D Number of samples of the to be generated signal q.
  * @param[out] q Array of length D. Is filled with samples
  *  \f$ q(t_n) \f$, where \f$ t_n = T[0] + n(T[1]-T[0])/(D-1) \f$

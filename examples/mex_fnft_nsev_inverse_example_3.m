@@ -55,7 +55,8 @@ tau = 2*t;
 % with the known closed-form formula for q(t).
 
 B_vals = complex(B_fun(tau));
-q = mex_fnft_nsev_inverse(B_vals, T, D, XI, kappa, 'cstype_B_of_tau');
+q = mex_fnft_nsev_inverse(B_vals, XI, [], [], D, T, kappa, ...
+    'cstype_B_of_tau');
 
 q_exact = q_exact_fun(t);
 error_in_q = norm(q_exact(:) - q(:))/norm(q_exact)

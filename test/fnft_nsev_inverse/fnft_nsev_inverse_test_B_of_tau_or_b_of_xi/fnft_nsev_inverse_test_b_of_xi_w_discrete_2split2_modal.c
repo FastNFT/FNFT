@@ -17,20 +17,20 @@
  * Sander Wahls (TU Delft) 2018.
  */
 
-#include "fnft_nsev_inverse_test_B_of_tau.inc"
+#include "fnft_nsev_inverse_test_B_of_tau_or_b_of_xi_w_discrete.inc"
 
 int main()
 {
     INT ret_code = SUCCESS;
 
     fnft_nsev_inverse_opts_t opts = fnft_nsev_inverse_default_opts();
-    opts.discretization = nse_discretization_2SPLIT2A;
-    opts.contspec_type = fnft_nsev_inverse_cstype_B_OF_TAU;
+    opts.discretization = nse_discretization_2SPLIT2_MODAL;
+    opts.contspec_type = fnft_nsev_inverse_cstype_B_OF_XI;
 
-    UINT D = 256;
-    REAL error_bound = 0.0009;
+    UINT D = 512;
+    REAL error_bound = 0.00058;
     for (UINT i=0; i<4; i++) {
-        ret_code = fnft_nsev_inverse_test(D, error_bound, &opts);
+        ret_code = fnft_nsev_inverse_test(D, D, error_bound, &opts);
         CHECK_RETCODE(ret_code, leave_fun);
         D *= 2;
         error_bound /= 4;
