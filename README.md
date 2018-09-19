@@ -27,9 +27,9 @@ FNFT is a software library for the fast numerical computation of nonlinear Fouri
       * Inversion of reflection or b-scattering coefficients
       * Bound states (eigenvalues) can be added with arbitray norming constants/residuals
 
-## Mailling List
+## Mailing List
 
-Please join the FNFT mailling list if you want to be notified about new releases of FNFT. You can subscribe either using the [web interface](https://listserv.tudelft.nl/mailman/listinfo/fnft-announcements), or by sending an email with the subject "subscribe" to <fnft-announcements-request@lists.tudelft.nl>.
+Please join the FNFT mailing list if you want to be notified about new releases of FNFT. You can subscribe either using the [web interface](https://listserv.tudelft.nl/mailman/listinfo/fnft-announcements), or by sending an email with the subject "subscribe" to <fnft-announcements-request@lists.tudelft.nl>.
 
 ## Citation
 
