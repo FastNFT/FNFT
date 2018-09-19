@@ -38,7 +38,7 @@
  * @param[out] major *major is overwritten with the value of FNFT_VERSION_MAJOR
  * @param[out] minor *minor is overwritten with the value of FNFT_VERSION_MINOR
  * @param[out] patch *patch is overwritten with the value of FNFT_VERSION_PATCH
- * @param[out] patch suffix is overwritten with the value of FNFT_VERSION_SUFFIX
+ * @param[out] suffix suffix is overwritten with the value of FNFT_VERSION_SUFFIX
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  *
