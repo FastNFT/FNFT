@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/FastNFT/FNFT.svg?branch=master)](https://travis-ci.org/FastNFT/FNFT) [![DOI](http://joss.theoj.org/papers/10.21105/joss.00597/status.svg)](https://doi.org/10.21105/joss.00597)
 
-FNFT is a software library for the fast numerical computation of nonlinear Fourier transforms, which are also known as direct scattering transforms. FNFT is written in C and comes with a MATLAB interface. A [Python interface](https://github.com/xmhk/FNFTpy) is available seperately.
+FNFT is a software library for the fast numerical computation of (inverse) nonlinear Fourier transforms, which are also known as (inverse) scattering transforms. FNFT is written in C and comes with a MATLAB interface. A [Python interface](https://github.com/xmhk/FNFTpy) is available seperately.
 
 ## Currently Implemented Cases
 
@@ -10,7 +10,7 @@ FNFT is a software library for the fast numerical computation of nonlinear Fouri
 
 * Nonlinear Schroedinger equation
     * Vanishing boundary conditions
-      * Reflection and/or scattering coefficients (a and b)
+      * Reflection coefficient and/or scattering coefficients (a and b)
       * Bound states (eigenvalues)
       * Norming constants and/or residues
     * Periodic boundary conditions
@@ -24,8 +24,8 @@ FNFT is a software library for the fast numerical computation of nonlinear Fouri
 
 * Nonlinear Schroedinger equation
     * Vanishing boundary conditions
-      * Inversion of reflection or b-scattering coefficients
-      * Bound states (eigenvalues) can be added with arbitray norming constants/residuals
+      * Inversion of reflection coefficients, b-scattering coefficients or the inverse Fourier transform of the b-coefficient
+      * Bound states (eigenvalues) can be added with arbitrary norming constants/residuals
 
 ## Mailing List
 
