@@ -32,17 +32,39 @@
  * @brief Enum that specifies discretizations used to compute nonlinear Fourier
  * transforms for the Korteweg-de Vries equation.
  *
+ * These discretizations are based on exponential spliting schemes, defined in
+ * Prins and Wahls, &quot;Higher order exponential splittings for the fast
+ * non-linear Fourier transform of the KdV equation,&quot;
+ * to appear in Proc. ICASSP 2018.\n
+ * All discretizations have the notation `xSPLITyz`, where `x` is the error order 
+ * of unsplit scheme and `y` is the order of accuracy of splitting scheme. `z` is type of splitting and
+ * can be `A`, `B` or `S`, with `A` standing for schemes implemented as defined in Prins and Wahls, &quot;
+ * Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot;
+ * to appear in Proc. ICASSP 2018. `B` type of splitting are the same as 'A' with the positions of the 
+ * two terms in the splitting interchanged. 'S' is for splittings not mentioned in above reference.\n
+ * `-2S` is from G. Strang,<a href="https://link.springer.com/content/pdf/10.1007/BF00281235.pdf">&quot;
+ * Accurate partial difference methods I: Linear Cauchy problems,&quot;</a> 
+ * in Archive for Rational Mechanics and Analysis, 12(1), 392-402, Jan 1963. It is also
+ * known as the Symmetric Weighted Sequential Splitting scheme (SWSS).\n
+ *`-3S` is from Eq. 14.4 in S. Brustein and A. Mirin,<a href="https://doi.org/10.1016/0021-9991(70)90080-X">&quot;
+ * Third Order Difference Methods for Hyperbolic Equations,&quot;</a> 
+ * J. Comput. Phys., 5, 547-571, 1970.\n
+ * `fnft_kdv_discretization_BO` has been taken from Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot;
+ * Computation of the direct scattering transform for the nonlinear Schroedinger  equation,&quot;</a> J. Comput. Phys. 102(2), 1992. 
+ * It is supported by \link fnft__kdv_scatter.h \endlink.\n 
  * In general, discretizations with a lower degree are faster, while those with
  * a highter order of accuracy are more accurate. Therefore, the best choice is
- * normally among `-2A`, `-2B`, `-4B`, `-6B` and `-8B`.
+ * normally among `-2A`, `-2B`, `-2S` `-4B`, `-6B` and `-8B`.
  * The choice between these is a trade-off between speed and accuracy.
  *
  * `fnft_kdv_discretization_2SPLIT1A`: Degree = 1, Order of accuracy = 1\n
  * `fnft_kdv_discretization_2SPLIT1B`: Degree = 1, Order of accuracy = 1\n
  * `fnft_kdv_discretization_2SPLIT2A`: Degree = 1, Order of accuracy = 2\n
  * `fnft_kdv_discretization_2SPLIT2B`: Degree = 1, Order of accuracy = 2\n
+ * `fnft_kdv_discretization_2SPLIT2S`: Degree = 1, Order of accuracy = 2\n
  * `fnft_kdv_discretization_2SPLIT3A`: Degree = 3, Order of accuracy = 3\n
  * `fnft_kdv_discretization_2SPLIT3B`: Degree = 3, Order of accuracy = 3\n
+ * `fnft_kdv_discretization_2SPLIT3S`: Degree = 2, Order of accuracy = 3\n
  * `fnft_kdv_discretization_2SPLIT4A`: Degree = 4, Order of accuracy = 4\n
  * `fnft_kdv_discretization_2SPLIT4B`: Degree = 2, Order of accuracy = 4\n
  * `fnft_kdv_discretization_2SPLIT5A`: Degree = 15, Order of accuracy = 5\n
@@ -54,11 +76,6 @@
  * `fnft_kdv_discretization_2SPLIT8A`: Degree = 24, Order of accuracy = 8\n
  * `fnft_kdv_discretization_2SPLIT8B`: Degree = 12, Order of accuracy = 8
  *
- * These discretizations are based on exponential spliting schemes, defined in
- * Prins and Wahls, &quot;Higher order exponential splittings for the fast
- * non-linear Fourier transform of the KdV equation,&quot;
- * to appear in Proc. ICASSP 2018.
- *
  * Used in \link fnft_kdvv_opts_t \endlink.
  *
  * @ingroup data_types
@@ -68,8 +85,10 @@ typedef enum {
     fnft_kdv_discretization_2SPLIT1B,
     fnft_kdv_discretization_2SPLIT2A,
     fnft_kdv_discretization_2SPLIT2B,
+    fnft_kdv_discretization_2SPLIT2S,
     fnft_kdv_discretization_2SPLIT3A,
     fnft_kdv_discretization_2SPLIT3B,
+    fnft_kdv_discretization_2SPLIT3S,
     fnft_kdv_discretization_2SPLIT4A,
     fnft_kdv_discretization_2SPLIT4B,
     fnft_kdv_discretization_2SPLIT5A,
@@ -79,7 +98,8 @@ typedef enum {
     fnft_kdv_discretization_2SPLIT7A,
     fnft_kdv_discretization_2SPLIT7B,
     fnft_kdv_discretization_2SPLIT8A,
-    fnft_kdv_discretization_2SPLIT8B
+    fnft_kdv_discretization_2SPLIT8B,
+    fnft_kdv_discretization_BO
 } fnft_kdv_discretization_t;
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
@@ -87,8 +107,10 @@ typedef enum {
 #define kdv_discretization_2SPLIT1B fnft_kdv_discretization_2SPLIT1B
 #define kdv_discretization_2SPLIT2A fnft_kdv_discretization_2SPLIT2A
 #define kdv_discretization_2SPLIT2B fnft_kdv_discretization_2SPLIT2B
+#define kdv_discretization_2SPLIT2S fnft_kdv_discretization_2SPLIT2S
 #define kdv_discretization_2SPLIT3A fnft_kdv_discretization_2SPLIT3A
 #define kdv_discretization_2SPLIT3B fnft_kdv_discretization_2SPLIT3B
+#define kdv_discretization_2SPLIT3S fnft_kdv_discretization_2SPLIT3S
 #define kdv_discretization_2SPLIT4A fnft_kdv_discretization_2SPLIT4A
 #define kdv_discretization_2SPLIT4B fnft_kdv_discretization_2SPLIT4B
 #define kdv_discretization_2SPLIT5A fnft_kdv_discretization_2SPLIT5A
@@ -99,6 +121,7 @@ typedef enum {
 #define kdv_discretization_2SPLIT7B fnft_kdv_discretization_2SPLIT7B
 #define kdv_discretization_2SPLIT8A fnft_kdv_discretization_2SPLIT8A
 #define kdv_discretization_2SPLIT8B fnft_kdv_discretization_2SPLIT8B
+#define kdv_discretization_BO fnft_kdv_discretization_BO
 #define kdv_discretization_t fnft_kdv_discretization_t
 #endif
 

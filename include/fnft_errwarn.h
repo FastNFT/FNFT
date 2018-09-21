@@ -19,6 +19,8 @@
 
 /**
  * @file fnft_errwarn.h
+ * @brief Controls error messages.
+ * 
  * @ingroup errwarn
  *
  * Provides error codes and functions that control error messages output.

@@ -43,7 +43,11 @@ typedef double FNFT_REAL;
  * The complex floating point data type used by FNFT.
  * @ingroup numtype
  */
+#ifndef __cplusplus
 typedef double complex FNFT_COMPLEX;
+#else
+typedef std::complex<double> FNFT_COMPLEX;
+#endif
 
 /**
  * The signed integer used by FNFT.
@@ -110,6 +114,12 @@ typedef size_t FNFT_UINT;
  * @ingroup numtype
  */
 #define FNFT_COSH(X) cosh(X)
+
+/**
+ * Arc tangent of a \link FNFT_REAL \endlink.
+ * @ingroup numtype
+ */
+#define FNFT_ATAN(X) atan(X)
 
 /**
  * Natural logarithm of a \link FNFT_REAL \endlink.
@@ -245,6 +255,11 @@ typedef size_t FNFT_UINT;
  */
 #define FNFT_CCOS(X) ccos(X)
 
+/**
+ * Complex arc hyperbolic tangent of a \link FNFT_COMPLEX \endlink.
+ */
+#define FNFT_ATANH(X) atanh(X)
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define REAL            FNFT_REAL
 #define COMPLEX         FNFT_COMPLEX
@@ -262,6 +277,7 @@ typedef size_t FNFT_UINT;
 #define CLOG(X)         FNFT_CLOG(X)
 #define COS(X)          FNFT_COS(X)
 #define SIN(X)          FNFT_SIN(X)
+#define ATAN(X)         FNFT_ATAN(X)
 #define SQRT(X)         FNFT_SQRT(X)
 #define EPSILON         FNFT_EPSILON
 #define CSINH(X)        FNFT_CSINH(X)
@@ -277,8 +293,9 @@ typedef size_t FNFT_UINT;
 #define CSQRT(X)        FNFT_CSQRT(X)
 #define CEXP(X)         FNFT_CEXP(X)
 #define CARG(X)         FNFT_CARG(X)
-#define PI        	FNFT_PI
+#define PI        	    FNFT_PI
 #define GAMMA(X)        FNFT_GAMMA(X)
+#define ATANH(X)   FNFT_ATANH(X)
 #endif
 
 #endif

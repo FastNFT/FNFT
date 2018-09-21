@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
+* Marius Brehler (TU Dortmund) 2018.
 */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -91,7 +92,7 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
                                   // far, 1st val is for main spec, 2nd for aux
 
     // Check inputs
-    if (D < 2)
+    if (D < 2 || (D & (D-1)) != 0 )
         return E_INVALID_ARGUMENT(D);
     if (q == NULL)
         return E_INVALID_ARGUMENT(q);
@@ -188,10 +189,9 @@ static inline INT gridsearch(const UINT D,
     COMPLEX * transfer_matrix = NULL;
     COMPLEX * p = NULL;
     COMPLEX * roots = NULL;
-    REAL map_coeff;
+    REAL degree1step, map_coeff;
     REAL PHI[2] = { 0.0, 2.0*PI };
 	UINT deg;
-    REAL eps_t;
     INT W = 0, *W_ptr = NULL;
     UINT K, K_filtered;
     UINT M;
@@ -215,7 +215,7 @@ static inline INT gridsearch(const UINT D,
     }
 
     // Determine step size
-    eps_t = (T[1] - T[0]) / D;
+    const REAL eps_t = (T[1] - T[0]) / D;
 
     // Compute the transfer matrix
     if (opts_ptr->normalization_flag)
@@ -225,7 +225,10 @@ static inline INT gridsearch(const UINT D,
     CHECK_RETCODE(ret_code, release_mem);
 
     // Will be required later for coordinate transforms
-    map_coeff = nse_discretization_mapping_coeff(opts_ptr->discretization);
+    degree1step = nse_discretization_degree(opts_ptr->discretization);
+    if (degree1step == NAN)
+        return E_INVALID_ARGUMENT(opts_ptr->discretization);
+    map_coeff = 2/degree1step;
     update_bounding_box_if_auto(eps_t, map_coeff, opts_ptr);
     PHI[0] = map_coeff*eps_t*opts_ptr->bounding_box[0];
     PHI[1] = map_coeff*eps_t*opts_ptr->bounding_box[1];
@@ -271,9 +274,9 @@ static inline INT gridsearch(const UINT D,
         }
 
         // Coordinate transform (from discrete-time to continuous-time domain)
-        for (i=0; i<K; i++)
-            roots[i] = CLOG(roots[i]) / (map_coeff*I*eps_t);
-
+        ret_code = nse_z_to_lambda(K, eps_t, roots, opts_ptr->discretization);
+        CHECK_RETCODE(ret_code, release_mem);
+        
         // Filter the roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
             ret_code = misc_filter(&K, roots, NULL, opts_ptr->bounding_box);
@@ -304,9 +307,9 @@ static inline INT gridsearch(const UINT D,
         }
 
         // Coordinate transform of the new roots
-        for (i=0; i<K_filtered; i++)
-            roots[i] = CLOG(roots[i]) / (map_coeff*I*eps_t);
-
+        ret_code = nse_z_to_lambda(K_filtered, eps_t, roots, opts_ptr->discretization);
+        CHECK_RETCODE(ret_code, release_mem);
+        
         // Filter the new roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
             ret_code = misc_filter(&K_filtered, roots, NULL,
@@ -340,9 +343,9 @@ static inline INT gridsearch(const UINT D,
         CHECK_RETCODE(ret_code, release_mem);
 
         // Coordinate transform (from discrete-time to continuous-time domain)
-        for (i=0; i<M; i++)
-            roots[i] = CLOG(roots[i]) / (map_coeff*I*eps_t);
-
+        ret_code = nse_z_to_lambda(M, eps_t, roots, opts_ptr->discretization);
+        CHECK_RETCODE(ret_code, release_mem);
+        
         // Filter the roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
             ret_code = misc_filter(&M, roots, NULL, opts_ptr->bounding_box);
@@ -384,11 +387,10 @@ static inline INT subsample_and_refine(const UINT D,
     COMPLEX * p = NULL;
     COMPLEX * roots = NULL;
     COMPLEX * qsub = NULL;
-    REAL map_coeff;
+    REAL degree1step, map_coeff;
     REAL tol_im;
 	UINT deg;
-    UINT Dsub, subsampling_factor;
-    REAL eps_t, eps_t_sub;
+    UINT Dsub;
     INT W = 0, *W_ptr = NULL;
     UINT K = 0, K_filtered = 0;
     UINT M = 0;
@@ -401,8 +403,13 @@ static inline INT subsample_and_refine(const UINT D,
 
     // Create a subsampled version of q for computing initial guesses. (The
     // refinement will be carried out based on the original signal.)
-    ret_code = misc_downsample(q, D, &qsub, &Dsub, &subsampling_factor);
-    CHECK_RETCODE(ret_code, release_mem);
+    Dsub = POW(2.0, CEIL( 0.5 * LOG2(D * LOG2(D) * LOG2(D)) ));
+    UINT first_last_index[2] = { 0, 0 };
+    ret_code = misc_downsample(D, q, &Dsub, &qsub, first_last_index);
+    if ( first_last_index[0] != 0 || first_last_index[1]+1 != D )
+        return E_ASSERTION_FAILED; // Correct update of T for general
+                                   // downsampling still needs to be
+                                   // implemented
 
     // Allocate memory for the transfer matrix
     i = nse_fscatter_numel(Dsub, opts_ptr->discretization);
@@ -417,8 +424,8 @@ static inline INT subsample_and_refine(const UINT D,
     }
 
     // Determine step sizes
-    eps_t = (T[1] - T[0]) / D;
-    eps_t_sub = (T[1] - T[0]) / Dsub;
+    const REAL eps_t = (T[1] - T[0]) / D;
+    const REAL eps_t_sub = (T[1] - T[0]) / Dsub;
 
     // Compute the transfer matrix
     if (opts_ptr->normalization_flag)
@@ -428,7 +435,10 @@ static inline INT subsample_and_refine(const UINT D,
     CHECK_RETCODE(ret_code, release_mem);
 
     // Will be required later for coordinate transforms and filtering
-    map_coeff = nse_discretization_mapping_coeff(opts_ptr->discretization);
+    degree1step = nse_discretization_degree(opts_ptr->discretization);
+    if (degree1step == NAN)
+        return E_INVALID_ARGUMENT(opts_ptr->discretization);
+    map_coeff = 2/degree1step;
     update_bounding_box_if_auto(eps_t_sub, map_coeff, opts_ptr);
     tol_im = opts_ptr->bounding_box[1] - opts_ptr->bounding_box[0];
     tol_im /= oversampling_factor*(D - 1);
@@ -460,9 +470,9 @@ static inline INT subsample_and_refine(const UINT D,
         CHECK_RETCODE(ret_code, release_mem);
 
         // Coordinate transform (from discrete-time to continuous-time domain)
-        for (i=0; i<deg; i++)
-            roots[i] = CLOG(roots[i]) / (map_coeff*I*eps_t_sub);
-
+        ret_code = nse_z_to_lambda(deg, eps_t_sub, roots, opts_ptr->discretization);
+        CHECK_RETCODE(ret_code, release_mem);
+        
         // Filter the roots
         K = deg;
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
@@ -507,9 +517,9 @@ static inline INT subsample_and_refine(const UINT D,
         CHECK_RETCODE(ret_code, release_mem);
 
         // Coordinate transform of the new roots
-        for (i=0; i<deg; i++)
-            roots[i] = CLOG(roots[i]) / (map_coeff*I*eps_t_sub);
-
+        ret_code = nse_z_to_lambda(deg, eps_t_sub, roots, opts_ptr->discretization);
+        CHECK_RETCODE(ret_code, release_mem);
+        
         // Filter the new roots
         K_filtered = deg;
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
@@ -564,9 +574,9 @@ static inline INT subsample_and_refine(const UINT D,
         M = deg;
 
         // Coordinate transform (from discrete-time to continuous-time domain)
-        for (i=0; i<M; i++)
-            roots[i] = CLOG(roots[i]) / (map_coeff*I*eps_t_sub);
-
+        ret_code = nse_z_to_lambda(M, eps_t_sub, roots, opts_ptr->discretization);
+        CHECK_RETCODE(ret_code, release_mem);
+        
         // Filter the roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
             ret_code = misc_filter(&M, roots, NULL, opts_ptr->bounding_box);

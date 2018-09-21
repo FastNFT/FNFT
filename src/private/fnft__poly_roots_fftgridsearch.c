@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
+* Marius Brehler (TU Dortmund) 2018.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -33,14 +34,13 @@ INT poly_roots_fftgridsearch(const UINT deg,
 {
     INT ret_code;
     COMPLEX A, W, c, zi, z0, yi, y0, zr;
-    REAL eps;
     UINT i, j, M, nroots = 0;
     INT k;
     COMPLEX * vals;
     REAL tmp;
 
 	// Check inputs
-    if ( deg%2 == 1 || deg < 2 ) // degree must be even and >= 2
+    if ( deg < 2 )
         return E_INVALID_ARGUMENT(deg);
 	if (p == NULL)
 		return E_INVALID_ARGUMENT(p);
@@ -61,7 +61,7 @@ INT poly_roots_fftgridsearch(const UINT deg,
     }
 
     // Evaluate polynomial using the Chirp transform on three rings
-    eps = (PHI[1] - PHI[0]) / (M - 1);
+    const REAL eps = (PHI[1] - PHI[0]) / (M - 1);
     W = CEXP(I*eps);
     for (k=-1; k<=1; k++) {
 
@@ -162,7 +162,7 @@ INT poly_roots_fftgridsearch_paraherm(const UINT deg,
 {
     INT ret_code;
     COMPLEX A, W;
-    REAL eps, phi, phi1, phi2;
+    REAL phi, phi1, phi2;
     UINT i, N, M, nroots = 0;
 
 	// Check inputs
@@ -180,7 +180,7 @@ INT poly_roots_fftgridsearch_paraherm(const UINT deg,
 
     // Evaluate polynomial using the Chirp transform
     M = *M_ptr;
-    eps = (PHI[1] - PHI[0]) / (M - 1);
+    const REAL eps = (PHI[1] - PHI[0]) / (M - 1);
     W = CEXP(I*eps);
     A = CEXP(-I*PHI[0]);
     ret_code = poly_chirpz(deg, p, A, W, M, roots);

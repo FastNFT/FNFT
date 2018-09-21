@@ -27,7 +27,7 @@ INT main()
     const fnft__nsep_testcases_t tc = nsep_testcases_PLANE_WAVE_FOCUSING;
     UINT D = 1024;
     REAL error_bounds[3] = {
-        3.3e-4, // main spectrum
+        3.5e-4, // main spectrum
         3.1e-4, // aux spectrum
         0.0     // sheet indices (zero since not yet implemented)
     };

@@ -10,6 +10,23 @@ matrix:
           packages:
             - gcc-5
             - gfortran-5
-      env: GCC_VER="5" CC=/usr/bin/gcc-5 FC=/usr/bin/gfortran-5"
+    - os: linux
+      addons:
+        apt:
+          sources: 
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-5
+            - gfortran-5
+            - libfftw3-dev
 
-script: cmake . && make && make test
+before_script:
+    - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 100
+    - sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-5 100
+    - mkdir build
+    - cd build
+ 
+script:
+    - if dpkg -s libfftw3-dev; then cmake .. -DENABLE_FFTW=ON; else cmake ..; fi
+    - make 
+    - make test CTEST_OUTPUT_ON_FAILURE=1

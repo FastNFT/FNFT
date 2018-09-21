@@ -1,6 +1,6 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
+* This file is part of FNFT.
+*
 * FNFT is free software; you can redistribute it and/or
 * modify it under the terms of the version 2 of the GNU General
 * Public License as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-*                                                                      
+*
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
@@ -33,7 +33,7 @@
  * Enum that controls how spectrum is localized. Used in
  * \link fnft_nsep_opts_t \endlink.\n \n
  * @ingroup data_types
- *  fnft_nsep_opts_loc_SUBSAMPLE_AND_REFINE: Similar approach as for 
+ *  fnft_nsep_opts_loc_SUBSAMPLE_AND_REFINE: Similar approach as for
  *  fnft_nsev_opts_dsloc_SUBSAMPLE_AND_REFINE (see
  *  \link fnft_nsev_opts_t::bound_state_localization\endlink.)\n\n
  *  fnft_nsep_opts_loc_GRIDSEARCH: Uses a grid search to localize roots. Can
@@ -67,8 +67,8 @@ typedef enum {
 
 /**
  * @struct fnft_nsep_opts_t
- * @brief Stores additional options for the routine \link fnft_nsep \endlink. 
- * 
+ * @brief Stores additional options for the routine \link fnft_nsep \endlink.
+ *
  * @ingroup fnft
  * @ingroup data_types
  *
@@ -85,7 +85,7 @@ typedef enum {
  *  filtered. It is recommended to use MANUAL filtering as accurate filtering
  *  reduces the runtime of the routine.\n
  *  Should be of type \link fnft_nsep_filt_t \endlink.
- * 
+ *
  * @var fnft_nsep_opts_t::bounding_box
  *  Array of four reals. Defines a box in the complex plane that is used for
  *  filtering: \n
@@ -102,7 +102,7 @@ typedef enum {
  *  See \link fnft_nsev_opts_t::discretization \endlink.
  *
  * @var fnft_nsep_opts_t::normalization_flag
- *  See \link fnft_nsev_opts_t::normalization_flag \endlink. 
+ *  See \link fnft_nsev_opts_t::normalization_flag \endlink.
  */
 typedef struct {
     fnft_nsep_loc_t localization;
@@ -116,7 +116,7 @@ typedef struct {
 /**
  * @brief Creates a new options variable for \link fnft_nsep \endlink with
  * default settings.
- * 
+ *
  * @ingroup fnft
  * @returns A \link fnft_nsep_opts_t \endlink object with the following options.\n
  *  localization = fnft_nsep_loc_MIXED\n
@@ -134,7 +134,7 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
 /**
  * @brief Fast nonlinear Fourier transform for the nonlinear Schroedinger
  *  equation with periodic boundary conditions.
- * 
+ *
  * @ingroup fnft
  * \n \n
  * This routine computes the nonlinear Fourier transform for the nonlinear
@@ -147,8 +147,8 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  * The main references for the numerical algorithm are:
  *      - Wahls and Poor, <a href="http://dx.doi.org/10.1109/TIT.2015.2485944">&quot;Fast numerical nonlinear Fourier transforms,&quot;</a> IEEE Trans. Inform. Theor. 61(12), 2015.
  *      - Prins and Wahls, &quot;Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot; to appear in Proc. ICASSP 2018.
- * 
- * @param[in] D Number of samples
+ *
+ * @param[in] D Number of samples. Has to be a power of two.
  * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
  *  where \f$ t_n = T[0] + n*L/D \f$, where L=T[2]-T[1] is the period and
  *  \f$n=0,1,\dots,D-1\f$, of the to-be-transformed signal in ascending order
@@ -191,7 +191,7 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  */
-FNFT_INT fnft_nsep(const FNFT_UINT D, FNFT_COMPLEX const * const q, 
+FNFT_INT fnft_nsep(const FNFT_UINT D, FNFT_COMPLEX const * const q,
     FNFT_REAL const * const T, FNFT_UINT * const K_ptr,
     FNFT_COMPLEX * const main_spec, FNFT_UINT * const M_ptr,
     FNFT_COMPLEX * const aux_spec, FNFT_REAL * const sheet_indices,

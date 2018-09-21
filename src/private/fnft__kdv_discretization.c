@@ -21,72 +21,140 @@
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft__kdv_discretization.h"
+#include "fnft__akns_discretization.h"
 
 /**
- * This routine returns the max degree d of the polynomials in a single
- * scattering matrix or zero if the discretization is unknown.
+ * Returns the max degree of the polynomials in a single scattering
+ * matrix or zero if the discretization is unknown.
  */
 UINT fnft__kdv_discretization_degree(kdv_discretization_t
-        discretization)
+        kdv_discretization)
 {
-    switch (discretization) {
-        case kdv_discretization_2SPLIT1A:
-        case kdv_discretization_2SPLIT1B:
-        case kdv_discretization_2SPLIT2A: // With change of base trick
-        case kdv_discretization_2SPLIT2B:
-            return 1;
-        case kdv_discretization_2SPLIT4B:
-            return 2;
-        case kdv_discretization_2SPLIT3A:
-        case kdv_discretization_2SPLIT3B:
-            return 3;
-        case kdv_discretization_2SPLIT4A:
-            return 4;
-        case kdv_discretization_2SPLIT6B:
-            return 6;
-        case kdv_discretization_2SPLIT6A:
-        case kdv_discretization_2SPLIT8B:
-            return 12;
-        case kdv_discretization_2SPLIT5A:
-        case kdv_discretization_2SPLIT5B:
-            return 15;
-        case kdv_discretization_2SPLIT8A:
-            return 24;
-        case kdv_discretization_2SPLIT7A:
-        case kdv_discretization_2SPLIT7B:
-            return 105;
-            
-        default: // Unknown discretization
-            return 0;
-    }
+    akns_discretization_t akns_discretization = 0;
+    INT ret_code;
+    UINT degree1step = 0;
+    ret_code = kdv_discretization_to_akns_discretization(kdv_discretization, &akns_discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
+    degree1step = akns_discretization_degree(akns_discretization); 
+    leave_fun:    
+        return degree1step; 
 }
+
 
 /**
  * This routine returns the boundary coefficient based on the discretization.
  */
-REAL fnft__kdv_discretization_boundary_coeff(kdv_discretization_t discretization)
+REAL fnft__kdv_discretization_boundary_coeff(kdv_discretization_t kdv_discretization)
+{
+    akns_discretization_t akns_discretization = 0;
+    REAL bnd_coeff = NAN;
+    INT ret_code;
+    ret_code = kdv_discretization_to_akns_discretization(kdv_discretization, &akns_discretization);
+    CHECK_RETCODE(ret_code, leave_fun);    
+    bnd_coeff = akns_discretization_boundary_coeff(akns_discretization);
+    leave_fun:    
+        return bnd_coeff;
+}
+
+/**
+ * This akns_discretization related to the given kdv_discretization
+ */
+INT fnft__kdv_discretization_to_akns_discretization(kdv_discretization_t kdv_discretization, 
+        akns_discretization_t * const akns_discretization)
 {
 
-    switch (discretization) {
+    switch (kdv_discretization) {
         case kdv_discretization_2SPLIT1A:
+            *akns_discretization = akns_discretization_2SPLIT1A;
+            break;
         case kdv_discretization_2SPLIT1B:
+            *akns_discretization = akns_discretization_2SPLIT1B;
+            break;
         case kdv_discretization_2SPLIT2A:
+            *akns_discretization = akns_discretization_2SPLIT2A;
+            break;
         case kdv_discretization_2SPLIT2B:
-        case kdv_discretization_2SPLIT3A:
-        case kdv_discretization_2SPLIT3B:
-        case kdv_discretization_2SPLIT4A:
+            *akns_discretization = akns_discretization_2SPLIT2B;
+            break;
+        case kdv_discretization_2SPLIT2S:
+            *akns_discretization = akns_discretization_2SPLIT2S;
+            break;
+        case kdv_discretization_2SPLIT3S:
+            *akns_discretization = akns_discretization_2SPLIT3S;
+            break;
         case kdv_discretization_2SPLIT4B:
-        case kdv_discretization_2SPLIT5A:
-        case kdv_discretization_2SPLIT5B:
-        case kdv_discretization_2SPLIT6A:
+            *akns_discretization = akns_discretization_2SPLIT4B;
+            break;
+        case kdv_discretization_2SPLIT3A:
+            *akns_discretization = akns_discretization_2SPLIT3A;
+            break;
+        case kdv_discretization_2SPLIT3B:
+            *akns_discretization = akns_discretization_2SPLIT3B;
+            break;
+        case kdv_discretization_2SPLIT4A:
+            *akns_discretization = akns_discretization_2SPLIT4A;
+            break;
         case kdv_discretization_2SPLIT6B:
-        case kdv_discretization_2SPLIT7A:
-        case kdv_discretization_2SPLIT7B:
-        case kdv_discretization_2SPLIT8A:
+            *akns_discretization = akns_discretization_2SPLIT6B;
+            break;
+        case kdv_discretization_2SPLIT6A:
+            *akns_discretization = akns_discretization_2SPLIT6A;
+            break;
         case kdv_discretization_2SPLIT8B:
-            return 0.5;
+            *akns_discretization = akns_discretization_2SPLIT8B;
+            break;
+        case kdv_discretization_2SPLIT5A:
+            *akns_discretization = akns_discretization_2SPLIT5A;
+            break;
+        case kdv_discretization_2SPLIT5B:
+            *akns_discretization = akns_discretization_2SPLIT5B;
+            break;
+        case kdv_discretization_2SPLIT8A:
+            *akns_discretization = akns_discretization_2SPLIT8A;
+            break;
+        case kdv_discretization_2SPLIT7A:
+            *akns_discretization = akns_discretization_2SPLIT7A;
+            break;
+        case kdv_discretization_2SPLIT7B:
+            *akns_discretization = akns_discretization_2SPLIT7B;
+            break;
+        case kdv_discretization_BO:
+            *akns_discretization = akns_discretization_BO;
+            break;
             
         default: // Unknown discretization
-            return NAN;
+            return E_INVALID_ARGUMENT(kdv_discretization);
     }
+    return SUCCESS;    
+}
+/**
+ * This routine maps lambda from continuous-time domain to
+ * z in the discrete-time domain based on the discretization. 
+ */
+INT fnft__kdv_lambda_to_z(const UINT n, const REAL eps_t, 
+        COMPLEX * const vals, kdv_discretization_t kdv_discretization)
+{
+    akns_discretization_t akns_discretization = 0;
+    INT ret_code = SUCCESS;
+    ret_code = kdv_discretization_to_akns_discretization(kdv_discretization, &akns_discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = fnft__akns_lambda_to_z(n, eps_t, vals, akns_discretization);
+    leave_fun:    
+        return ret_code;
+}
+
+/**
+ * This routine maps z from the discrete-time domain to
+ * lambda in the continuous-time domain based on the discretization. 
+ */
+INT fnft__kdv_z_to_lambda(const UINT n, const REAL eps_t, 
+        COMPLEX * const vals, kdv_discretization_t kdv_discretization)
+{
+    akns_discretization_t akns_discretization = 0;
+    INT ret_code = SUCCESS;
+    ret_code = kdv_discretization_to_akns_discretization(kdv_discretization, &akns_discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = fnft__akns_z_to_lambda(n, eps_t, vals, akns_discretization);
+    leave_fun:    
+        return ret_code;   
 }

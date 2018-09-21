@@ -1,6 +1,6 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
+* This file is part of FNFT.
+*
 * FNFT is free software; you can redistribute it and/or
 * modify it under the terms of the version 2 of the GNU General
 * Public License as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-*                                                                      
+*
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
@@ -21,16 +21,17 @@
 #include "fnft__errwarn.h"
 #include "fnft__misc.h" // for misc_sech
 #include "fnft__nsev_testcases.h"
+#include "fnft__nse_discretization.h" // for nse_discretization_degree
 #ifdef DEBUG
 #include <stdio.h>
 #endif
 
 INT nsev_testcases(nsev_testcases_t tc, const UINT D,
-    COMPLEX ** const q_ptr, REAL * const T, 
+    COMPLEX ** const q_ptr, REAL * const T,
     UINT * const M_ptr, COMPLEX ** const contspec_ptr,
     COMPLEX ** const ab_ptr,
-    REAL * const XI, UINT * const K_ptr, 
-    COMPLEX ** const bound_states_ptr, 
+    REAL * const XI, UINT * const K_ptr,
+    COMPLEX ** const bound_states_ptr,
     COMPLEX ** const normconsts_ptr,
     COMPLEX ** residues_ptr, INT * const kappa_ptr)
 {
@@ -72,19 +73,17 @@ INT nsev_testcases(nsev_testcases_t tc, const UINT D,
 
     case nsev_testcases_SECH_DEFOCUSING:
         *M_ptr = 16;
-        *K_ptr = 1; // There is actually no soliton, but we set this value
-        // to avoid undefined behavior of the malloc calls below.
+        *K_ptr = 0;
         break;
 
     case nsev_testcases_TRUNCATED_SOLITON:
         *M_ptr = 16;
-        *K_ptr = 1; // There is actually no soliton, but we set this value
-        // to avoid undefined behavior of the malloc calls below.
+        *K_ptr = 0;
         break;
 
     default:
         return E_INVALID_ARGUMENT(tc);
-    } 
+    }
 
     // Allocate memory for results
     *q_ptr = malloc(D * sizeof(COMPLEX));
@@ -92,36 +91,47 @@ INT nsev_testcases(nsev_testcases_t tc, const UINT D,
         ret_code = E_NOMEM;
         goto release_mem_1;
     }
-    *contspec_ptr = malloc((*M_ptr) * sizeof(COMPLEX));
-    if (*contspec_ptr == NULL) {
-        ret_code = E_NOMEM;
-        goto release_mem_2;
+    if (*M_ptr > 0) {
+        *contspec_ptr = malloc((*M_ptr) * sizeof(COMPLEX));
+        if (*contspec_ptr == NULL) {
+            ret_code = E_NOMEM;
+            goto release_mem_2;
+        }
+        *ab_ptr = malloc(2*(*M_ptr) * sizeof(COMPLEX));
+        if (*ab_ptr == NULL) {
+            ret_code = E_NOMEM;
+            goto release_mem_3;
+        }
+    } else {
+        *contspec_ptr = NULL;
+        *ab_ptr = NULL;
     }
-    *ab_ptr = malloc(2*(*M_ptr) * sizeof(COMPLEX));
-    if (*ab_ptr == NULL) {
-        ret_code = E_NOMEM;
-        goto release_mem_3;
+    if (*K_ptr > 0) {
+        *bound_states_ptr = malloc((*K_ptr) * sizeof(COMPLEX));
+        if (*bound_states_ptr == NULL) {
+            ret_code = E_NOMEM;
+            goto release_mem_4;
+        }
+        *normconsts_ptr = malloc((*K_ptr) * sizeof(COMPLEX));
+        if (*normconsts_ptr == NULL) {
+            ret_code = E_NOMEM;
+            goto release_mem_5;
+        }
+        *residues_ptr = malloc((*K_ptr) * sizeof(COMPLEX));
+        if (*residues_ptr == NULL) {
+            ret_code = E_NOMEM;
+            goto release_mem_6;
+        }
+    } else {
+        *bound_states_ptr = NULL;
+        *normconsts_ptr = NULL;
+        *residues_ptr = NULL;
     }
-    *bound_states_ptr = malloc((*K_ptr) * sizeof(COMPLEX));
-    if (*bound_states_ptr == NULL) {
-        ret_code = E_NOMEM;
-        goto release_mem_4;
-    }    
-    *normconsts_ptr = malloc((*K_ptr) * sizeof(COMPLEX));
-    if (*normconsts_ptr == NULL) {
-        ret_code = E_NOMEM;
-        goto release_mem_5;
-    }    
-    *residues_ptr = malloc((*K_ptr) * sizeof(COMPLEX));
-    if (*residues_ptr == NULL) {
-        ret_code = E_NOMEM;
-        goto release_mem_6;
-    }    
 
     // generate test case
     switch (tc) {
 
-    case nsev_testcases_SECH_FOCUSING: 
+    case nsev_testcases_SECH_FOCUSING:
 
         // This test case can be found in J. Satsuma & N. Yajima, Prog. Theor.
         // Phys. Suppl., No. 55, p. 284ff, 1974.
@@ -153,7 +163,7 @@ INT nsev_testcases(nsev_testcases_t tc, const UINT D,
         // Time domain
         T[0] = -25.0;
         T[1] = 25.0;
-       
+
         // Time domain signal. Note that the signal here has an extra factor I
         // when compared to the reference because there a different variant of
         // the Zakharov-Shabat problem is used. By multiplying the signal with
@@ -202,34 +212,34 @@ INT nsev_testcases(nsev_testcases_t tc, const UINT D,
         // a(xi)
         (*ab_ptr)[0] =   0.1922981551089552207414790788104399336051
             - 0.9812300627012406776576449201797836254391*I;
-        (*ab_ptr)[1] =   0.561866472778759866094679757854572199885 
+        (*ab_ptr)[1] =   0.561866472778759866094679757854572199885
             - 0.8267843388695356739056977390134312187561*I;
         (*ab_ptr)[2] =   0.8730141099108177240539975329792577203606
             - 0.4850517842024005091448564057792135627085*I;
-        (*ab_ptr)[3] =   0.99473134297967765839265519878851030091 
+        (*ab_ptr)[3] =   0.99473134297967765839265519878851030091
             + 0.03949339706100667801810586124473818981564*I;
-        (*ab_ptr)[4] =   0.7606487443184108526272926017586175655859 
+        (*ab_ptr)[4] =   0.7606487443184108526272926017586175655859
             + 0.6252785106141419778427378472314923857149*I;
-        (*ab_ptr)[5] =   0.1089468485775085556086575508888526656452 
+        (*ab_ptr)[5] =   0.1089468485775085556086575508888526656452
             + 0.9446351632262268082615533423570763855373*I;
-        (*ab_ptr)[6] = - 0.590997041209672540861257403754476421502 
+        (*ab_ptr)[6] = - 0.590997041209672540861257403754476421502
             + 0.6421669003309714788364298184082912989208*I;
         (*ab_ptr)[7] = - 0.8090169943749474241022934171828190588602;
-        (*ab_ptr)[8] = - 0.590997041209672540861257403754476421502 
+        (*ab_ptr)[8] = - 0.590997041209672540861257403754476421502
             - 0.6421669003309714788364298184082912989208*I;
-        (*ab_ptr)[9] =   0.1089468485775085556086575508888526656452 
+        (*ab_ptr)[9] =   0.1089468485775085556086575508888526656452
             - 0.9446351632262268082615533423570763855373*I;
-        (*ab_ptr)[10] =   0.7606487443184108526272926017586175655859 
+        (*ab_ptr)[10] =   0.7606487443184108526272926017586175655859
             - 0.6252785106141419778427378472314923857149*I;
-        (*ab_ptr)[11] =   0.99473134297967765839265519878851030091 
+        (*ab_ptr)[11] =   0.99473134297967765839265519878851030091
             - 0.03949339706100667801810586124473818981564*I;
-        (*ab_ptr)[12] =   0.8730141099108177240539975329792577203606 
+        (*ab_ptr)[12] =   0.8730141099108177240539975329792577203606
             + 0.4850517842024005091448564057792135627085*I;
-        (*ab_ptr)[13] =   0.561866472778759866094679757854572199885 
+        (*ab_ptr)[13] =   0.561866472778759866094679757854572199885
             + 0.8267843388695356739056977390134312187561*I;
-        (*ab_ptr)[14] =   0.1922981551089552207414790788104399336051 
+        (*ab_ptr)[14] =   0.1922981551089552207414790788104399336051
             + 0.9812300627012406776576449201797836254391*I;
-        (*ab_ptr)[15] = - 0.1579366040628854761179976110287556423348 
+        (*ab_ptr)[15] = - 0.1579366040628854761179976110287556423348
             + 0.9874191295994487368292392806331584236124*I;
 
         // b(xi)
@@ -263,43 +273,43 @@ INT nsev_testcases(nsev_testcases_t tc, const UINT D,
             / ( 15.0 * CPOW(GAMMA(1.0/5.0), 2.0) );
         (*residues_ptr)[2] = -4284.0 * GAMMA(2.0/5.0) \
             / (11.0 * CPOW(GAMMA(1.0/5.0), 2.0) );
- 
+
         *kappa_ptr = +1;
 
         break;
 
     case nsev_testcases_SECH_DEFOCUSING:
-    
-		// This example (with a different Q) can be found in
-		// Frumin et al., J. Opt. Soc. Am. B 32(2), 2015.
 
-		/* Matlab code for computing contspec:
-    	M = 16; XI1 = -100; XI2 = 80; eps_xi = (XI2 - XI1)/(M - 1);
-    	Q = 1; GAM = 1/25; F = 1.5; xi = XI1 + (0:(M-1))*eps_xi;
-    	cgamma = @(z) double(gamma(sym(z))); d = 0.5 + 1i*(xi*GAM-F);
-    	fp = 0.5 - 1i*(xi*GAM+sqrt(F^2+Q^2)); fm = 0.5 - 1i*(xi*GAM-sqrt(F^2+Q^2));
-    	gp = 1 - 1i*(F+sqrt(F^2+Q^2)); gm = 1 - 1i*(F-sqrt(F^2+Q^2));
-    	contspec_exact = -2^(-2i*F)*Q*cgamma(d).*cgamma(fm).* ...
+    // This example (with a different Q) can be found in
+    // Frumin et al., J. Opt. Soc. Am. B 32(2), 2015.
+
+    /* Matlab code for computing contspec:
+      M = 16; XI1 = -100; XI2 = 80; eps_xi = (XI2 - XI1)/(M - 1);
+      Q = 1; GAM = 1/25; F = 1.5; xi = XI1 + (0:(M-1))*eps_xi;
+      cgamma = @(z) double(gamma(sym(z))); d = 0.5 + 1i*(xi*GAM-F);
+      fp = 0.5 - 1i*(xi*GAM+sqrt(F^2+Q^2)); fm = 0.5 - 1i*(xi*GAM-sqrt(F^2+Q^2));
+      gp = 1 - 1i*(F+sqrt(F^2+Q^2)); gm = 1 - 1i*(F-sqrt(F^2+Q^2));
+      contspec_exact = -2^(-2i*F)*Q*cgamma(d).*cgamma(fm).* ...
         cgamma(fp)./(cgamma(conj(d)).*cgamma(gm).*cgamma(gp));
-    	format long g; contspec_exact.'
-    	*/
+      format long g; contspec_exact.'
+      */
 
-		// time domain
-		T[0] = -2.0;
-       	T[1] = 1.5;
+    // time domain
+    T[0] = -2.0;
+        T[1] = 1.5;
 
-		// nonlinear spectral domain
-		XI[0] = -100.0;
-    	XI[1] = 80.0;
+    // nonlinear spectral domain
+    XI[0] = -100.0;
+      XI[1] = 80.0;
 
-		// time domain signal
-    	REAL Q = 1.0, GAM = 1.0/25.0, F = 1.5;
-		for (i=0; i<D; i++)
-			(*q_ptr)[i] = -CONJ(Q/GAM*CPOW(
-				misc_sech((T[0] + i*(T[1] - T[0])/(D - 1))/GAM), 1-2*I*F));
+    // time domain signal
+      REAL Q = 1.0, GAM = 1.0/25.0, F = 1.5;
+    for (i=0; i<D; i++)
+      (*q_ptr)[i] = -CONJ(Q/GAM*CPOW(
+        misc_sech((T[0] + i*(T[1] - T[0])/(D - 1))/GAM), 1-2*I*F));
 
-		// continuous spectrum
-		(*contspec_ptr)[0] = 0.000354402005409124 - 0.000856556445220169*I;
+    // continuous spectrum
+    (*contspec_ptr)[0] = 0.000354402005409124 - 0.000856556445220169*I;
         (*contspec_ptr)[1] = 0.0031344195756859 - 0.00277695685654264*I;
         (*contspec_ptr)[2] = 0.0186103836129823 - 0.00337452951491781*I;
         (*contspec_ptr)[3] = 0.0738785929426912 + 0.0422315609342956*I;
@@ -316,11 +326,16 @@ INT nsev_testcases(nsev_testcases_t tc, const UINT D,
         (*contspec_ptr)[14] = 0.0420552444423587 - 0.0299273399538242*I;
         (*contspec_ptr)[15] = 0.0054223424902175 - 0.010076662096351*I;
 
+        // These are not the correct values, but not setting them at all can
+        // have funny side effects.
+        for (i=0; i<2*(*M_ptr); i++)
+            (*ab_ptr)[i] = 0.0;
+
         // There are no bound states. (Note: nevertheless, some memory was
         // allocated that has to be freed by the user.)
         *K_ptr = 0;
 
-		// defocusing case
+    // defocusing case
         *kappa_ptr = -1;
 
         break;
@@ -344,7 +359,7 @@ INT nsev_testcases(nsev_testcases_t tc, const UINT D,
             (*q_ptr)[i] = -2.0*be * misc_sech(2.0*be*t);
         }
         (*q_ptr)[0] *= 0.5; // to account for discontinuity at t=0
-    
+
         // Nonlinear spectral domain
         XI[0] = 0.5;
         XI[1] = 3.0;
@@ -355,6 +370,11 @@ INT nsev_testcases(nsev_testcases_t tc, const UINT D,
             xi = XI[0] + i*(XI[1] - XI[0])/(*M_ptr - 1);
             (*contspec_ptr)[i] = -I*be / xi * (xi + I*be) / (xi - I*be);
         }
+
+        // These are not the correct values, but not setting them at all can
+        // have funny side effects.
+        for (i=0; i<2*(*M_ptr); i++)
+            (*ab_ptr)[i] = 0.0;
 
         // There are no bound states. (Note: nevertheless, some memory was
         // allocated that has to be freed by the user.)
@@ -386,7 +406,7 @@ release_mem_2:
     free(*contspec_ptr);
 release_mem_1:
     free(*q_ptr);
-    
+
     return ret_code;
 }
 
@@ -416,20 +436,22 @@ static INT nsev_compare_nfs(const UINT M, const UINT K1, const UINT K2,
     else {
         dists[0] = 0.0;
         nrm = 0.0;
-        for (i=0; i<M; i++) {
+        for (i=0; !(i>=M); i++) {
             dists[0] += CABS(contspec_1[i] - contspec_2[i]);
             nrm += CABS(contspec_2[i]);
         }
         if (nrm > 0)
             dists[0] /= nrm;
     }
-    if (ab_1 == NULL || ab_2 == NULL || M == 0)
+    if (ab_1 == NULL || ab_2 == NULL || M == 0) {
         dists[1] = NAN;
+        dists[2] = NAN;
+    }
     else {
         // error in a
         dists[1] = 0.0;
         nrm = 0.0;
-        for (i=0; i<M; i++) {
+        for (i=0; !(i>=M); i++) {
             dists[1] += CABS(ab_1[i] - ab_2[i]);
             nrm += CABS(ab_2[i]);
         }
@@ -439,7 +461,7 @@ static INT nsev_compare_nfs(const UINT M, const UINT K1, const UINT K2,
         // error in b
         dists[2] = 0.0;
         nrm = 0.0;
-        for (i=M; i<2*M; i++) {
+        for (i=M; !(i>=2*M); i++) {
             dists[2] += CABS(ab_1[i] - ab_2[i]);
             nrm += CABS(ab_2[i]);
         }
@@ -462,9 +484,9 @@ static INT nsev_compare_nfs(const UINT M, const UINT K1, const UINT K2,
         else {
             dists[4] = 0.0;
             nrm = 0.0;
-            for (i=0; i<K1; i++) {
+            for (i=0; !(i>=K1); i++) {
                 min_dist = INFINITY;
-                for (j=0; j<K1; j++) {
+                for (j=0; !(j>=K1); j++) {
                     dist = CABS(bound_states_1[i] - bound_states_2[j]);
                     if (dist < min_dist) {
                         min_dist = dist;
@@ -484,9 +506,9 @@ static INT nsev_compare_nfs(const UINT M, const UINT K1, const UINT K2,
         else {
             dists[5] = 0.0;
             nrm = 0.0;
-            for (i=0; i<K1; i++) {
+            for (i=0; !(i>=K1); i++) {
                 min_dist = INFINITY;
-                for (j=0; j<K1; j++) {
+                for (j=0; !(j>=K1); j++) {
                     dist = CABS(bound_states_1[i] - bound_states_2[j]);
                     if (dist < min_dist) {
                         min_dist = dist;
@@ -517,8 +539,9 @@ const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
     COMPLEX * normconsts_exact = NULL;
     COMPLEX * residues_exact = NULL;
     UINT K, K_exact, M;
-    INT kappa;
-    REAL errs[6] = { FNFT_NAN };
+    INT kappa = 0;
+    REAL errs[6] = {
+        FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN };
     INT ret_code;
 
     // Check inputs
@@ -526,17 +549,17 @@ const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
         return E_INVALID_ARGUMENT(opts);
 
     // Load test case
-    ret_code = nsev_testcases(tc, D, &q, T, &M, &contspec_exact, &ab_exact, 
+    ret_code = nsev_testcases(tc, D, &q, T, &M, &contspec_exact, &ab_exact,
         XI, &K_exact,&bound_states_exact, &normconsts_exact, &residues_exact,
         &kappa);
     CHECK_RETCODE(ret_code, release_mem);
-  
+
     // Allocate memory
     contspec = malloc(3*M * sizeof(COMPLEX));
     K = nse_discretization_degree(opts->discretization) * D;
     bound_states = malloc(K * sizeof(COMPLEX));
     normconsts_and_residues = malloc(2*D * sizeof(COMPLEX));
-    if ( q == NULL || contspec == NULL || bound_states == NULL \
+    if ( q == NULL || contspec == NULL || bound_states == NULL
     || normconsts_and_residues == NULL) {
         ret_code = E_NOMEM;
         goto release_mem;
@@ -545,7 +568,7 @@ const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
     // Compute the NFT
     opts->contspec_type = fnft_nsev_cstype_BOTH;
     opts->discspec_type = fnft_nsev_dstype_BOTH;
-    ret_code = fnft_nsev(D, q, T, M, contspec, XI, &K, bound_states, 
+    ret_code = fnft_nsev(D, q, T, M, contspec, XI, &K, bound_states,
         normconsts_and_residues, kappa, opts);
     CHECK_RETCODE(ret_code, release_mem);
 
@@ -558,8 +581,12 @@ const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
 
 #ifdef DEBUG
     for (UINT i=0; i<6; i++)
-       printf("nsev_testcases_test_fnft: error_bounds[%i] = %2.1e <= %2.1e\n",
+        printf("nsev_testcases_test_fnft: error_bounds[%i] = %2.1e <= %2.1e\n",
             (int)i, errs[i], error_bounds[i]);
+    //misc_print_buf(M, contspec, "r_num");
+    //misc_print_buf(M, contspec_exact, "r_exact");
+    misc_print_buf(2*M, contspec+M, "ab_num");
+     misc_print_buf(2*M, ab_exact, "ab_exact");
 #endif
 
     // Check if the errors are below the specified bounds. Organized such that

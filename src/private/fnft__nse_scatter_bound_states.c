@@ -16,6 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
 * Shrinivas Chimmalgi (TU Delft) 2017.
+* Marius Brehler (TU Dortmund) 2018.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -61,7 +62,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
         return E_INVALID_ARGUMENT(b);
     
     
-    REAL eps_t = (T[1] - T[0])/(D - 1);
+    const REAL eps_t = (T[1] - T[0])/(D - 1);
     
     if (*trunc_index_ptr == D){
         // Heuristic for where to split the potential: Find the poINT where the

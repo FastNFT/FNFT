@@ -28,7 +28,7 @@
 #define FNFT__NSEV_TESTCASES_H
 
 #include "fnft_nsev.h" // for fnft_nsev_opts_t
-#include "fnft__nse_discretization.h"
+
 
 /**
  * List of currently implemented test cases for the NSE with vanishing

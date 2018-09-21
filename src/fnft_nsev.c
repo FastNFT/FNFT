@@ -16,6 +16,7 @@
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
  * Shrinivas Chimmalgi (TU Delft) 2017-2018.
+ * Marius Brehler (TU Dortmund) 2018.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -29,12 +30,14 @@
 #include "fnft__nse_fscatter.h"
 #include "fnft__nse_scatter.h"
 #include "fnft__nse_discretization.h"
+#include "fnft__akns_discretization.h"
 #include "fnft__misc.h" // for l2norm
 
 static fnft_nsev_opts_t default_opts = {
     .bound_state_filtering = nsev_bsfilt_FULL,
     .bound_state_localization = nsev_bsloc_SUBSAMPLE_AND_REFINE,
     .niter = 10,
+    .Dsub = 0, // auto
     .discspec_type = nsev_dstype_NORMING_CONSTANTS,
     .contspec_type = nsev_cstype_REFLECTION_COEFFICIENT,
     .normalization_flag = 1,
@@ -128,8 +131,6 @@ INT fnft_nsev(
 {
     COMPLEX *transfer_matrix = NULL;
     COMPLEX *qsub = NULL;
-    REAL eps_t;
-    UINT subsampling_factor, Dsub;
     UINT deg;
     INT W = 0, *W_ptr = NULL;
     INT ret_code = SUCCESS;
@@ -171,7 +172,7 @@ INT fnft_nsev(
     }
     
     // Determine step size
-    eps_t = (T[1] - T[0])/(D - 1);
+    const REAL eps_t = (T[1] - T[0])/(D - 1);
 
     // Compute the transfer matrix
     if (opts->normalization_flag)
@@ -191,19 +192,24 @@ INT fnft_nsev(
     if (kappa == +1 && bound_states != NULL) {
         
         // Compute the bound states
-        if (opts->bound_state_localization == nsev_bsloc_SUBSAMPLE_AND_REFINE) { // the
-            // mixed method gets special treatment
+        if (opts->bound_state_localization == nsev_bsloc_SUBSAMPLE_AND_REFINE) {
+            // the mixed method gets special treatment
             
             // First step: Find initial guesses for the bound states using the
             // fast eigenvalue method. To bound the complexity, a subsampled
             // version of q, qsub, will be passed to the fast eigenroutine.
-            
-            ret_code = misc_downsample(q, D, &qsub, &Dsub,&subsampling_factor);
+            UINT Dsub = opts->Dsub;
+            if (Dsub == 0) // The user wants us to determine Dsub
+                Dsub = SQRT(D * LOG2(D) * LOG2(D));
+            UINT first_last_index[2];
+            ret_code = misc_downsample(D, q, &Dsub, &qsub, first_last_index);
             CHECK_RETCODE(ret_code, release_mem);
+            REAL const Tsub[2] = { T[0] + first_last_index[0]*eps_t,
+                T[0] + first_last_index[1]*eps_t };
           
             // Fixed bound states of qsub using the fast eigenvalue method
             opts->bound_state_localization = nsev_bsloc_FAST_EIGENVALUE;
-            ret_code = fnft_nsev(Dsub, qsub, T, 0, NULL, XI, K_ptr,
+            ret_code = fnft_nsev(Dsub, qsub, Tsub, 0, NULL, XI, K_ptr,
                 bound_states, NULL, kappa, opts);
             CHECK_RETCODE(ret_code, release_mem);
            
@@ -257,36 +263,52 @@ static inline INT tf2contspec(
     COMPLEX * const result,
     fnft_nsev_opts_t * const opts)
 {
-    COMPLEX *a_vals;
+    COMPLEX *H11_vals, *H21_vals;
     COMPLEX A, V;
-    REAL eps_t, eps_xi;
-    REAL xi, map_coeff, bnd_coeff, scale;
+    REAL xi, boundary_coeff, scale;
     REAL phase_factor_rho, phase_factor_a, phase_factor_b;
     INT ret_code;
     UINT i, offset = 0;
     
-    // We reuse an unused part of the transfer matrix as buffer
-    a_vals = transfer_matrix + (deg+1);
-    if (M > deg+1)
-        return E_NOT_YET_IMPLEMENTED(M >> D, "Any M<=2*D should work. It is planned to remove this restriction in the next release.");
+    H11_vals = malloc(2*M * sizeof(COMPLEX));
+    if (H11_vals == NULL){
+        return E_NOMEM;
+        goto leave_fun;}
+    H21_vals = H11_vals + M;
+ 
     
-    // Set step sizes
-    eps_t = (T[1] - T[0])/(D - 1);
-    eps_xi = (XI[1] - XI[0])/(M - 1);
 
-    // Retrieve some discretization-specific constants
-    map_coeff = nse_discretization_mapping_coeff(opts->discretization);
-    bnd_coeff = nse_discretization_boundary_coeff(opts->discretization);
-    if (map_coeff == NAN || bnd_coeff == NAN)
+    // Set step sizes
+    const REAL eps_t = (T[1] - T[0])/(D - 1);
+    const REAL eps_xi = (XI[1] - XI[0])/(M - 1);
+
+
+    // Determine discretization-specific coefficients
+    boundary_coeff = nse_discretization_boundary_coeff(opts->discretization);
+    if (boundary_coeff == NAN){
         return E_INVALID_ARGUMENT(opts->discretization);
+        goto leave_fun;
+    }
+
 
     // Prepare the use of the chirp transform. The entries of the transfer
     // matrix that correspond to a and b will be evaluated on the frequency
     // grid xi(i) = XI1 + i*eps_xi, where i=0,...,M-1. Since
-    // z=exp(map_coeff*j*xi*eps_t), we find that the z at which z the transfer
+    // z=exp(2.0*I*XI*eps_t/degree1step), we find that the z at which z the transfer
     // matrix has to be evaluated are given by z(i) = 1/(A * V^-i), where:
-    V = CEXP(map_coeff*I*eps_xi*eps_t);
-    A = CEXP(-map_coeff*I*XI[0]*eps_t);
+    V = eps_xi;
+    ret_code = nse_lambda_to_z(1, eps_t, &V, opts->discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
+    A = -XI[0];
+    ret_code = nse_lambda_to_z(1, eps_t, &A, opts->discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    ret_code = poly_chirpz(deg, transfer_matrix, A, V, M, H11_vals);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    ret_code = poly_chirpz(deg, transfer_matrix+2*(deg+1), A, V, M,
+         H21_vals);
+    CHECK_RETCODE(ret_code, leave_fun);    
 
     // Compute the continuous spectrum
     switch (opts->contspec_type) {
@@ -295,68 +317,64 @@ static inline INT tf2contspec(
 
         offset = M;
         // fall through
+
     case nsev_cstype_REFLECTION_COEFFICIENT:
 
-        ret_code = poly_chirpz(deg, transfer_matrix, A, V, M, a_vals);
-        if (ret_code != SUCCESS)
-            return E_SUBROUTINE(ret_code);
+        
+        ret_code = nse_phase_factor_rho(eps_t, T[1], &phase_factor_rho,opts->discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
 
-        ret_code = poly_chirpz(deg, transfer_matrix+2*(deg+1), A, V, M,result);
-        if (ret_code != SUCCESS)
-            return E_SUBROUTINE(ret_code);
 
-        phase_factor_rho = -2.0*(T[1] + eps_t*bnd_coeff);
         for (i = 0; i < M; i++) {
             xi = XI[0] + i*eps_xi;
-            if (a_vals[i] == 0.0)
+            if (H11_vals[i] == 0.0){
                 return E_DIV_BY_ZERO;
-            result[i] *= CEXP(I*xi*phase_factor_rho) / a_vals[i];
+                goto leave_fun;
+            }
+            result[i] = H21_vals[i] * CEXP(I*xi*phase_factor_rho) / H11_vals[i];
         }
 
         if (opts->contspec_type == nsev_cstype_REFLECTION_COEFFICIENT)
             break;
         // fall through
+
     case nsev_cstype_AB:
-
-        ret_code = poly_chirpz(deg, transfer_matrix, A, V, M, result + offset);
-        if (ret_code != SUCCESS)
-            return E_SUBROUTINE(ret_code);
-
-        ret_code = poly_chirpz(deg, transfer_matrix+2*(deg+1), A, V, M,
-            result + offset + M);
-        if (ret_code != SUCCESS)
-            return E_SUBROUTINE(ret_code);
 
         scale = POW(2.0, W); // needed since the transfer matrix might
                                   // have been scaled by nse_fscatter
+  
+        ret_code = nse_phase_factor_a(eps_t, D, T, &phase_factor_a,opts->discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
+        
+        ret_code = nse_phase_factor_b(eps_t, D, T, &phase_factor_b,opts->discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
 
-        if (bnd_coeff == 0.0) {
-            phase_factor_a = T[0] + T[1];
-            phase_factor_b = T[0] - T[1];
-        } else {
-            phase_factor_a =  2.0*D*eps_t + T[1] + T[0];
-            phase_factor_b = 2.0*(D-bnd_coeff)*eps_t + T[0] - T[1];
-        }
 
         for (i = 0; i < M; i++) {
             xi = XI[0] + i*eps_xi;       
-            result[offset + i] *= scale * CEXP(I*xi*phase_factor_a);
-        	result[offset + M + i] *= scale * CEXP(I*xi*phase_factor_b);
+            result[offset + i] = H11_vals[i] * scale * CEXP(I*xi*phase_factor_a);
+        	result[offset + M + i] = H21_vals[i] * scale * CEXP(I*xi*phase_factor_b);
         }
 
         break;
 
     default:
 
-        return E_INVALID_ARGUMENT(opts->contspec_type);
+        ret_code = E_INVALID_ARGUMENT(opts->contspec_type);
+        goto leave_fun;
     }
     
-    return SUCCESS;
+
+
+leave_fun:
+    free(H11_vals);
+
+    return ret_code;
 }
 
 // Auxiliary function for filtering: We assume that bound states must have
 // real part in the interval [-re_bound, re_bound].
-static inline REAL re_bound(REAL eps_t, REAL map_coeff)
+static inline REAL re_bound(const REAL eps_t, const REAL map_coeff)
 {
     // At least for discretizations in which the continuous-time
     // spectral parameter lam is mapped to z=exp(map_coeff*j*lam*eps_t), we
@@ -394,15 +412,16 @@ static inline INT tf2boundstates(
     COMPLEX * const bound_states,
     fnft_nsev_opts_t * const opts)
 {
-    REAL map_coeff;
-    UINT i, K;
+    REAL degree1step, map_coeff;
+    UINT K;
     REAL bounding_box[4] = { NAN };
     COMPLEX * buffer = NULL;
     INT ret_code = SUCCESS;
 
-    map_coeff = nse_discretization_mapping_coeff(opts->discretization);
-    if (map_coeff == NAN)
+    degree1step = nse_discretization_degree(opts->discretization);
+    if (degree1step == 0)
         return E_INVALID_ARGUMENT(opts->discretization);
+    map_coeff = 2/degree1step;
 
     // Localize bound states ...
     switch (opts->bound_state_localization) {
@@ -441,9 +460,8 @@ static inline INT tf2boundstates(
 
             // Roots are returned in discrete-time domain -> coordinate
             // transform (from discrete-time to continuous-time domain).
-            for (i = 0; i < K; i++)
-                buffer[i] = CLOG(buffer[i]) / (map_coeff*I*eps_t);
-            
+            ret_code = nse_z_to_lambda(K, eps_t, buffer, opts->discretization);
+            CHECK_RETCODE(ret_code, leave_fun);
             break;
             
         default:
@@ -569,10 +587,10 @@ static inline INT refine_roots_newton(
     UINT i, iter;
     COMPLEX a_val, b_val, aprime_val, error;
     REAL eprecision = EPSILON * 100;
-    REAL re_bound_val, im_bound_val, eps_t, map_coeff;
+    REAL re_bound_val, im_bound_val;
     UINT trunc_index;
     trunc_index = D;
-    eps_t = (T[1] - T[0])/(D - 1);
+    const REAL eps_t = (T[1] - T[0])/(D - 1);
     
     // Check inputs
     if (K == 0) // no bound states to refine
@@ -590,9 +608,6 @@ static inline INT refine_roots_newton(
     if (im_bound_val == NAN)
         return E_OTHER("Upper bound on imaginary part of bound states is NaN");
     
-    map_coeff = nse_discretization_mapping_coeff(discretization);
-    if (map_coeff == NAN)
-        return E_INVALID_ARGUMENT(discretization);
     re_bound_val = re_bound(eps_t, discretization);
         
     // Perform iterations of Newton's method

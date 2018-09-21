@@ -40,6 +40,12 @@ INT main()
     ret_code = kdvv_testcases_test_fnft(tc, D, eb, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
+    ret_code = kdvv_testcases_test_fnft(tc, D+1, eb, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+   
+    ret_code = kdvv_testcases_test_fnft(tc, D-1, eb, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+
     // check for quadratic error decay
     D *= 2;
     for (i=0; i<6; i++)

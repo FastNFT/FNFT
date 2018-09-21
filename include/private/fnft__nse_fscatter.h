@@ -28,11 +28,11 @@
 #define FNFT__NSE_FSCATTER_H
 
 
-#include "fnft_nse_discretization_t.h"
-
+#include "fnft__nse_discretization.h"
+#include "fnft__akns_fscatter.h"
 
 /**
- * @brief Returns the length of vector to be allocated based on the number
+ * @brief Returns the length of transfer_matrix to be allocated based on the number
  * of samples and discretization.
  * 
  * @ingroup nse

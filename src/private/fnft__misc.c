@@ -1,6 +1,6 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
+* This file is part of FNFT.
+*
 * FNFT is free software; you can redistribute it and/or
 * modify it under the terms of the version 2 of the GNU General
 * Public License as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-*                                                                      
+*
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
@@ -23,7 +23,8 @@
 #include <stdio.h>
 #include "fnft__misc.h"
 
-void misc_print_buf(INT len, COMPLEX *buf, char* varname)
+void misc_print_buf(const INT len, COMPLEX const * const buf,
+                    char const * const varname)
 {
     INT i;
     printf("%s = [", varname);
@@ -35,7 +36,8 @@ void misc_print_buf(INT len, COMPLEX *buf, char* varname)
     printf("];\n");
 }
 
-REAL misc_rel_err(INT len, COMPLEX *vec_numer, COMPLEX *vec_exact)
+REAL misc_rel_err(const INT len, COMPLEX const * const vec_numer,
+    COMPLEX const * const vec_exact)
 {
     INT i;
     double n = 0.0, d = 0.0;
@@ -43,7 +45,7 @@ REAL misc_rel_err(INT len, COMPLEX *vec_numer, COMPLEX *vec_exact)
         n += CABS(vec_numer[i] - vec_exact[i]);
         d += CABS(vec_exact[i]);
     }
-    return n/d; 
+    return n/d;
 }
 
 REAL misc_hausdorff_dist(const UINT lenA,
@@ -92,7 +94,7 @@ REAL misc_l2norm2(const UINT N, COMPLEX const * const Z,
     // Check inputs
     if (N < 2 || a >= b)
         return NAN;
-    
+
     // Integrate |q(t)|^2 numerically
     h = (b - a)/N;
     tmp = CABS(Z[0]);
@@ -123,7 +125,7 @@ INT misc_filter(UINT * const N_ptr, COMPLEX * const vals,
         || !(bounding_box[2] <= bounding_box[3]) )
         return E_INVALID_ARGUMENT(bounding_box);
 
-    N_filtered = 0; // Will contain number of values that survived the 
+    N_filtered = 0; // Will contain number of values that survived the
                     // filtering (the current no of candidates is in N)
     N_local = *N_ptr;
 
@@ -169,7 +171,7 @@ INT misc_filter_inv(UINT * const N_ptr, COMPLEX * const vals,
         || !(bounding_box[2] <= bounding_box[3]) )
         return E_INVALID_ARGUMENT(bounding_box);
 
-    N_filtered = 0; // Will contain number of values that survived the 
+    N_filtered = 0; // Will contain number of values that survived the
                     // filtering (the current no of candidates is in N)
     N_local = *N_ptr;
 
@@ -225,7 +227,7 @@ INT misc_merge(UINT *N_ptr, COMPLEX * const vals, REAL tol)
 {
     REAL dist = -1.0;
     UINT i, j, N, N_filtered;
-    
+
     if (N_ptr == NULL)
         return E_INVALID_ARGUMENT(N_ptr);
     if (*N_ptr == 0)
@@ -245,7 +247,7 @@ INT misc_merge(UINT *N_ptr, COMPLEX * const vals, REAL tol)
         }
         if (dist < tol)
             continue;
-           
+
         // Keep bound value since it is not close to previous values
         vals[N_filtered++] = vals[i];
     }
@@ -254,13 +256,9 @@ INT misc_merge(UINT *N_ptr, COMPLEX * const vals, REAL tol)
     return SUCCESS;
 }
 
-INT misc_downsample(COMPLEX const * const q, const UINT D,
-    COMPLEX ** qsub_ptr, UINT * const Dsub_ptr,
-    UINT * const subsampling_factor_ptr)
+INT misc_downsample(const UINT D, COMPLEX const * const q,
+    UINT * const Dsub_ptr, COMPLEX ** qsub_ptr, UINT * const first_last_index)
 {
-    UINT i, Dsub, subsampling_factor;
-    COMPLEX * qsub;
-
     if (q == NULL)
         return E_INVALID_ARGUMENT(q);
     if (D <= 2)
@@ -269,32 +267,35 @@ INT misc_downsample(COMPLEX const * const q, const UINT D,
         return E_INVALID_ARGUMENT(qsub_ptr);
     if (Dsub_ptr == NULL)
         return E_INVALID_ARGUMENT(Dsub_ptr);
-    if (subsampling_factor_ptr == NULL)
-        return E_INVALID_ARGUMENT(subsampling_factor_ptr);
+    if (first_last_index == NULL)
+        return E_INVALID_ARGUMENT(first_last_index);
 
-    // Dsub is the number of samples of qsub. It is is chosen to be a
-    // power of two that is close to sqrt(D*log2(D)*log2(D)). The
-    // runtime of the fast eigenvalue root finder is thus
-    // O(D*log2(D)*log2(D)) -- this is the complexity that the
-    // algorithm for computing the continuous spectrum needs anyway
-    // (if M==D).
-    Dsub = POW(2.0, CEIL( \
-        0.5 * LOG2(D * LOG2(D) * LOG2(D)) ));
-    if (Dsub <= 2)
-        Dsub = 2;
-    subsampling_factor = D / Dsub;
-            
-    // Create the subsampled version of q, qsub
-    qsub = malloc(Dsub * sizeof(COMPLEX));
+    // Determine number of samples after downsampling, Dsub
+    UINT Dsub = *Dsub_ptr; // desired Dsub
+    if (Dsub < 2)
+       Dsub = 2;
+    if (Dsub > D)
+        Dsub = D;
+    const UINT nskip_per_step = ROUND((REAL)D / Dsub);
+    Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
+
+    COMPLEX * const qsub = malloc(Dsub * sizeof(COMPLEX));
     if (qsub == NULL)
         return E_NOMEM;
-    for (i=0; i<Dsub; i++)
-        qsub[i] = q[i * subsampling_factor];
+
+    // Perform the downsampling
+    UINT isub, i = 0;
+    for (isub=0; isub<Dsub; isub++) {
+        qsub[isub] = q[i];
+        i += nskip_per_step;
+    }
+
+    // Original index of the first and last sample in qsub
+    first_last_index[0] = 0;
+    first_last_index[1] = i - 1;
 
     *qsub_ptr = qsub;
     *Dsub_ptr = Dsub;
-    *subsampling_factor_ptr = subsampling_factor;
-
     return SUCCESS;
 }
 
@@ -303,10 +304,19 @@ INT misc_downsample(COMPLEX const * const q, const UINT D,
 COMPLEX misc_CSINC(COMPLEX x)
 {
     const REAL sinc_th=1.0E-8;
-    
+
     if (CABS(x)>=sinc_th)
         return CSIN(x)/x;
     else
         return CCOS(x/CSQRT(3));
 }
 
+UINT misc_nextpowerof2(const UINT number)
+{
+    if (number == 0)
+        return 0;
+    UINT result = 1;
+    while (result < number)
+        result *= 2;
+    return result;
+}

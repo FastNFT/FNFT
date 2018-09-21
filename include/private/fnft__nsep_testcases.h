@@ -28,7 +28,7 @@
 #define FNFT__NSEP_TESTCASES_H
 
 #include "fnft_nsep.h"
-#include "fnft__nse_discretization.h"
+
 
 /**
  * List of currently implemented test cases for the NSE with periodic
