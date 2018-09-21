@@ -17,20 +17,26 @@
  * Sander Wahls (TU Delft) 2017-2018.
  */
 
-#ifndef FNFT_CONFIG_H
-#define FNFT_CONFIG_H
+#define FNFT_ENABLE_SHORT_NAMES
+#include "fnft_version.h"
+#include "fnft__errwarn.h"
+#include <stdio.h>
 
-#define FNFT_VERSION_MAJOR @FNFT_VERSION_MAJOR@
-#define FNFT_VERSION_MINOR @FNFT_VERSION_MINOR@
-#define FNFT_VERSION_PATCH @FNFT_VERSION_PATCH@
-#define FNFT_VERSION_SUFFIX "@FNFT_VERSION_SUFFIX@"
-// The suffix should not exceed the length defined below (not counting the NULL
-// termination symbol)
-#define FNFT_VERSION_SUFFIX_MAXLEN 8
+int main()
+{
+    UINT major, minor, patch;
+    char suffix[FNFT_VERSION_SUFFIX_MAXLEN+1];
 
-#cmakedefine HAVE__THREAD_LOCAL 1
-#cmakedefine HAVE___THREAD 1
-#cmakedefine DEBUG 1
-#cmakedefine HAVE_FFTW3 1
+    INT ret_code = fnft_version(&major, &minor, &patch, suffix);
+    if (ret_code != SUCCESS) {
+        ret_code = E_SUBROUTINE(ret_code);
+        return EXIT_FAILURE;
+    }
 
-#endif
+    printf("%u.%u.%u%s\n",
+           (unsigned int)major,
+           (unsigned int)minor,
+           (unsigned int)patch,
+           suffix);
+    return EXIT_SUCCESS;
+}

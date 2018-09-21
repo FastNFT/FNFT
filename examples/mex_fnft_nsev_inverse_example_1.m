@@ -24,9 +24,6 @@
 %
 % Note that this is a difficult test case since the time domain signal is
 % discontinuous and the reflection coefficient decays slowly.
-%
-% The signal has no bound states for the parameters used below, which are
-% not yet supported.
 
 clear all;
 close all;
@@ -44,24 +41,26 @@ kappa = +1;     % Focusing nonlinear Schroedinger equation
 %%% Setup the reflection coefficent %%%
 
 al = 2;
-be = -0.55;
+be = 0.55;
+gam = sqrt(abs(al)^2 + be^2);
 contspec_fun = @(xi) complex(al./(xi - be*1j));
 contspec_exact = contspec_fun(xi);
 
 %%% Compute the corresponding time domain signal numerically %%%
 
-q = mex_fnft_nsev_inverse(contspec_exact, XI, [], [], D, T, kappa);
+bound_states = [1j*be];
+normconsts = [-1j*al/(gam + be)];
+q = mex_fnft_nsev_inverse(contspec_exact, XI, bound_states, normconsts, ...
+    D, T, kappa);
 
-%%% Compute the reflection coefficent of the numerically determined time
-% domain signal %%%
+%%% Compute the nonlinear Fourier transform of the numerically determined
+% time domain signal %%%
 
-[contspec, bs] = mex_fnft_nsev(q, T, XI, kappa, 'M', M);
-assert(length(bs) == 0);
+[contspec, bs, nc] = mex_fnft_nsev(q, T, XI, kappa, 'M', M);
 
 %%% Compute the exact values of the time domain signal using the formula
 % in the reference given above %%%
 
-gam = sqrt(abs(al)^2 + be^2);
 eps_t = (T(2) - T(1))/(D - 1);
 t = T(1) + (0:D-1)*eps_t;
 q_exact = (t <= 0).*-2.0j*gam*al/abs(al).*sech(2*gam*t + atanh(be/gam));

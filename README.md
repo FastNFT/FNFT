@@ -2,16 +2,20 @@
 
 [![Build Status](https://travis-ci.org/FastNFT/FNFT.svg?branch=master)](https://travis-ci.org/FastNFT/FNFT) [![DOI](http://joss.theoj.org/papers/10.21105/joss.00597/status.svg)](https://doi.org/10.21105/joss.00597)
 
-FNFT is a software library for the fast numerical computation of nonlinear Fourier transforms, which are also known as direct scattering transforms. FNFT is written in C and comes with a MATLAB interface. It also contains some third-party Fortran code.
+FNFT is a software library for the fast numerical computation of (inverse) nonlinear Fourier transforms, which are also known as (inverse) scattering transforms. FNFT is written in C and comes with a MATLAB interface. A [Python interface](https://github.com/xmhk/FNFTpy) is available seperately.
 
 ## Currently Implemented Cases
 
 ### Forward Transforms
 
 * Nonlinear Schroedinger equation
-    * Focusing and defocusing case
     * Vanishing boundary conditions
-    * Periodic boundary conditions (main and auxiliary spectrum)
+      * Reflection coefficient and/or scattering coefficients (a and b)
+      * Bound states (eigenvalues)
+      * Norming constants and/or residues
+    * Periodic boundary conditions
+      * Main spectrum
+      * Auxiliary spectrum
 
 * Korteweg-de Vries equation
     * Vanishing boundary conditions (reflection coefficient only)
@@ -19,12 +23,13 @@ FNFT is a software library for the fast numerical computation of nonlinear Fouri
 ### Inverse Transforms
 
 * Nonlinear Schroedinger equation
-    * Focusing and defocusing case
     * Vanishing boundary conditions
+      * Inversion of reflection coefficients, b-scattering coefficients or the inverse Fourier transform of the b-coefficient
+      * Bound states (eigenvalues) can be added with arbitrary norming constants/residuals
 
-## Mailling List
+## Mailing List
 
-Please join the [FNFT mailling list](https://listserv.tudelft.nl/mailman/listinfo/fnft-announcements) if you want to be notified about new releases of FNFT.
+Please join the FNFT mailing list if you want to be notified about new releases of FNFT. You can subscribe either using the [web interface](https://listserv.tudelft.nl/mailman/listinfo/fnft-announcements), or by sending an email with the subject "subscribe" to <fnft-announcements-request@lists.tudelft.nl>.
 
 ## Citation
 
@@ -62,6 +67,7 @@ Please use the [issue tracker](https://github.com/FastNFT/FNFT/issues) to report
 * Sander Wahls, TU Delft
 * Shrinivas Chimmalgi, TU Delft
 * Peter J. Prins, TU Delft
+* Marius Brehler, TU Dortmund
 
 ## License
 
@@ -82,13 +88,13 @@ FNFT is provided under the terms of the [GNU General Public License, version 2](
 The algorithms in FNFT utilize ideas from the following references. More information can be found in the documentation of the individual routines.
 
 - S. Wahls and H. V. Poor, ["Introducing the fast nonlinear Fourier transform"](http://dx.doi.org/10.1109/ICASSP.2013.6638772), Proc. IEEE International Conference on Acoustics, Speech, and Signal Processing (ICASSP), Vancouver, Canada, May 2013.
-- S. Wahls and H. V. Poor, [Fast Numerical Nonlinear Fourier Transforms](http://dx.doi.org/10.1109/TIT.2015.2485944), IEEE Transactions on Information Theory, vol. 61, no. 12, pp. 6957-6974, Dec. 2015.
-- P. J. Prins and S. Wahls, "Higher order exponential splittings for the fast non-linear Fourier transform of the Korteweg-de Vries equation", Accepted for presentation at the IEEE International Conference on Acoustics, Speech, and Signal Processing (ICASSP), Calgary, Canada, April 2018.
+- S. Wahls and H. V. Poor, ["Fast Numerical Nonlinear Fourier Transforms"](http://dx.doi.org/10.1109/TIT.2015.2485944), IEEE Transactions on Information Theory, vol. 61, no. 12, pp. 6957-6974, Dec. 2015.
+- P. J. Prins and S. Wahls, ["Higher order exponential splittings for the fast non-linear Fourier transform of the Korteweg-de Vries equation"](https://doi.org/10.1109/ICASSP.2018.8461708), Proc. IEEE International Conference on Acoustics, Speech, and Signal Processing (ICASSP), Calgary, Canada, April 2018.
 - G. Boffetta and A. R. Osborne, ["Computation of the direct scattering transform for the nonlinear Schroedinger equation"](https://doi.org/10.1016/0021-9991(92)90370-E), Journal of Computational Physics, vol. 102, no. 2, pp. 252-264, Oct. 1992.
 - V. Aref, ["Control and Detection of Discrete Spectral Amplitudes in Nonlinear Fourier Spectrum"](https://arxiv.org/abs/1605.06328), Preprint, arXiv:1605.06328v1, May 2016.
 - S. Hari and F. R. Kschischang, ["Bi-Directional Algorithm for Computing Discrete Spectral Amplitudes in the NFT"](https://doi.org/10.1109/JLT.2016.2577702), Journal of Lightwave Technology, vol. 34, no. 15, pp. 3529-3537, Aug. 2016.
 - J. L. Aurentz, T. Mach, L. Robol, R. Vandebril and D. S. Watkins, ["Fast and backward stable computation of roots of polynomials, Part IIa: general backward error analysis"](http://www.cs.kuleuven.be/publicaties/rapporten/tw/TW683.abs.html), Technical Report no. TW 683, KU Leuven, Oct. 2017.
-- V. Aref, S. T. Le and H. Buelow, ["Modulation over Nonlinear Fourier Spectrum: Continuous and Discrete Spectrum"](https://doi-org.tudelft.idm.oclc.org/10.1109/JLT.2018.2794475), Journal of Lightwave Technology, to appear.
+- V. Aref, S. T. Le and H. Buelow, ["Modulation over Nonlinear Fourier Spectrum: Continuous and Discrete Spectrum"](https://dx.doi.org/10.1109/JLT.2018.2794475), Journal of Lightwave Technology, vol. 36, no. 6, pp. 1289--1295, Mar. 2018.
 - W. K. McClary, ["Fast seismic inversion"](https://doi.org/10.1190/1.1441417), Geophysics, vol. 48, no. 10, pp. 1371--1372, Oct. 1983.
 - S. Wahls and H. V. Poor, ["Fast Inverse Nonlinear Fourier Transform For Generating Multi-Solitons In Optical Fiber"](http://dx.doi.org/10.1109/ISIT.2015.7282741), Proc. IEEE International Symposium on Information Theory (ISIT’15), pp. 1676–1680, Hong Kong, China, Jun. 2015.
 - S. Wahls and V. Vaibhav, ["Fast Inverse Nonlinear Fourier Transforms for Continuous Spectra of Zakharov-Shabat Type"](http://arxiv.org/abs/1607.01305v2), Withdrawn Preprint, Dec. 2016. arXiv:1607.01305v2 [cs.IT]

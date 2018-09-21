@@ -40,7 +40,8 @@ kappa = +1;     % Focusing nonlinear Schroedinger equation
 
 %%% Setup the signal and the continuous spectrum %%%
 
-A = 0.45; % should be >0 and <0.5 to avoid solitons
+A = 0.45; % should be >0 and <0.5; for >=0.5, the appropriate discrete
+          % spectrum has to be added
 q_exact_fun = @(t) 1j*A*sech(t-1);
 b_fun = @(xivec) exp(-2j*xivec).*1j*sin(pi*A)./cosh(pi*xivec);
 B_fun = @(tauvec) 1j/(2*pi)*sin(pi*A)*sech((tauvec-2)/2);
