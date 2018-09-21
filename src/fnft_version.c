@@ -33,7 +33,10 @@ INT fnft_version(UINT * const major,
     *major = FNFT_VERSION_MAJOR;
     *minor = FNFT_VERSION_MINOR;
     *patch = FNFT_VERSION_PATCH;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-zero-length"
     int rc = snprintf(suffix, FNFT_VERSION_SUFFIX_MAXLEN+1,FNFT_VERSION_SUFFIX);
+#pragma GCC diagnostic pop
     if (rc < 0)
         return E_ASSERTION_FAILED; // snprintf encoding error
     if (rc > FNFT_VERSION_SUFFIX_MAXLEN)
