@@ -27,21 +27,34 @@ int main()
     REAL error_bound;
     INT ret_code = SUCCESS;
 
-    fnft_nsev_inverse_opts_t opts = fnft_nsev_inverse_default_opts();
-    opts.discretization = nse_discretization_2SPLIT2A;
-    opts.discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANTS;
-
+    fnft_nsev_inverse_opts_t opts_inv = fnft_nsev_inverse_default_opts();
+    opts_inv.discretization = nse_discretization_2SPLIT2A;
+    opts_inv.discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANTS;      
 
     D = 512;
     M = 2*D;
     error_bound = 0.014;
-    ret_code = fnft_nsev_inverse_test(D, M, error_bound, &opts);
+    ret_code = fnft_nsev_inverse_test(D, M, error_bound, &opts_inv);
     CHECK_RETCODE(ret_code, leave_fun);
     
     D = D*2;
     M = 2*D;
     error_bound = error_bound/4;
-    ret_code = fnft_nsev_inverse_test(D, M, error_bound, &opts);
+    ret_code = fnft_nsev_inverse_test(D, M, error_bound, &opts_inv);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    opts_inv.discspec_type = fnft_nsev_inverse_dstype_RESIDUES;      
+
+    D = 512;
+    M = 2*D;
+    error_bound = 0.014;
+    ret_code = fnft_nsev_inverse_test(D, M, error_bound, &opts_inv);
+    CHECK_RETCODE(ret_code, leave_fun);
+    
+    D = D*2;
+    M = 2*D;
+    error_bound = error_bound/4;
+    ret_code = fnft_nsev_inverse_test(D, M, error_bound, &opts_inv);
     CHECK_RETCODE(ret_code, leave_fun);
 
 

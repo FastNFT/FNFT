@@ -29,6 +29,8 @@
 #include "fnft__fft_wrapper.h"
 #include "fnft__poly_specfact.h"
 #include "fnft__misc.h"
+#include "fnft__nse_scatter.h"
+
 
 static fnft_nsev_inverse_opts_t default_opts = {
     .discretization = nse_discretization_2SPLIT2A,
@@ -704,6 +706,7 @@ static INT add_discrete_spectrum(
     COMPLEX * bnd_states_conj = NULL;
     COMPLEX * bnd_states_diff = NULL;
     COMPLEX tmp;
+    COMPLEX * acoeff_cs = NULL;
     COMPLEX * phi = NULL;
     COMPLEX * psi = NULL;
     UINT i,j;
@@ -716,9 +719,10 @@ static INT add_discrete_spectrum(
     norm_consts = malloc(K * sizeof(COMPLEX));
     bnd_states_conj = malloc(K * sizeof(COMPLEX));
     bnd_states_diff = malloc(K * sizeof(COMPLEX));
+    acoeff_cs = malloc(3*K * sizeof(COMPLEX));
     if (t == NULL || bnd_states == NULL ||
             bnd_states_conj == NULL || bnd_states_diff == NULL ||
-            norm_consts == NULL) {
+            norm_consts == NULL || acoeff_cs == NULL) {
         ret_code = E_NOMEM;
         goto leave_fun;
     }
@@ -768,16 +772,29 @@ static INT add_discrete_spectrum(
     //CDT works with norming constants so residues need to be converted to
     // norming constants
     if (opts_ptr->discspec_type == fnft_nsev_inverse_dstype_RESIDUES){
+        if (contspec_flag != 0){
+            //When continuous spectrum exists, the non-solitonic component
+            // of the potential contributes to the residues and needs to be
+            // removed.
+            UINT trunc_index;
+            trunc_index = D;
+            ret_code = nse_scatter_bound_states(D, q, T, &trunc_index, K,
+                    bnd_states, acoeff_cs, acoeff_cs+K, acoeff_cs+2*K, nse_discretization_BO);
+            CHECK_RETCODE(ret_code, leave_fun);
+        }
+        else {
+            for (i = 0; i < K; i++)
+                acoeff_cs[i] = 1;
+        }
         for (i = 0; i < K; i++){
-            tmp = 1;
+            tmp = acoeff_cs[i];
             for (j = 0; j < K; j++){
                 if (j != i){
                     tmp = tmp*(bnd_states[i]-bnd_states[j])/(bnd_states[i]-CONJ(bnd_states[j]));
                 }
             }
             norm_consts[i]=(norm_consts[i]/bnd_states_diff[i])*tmp;
-        }
-
+        }        
     }
 
     // In absence of contspec some tricks can be used to
@@ -896,6 +913,7 @@ static INT add_discrete_spectrum(
         free(bnd_states_conj);
         free(bnd_states_diff);
         free(norm_consts);
+        free(acoeff_cs);
         return ret_code;
 }
 
