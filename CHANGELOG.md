@@ -1,6 +1,12 @@
 # Changelog
 
-## [0.2.0] -- 2018-09
+## [0.2.1] -- 2018-09-28
+
+### Fixed
+
+- Computation of norming constants from residues in fnft_nsev_inverse was incorrect when continuous spectrum was present.
+
+## [0.2.0] -- 2018-09-21
 
 ### Added
 

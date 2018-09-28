@@ -30,7 +30,7 @@
 #include <stdio.h>
 
 static INT fnft_nsev_inverse_test(const UINT D, const UINT M,
-   const REAL error_bound, fnft_nsev_inverse_opts_t * opts_ptr)
+   const REAL error_bound, fnft_nsev_inverse_opts_t * opts_inv_ptr)
 {
     if (M < D)
         return E_INVALID_ARGUMENT(M);
@@ -70,9 +70,13 @@ static INT fnft_nsev_inverse_test(const UINT D, const UINT M,
     //Setting up forward transform options
     fnft_nsev_opts_t opts_fwd = fnft_nsev_default_opts();
     opts_fwd.discretization = nse_discretization_2SPLIT4B;
+    if (opts_inv_ptr->discspec_type == fnft_nsev_inverse_dstype_RESIDUES)
+       opts_fwd.discspec_type = nsev_dstype_RESIDUES;
+    else if (opts_inv_ptr->discspec_type == fnft_nsev_inverse_dstype_NORMING_CONSTANTS)
+       opts_fwd.discspec_type = nsev_dstype_NORMING_CONSTANTS;
 
     //Obtain XI grid
-    ret_code = fnft_nsev_inverse_XI(D, T, M, XI, opts_ptr->discretization);
+    ret_code = fnft_nsev_inverse_XI(D, T, M, XI, opts_inv_ptr->discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 
     //Perform full forward NFT
@@ -82,7 +86,7 @@ static INT fnft_nsev_inverse_test(const UINT D, const UINT M,
 
     //Perform full inverse NFT
     ret_code = fnft_nsev_inverse(M, contspec, XI, *K_ptr, bound_states, normconsts_or_residues, D, q, T,
-            kappa, opts_ptr);
+            kappa, opts_inv_ptr);
     CHECK_RETCODE(ret_code, leave_fun);
 
     REAL error = misc_rel_err(D, q, q_exact);
