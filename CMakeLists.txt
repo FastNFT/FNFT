@@ -22,7 +22,7 @@ project(fnft C)
 set(FNFT_VERSION_MAJOR 0)
 set(FNFT_VERSION_MINOR 2)
 set(FNFT_VERSION_PATCH 1)
-set(FNFT_VERSION_SUFFIX "") # should not be longer than FNFT_SUFFIX_MAXLEN
+set(FNFT_VERSION_SUFFIX "-dev") # should not be longer than FNFT_SUFFIX_MAXLEN
 set(FNFT_VERSION ${FNFT_VERSION_MAJOR}.${FNFT_VERSION_MINOR}.${FNFT_VERSION_PATCH}${FNFT_VERSION_SUFFIX})
 
 include(CheckIncludeFiles)
