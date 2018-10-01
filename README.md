@@ -9,10 +9,12 @@ FNFT is a software library for the fast numerical computation of (inverse) nonli
 ### Forward Transforms
 
 * Nonlinear Schroedinger equation
+
     * Vanishing boundary conditions
       * Reflection coefficient and/or scattering coefficients (a and b)
       * Bound states (eigenvalues)
       * Norming constants and/or residues
+
     * Periodic boundary conditions
       * Main spectrum
       * Auxiliary spectrum
@@ -23,6 +25,7 @@ FNFT is a software library for the fast numerical computation of (inverse) nonli
 ### Inverse Transforms
 
 * Nonlinear Schroedinger equation
+
     * Vanishing boundary conditions
       * Inversion of reflection coefficients, b-scattering coefficients or the inverse Fourier transform of the b-coefficient
       * Bound states (eigenvalues) can be added with arbitrary norming constants/residuals

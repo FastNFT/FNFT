@@ -19,8 +19,7 @@
 
 // This example demonstrates the use of the function fnft_nsev_inverse, which
 // implements the inverse nonlinear Fourier transform with respect to the
-// nonlinear Schroedinger equation with vanishing boundary conditions. (Only
-// continuous spectrum is currently supported.)
+// nonlinear Schroedinger equation with vanishing boundary conditions.
 
 // The signal is a truncated soliton pulse given in Rourke and Morris,
 // Phys. Rev. A 46(7), 1992, https://doi.org/10.1103/PhysRevA.46.3631
@@ -76,17 +75,25 @@ int main()
     /** Step 3: Set up the continuous spectrum **/
 
     const FNFT_REAL alpha = 2;
-    const FNFT_REAL beta = -0.55;
+    const FNFT_REAL beta = 0.55;
+    const FNFT_REAL gamma = FNFT_SQRT(FNFT_FABS(alpha)*FNFT_FABS(alpha)
+                                      + beta*beta);
     const FNFT_REAL eps_xi = (XI[1] - XI[0])/(M - 1);
     for (FNFT_UINT i=0; i<M; i++) {
         const FNFT_REAL xi = XI[0] + i*eps_xi;
         contspec[i] = alpha / (xi - beta*I);
     }
 
-    /** Step 4: Call fnft_nsev_inverse **/
+    /** Step 4: Set up the discrete spectrum **/
 
-    ret_code = fnft_nsev_inverse(M, contspec, XI, 0, NULL, NULL, D, q, T,
-                                 kappa, &opts);
+    const FNFT_UINT K = 1;
+    const FNFT_COMPLEX bound_states[1] = { I*beta };
+    const FNFT_COMPLEX normconsts[1] = { -I*alpha/(gamma + beta) };
+
+    /** Step 5: Call fnft_nsev_inverse **/
+
+    ret_code = fnft_nsev_inverse(M, contspec, XI, K, bound_states, normconsts,
+                                 D, q, T, kappa, &opts);
     if (ret_code != FNFT_SUCCESS) {
         printf("An error occured!\n");
         free(contspec);
@@ -94,7 +101,7 @@ int main()
         return EXIT_FAILURE;
     }
 
-    /** Step 5: Print some of the results **/
+    /** Step 6: Print some of the results **/
 
     FNFT_REAL eps_t = (T[1] - T[0]) / (D - 1);
     printf("Below a few of the %d computed samples are printed:\n",
@@ -108,7 +115,7 @@ int main()
         );
     }
 
-    /** Step 6: Free memory and return **/
+    /** Step 7: Free memory and return **/
 
     free(contspec);
     free(q);
