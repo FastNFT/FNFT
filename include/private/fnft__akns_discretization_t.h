@@ -86,7 +86,7 @@
  * `fnft__akns_discretization_2SPLIT8A`: Degree = 24, Order of accuracy = 8;\n
  * `fnft__akns_discretization_2SPLIT8B`: Degree = 12, Order of accuracy = 8.
  *
- * `fnft_nse_discretization_BO` has been taken from Boffetta and Osborne,
+ * `fnft__akns_discretization_BO` has been taken from Boffetta and Osborne,
  * <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot;Computation of
  * the direct scattering transform for the nonlinear Schroedinger
  * equation,&quot;</a> J. Comput. Phys. 102(2), 1992.
