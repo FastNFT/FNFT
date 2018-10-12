@@ -1,21 +1,21 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
-* FNFT is free software; you can redistribute it and/or
-* modify it under the terms of the version 2 of the GNU General
-* Public License as published by the Free Software Foundation.
-*
-* FNFT is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*                                                                      
-* You should have received a copy of the GNU General Public License
-* along with this program. If not, see <http://www.gnu.org/licenses/>.
-*
-* Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
-*/
+ * This file is part of FNFT.
+ *
+ * FNFT is free software; you can redistribute it and/or
+ * modify it under the terms of the version 2 of the GNU General
+ * Public License as published by the Free Software Foundation.
+ *
+ * FNFT is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ * Sander Wahls (TU Delft) 2017-2018.
+ */
 
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -45,7 +45,7 @@ inline INT poly_fmult_two_polys_len(const UINT deg)
 
 inline INT poly_fmult_two_polys(
     const UINT deg,
-    COMPLEX const * const p1, 
+    COMPLEX const * const p1,
     COMPLEX const * const p2,
     COMPLEX * const result,
     fft_wrapper_plan_t plan_fwd,
@@ -60,20 +60,24 @@ inline INT poly_fmult_two_polys(
 
     // Prepare buffers
     len = poly_fmult_two_polys_len(deg);
-
-    // FFT of first polynomial
-    for (i = 0; i <= deg; i++)
-        buf0[i] = p1[i];
     for (i = deg + 1; i < len; i++)
         buf0[i] = 0;
-    ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf1);
-    CHECK_RETCODE(ret_code, leave_fun);
+
+    // FFT of first polynomial
+    if (p1 != NULL) {
+        for (i = 0; i <= deg; i++)
+            buf0[i] = p1[i];
+        ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf1);
+        CHECK_RETCODE(ret_code, leave_fun);
+    }
 
     // FFT of second polynomial
-    for (i = 0; i <= deg; i++)
-        buf0[i] = p2[i];
-    ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf2);
-    CHECK_RETCODE(ret_code, leave_fun);
+    if (p2 != NULL) {
+        for (i = 0; i <= deg; i++)
+            buf0[i] = p2[i];
+        ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf2);
+        CHECK_RETCODE(ret_code, leave_fun);
+    }
 
     // Inverse FFT of product
     for (i = 0; i < len; i++)
@@ -125,7 +129,7 @@ static inline INT poly_rescale(const UINT d, COMPLEX * const p)
     return a;
 }
 
-INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p, 
+INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
     INT * const W_ptr)
 {
     UINT i, j, deg, len, lenmem;
@@ -172,7 +176,7 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
         p1 = p;
         p2 = p + (deg + 1);
         result = p;
-        
+
         // Multiply all pairs of polynomials, normalize if desired
         for (i=0; i<n; i+=2) {
             ret_code = poly_fmult_two_polys(deg, p1, p2, result, plan_fwd,
@@ -189,7 +193,7 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
 
         fft_wrapper_destroy_plan(&plan_fwd);
         fft_wrapper_destroy_plan(&plan_inv);
- 
+
         // Double degrees and half the number of polynomials
         deg *= 2;
         if (n%2 != 0) { // n was no power of two
@@ -198,12 +202,12 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
         }
         n /= 2;
     }
-    
+
     // Set degree of final result, free memory and return w/o error
     *d = deg - n_excess*(*d);
     if (W_ptr != NULL)
         *W_ptr = W;
-release_mem:  
+release_mem:
     fft_wrapper_destroy_plan(&plan_fwd);
     fft_wrapper_destroy_plan(&plan_inv);
     fft_wrapper_free(buf0);
@@ -240,28 +244,35 @@ inline INT poly_fmult_two_polys2x2(const UINT deg,
     COMPLEX * const result_22 = result_21 + result_stride;
 
     ret_code = poly_fmult_two_polys(deg, p1_11, p2_11, result_11,
-        plan_fwd, plan_inv, buf0, buf1, buf2, 0);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, 0);
     CHECK_RETCODE(ret_code, leave_fun);
+
+    ret_code = poly_fmult_two_polys(deg, NULL /*p2_11*/, p1_21, result_21,
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, 0);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    ret_code = poly_fmult_two_polys(deg, NULL /*p1_21*/, p2_12, result_22,
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, 0);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    ret_code = poly_fmult_two_polys(deg, NULL /*p2_12*/, p1_11, result_12,
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, 0);
+    CHECK_RETCODE(ret_code, leave_fun);
+
     ret_code = poly_fmult_two_polys(deg, p1_12, p2_21, result_11,
-        plan_fwd, plan_inv, buf0, buf1, buf2, 1);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, 1);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_11, p2_12, result_12,
-        plan_fwd, plan_inv, buf0, buf1, buf2, 0);
+
+    ret_code = poly_fmult_two_polys(deg, NULL /*p2_21*/, p1_22, result_21,
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, 1);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_12, p2_22, result_12,
-        plan_fwd, plan_inv, buf0, buf1, buf2, 1);
+
+    ret_code = poly_fmult_two_polys(deg, NULL /*p1_22*/, p2_22, result_22,
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, 1);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_21, p2_11, result_21,
-        plan_fwd, plan_inv, buf0, buf1, buf2, 0);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_22, p2_21, result_21,
-        plan_fwd, plan_inv, buf0, buf1, buf2, 1);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_21, p2_12, result_22,
-        plan_fwd, plan_inv, buf0, buf1, buf2, 0);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_22, p2_22, result_22,
-        plan_fwd, plan_inv, buf0, buf1, buf2, 1);
+
+    ret_code = poly_fmult_two_polys(deg, NULL /*p2_22*/, p1_12, result_12,
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, 1);
     CHECK_RETCODE(ret_code, leave_fun);
 
 leave_fun:
@@ -340,7 +351,7 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
     p12 = p11 + n*(deg+1);
     p21 = p12 + n*(deg+1);
     p22 = p21 + n*(deg+1);
-   
+
     // Pad if n is not a power of two
     const UINT n_excess = misc_nextpowerof2(n) - n;
     if (n_excess > 0) {
@@ -384,7 +395,7 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
         p22 = p22_pad;
         n += n_excess;
     }
-    
+
     // Allocate memory for for calls to poly_fmult2
     lenmem = poly_fmult_two_polys_len(deg * n) * sizeof(COMPLEX);
     buf0 = fft_wrapper_malloc(lenmem);
@@ -483,4 +494,3 @@ release_mem:
     fft_wrapper_free(buf2);
     return ret_code;
 }
-
