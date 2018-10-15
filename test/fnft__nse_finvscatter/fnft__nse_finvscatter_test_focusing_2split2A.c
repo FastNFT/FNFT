@@ -24,7 +24,7 @@ int main()
     const INT kappa = +1;
     const REAL error_bound
 #ifdef HAVE_FFTW3
-        = 69.0*FNFT_EPSILON;
+        = 73.0*FNFT_EPSILON;
 #else
         = 1262.0*FNFT_EPSILON;
 #endif
