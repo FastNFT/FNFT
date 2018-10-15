@@ -87,6 +87,7 @@ else()
         message("++ FFTW3 NOT found. Using Kiss FFT instead.")
     endif()
 endif()
+check_c_source_compiles("#pragma GCC optimize(\"Ofast\") \n int main() { int g = 1; return g; }" HAVE_PRAGMA_GCC_OPTIMIZE_OFAST)
 
 # header files
 include_directories(include)
@@ -132,6 +133,8 @@ else()
     endif()
   endif()
 endif()
+
+
 
 # generate config header file
 configure_file(include/fnft_config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/include/fnft_config.h)

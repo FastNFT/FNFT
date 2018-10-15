@@ -1,21 +1,21 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
-* FNFT is free software; you can redistribute it and/or
-* modify it under the terms of the version 2 of the GNU General
-* Public License as published by the Free Software Foundation.
-*
-* FNFT is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*                                                                      
-* You should have received a copy of the GNU General Public License
-* along with this program. If not, see <http://www.gnu.org/licenses/>.
-*
-* Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
-*/
+ * This file is part of FNFT.
+ *
+ * FNFT is free software; you can redistribute it and/or
+ * modify it under the terms of the version 2 of the GNU General
+ * Public License as published by the Free Software Foundation.
+ *
+ * FNFT is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ * Sander Wahls (TU Delft) 2017-2018.
+ */
 
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -34,19 +34,19 @@ static INT poly_fmult_test_n_is_power_of_2(INT normalize_flag)
     */
     COMPLEX result_exact[17] = {
            10690.1093069785 - I*7285.45565246217,
-           22605.6811426431 - I*19510.065631389, 
+           22605.6811426431 - I*19510.065631389,
            57389.5004107115 - I*20763.2575587549,
            53847.0938223071 - I*18963.5560762862,
            88648.7268642591 - I*2309.98190237675,
            66515.8698354361 - I*3878.11603829108,
            45160.5175520559 + I*12083.5337878339,
-           64021.1527510823 + I*34487.976136233, 
+           64021.1527510823 + I*34487.976136233,
           -26614.7840829275 + I*18912.0673174305,
            624.669240812309 + I*18294.2454730283,
            7755.19752834515 + I*18447.5313133858,
           -33812.2918248361 + I*1257.46809193287,
           -711.103319555697 - I*2023.66741077336,
-           9781.54461527385 + I*407.75394285625, 
+           9781.54461527385 + I*407.75394285625,
            39.3498537600159 + I*420.245708764338,
           -508.134987301475 + I*156.212629759735,
            4.42978955469815 - I*0.0813363246183392 };
@@ -72,7 +72,7 @@ static INT poly_fmult_test_n_is_power_of_2(INT normalize_flag)
         for (i=0; i<deg+1; i++)
             p[i] *= scl;
     }
-    if (misc_rel_err(deg+1, p, result_exact) > 100*EPSILON)
+    if (!(misc_rel_err(deg+1, p, result_exact) <= 100*EPSILON))
         return E_TEST_FAILED;
     return SUCCESS;
 }

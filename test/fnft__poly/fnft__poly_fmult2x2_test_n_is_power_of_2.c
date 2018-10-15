@@ -1,21 +1,21 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
-* FNFT is free software; you can redistribute it and/or
-* modify it under the terms of the version 2 of the GNU General
-* Public License as published by the Free Software Foundation.
-*
-* FNFT is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*                                                                      
-* You should have received a copy of the GNU General Public License
-* along with this program. If not, see <http://www.gnu.org/licenses/>.
-*
-* Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
-*/
+ * This file is part of FNFT.
+ *
+ * FNFT is free software; you can redistribute it and/or
+ * modify it under the terms of the version 2 of the GNU General
+ * Public License as published by the Free Software Foundation.
+ *
+ * FNFT is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ * Sander Wahls (TU Delft) 2017-2018.
+ */
 
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -71,13 +71,13 @@ static INT poly_fmult2x2_test_n_is_power_of_2(INT normalize_flag)
         14.8569933196036 + I*113.838094358267,
         46.5859268828598 + I*75.6288485779254,
         171.341929283725 - I*10.2410011372218,
-        155.475099221666 - I*110.340545813463, 
+        155.475099221666 - I*110.340545813463,
        -117.458524441818 - I*87.5204294848652,
-        31.9873641358437 + I*114.857725853133, 
-          44.9841424843245 + I*81.2642643937605, 
-          166.826592700681 - I*5.16720885749995, 
-          155.130568557566 - I*102.464890587643, 
-          -127.981613283912 - I*83.7735775388555, 
+        31.9873641358437 + I*114.857725853133,
+          44.9841424843245 + I*81.2642643937605,
+          166.826592700681 - I*5.16720885749995,
+          155.130568557566 - I*102.464890587643,
+          -127.981613283912 - I*83.7735775388555,
           34.4728506991058 + I*107.132856593172};
     const UINT deg_exact = sizeof(result_exact)/sizeof(result_exact[0])/4 - 1;
 
@@ -87,7 +87,7 @@ static INT poly_fmult2x2_test_n_is_power_of_2(INT normalize_flag)
         p[i+2*n*(deg+1)] = SQRT(i+1.0)*(COS(i+0.2) + I*SIN(-2.0*i+0.2));
         p[i+3*n*(deg+1)] = SQRT(i+1.0)*(COS(i+0.3) + I*SIN(-2.0*i+0.3));
     }
-   
+
     if (normalize_flag)
         W_ptr = &W;
     ret_code = poly_fmult2x2(&deg, n, p, result, W_ptr);
@@ -102,7 +102,7 @@ static INT poly_fmult2x2_test_n_is_power_of_2(INT normalize_flag)
         for (i=0; i<4*(deg+1); i++)
             result[i] *= scl;
     }
-    if (misc_rel_err(4*(deg+1), result, result_exact) > 100*EPSILON)
+    if (!(misc_rel_err(4*(deg+1), result, result_exact) <= 100*EPSILON))
         return E_TEST_FAILED;
 
     return SUCCESS;
