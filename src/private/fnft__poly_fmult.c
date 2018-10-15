@@ -172,8 +172,8 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
     }
     n += n_excess;
 
-    // Allocate memory for for calls to poly_fmult2
-    lenmem = poly_fmult_two_polys_len(deg * n) * sizeof(COMPLEX);
+    // Allocate memory for calls to poly_fmult_two_polys
+    lenmem = poly_fmult_two_polys_len(deg * n/2) * sizeof(COMPLEX);
     buf0 = fft_wrapper_malloc(lenmem);
     buf1 = fft_wrapper_malloc(lenmem);
     buf2 = fft_wrapper_malloc(lenmem);
@@ -443,9 +443,9 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
         p22 = p22_pad;
         n += n_excess;
     }
-
-    // Allocate memory for for calls to poly_fmult2
-    lenmem = poly_fmult_two_polys_len(deg * n) * sizeof(COMPLEX);
+    
+    // Allocate memory for calls to poly_fmult_two_polys2x2
+    lenmem = poly_fmult_two_polys_len(deg * n/2) * sizeof(COMPLEX);
     buf0 = fft_wrapper_malloc(lenmem);
     buf1 = fft_wrapper_malloc(lenmem);
     buf2 = fft_wrapper_malloc(lenmem);
