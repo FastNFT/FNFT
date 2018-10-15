@@ -66,10 +66,16 @@ FNFT_INT fnft__poly_fmult_two_polys_len(const FNFT_UINT deg);
  * @param [in,out] buf1 See buf0.
  * @param [in,out] buf2 See buf0. Upon exit, buf2 contains the FFT of the
  *   zero-padded coefficient vector of the second polynomial.
- * @param [in] add_flag Flag either 0 or 1. If add_flag = 1 is
- *   passed then the result of polynomial multiplication is added to the values
- *   already present in result. If add_flag = 0 then the values in result are
- *   overwritten.
+ * @param [in] mode If mode==0, then the product of the two polynomials
+ *   is stored in result. This is the standard mode. The following modes are
+ *   useful to speed-up the multiplication of polynomial matrices. If mode==1,
+ *   then the product is added to the values currently stored in result. If
+ *   mode==3, then the FFT of the product of the (zero-padded) polynomials
+ *   is stored in result. If mode==4, then the FFT of the two (zero-padded)
+ *   polynomials is added to the values currently stored in result, an inverse
+ *   FFT is applied to these values, and the outcome is finally stored in
+ *   result. IMPORTANT: The modes 3 and 4 require that the array result is large
+ *   enough to store an FFT of the size given above.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  */
@@ -83,7 +89,7 @@ FNFT_INT fnft__poly_fmult_two_polys(
     FNFT_COMPLEX * const buf0,
     FNFT_COMPLEX * const buf1,
     FNFT_COMPLEX * const buf2,
-    const FNFT_INT add_flag);
+    const FNFT_INT mode);
 
 /**
  * @brief Multiplies two 2x2 matrices of polynomials.
@@ -121,8 +127,11 @@ FNFT_INT fnft__poly_fmult_two_polys(
  *   \endlink and \link fnft__fft_wrapper_free \endlink, respectively.
  * @param [in,out] buf1 See buf0.
  * @param [in,out] buf2 See buf0.
+ * @param [in] mode_offset Set to 2 if the arrays result_11+n*result_stride,
+ *   where n=0,1,2,3, are long enough to store the FFT's. This allows improve
+ *   performance by storing some intermediate values there. Otherwise, set to 0.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
- *  defined in \link fnft_errwarn.h \endlink.
+ *   defined in \link fnft_errwarn.h \endlink.
  */
 FNFT_INT fnft__poly_fmult_two_polys2x2(const FNFT_UINT deg,
     FNFT_COMPLEX const * const p1_11,
@@ -135,7 +144,8 @@ FNFT_INT fnft__poly_fmult_two_polys2x2(const FNFT_UINT deg,
     fnft__fft_wrapper_plan_t plan_inv,
     FNFT_COMPLEX * const buf0,
     FNFT_COMPLEX * const buf1,
-    FNFT_COMPLEX * const buf2);
+    FNFT_COMPLEX * const buf2,
+    const FNFT_UINT mode_offset);
 
 /**
  * @brief Number of elements that the input p to

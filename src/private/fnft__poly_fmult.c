@@ -53,47 +53,63 @@ inline INT poly_fmult_two_polys(
     COMPLEX * const buf0,
     COMPLEX * const buf1,
     COMPLEX * const buf2,
-    const INT add_flag)
+    const INT mode)
 {
-    UINT i, len;
+    UINT i;
     INT ret_code = SUCCESS;
 
-    // Prepare buffers
-    len = poly_fmult_two_polys_len(deg);
-    for (i = deg + 1; i < len; i++)
-        buf0[i] = 0;
+    // Zero-pad polynomials
+    const UINT len = poly_fmult_two_polys_len(deg);
+    memset(&buf0[deg+1], 0, (len - (deg+1))*sizeof(COMPLEX));
 
     // FFT of first polynomial
     if (p1 != NULL) {
-        for (i = 0; i <= deg; i++)
-            buf0[i] = p1[i];
+        memcpy(buf0, p1, (deg+1)*sizeof(COMPLEX));
         ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf1);
         CHECK_RETCODE(ret_code, leave_fun);
     }
 
     // FFT of second polynomial
     if (p2 != NULL) {
-        for (i = 0; i <= deg; i++)
-            buf0[i] = p2[i];
+        memcpy(buf0, p2, (deg+1)*sizeof(COMPLEX));
         ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf2);
         CHECK_RETCODE(ret_code, leave_fun);
     }
 
-    // Inverse FFT of product
+    // Multiply FFT's
     for (i = 0; i < len; i++)
         buf0[i] = buf1[i] * buf2[i];
-    ret_code = fft_wrapper_execute_plan(plan_inv, buf0, buf1);
-    CHECK_RETCODE(ret_code, leave_fun);
 
-    // Extract result
-    if (!add_flag) {
-        for (i = 0; i < 2*deg + 1; i++) {
+    if (mode == 2) {
+
+        // Temporarily store product of FFT's in result
+        memcpy(result, buf0, len*sizeof(COMPLEX));
+
+    } else if (mode == 3) {
+
+        // Add product of FFT's to previously stored product in result to
+        // current product
+        for (i = 0; i < len; i++)
+            buf0[i] += result[i];
+    }
+
+    if (mode != 2) {
+
+        // Inverse FFT of product
+        ret_code = fft_wrapper_execute_plan(plan_inv, buf0, buf1);
+        CHECK_RETCODE(ret_code, leave_fun);
+    }
+
+    if (mode == 0 || mode == 3) {
+
+        // Store relevant part of scaled result of inverse FFT in result
+        for (i = 0; i < 2*deg + 1; i++)
             result[i] = buf1[i]/len;
-        }
-    } else {
-        for (i = 0; i < 2*deg + 1; i++) {
+
+    } else if (mode == 1) {
+
+        for (i = 0; i < 2*deg + 1; i++)
             result[i] += buf1[i]/len;
-        }
     }
 
 leave_fun:
@@ -227,7 +243,8 @@ inline INT poly_fmult_two_polys2x2(const UINT deg,
     fft_wrapper_plan_t plan_inv,
     COMPLEX * const buf0,
     COMPLEX * const buf1,
-    COMPLEX * const buf2)
+    COMPLEX * const buf2,
+    const UINT mode_offset)
 {
     INT ret_code;
 
@@ -243,36 +260,63 @@ inline INT poly_fmult_two_polys2x2(const UINT deg,
     COMPLEX * const result_21 = result_12 + result_stride;
     COMPLEX * const result_22 = result_21 + result_stride;
 
+    // We compute the matrix product
+    //
+    //  [a b ; c d][e f ; g h]=[ae af ; ce cf]+[bg bh ; dg dh],
+    //
+    // where a=p1_11, b=p1_12, etc.
+
+    UINT mode = mode_offset;
+
+    // If mode_offset==0:
+    //
+    //   Store ae, af, ce and cf in result_11, result_12, result_21 and
+    //   result_22, respectively
+    //
+    // If mode_offset==2:
+    //
+    //   Store FFT's of ae, af, ce and cf in result_11, result_12, result_21 and
+    //   result_22, respectively. This saves us performing some inverse FFT's,
+    //   but since the polynomials are zero-padded before the FFT is taken, it
+    //   is only possible if the result_* arrays are larger than strictly
+    //   necessary. See the doc of this fun.
+
     ret_code = poly_fmult_two_polys(deg, p1_11, p2_11, result_11,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, 0);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
     CHECK_RETCODE(ret_code, leave_fun);
-
     ret_code = poly_fmult_two_polys(deg, NULL /*p2_11*/, p1_21, result_21,
-                                    plan_fwd, plan_inv, buf0, buf2, buf1, 0);
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
     CHECK_RETCODE(ret_code, leave_fun);
-
     ret_code = poly_fmult_two_polys(deg, NULL /*p1_21*/, p2_12, result_22,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, 0);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = poly_fmult_two_polys(deg, NULL /*p2_12*/, p1_11, result_12,
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    ret_code = poly_fmult_two_polys(deg, NULL /*p2_12*/, p1_11, result_12,
-                                    plan_fwd, plan_inv, buf0, buf2, buf1, 0);
-    CHECK_RETCODE(ret_code, leave_fun);
+    mode = mode_offset + 1;
+
+    // If mode_offset==0:
+    //
+    //   Add bg, bh, dg and dg to result_11, result_12, result_21 and
+    //   result_22, respectively
+    //
+    // If mode_offset==2:
+    //
+    //   Add result_11, result_12, result_21 and result_22 to the FFT's of ae,
+    //   af, ce and cf, respectively, and perform inverse FFT's.
 
     ret_code = poly_fmult_two_polys(deg, p1_12, p2_21, result_11,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, 1);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
     CHECK_RETCODE(ret_code, leave_fun);
-
     ret_code = poly_fmult_two_polys(deg, NULL /*p2_21*/, p1_22, result_21,
-                                    plan_fwd, plan_inv, buf0, buf2, buf1, 1);
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
     CHECK_RETCODE(ret_code, leave_fun);
-
     ret_code = poly_fmult_two_polys(deg, NULL /*p1_22*/, p2_22, result_22,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, 1);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
     CHECK_RETCODE(ret_code, leave_fun);
-
     ret_code = poly_fmult_two_polys(deg, NULL /*p2_22*/, p1_12, result_12,
-                                    plan_fwd, plan_inv, buf0, buf2, buf1, 1);
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
     CHECK_RETCODE(ret_code, leave_fun);
 
 leave_fun:
@@ -433,9 +477,11 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
         // Multiply all pairs of polynomials, normalize if desired
         for (i=0; i<n; i+=2) {
 
+            const UINT mode_offset  = r_stride - or < len ? 0 : 2;
             ret_code = poly_fmult_two_polys2x2(deg, p+o1, p_stride, p+o2,
-                p_stride, result+or, r_stride, plan_fwd, plan_inv, buf0, buf1,
-                buf2);
+                                               p_stride, result+or, r_stride,
+                                               plan_fwd, plan_inv, buf0, buf1,
+                                               buf2, mode_offset);
             CHECK_RETCODE(ret_code, release_mem);
 
             // Normalize if desired
