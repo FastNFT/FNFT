@@ -28,6 +28,10 @@
 #include "fnft__misc.h"
 #include "fnft__fft_wrapper.h"
 
+#ifdef HAVE_PRAGMA_GCC_OPTIMIZE_OFAST
+#pragma GCC optimize("Ofast")
+#endif
+
 UINT poly_fmult_numel(UINT deg, UINT n)
 {
     return (deg+1)*misc_nextpowerof2(n);
