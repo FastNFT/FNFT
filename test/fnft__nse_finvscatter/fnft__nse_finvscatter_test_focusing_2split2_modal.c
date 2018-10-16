@@ -1,6 +1,6 @@
 /*
- * This file is part of FNFT.  
- *                                                                  
+ * This file is part of FNFT.
+ *
  * FNFT is free software; you can redistribute it and/or
  * modify it under the terms of the version 2 of the GNU General
  * Public License as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *                                                                      
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
@@ -24,10 +24,10 @@ int main()
     const INT kappa = +1;
     const REAL error_bound
 #ifdef HAVE_FFTW3
-        = 36.0*FNFT_EPSILON;
+        = 177.0*FNFT_EPSILON;
 #else
         = 1150.0*FNFT_EPSILON;
-#endif    
+#endif
     const nse_discretization_t discretization
         = fnft_nse_discretization_2SPLIT2_MODAL;
 
@@ -36,4 +36,3 @@ int main()
 
     return EXIT_SUCCESS;
 }
-
