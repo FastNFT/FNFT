@@ -89,7 +89,7 @@ FNFT_INT fnft__poly_fmult_two_polys(
     FNFT_COMPLEX * const buf0,
     FNFT_COMPLEX * const buf1,
     FNFT_COMPLEX * const buf2,
-    const FNFT_INT mode);
+    const FNFT_UINT mode);
 
 /**
  * @brief Multiplies two 2x2 matrices of polynomials.

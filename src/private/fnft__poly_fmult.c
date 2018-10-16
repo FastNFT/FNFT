@@ -57,7 +57,7 @@ inline INT poly_fmult_two_polys(
     COMPLEX * const buf0,
     COMPLEX * const buf1,
     COMPLEX * const buf2,
-    const INT mode)
+    const UINT mode)
 {
     UINT i;
     INT ret_code = SUCCESS;
