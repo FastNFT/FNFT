@@ -87,7 +87,6 @@ else()
         message("++ FFTW3 NOT found. Using Kiss FFT instead.")
     endif()
 endif()
-check_c_source_compiles("#pragma GCC optimize(\"Ofast\") \n int main() { int g = 1; return g; }" HAVE_PRAGMA_GCC_OPTIMIZE_OFAST)
 
 # header files
 include_directories(include)
@@ -110,6 +109,7 @@ if (CMAKE_COMPILER_IS_GNUCC) # gcc
         message("++ Enabling machine specific optimization in the C compiler")
   endif()
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -pedantic -Werror=implicit-function-declaration")
+  check_c_source_compiles("#pragma GCC optimize(\"Ofast\") \n int main() { int g = 1; return g; }" HAVE_PRAGMA_GCC_OPTIMIZE_OFAST)
 else()
   message(WARNING "++ Compiler is not gcc. Will try to set flags anyway.")
   if (DEBUG)
