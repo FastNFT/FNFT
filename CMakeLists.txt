@@ -21,7 +21,7 @@ project(fnft C)
 
 set(FNFT_VERSION_MAJOR 0)
 set(FNFT_VERSION_MINOR 2)
-set(FNFT_VERSION_PATCH 1)
+set(FNFT_VERSION_PATCH 2)
 set(FNFT_VERSION_SUFFIX "") # should not be longer than FNFT_SUFFIX_MAXLEN
 set(FNFT_VERSION ${FNFT_VERSION_MAJOR}.${FNFT_VERSION_MINOR}.${FNFT_VERSION_PATCH}${FNFT_VERSION_SUFFIX})
 
@@ -172,8 +172,8 @@ target_link_libraries(fnft ${FFTW3_LIB})
 file(GLOB PUBLIC_HEADERS "include/*.h")
 set_target_properties(fnft PROPERTIES VERSION ${FNFT_VERSION} SOVERSION ${FNFT_VERSION_MAJOR} LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib" PUBLIC_HEADER "${PUBLIC_HEADERS}")
 
-# installation under Linux
-install(TARGETS fnft LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include)
+# installation (under Windows, DLL's are considered runtime, while DLL import libraries are considered ARCHIVE)
+install(TARGETS fnft LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include RUNTIME DESTINATION lib ARCHIVE DESTINATION lib)
 
 # generate examples
 foreach (srcfile ${EXAMPLE_SOURCES})

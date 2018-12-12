@@ -66,7 +66,7 @@ To uninstall FNFT, run the commands
 
 ## Building under Windows
 
-The following instructions have been tested under Windows 7/8/10. A simple way to build FNFT is via the [Scoop](http://scoop.sh/) packet manager. Make sure that [PowerShell 3](https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-windows-powershell?view=powershell-6) is available. Run the command
+The following instructions have been tested under Windows 7/8/10. Please note that they result in a 32 bit library even on 64 bit machines, which however is not a problem in most cases. A simple way to build FNFT is via the [Scoop](http://scoop.sh/) packet manager. Make sure that [PowerShell 3](https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-windows-powershell?view=powershell-6) is available. Run the command
 
     powershell.exe -ExecutionPolicy RemoteSigned
 
@@ -90,7 +90,7 @@ Create a build directory and run cmake there
 
     mkdir build
     cd build
-    cmake .. -SHELL=cmd -G"MinGW Makefiles"
+    cmake .. -G"MinGW Makefiles"
 
 Build the library:
 
@@ -100,8 +100,7 @@ Run the tests:
 
     mingw32-make -j4 test
 
-_Note:_ If MATLAB is installed, the MATLAB interface should have been built
-automatically. It can be found in the 'matlab' folder. Please copy the libfnft... dll file and the mex_... mexw... files manually from the 'build' into the 'matlab' folder.
+_Note:_ If a 32 bit version of MATLAB is installed, the MATLAB interface should have been built automatically. It can be found in the 'matlab' folder. Please copy the libfnft... dll file and the mex_... mexw... files manually from the 'build' into the 'matlab' folder.
 
 ## Building under MacOS
 
