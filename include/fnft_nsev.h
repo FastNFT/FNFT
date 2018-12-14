@@ -261,7 +261,9 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *  bound_states. Upon return, *K_ptr contains the number of actually detected
  *  bound states. If the length of the array bound_states was not sufficient
  *  to store all of the detected bound states, a warning is printed and as many
- *  bound states as possible are returned instead.
+ *  bound states as possible are returned instead. Note that in order to skip
+ *  the computation of the bound states completely, it is not sufficient to pass
+ *  *K_ptr==0. Instead, one needs to pass bound_states==NULL.
  * @param[out] bound_states Array. Upon return, the routine has stored the detected
  *  bound states (aka eigenvalues) in the first *K_ptr entries of this array.
  *  If NULL is passed instead, the discrete spectrum will not be computed.

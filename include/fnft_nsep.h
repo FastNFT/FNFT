@@ -161,6 +161,8 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  *  points in the main spectrum. If the length of the array main_spec was not
  *  sufficient to store all of the detected points in the main spectrum, a
  *  warning is printed and as many points as possible are returned instead.
+ *  Note that in order to skip the computation of the main spectrum completely,
+ *  it is not sufficient to pass *K_ptr==NULL. Instead, pass main_spec==NULL.
  * @param[out] main_spec Array. Upon return, the routine has stored the detected
  *  main specrum points (i.e., the points for which the trace of the monodromy
  *  matrix is either +2 or -2) in the first *K_ptr entries of this array.
@@ -172,7 +174,9 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  *  points in the auxiliary spectrum. If the length of the array aux_spec was
  *  not sufficient to store all of the detected points in the auxiliary
  *  spectrum, a warning is printed and as many points as possible are returned
- *  instead.
+ *  instead. Note that in order to skip the computation of the auxiliary
+ *  spectrum completely, it is not sufficient to pass *M_ptr==NULL. Instead,
+ *  pass aux_spec==NULL.
  * @param[out] aux_spec Array. Upon return, the routine has stored the detected
  *  auxiliary specrum points (i.e., the points for which the upper right
  *  element of the monodromy matrix is zero) in the first *M_ptr entries of

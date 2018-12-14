@@ -50,6 +50,8 @@ INT fnft_nsev_inverse_XI(const UINT D, REAL const * const T,
         const UINT M, REAL * const XI,
         const nse_discretization_t discretization)
 {
+    if (D<2)
+        return E_INVALID_ARGUMENT(D);
     if (M == 0)
         return E_INVALID_ARGUMENT(M);
     if (XI == NULL)
@@ -794,7 +796,7 @@ static INT add_discrete_spectrum(
                 }
             }
             norm_consts[i]=(norm_consts[i]/bnd_states_diff[i])*tmp;
-        }        
+        }
     }
 
     // In absence of contspec some tricks can be used to
