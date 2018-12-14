@@ -9,9 +9,10 @@
 
 ### Fixed
 
-- Updated documentation for fnft_nsev_inverse on that D should be a positive power of two
 - CMake failed under Windows due to an incomplete install command in CMakeLists.txt
 - Removed incorrect "-SHELL=cmd" parameter for CMake from Windows build instructions
+- Documentation for fnft_nsev_inverse now states that D should be a positive power of two
+- Documentation for fnft_nsev and fnft_nsep now states that passing *K_ptr==0 and *M_ptr==0 is not sufficient in order to completely skip the computation of the corresponding spectra
 - Reformatted changelog for 0.1.1
 
 ## [0.2.1] -- 2018-09-28
