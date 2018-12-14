@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.2] -- 2018-12-13
+
+### Added
+
+- The routine fnft_nsev_inverse_XI now raises an error if D<2 to avoid division by zero
+- A .gitattribute file to correct incorrect language detection on GitHub
+
+### Fixed
+
+- CMake failed under Windows due to an incomplete install command in CMakeLists.txt
+- Removed incorrect "-SHELL=cmd" parameter for CMake from Windows build instructions
+- Documentation for fnft_nsev_inverse now states that D should be a positive power of two
+- Documentation for fnft_nsev and fnft_nsep now states that passing *K_ptr==0 and *M_ptr==0 is not sufficient in order to completely skip the computation of the corresponding spectra
+- Reformatted changelog for 0.1.1
+
 ## [0.2.1] -- 2018-09-28
 
 ### Fixed
@@ -37,14 +52,11 @@
 
 ## [0.1.1] -- 2018-05-14
 
-### Added
+### Fixed
 
 - Mex files now compile also with Matlab R2018a
-
-### Changed
-
-- Fixed: Several potential memory violations in fnft_nsev, poly_chirpz and nsev_testcases
-- Fixed: Some return codes in fnft_nsep had not been checked
-- Fixed: misc_merge did not work correctly for empty input vectors
-- Fixed: The continuous spectrum in mex_fnft_nsev_example.m was plotted over t, not xi
-- Fixed: A superfluous parameter kappa was given in the documentation of mex_fnft_kdvv
+- Several potential memory violations in fnft_nsev, poly_chirpz and nsev_testcases
+- Some return codes in fnft_nsep had not been checked
+- misc_merge did not work correctly for empty input vectors
+- The continuous spectrum in mex_fnft_nsev_example.m was plotted over t, not xi
+- A superfluous parameter kappa was given in the documentation of mex_fnft_kdvv
