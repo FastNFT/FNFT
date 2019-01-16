@@ -134,7 +134,7 @@ INT fnft_nsev(
     UINT deg;
     INT W = 0, *W_ptr = NULL;
     INT ret_code = SUCCESS;
-    UINT i;
+    UINT i, D_scl;// D_scl*D gives the effective number of samples
     
     // Check inputs
     if (D < 2)

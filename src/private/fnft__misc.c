@@ -22,6 +22,7 @@
 #include "fnft__errwarn.h"
 #include <stdio.h>
 #include "fnft__misc.h"
+#include "fnft__fft_wrapper.h"
 
 void misc_print_buf(const INT len, COMPLEX const * const buf,
                     char const * const varname)
@@ -319,4 +320,76 @@ UINT misc_nextpowerof2(const UINT number)
     while (result < number)
         result *= 2;
     return result;
+}
+
+INT misc_resample(const UINT D, const REAL eps_t, COMPLEX const * const q,
+    const REAL delta, COMPLEX *const q_new)
+{
+    if (q == NULL)
+        return E_INVALID_ARGUMENT(q);
+    if (D <= 2)
+        return E_INVALID_ARGUMENT(D);
+    if (q_new == NULL)
+        return E_INVALID_ARGUMENT(q_new);
+    if (eps_t == 0)
+        return E_INVALID_ARGUMENT(eps_t);
+
+    fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
+    fft_wrapper_plan_t plan_inv = fft_wrapper_safe_plan_init();
+    COMPLEX *buf0 = NULL, *buf1 = NULL;
+    REAL *freq = NULL;
+    INT ret_code;
+    UINT i, len, lenmem;
+    // Allocate memory
+    len = misc_nextpowerof2(D);
+    lenmem = len * sizeof(COMPLEX);
+    buf0 = fft_wrapper_malloc(lenmem);
+    buf1 = fft_wrapper_malloc(lenmem);
+    freq = malloc(len * sizeof(REAL));
+    if (buf0 == NULL || buf1 == NULL || freq == NULL) {
+        ret_code = E_NOMEM;
+        goto release_mem;
+    }
+
+    ret_code = fft_wrapper_create_plan(&plan_fwd, len, buf0, buf1, -1);
+    CHECK_RETCODE(ret_code, release_mem);
+
+
+    ret_code = fft_wrapper_create_plan(&plan_inv, len, buf0, buf1, 1);
+    CHECK_RETCODE(ret_code, release_mem);
+
+    // Zero padding and FFT of q
+    for (i = 0; i < D; i++)
+        buf0[i] = q[i];
+    for (i = D+1; i < len; i++)
+        buf0[i] = 0;
+    ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf1);
+    CHECK_RETCODE(ret_code, release_mem);
+
+
+
+    // Applying frequency shift
+    for (i = 0; i <=len/2; i++)
+        freq[i] = i/(len*eps_t);
+    for (i = len/2+1; i < len; i++)
+        freq[i] = ((INT)i - (INT)len)/(len*eps_t);
+
+    for (i = 0; i < len; i++)
+        buf1[i] = buf1[i]*CEXP(2*I*PI*freq[i]*delta);
+
+
+    // Inverse FFT and truncation
+    ret_code = fft_wrapper_execute_plan(plan_inv, buf1, buf0);
+    CHECK_RETCODE(ret_code, release_mem);
+    for (i = 0; i < D; i++)
+        q_new[i] = buf0[i]/len;
+
+
+release_mem:  
+    fft_wrapper_destroy_plan(&plan_fwd);
+    fft_wrapper_destroy_plan(&plan_inv);
+    fft_wrapper_free(buf0);
+    fft_wrapper_free(buf1);
+    free(freq);
+    return ret_code;
 }
