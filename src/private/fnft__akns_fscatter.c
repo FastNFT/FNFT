@@ -363,6 +363,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             
             break;
         case akns_discretization_2SPLIT4A:
+        case akns_discretization_4SPLIT4A:
 
             e_2B = &e_Bstorage[0];
             e_4B = &e_Bstorage[3];
@@ -402,6 +403,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
 
             break;
         case akns_discretization_2SPLIT4B:
+        case akns_discretization_4SPLIT4B:
 
             e_0_5B = &e_Bstorage[0];
             e_1B = &e_Bstorage[3];

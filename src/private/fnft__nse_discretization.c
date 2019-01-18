@@ -15,7 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017.
-* Shrinivas Chimmalgi (TU Delft) 2017.
+* Shrinivas Chimmalgi (TU Delft) 2017-2019.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -53,6 +53,21 @@ REAL fnft__nse_discretization_boundary_coeff(nse_discretization_t nse_discretiza
     bnd_coeff = akns_discretization_boundary_coeff(akns_discretization);
     leave_fun:    
         return bnd_coeff;
+}
+
+/**
+ * This routine returns the scaling for effective number of samples based on the discretization.
+ */
+UINT fnft__nse_discretization_D_scale(nse_discretization_t nse_discretization)
+{
+    akns_discretization_t akns_discretization = 0;
+    UINT D_scale = 0;
+    INT ret_code;
+    ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
+    CHECK_RETCODE(ret_code, leave_fun);    
+    D_scale = akns_discretization_D_scale(akns_discretization);
+    leave_fun:    
+        return D_scale;
 }
 
 /**
@@ -122,7 +137,13 @@ INT fnft__nse_discretization_to_akns_discretization(nse_discretization_t nse_dis
             break;
         case nse_discretization_BO:
             *akns_discretization = akns_discretization_BO;
-            break;            
+            break;   
+        case nse_discretization_4SPLIT4A:
+            *akns_discretization = akns_discretization_4SPLIT4A;
+            break;
+        case nse_discretization_4SPLIT4B:
+            *akns_discretization = akns_discretization_4SPLIT4B;
+            break;         
             
         default: // Unknown discretization
             return E_INVALID_ARGUMENT(nse_discretization);

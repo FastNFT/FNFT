@@ -217,8 +217,8 @@ FNFT_COMPLEX fnft__misc_CSINC(FNFT_COMPLEX x);
 FNFT_UINT fnft__misc_nextpowerof2(const FNFT_UINT number);
 
 
-FNFT_INT fnft__misc_resample(const FNFT_UINT D, FNFT_REAL const eps_t, FNFT_COMPLEX const * const q,
-    FNFT_REAL const delta, FNFT_COMPLEX *const q_new);
+FNFT_INT fnft__misc_resample(const FNFT_UINT D, const FNFT_REAL eps_t, FNFT_COMPLEX const * const q,
+    const FNFT_REAL delta, FNFT_COMPLEX *const q_new);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define misc_print_buf(...) fnft__misc_print_buf(__VA_ARGS__)

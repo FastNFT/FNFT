@@ -339,10 +339,11 @@ INT misc_resample(const UINT D, const REAL eps_t, COMPLEX const * const q,
     COMPLEX *buf0 = NULL, *buf1 = NULL;
     REAL *freq = NULL;
     INT ret_code;
-    UINT i, len, lenmem;
+    UINT i;
     // Allocate memory
-    len = misc_nextpowerof2(D);
-    lenmem = len * sizeof(COMPLEX);
+    const UINT len = misc_nextpowerof2(D);
+    //printf("%ld \n",len);
+    const UINT lenmem = len * sizeof(COMPLEX);
     buf0 = fft_wrapper_malloc(lenmem);
     buf1 = fft_wrapper_malloc(lenmem);
     freq = malloc(len * sizeof(REAL));
@@ -363,20 +364,23 @@ INT misc_resample(const UINT D, const REAL eps_t, COMPLEX const * const q,
         buf0[i] = q[i];
     for (i = D+1; i < len; i++)
         buf0[i] = 0;
+
+    for (i = 0; i < len; i++)
+        buf1[i] = 0.0; 
     ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf1);
     CHECK_RETCODE(ret_code, release_mem);
 
 
-
+    const REAL scl_factor = (REAL)len*eps_t;
     // Applying frequency shift
     for (i = 0; i <=len/2; i++)
-        freq[i] = i/(len*eps_t);
+        freq[i] = i/scl_factor;
     for (i = len/2+1; i < len; i++)
-        freq[i] = ((INT)i - (INT)len)/(len*eps_t);
+        freq[i] = ((REAL)i - (REAL)len)/scl_factor;
 
-    for (i = 0; i < len; i++)
-        buf1[i] = buf1[i]*CEXP(2*I*PI*freq[i]*delta);
-
+    for (i = 0; i < len; i++) {
+        buf1[i] *= CEXP(2*I*PI*delta*freq[i]);
+    }
 
     // Inverse FFT and truncation
     ret_code = fft_wrapper_execute_plan(plan_inv, buf1, buf0);

@@ -65,7 +65,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
     const REAL eps_t = (T[1] - T[0])/(D - 1);
     
     if (*trunc_index_ptr == D){
-        // Heuristic for where to split the potential: Find the poINT where the
+        // Heuristic for where to split the potential: Find the point where the
         // L1 norm of the left half is equal to that of the right half
         i0 = 0;
         i1 = D-1;
