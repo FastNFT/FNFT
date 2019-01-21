@@ -174,13 +174,14 @@ typedef enum {
  */
 typedef struct {
     fnft_nsev_bsfilt_t bound_state_filtering;
-  fnft_nsev_bsloc_t bound_state_localization;
+    fnft_nsev_bsloc_t bound_state_localization;
     FNFT_UINT niter;
     FNFT_UINT Dsub;
     fnft_nsev_dstype_t discspec_type;
     fnft_nsev_cstype_t contspec_type;
     FNFT_INT normalization_flag;
     fnft_nse_discretization_t discretization;
+    FNFT_UINT richardson_extrapolation_flag;
 } fnft_nsev_opts_t;
 
 /**

@@ -26,15 +26,15 @@ INT main()
 {
     INT ret_code, i;
     fnft_nsev_opts_t opts;
-    UINT D = 1024;
+    UINT D = 1023;
     const nsev_testcases_t tc = nsev_testcases_SECH_FOCUSING;
     REAL error_bounds[6] = { 
-        9.8e-8,     // reflection coefficient
+        10.0e-8,     // reflection coefficient
         2.7e-7,     // a
         8.3e-8,     // b
-        1,     // bound states
-        1,      // norming constants
-        1      // residues 
+        1.4e-8,     // bound states
+        5e-15,      // norming constants
+        6.4e-8      // residues 
     };
 
     opts = fnft_nsev_default_opts();
@@ -45,13 +45,13 @@ INT main()
 
     // Check the case where D is not a power of two. The error bounds have to
     // be tight but not too tight for this to make sense!
-    //ret_code = nsev_testcases_test_fnft(tc, D+1, error_bounds, &opts);
-    //CHECK_RETCODE(ret_code, leave_fun);
-    //ret_code = nsev_testcases_test_fnft(tc, D-1, error_bounds, &opts);
-    //CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = nsev_testcases_test_fnft(tc, D+1, error_bounds, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = nsev_testcases_test_fnft(tc, D-1, error_bounds, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
 
 
-    // Check for quadratic error decay (error_bounds[4] stays as it is because it is
+    // Check for fourth-order error decay (error_bounds[4] stays as it is because it is
     // already close to machine precision)
     D *= 2;
     for (i=0; i<6; i++)

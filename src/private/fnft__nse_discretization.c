@@ -143,7 +143,10 @@ INT fnft__nse_discretization_to_akns_discretization(nse_discretization_t nse_dis
             break;
         case nse_discretization_4SPLIT4B:
             *akns_discretization = akns_discretization_4SPLIT4B;
-            break;         
+            break;        
+        case nse_discretization_CF4_2:
+            *akns_discretization = akns_discretization_CF4_2;
+            break; 
             
         default: // Unknown discretization
             return E_INVALID_ARGUMENT(nse_discretization);

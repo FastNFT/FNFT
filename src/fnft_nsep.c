@@ -406,10 +406,7 @@ static inline INT subsample_and_refine(const UINT D,
     Dsub = POW(2.0, CEIL( 0.5 * LOG2(D * LOG2(D) * LOG2(D)) ));
     UINT first_last_index[2] = { 0, 0 };
     ret_code = misc_downsample(D, q, &Dsub, &qsub, first_last_index);
-    if ( first_last_index[0] != 0 || first_last_index[1]+1 != D )
-        return E_ASSERTION_FAILED; // Correct update of T for general
-                                   // downsampling still needs to be
-                                   // implemented
+
 
     // Allocate memory for the transfer matrix
     i = nse_fscatter_numel(Dsub, opts_ptr->discretization);

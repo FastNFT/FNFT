@@ -293,7 +293,7 @@ INT misc_downsample(const UINT D, COMPLEX const * const q,
 
     // Original index of the first and last sample in qsub
     first_last_index[0] = 0;
-    first_last_index[1] = i - 1;
+    first_last_index[1] = i - nskip_per_step;
 
     *qsub_ptr = qsub;
     *Dsub_ptr = Dsub;
@@ -341,8 +341,7 @@ INT misc_resample(const UINT D, const REAL eps_t, COMPLEX const * const q,
     INT ret_code;
     UINT i;
     // Allocate memory
-    const UINT len = misc_nextpowerof2(D);
-    //printf("%ld \n",len);
+    const UINT len = fft_wrapper_next_fft_length(D);
     const UINT lenmem = len * sizeof(COMPLEX);
     buf0 = fft_wrapper_malloc(lenmem);
     buf1 = fft_wrapper_malloc(lenmem);
@@ -362,11 +361,9 @@ INT misc_resample(const UINT D, const REAL eps_t, COMPLEX const * const q,
     // Zero padding and FFT of q
     for (i = 0; i < D; i++)
         buf0[i] = q[i];
-    for (i = D+1; i < len; i++)
-        buf0[i] = 0;
+    for (i = D; i < len; i++)
+        buf0[i] = 0.0;
 
-    for (i = 0; i < len; i++)
-        buf1[i] = 0.0; 
     ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf1);
     CHECK_RETCODE(ret_code, release_mem);
 

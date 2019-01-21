@@ -32,9 +32,9 @@ INT main()
         5.2e-8,     // reflection coefficient
         1.6e-7,     // a
         4.5e-8,     // b
-        1,     // bound states
-        1,      // norming constants
-        1      // residues 
+        1.4e-8,     // bound states
+        5e-15,      // norming constants
+        6.3e-8     // residues 
     };
 
     opts = fnft_nsev_default_opts();
@@ -55,7 +55,7 @@ INT main()
 
 
 
-    // Check for quadratic error decay (error_bounds[4] stays as it is because it is
+    // Check for fourth-order error decay (error_bounds[4] stays as it is because it is
     // already close to machine precision)
     D *= 2;
     for (i=0; i<6; i++)

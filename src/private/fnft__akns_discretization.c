@@ -127,9 +127,11 @@ UINT fnft__akns_discretization_D_scale(akns_discretization_t discretization)
         case akns_discretization_2SPLIT8A:
         case akns_discretization_2SPLIT8B:
         case akns_discretization_2SPLIT2_MODAL:
+        case akns_discretization_BO:
             return 1;
         case akns_discretization_4SPLIT4A:
         case akns_discretization_4SPLIT4B:
+        case akns_discretization_CF4_2:
             return 2;
             
         default: // Unknown discretization
