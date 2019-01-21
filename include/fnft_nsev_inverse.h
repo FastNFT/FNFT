@@ -91,11 +91,11 @@ typedef enum {
  *  The maximum number of iterations can be controlled using the max_iter
  *  field in \link fnft_nsev_inverse_opts_t \endlink. Requires M=D. Defocusing
  *  case only.\n\n
- *  fnft_nsev_inverse_csmethod_USE_SEED_POTENTIAL_INSTEAD: This algorithm 
- *  adds discrete spectrum over the given seed potential. It uses Boffetta and Osborne 
+ *  fnft_nsev_inverse_csmethod_USE_SEED_POTENTIAL_INSTEAD: This algorithm
+ *  adds discrete spectrum over the given seed potential. It uses Boffetta and Osborne
  * (<a href="http://dx.doi.org/10.1016/0021-9991(92)90370-E">J. Comput. Physics 1992 </a>)
  *  method to compute the intermediate eigenfunctions and then uses the classical
- *  Darboux transform in <a href="https://doi.org/10.1007/BF02015338">[Lin, 
+ *  Darboux transform in <a href="https://doi.org/10.1007/BF02015338">[Lin,
  *  J. Acta Mathematicae Applicatae Sinica (1990) 6: 308]</a> to add the discrete spectrum.
  */
 typedef enum {
@@ -176,7 +176,7 @@ fnft_nsev_inverse_opts_t fnft_nsev_inverse_default_opts();
  * the grid that has to be used when providing a continuous spectrum
  * to \link fnft_nsev_inverse \endlink.
  *
- * @param[in] D Number of samples of the to be generated signal q.
+ * @param[in] D Number of samples of the to be generated signal q. Should be >=2.
  * @param[in] T Array of length two. Contains the desired location
  *  of the first and last sample of the signal q.
  * @param[in] M Number of samples in the nonlinear frequency domain.
@@ -238,11 +238,12 @@ FNFT_INT fnft_nsev_inverse_XI(
  *  whether the user adheres to this requirement.
  * @param[in] K Number of discrete spectrum points.
  * @param[in] bound_states Complex array of length K. Complex roots of
- * \f$ a(\xi) \f$ in the upper half of the complex-plane.
+ *  \f$ a(\xi) \f$ in the upper half of the complex-plane.
  * @param[in] normconsts_or_residues Complex array of length K. Values of
- * either the norming constants \f$ b(\xi) \f$ or the residues
- * \f$ \frac{b(\xi)}{\partial{a(\xi)}/\partial{\xi}}\f$ at the values bound_states.
- * @param[in] D Number of samples of the to be generated signal q.
+ *  either the norming constants \f$ b(\xi) \f$ or the residues
+ *  \f$ \frac{b(\xi)}{\partial{a(\xi)}/\partial{\xi}}\f$ at the values bound_states.
+ * @param[in] D Number of samples of the to be generated signal q. Should be a
+ *  positive power of two.
  * @param[out] q Array of length D. Is filled with samples
  *  \f$ q(t_n) \f$, where \f$ t_n = T[0] + n(T[1]-T[0])/(D-1) \f$
  *  and \f$n=0,1,\dots,D-1\f$, of the to-be-generated signal in ascending order
