@@ -125,79 +125,12 @@ static inline INT fnft_nsev_base(
         const INT kappa,
         fnft_nsev_opts_t *opts);
 
-static inline INT fnft_nsev_base_wrapper(
-        const UINT D,
-        COMPLEX * const q,
-        REAL const * const T,
-        const UINT M,
-        COMPLEX * const contspec,
-        REAL const * const XI,
-        UINT * const K_ptr,
-        COMPLEX * const bound_states,
-        COMPLEX * const normconsts_or_residues,
-        const INT kappa,
-        fnft_nsev_opts_t *opts);
-
 /**
  * Fast nonlinear Fourier transform for the nonlinear Schroedinger
  * equation with vanishing boundary conditions.
  * See the header file for documentation.
  */
 INT fnft_nsev(
-        const UINT D,
-        COMPLEX * const q,
-        REAL const * const T,
-        const UINT M,
-        COMPLEX * const contspec,
-        REAL const * const XI,
-        UINT * const K_ptr,
-        COMPLEX * const bound_states,
-        COMPLEX * const normconsts_or_residues,
-        const INT kappa,
-        fnft_nsev_opts_t *opts)
-{
-    
-//     COMPLEX *q_1 = NULL;
-//     COMPLEX *q_2 = NULL;
-//     COMPLEX *q_effective = NULL;
-    INT ret_code = SUCCESS;
-    UINT i, j, D_scale, D_effective;// D_scale*D gives the effective number of samples
-    
-    // Check inputs
-    if (D < 2)
-        return E_INVALID_ARGUMENT(D);
-    if (q == NULL)
-        return E_INVALID_ARGUMENT(q);
-    if (T == NULL || T[0] >= T[1])
-        return E_INVALID_ARGUMENT(T);
-    if (contspec != NULL) {
-        if (XI == NULL || XI[0] >= XI[1])
-            return E_INVALID_ARGUMENT(XI);
-    }
-    if (abs(kappa) != 1)
-        return E_INVALID_ARGUMENT(kappa);
-    if (bound_states != NULL) {
-        if (K_ptr == NULL)
-            return E_INVALID_ARGUMENT(K_ptr);
-    }
-    if (opts == NULL)
-        opts = &default_opts;
-    
-    if (opts->richardson_extrapolation_flag == 0)
-    {
-        ret_code = fnft_nsev_base_wrapper(D, q, T, M, contspec, XI, K_ptr,
-                bound_states, normconsts_or_residues, kappa, opts);
-        CHECK_RETCODE(ret_code, release_mem);
-        
-    }
-    
-    release_mem:
-//         free(qsub);
-        return ret_code;
-        
-        
-}
-static inline INT fnft_nsev_base_wrapper(
         const UINT D,
         COMPLEX * const q,
         REAL const * const T,
@@ -217,6 +150,15 @@ static inline INT fnft_nsev_base_wrapper(
     COMPLEX *q_1 = NULL;
     COMPLEX *q_2 = NULL;
     COMPLEX *q_effective = NULL;
+    UINT Dsub = 0;
+    REAL Tsub[2] = {0.0 ,0.0};
+    UINT first_last_index[2];
+    UINT K_sub;
+    COMPLEX *contspec_sub = NULL;
+    COMPLEX *bound_states_sub = NULL;
+    COMPLEX  *normconsts_or_residues_sub = NULL;
+    INT bs_loc_opt = 0;
+    UINT nskip_per_step;
     INT ret_code = SUCCESS;
     UINT i, j, D_scale, D_effective;// D_scale*D gives the effective number of samples
     
@@ -262,8 +204,7 @@ static inline INT fnft_nsev_base_wrapper(
         
         ret_code = misc_resample(D, eps_t, q, -eps_t*scl_factor, q_1);
         CHECK_RETCODE(ret_code, release_mem);
-        REAL some_val  = eps_t*scl_factor;
-        ret_code = misc_resample(D, eps_t, q, some_val, q_2);
+        ret_code = misc_resample(D, eps_t, q, eps_t*scl_factor, q_2);
         CHECK_RETCODE(ret_code, release_mem);
         
         j = 0;
@@ -287,11 +228,17 @@ static inline INT fnft_nsev_base_wrapper(
         // First step: Find initial guesses for the bound states using the
         // fast eigenvalue method. To bound the complexity, a subsampled
         // version of q, qsub, will be passed to the fast eigenroutine.
-        UINT Dsub = opts->Dsub;
+        Dsub = opts->Dsub;
         if (Dsub == 0) // The user wants us to determine Dsub
             Dsub = SQRT(D * LOG2(D) * LOG2(D));
-        UINT first_last_index[2];
+        nskip_per_step = ROUND((REAL)D / Dsub);
+        Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
+        
         if (D_scale == 2) {
+            ret_code = misc_resample(D, eps_t, q, -eps_t*scl_factor*nskip_per_step, q_1);
+            CHECK_RETCODE(ret_code, release_mem);
+            ret_code = misc_resample(D, eps_t, q, eps_t*scl_factor*nskip_per_step, q_2);
+            CHECK_RETCODE(ret_code, release_mem);
             ret_code = misc_downsample(D, q_1, &Dsub, &qsub_1, first_last_index);
             CHECK_RETCODE(ret_code, release_mem);
             ret_code = misc_downsample(D, q_2, &Dsub, &qsub_2, first_last_index);
@@ -317,8 +264,8 @@ static inline INT fnft_nsev_base_wrapper(
         }
         
         
-        REAL const Tsub[2] = { T[0] + first_last_index[0]*eps_t,
-        T[0] + first_last_index[1]*eps_t };
+        Tsub[0] = T[0] + first_last_index[0]*eps_t;
+        Tsub[1] = T[0] + first_last_index[1]*eps_t;
         
         // Fixed bound states of qsub using the fast eigenvalue method
         opts->bound_state_localization = nsev_bsloc_FAST_EIGENVALUE;
@@ -341,6 +288,141 @@ static inline INT fnft_nsev_base_wrapper(
         
     }
     
+    if (opts->richardson_extrapolation_flag == 1){
+        // TODO - Optimize memory allocation
+        // Allocating memory
+        UINT contspec_len = 0;
+        if (contspec != NULL && M > 0){
+            switch (opts->contspec_type) {
+                case nsev_cstype_BOTH:
+                    contspec_len = 3*M;
+                    break;
+                case nsev_cstype_REFLECTION_COEFFICIENT:
+                    contspec_len = M;
+                    break;
+                case nsev_cstype_AB:
+                    contspec_len = 2*M;
+                    break;
+                default:
+                    ret_code = E_INVALID_ARGUMENT(opts->contspec_type);
+                    goto release_mem;
+            }
+            contspec_sub = malloc(contspec_len * sizeof(COMPLEX));
+            if (contspec_sub == NULL) {
+                ret_code = E_NOMEM;
+                goto release_mem;
+            }
+        }
+        UINT discspec_len = 0;
+        if (kappa == +1 && bound_states != NULL && *K_ptr != 0) {
+            K_sub = *K_ptr;
+            bound_states_sub = malloc(K_sub * sizeof(COMPLEX));
+            discspec_len = K_sub;
+            switch (opts->discspec_type) {
+                case nsev_dstype_BOTH:
+                    discspec_len = 2*K_sub;
+                    break;
+                case nsev_dstype_NORMING_CONSTANTS:
+                case nsev_dstype_RESIDUES:
+                    discspec_len = K_sub;
+                    break;
+                default:
+                    ret_code = E_INVALID_ARGUMENT(opts->discspec_type);
+                    goto release_mem;
+            }
+            normconsts_or_residues_sub = malloc(discspec_len * sizeof(COMPLEX));
+            if (normconsts_or_residues_sub == NULL || bound_states_sub == NULL) {
+                ret_code = E_NOMEM;
+                goto release_mem;
+            }
+            for (i=0; i<K_sub; i++)
+                bound_states_sub[i] = bound_states[i];
+        }
+        // Preparing q_effective
+        REAL method_order = 2.0;
+        Dsub = CEIL(D/2);
+        nskip_per_step = ROUND((REAL)D / Dsub);
+        Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
+        if (D_scale == 2) {
+            method_order = 4.0;
+            ret_code = misc_resample(D, eps_t, q, -eps_t*scl_factor*nskip_per_step, q_1);
+            CHECK_RETCODE(ret_code, release_mem);
+            ret_code = misc_resample(D, eps_t, q, eps_t*scl_factor*nskip_per_step, q_2);
+            CHECK_RETCODE(ret_code, release_mem);
+            ret_code = misc_downsample(D, q_1, &Dsub, &qsub_1, first_last_index);
+            CHECK_RETCODE(ret_code, release_mem);
+            ret_code = misc_downsample(D, q_2, &Dsub, &qsub_2, first_last_index);
+            CHECK_RETCODE(ret_code, release_mem);
+            qsub_effective = malloc(Dsub * D_scale * sizeof(COMPLEX));
+            if (qsub_effective == NULL) {
+                ret_code = E_NOMEM;
+                goto release_mem;
+            }
+            j = 0;
+            for (i=0; i < Dsub; i++) {
+                qsub_effective[j] = (qsub_1[i]+qsub_2[i])/4.0 - (qsub_2[i]-qsub_1[i])*scl_factor;
+                j = j+2;
+            }
+            j = 1;
+            for (i=0; i < Dsub; i++) {
+                qsub_effective[j] = (qsub_1[i]+qsub_2[i])/4.0 + (qsub_2[i]-qsub_1[i])*scl_factor;
+                j = j+2;
+            }
+        } else if (D_scale == 1) {
+            method_order = 2.0;
+            ret_code = misc_downsample(D, q, &Dsub, &qsub_effective, first_last_index);
+            CHECK_RETCODE(ret_code, release_mem);
+        }
+        Tsub[0] = T[0] + first_last_index[0]*eps_t;
+        Tsub[1] = T[0] + first_last_index[1]*eps_t;
+        const REAL eps_t_sub = (Tsub[1] - Tsub[0])/(Dsub - 1);
+        // Calling fnft_nsev_base with subsampled signal
+        bs_loc_opt = opts->bound_state_localization;
+        opts->bound_state_localization = nsev_bsloc_NEWTON;
+        ret_code = fnft_nsev_base(Dsub * D_scale, qsub_effective, Tsub, M, contspec_sub, XI, &K_sub,
+                bound_states_sub, normconsts_or_residues_sub, kappa, opts);
+        CHECK_RETCODE(ret_code, release_mem);
+        opts->bound_state_localization = bs_loc_opt;
+        // Richardson step
+        REAL const scl_num = POW(nskip_per_step,method_order);
+        REAL const scl_den = scl_num - 1.0;
+        REAL const dxi = (XI[1]-XI[0])/(M-1);
+        if (contspec != NULL && M > 0){
+            for (i=0; i<M; i++){
+                if (FABS(XI[0]+dxi*i) < 0.9*PI/(2.0*eps_t_sub)){
+                    for (j=0; j<contspec_len; j+=M)
+                        contspec[i+j] = (scl_num*contspec[i+j] - contspec_sub[i+j])/scl_den;
+                }
+            }
+        }
+        if (kappa == +1 && bound_states != NULL && *K_ptr != 0 && K_sub != 0) {
+            UINT loc = K_sub;
+            REAL bs_err_thres = eps_t;
+            REAL bs_err = eps_t;
+            UINT K = *K_ptr;
+                        misc_print_buf(2*K,normconsts_or_residues,"BS");
+                        misc_print_buf(2*K_sub,normconsts_or_residues_sub,"BS_sub");
+
+            for (i=0; i<K; i++){
+                loc = K_sub;
+                bs_err_thres = eps_t;
+                for (j=0; j<K_sub; j++){
+                    bs_err = CABS(bound_states[i]-bound_states_sub[j])/CABS(bound_states[i]);
+                    if (bs_err < bs_err_thres){
+                        bs_err_thres = bs_err;
+                        loc = j;
+                    }
+                }
+                if (loc < K_sub){
+                    printf("loc = %ld\n",loc);
+                    bound_states[i] = (scl_num*bound_states[i] - bound_states_sub[loc])/scl_den;
+//                     for (j=0; j<discspec_len/K; j++)
+//                         normconsts_or_residues[i+j*K] = (scl_num*normconsts_or_residues[i+j*K] - normconsts_or_residues_sub[loc+j*K_sub])/scl_den;
+                }
+            }
+        }
+    }
+
     release_mem:
         free(transfer_matrix);
         free(qsub_1);
@@ -349,6 +431,9 @@ static inline INT fnft_nsev_base_wrapper(
         free(q_1);
         free(q_2);
         free(q_effective);
+        free(contspec_sub);
+        free(bound_states_sub);
+        free(normconsts_or_residues_sub);
         return ret_code;
 }
 static inline INT fnft_nsev_base(
