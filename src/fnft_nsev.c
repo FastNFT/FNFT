@@ -157,7 +157,8 @@ INT fnft_nsev(
     COMPLEX *contspec_sub = NULL;
     COMPLEX *bound_states_sub = NULL;
     COMPLEX  *normconsts_or_residues_sub = NULL;
-    INT bs_loc_opt = 0;
+    COMPLEX  *normconsts_or_residues_reserve = NULL;
+    INT bs_loc_opt = 0, ds_type_opt = 0;
     UINT nskip_per_step;
     INT ret_code = SUCCESS;
     UINT i, j, D_scale, D_effective;// D_scale*D gives the effective number of samples
@@ -192,6 +193,19 @@ INT fnft_nsev(
     // Determine step size
     const REAL eps_t = (T[1] - T[0])/(D - 1);
     const REAL scl_factor = SQRT(3.0)/6.0;
+    
+    normconsts_or_residues_reserve = normconsts_or_residues;
+    if (opts->richardson_extrapolation_flag == 1){
+        ds_type_opt = opts->discspec_type;
+        if (ds_type_opt == nsev_dstype_RESIDUES){
+            opts->discspec_type = nsev_dstype_BOTH;
+            normconsts_or_residues_reserve = malloc(*K_ptr*2 * sizeof(COMPLEX));
+            if (normconsts_or_residues_reserve == NULL) {
+                ret_code = E_NOMEM;
+                goto release_mem;
+            }
+        }
+    }
     
     // Resample signal
     if (D_scale == 2) {
@@ -276,7 +290,7 @@ INT fnft_nsev(
         // on the full signal and compute continuous spectrum
         opts->bound_state_localization = nsev_bsloc_NEWTON;
         ret_code = fnft_nsev_base(D_effective, q_effective, T, M, contspec, XI, K_ptr,
-                bound_states, normconsts_or_residues, kappa, opts);
+                bound_states, normconsts_or_residues_reserve, kappa, opts);
         CHECK_RETCODE(ret_code, release_mem);
         
         // Restore original state of opts
@@ -320,10 +334,10 @@ INT fnft_nsev(
             discspec_len = K_sub;
             switch (opts->discspec_type) {
                 case nsev_dstype_BOTH:
+                case nsev_dstype_RESIDUES:
                     discspec_len = 2*K_sub;
                     break;
                 case nsev_dstype_NORMING_CONSTANTS:
-                case nsev_dstype_RESIDUES:
                     discspec_len = K_sub;
                     break;
                 default:
@@ -383,6 +397,7 @@ INT fnft_nsev(
                 bound_states_sub, normconsts_or_residues_sub, kappa, opts);
         CHECK_RETCODE(ret_code, release_mem);
         opts->bound_state_localization = bs_loc_opt;
+        opts->discspec_type = ds_type_opt;
         // Richardson step
         REAL const scl_num = POW(nskip_per_step,method_order);
         REAL const scl_den = scl_num - 1.0;
@@ -400,9 +415,8 @@ INT fnft_nsev(
             REAL bs_err_thres = eps_t;
             REAL bs_err = eps_t;
             UINT K = *K_ptr;
-                        misc_print_buf(2*K,normconsts_or_residues,"BS");
-                        misc_print_buf(2*K_sub,normconsts_or_residues_sub,"BS_sub");
-
+           
+            
             for (i=0; i<K; i++){
                 loc = K_sub;
                 bs_err_thres = eps_t;
@@ -414,15 +428,26 @@ INT fnft_nsev(
                     }
                 }
                 if (loc < K_sub){
-                    printf("loc = %ld\n",loc);
                     bound_states[i] = (scl_num*bound_states[i] - bound_states_sub[loc])/scl_den;
-//                     for (j=0; j<discspec_len/K; j++)
-//                         normconsts_or_residues[i+j*K] = (scl_num*normconsts_or_residues[i+j*K] - normconsts_or_residues_sub[loc+j*K_sub])/scl_den;
+                    if (ds_type_opt == nsev_dstype_RESIDUES || ds_type_opt == nsev_dstype_BOTH){
+                        // Computing aprimes from residues and norming constants
+                        normconsts_or_residues_reserve[K+i] = normconsts_or_residues_reserve[i]/normconsts_or_residues_reserve[K+i];
+                        normconsts_or_residues_sub[K_sub+loc] = normconsts_or_residues_sub[loc]/normconsts_or_residues_sub[K_sub+loc];
+                        // Richardson step on aprime
+                        normconsts_or_residues_reserve[K+i] = (scl_num*normconsts_or_residues_reserve[K+i] - normconsts_or_residues_sub[loc+K_sub])/scl_den;
+                        // Computing residue
+                        normconsts_or_residues_reserve[K+i] = normconsts_or_residues_reserve[i]/normconsts_or_residues_reserve[K+i];
+                    }
                 }
             }
+            if (ds_type_opt == nsev_dstype_RESIDUES)
+                memcpy(normconsts_or_residues,normconsts_or_residues_reserve+K,K* sizeof(COMPLEX));
+            else if(ds_type_opt == nsev_dstype_BOTH)
+                memcpy(normconsts_or_residues,normconsts_or_residues_reserve,2*K* sizeof(COMPLEX));
+
         }
     }
-
+    
     release_mem:
         free(transfer_matrix);
         free(qsub_1);
