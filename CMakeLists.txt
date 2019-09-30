@@ -21,7 +21,7 @@ project(fnft C)
 
 set(FNFT_VERSION_MAJOR 0)
 set(FNFT_VERSION_MINOR 2)
-set(FNFT_VERSION_PATCH 1)
+set(FNFT_VERSION_PATCH 2)
 set(FNFT_VERSION_SUFFIX "-dev") # should not be longer than FNFT_SUFFIX_MAXLEN
 set(FNFT_VERSION ${FNFT_VERSION_MAJOR}.${FNFT_VERSION_MINOR}.${FNFT_VERSION_PATCH}${FNFT_VERSION_SUFFIX})
 
@@ -87,7 +87,6 @@ else()
         message("++ FFTW3 NOT found. Using Kiss FFT instead.")
     endif()
 endif()
-check_c_source_compiles("#pragma GCC optimize(\"Ofast\") \n int main() { int g = 1; return g; }" HAVE_PRAGMA_GCC_OPTIMIZE_OFAST)
 
 # header files
 include_directories(include)
@@ -110,6 +109,7 @@ if (CMAKE_COMPILER_IS_GNUCC) # gcc
         message("++ Enabling machine specific optimization in the C compiler")
   endif()
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -pedantic -Werror=implicit-function-declaration")
+  check_c_source_compiles("#pragma GCC optimize(\"Ofast\") \n int main() { int g = 1; return g; }" HAVE_PRAGMA_GCC_OPTIMIZE_OFAST)
 else()
   message(WARNING "++ Compiler is not gcc. Will try to set flags anyway.")
   if (DEBUG)
@@ -175,8 +175,8 @@ target_link_libraries(fnft ${FFTW3_LIB})
 file(GLOB PUBLIC_HEADERS "include/*.h")
 set_target_properties(fnft PROPERTIES VERSION ${FNFT_VERSION} SOVERSION ${FNFT_VERSION_MAJOR} LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib" PUBLIC_HEADER "${PUBLIC_HEADERS}")
 
-# installation under Linux
-install(TARGETS fnft LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include)
+# installation (under Windows, DLL's are considered runtime, while DLL import libraries are considered ARCHIVE)
+install(TARGETS fnft LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include RUNTIME DESTINATION lib ARCHIVE DESTINATION lib)
 
 # generate examples
 foreach (srcfile ${EXAMPLE_SOURCES})
@@ -213,7 +213,7 @@ if (WITH_MATLAB)
     foreach (srcfile ${MEX_SOURCES})
       get_filename_component(mexfile ${srcfile} NAME_WE)
       matlab_add_mex(NAME ${mexfile} SRC ${srcfile} LINK_TO fnft ${LIBM} ${FFTW3_LIB})
-      set_target_properties(${mexfile} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/matlab")
+      set_target_properties(${mexfile} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/matlab" COMPILE_FLAGS "-fvisibility=default")
       target_compile_options(${mexfile} PRIVATE -DMEX_DOUBLE_HANDLE)
       # -DMEX_DOUBLE_HANDLE avoids the new complex interleaved API
     endforeach()
