@@ -412,7 +412,7 @@ static inline INT tf2boundstates(
     COMPLEX * const bound_states,
     fnft_nsev_opts_t * const opts)
 {
-    REAL degree1step, map_coeff;
+    REAL degree1step;
     UINT K;
     REAL bounding_box[4] = { NAN };
     COMPLEX * buffer = NULL;
@@ -421,7 +421,7 @@ static inline INT tf2boundstates(
     degree1step = nse_discretization_degree(opts->discretization);
     if (degree1step == 0)
         return E_INVALID_ARGUMENT(opts->discretization);
-    map_coeff = 2.0/degree1step;
+    const REAL map_coeff = 2.0/degree1step;
 
     // Localize bound states ...
     switch (opts->bound_state_localization) {
