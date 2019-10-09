@@ -152,7 +152,7 @@ static inline INT poly_rescale(const UINT d, COMPLEX * const p)
 INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
     INT * const W_ptr)
 {
-    UINT i, j, deg, len, lenmem;
+    UINT i, j, deg, len;
     COMPLEX *p1, *p2, *result;
     fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
     fft_wrapper_plan_t plan_inv = fft_wrapper_safe_plan_init();
@@ -173,7 +173,7 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
     n += n_excess;
 
     // Allocate memory for calls to poly_fmult_two_polys
-    lenmem = poly_fmult_two_polys_len(deg * n/2) * sizeof(COMPLEX);
+    const UINT lenmem = poly_fmult_two_polys_len(deg * n/2) * sizeof(COMPLEX);
     buf0 = fft_wrapper_malloc(lenmem);
     buf1 = fft_wrapper_malloc(lenmem);
     buf2 = fft_wrapper_malloc(lenmem);
@@ -381,7 +381,7 @@ static inline INT poly_rescale2x2(const UINT d,
 INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
     COMPLEX * const result, INT * const W_ptr)
 {
-    UINT i, j, deg, lenmem, len;
+    UINT i, j, deg, len;
     UINT o1, o2, or; // pointer offsets
     COMPLEX *p11, *p12, *p21, *p22;
     COMPLEX *p11_pad, *p12_pad, *p21_pad, *p22_pad;
@@ -445,7 +445,7 @@ INT fnft__poly_fmult2x2(UINT * const d, UINT n, COMPLEX * const p,
     }
     
     // Allocate memory for calls to poly_fmult_two_polys2x2
-    lenmem = poly_fmult_two_polys_len(deg * n/2) * sizeof(COMPLEX);
+    const UINT lenmem = poly_fmult_two_polys_len(deg * n/2) * sizeof(COMPLEX);
     buf0 = fft_wrapper_malloc(lenmem);
     buf1 = fft_wrapper_malloc(lenmem);
     buf2 = fft_wrapper_malloc(lenmem);
