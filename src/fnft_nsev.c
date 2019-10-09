@@ -421,7 +421,7 @@ static inline INT tf2boundstates(
     degree1step = nse_discretization_degree(opts->discretization);
     if (degree1step == 0)
         return E_INVALID_ARGUMENT(opts->discretization);
-    map_coeff = 2/degree1step;
+    map_coeff = 2.0/degree1step;
 
     // Localize bound states ...
     switch (opts->bound_state_localization) {

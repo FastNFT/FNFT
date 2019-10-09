@@ -228,7 +228,7 @@ static inline INT gridsearch(const UINT D,
     degree1step = nse_discretization_degree(opts_ptr->discretization);
     if (degree1step == NAN)
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
-    map_coeff = 2/degree1step;
+    map_coeff = 2.0/degree1step;
     update_bounding_box_if_auto(eps_t, map_coeff, opts_ptr);
     PHI[0] = map_coeff*eps_t*opts_ptr->bounding_box[0];
     PHI[1] = map_coeff*eps_t*opts_ptr->bounding_box[1];
@@ -438,7 +438,7 @@ static inline INT subsample_and_refine(const UINT D,
     degree1step = nse_discretization_degree(opts_ptr->discretization);
     if (degree1step == NAN)
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
-    map_coeff = 2/degree1step;
+    map_coeff = 2.0/degree1step;
     update_bounding_box_if_auto(eps_t_sub, map_coeff, opts_ptr);
     tol_im = opts_ptr->bounding_box[1] - opts_ptr->bounding_box[0];
     tol_im /= oversampling_factor*(D - 1);
