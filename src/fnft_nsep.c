@@ -189,7 +189,6 @@ static inline INT gridsearch(const UINT D,
     COMPLEX * transfer_matrix = NULL;
     COMPLEX * p = NULL;
     COMPLEX * roots = NULL;
-    REAL degree1step;
     REAL PHI[2] = { 0.0, 2.0*PI };
 	UINT deg;
     INT W = 0, *W_ptr = NULL;
@@ -225,7 +224,7 @@ static inline INT gridsearch(const UINT D,
     CHECK_RETCODE(ret_code, release_mem);
 
     // Will be required later for coordinate transforms
-    degree1step = nse_discretization_degree(opts_ptr->discretization);
+    const REAL degree1step = nse_discretization_degree(opts_ptr->discretization);
     if (degree1step == NAN)
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
     const REAL map_coeff = 2.0/degree1step;
@@ -387,7 +386,6 @@ static inline INT subsample_and_refine(const UINT D,
     COMPLEX * p = NULL;
     COMPLEX * roots = NULL;
     COMPLEX * qsub = NULL;
-    REAL degree1step;
     REAL tol_im;
 	UINT deg;
     UINT Dsub;
@@ -435,7 +433,7 @@ static inline INT subsample_and_refine(const UINT D,
     CHECK_RETCODE(ret_code, release_mem);
 
     // Will be required later for coordinate transforms and filtering
-    degree1step = nse_discretization_degree(opts_ptr->discretization);
+    const REAL degree1step = nse_discretization_degree(opts_ptr->discretization);
     if (degree1step == NAN)
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
     const REAL map_coeff = 2.0/degree1step;

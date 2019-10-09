@@ -412,13 +412,12 @@ static inline INT tf2boundstates(
     COMPLEX * const bound_states,
     fnft_nsev_opts_t * const opts)
 {
-    REAL degree1step;
     UINT K;
     REAL bounding_box[4] = { NAN };
     COMPLEX * buffer = NULL;
     INT ret_code = SUCCESS;
 
-    degree1step = nse_discretization_degree(opts->discretization);
+    const REAL degree1step = nse_discretization_degree(opts->discretization);
     if (degree1step == 0)
         return E_INVALID_ARGUMENT(opts->discretization);
     const REAL map_coeff = 2.0/degree1step;
