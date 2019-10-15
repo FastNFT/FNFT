@@ -585,8 +585,7 @@ static inline INT refine_roots_newton(
     INT ret_code = SUCCESS;
     UINT i, iter;
     COMPLEX a_val, b_val, aprime_val, error;
-    REAL eprecision = EPSILON * 100;
-    REAL re_bound_val, im_bound_val;
+    const REAL eprecision = EPSILON * 100;
     UINT trunc_index;
     trunc_index = D;
     const REAL eps_t = (T[1] - T[0])/(D - 1);
@@ -603,11 +602,11 @@ static inline INT refine_roots_newton(
     if (T == NULL)
         return E_INVALID_ARGUMENT(T);
     
-    im_bound_val = im_bound(D, q, T);
+    const REAL im_bound_val = im_bound(D, q, T);
     if (im_bound_val == NAN)
         return E_OTHER("Upper bound on imaginary part of bound states is NaN");
     
-    re_bound_val = re_bound(eps_t, discretization);
+    const REAL re_bound_val = re_bound(eps_t, discretization);
         
     // Perform iterations of Newton's method
     for (i = 0; i < K; i++) {
