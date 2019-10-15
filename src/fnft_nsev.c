@@ -265,7 +265,7 @@ static inline INT tf2contspec(
 {
     COMPLEX *H11_vals, *H21_vals;
     COMPLEX A, V;
-    REAL xi, boundary_coeff, scale;
+    REAL xi, boundary_coeff;
     REAL phase_factor_rho, phase_factor_a, phase_factor_b;
     INT ret_code;
     UINT i, offset = 0;
@@ -340,7 +340,7 @@ static inline INT tf2contspec(
 
     case nsev_cstype_AB:
 
-        scale = POW(2.0, W); // needed since the transfer matrix might
+        const REAL scale = POW(2.0, W); // needed since the transfer matrix might
                                   // have been scaled by nse_fscatter
   
         ret_code = nse_phase_factor_a(eps_t, D, T, &phase_factor_a,opts->discretization);
