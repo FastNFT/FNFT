@@ -38,7 +38,7 @@ INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
 {
      
     INT ret_code = SUCCESS;
-    UINT i;
+    UINT i, D_scale;
     akns_discretization_t akns_discretization;
     COMPLEX *r = NULL;
     
@@ -60,7 +60,8 @@ INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
 
     ret_code = nse_discretization_to_akns_discretization(discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
-    
+
+
     r = malloc(D*sizeof(COMPLEX));
     if (r == NULL) {
         ret_code = E_NOMEM;

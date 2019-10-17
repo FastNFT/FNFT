@@ -864,15 +864,9 @@ static INT add_discrete_spectrum(
             ret_code = E_NOMEM;
             goto leave_fun;
         }
-//         // TODO: Find reason why this is needed
-        INT sgn_fac = 1;
-        if (K%2 != 0 &&
-                opts_ptr->contspec_inversion_method == fnft_nsev_inverse_csmethod_USE_SEED_POTENTIAL_INSTEAD){
-            sgn_fac = -1;
-            for (i = 0; i < K; i++)
-                norm_consts[i] = -norm_consts[i];
-        }
-//         //
+
+
+
         ret_code = compute_eigenfunctions(K, bnd_states, D, q, T, phi, psi);
         CHECK_RETCODE(ret_code, leave_fun);
         COMPLEX S1[K], S2[K], phi1, phi2, psi1, psi2, beta, qn;
@@ -901,7 +895,7 @@ static INT add_discrete_spectrum(
                 qn = qn - 2*I*S2[i];
 
             }
-            q[n] = sgn_fac*qn;
+            q[n] = qn;
         }
     }
     else

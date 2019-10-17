@@ -275,7 +275,7 @@ static INT nsep_compare_nfs(const UINT K1, const UINT K2,
     } else {
         dists[0] = misc_hausdorff_dist(K1, mainspec_1, K2, mainspec_2);
     }
-
+              
     // Compare auxiliary spectra
     if (M1 == 0 && M2 == 0) {
         dists[1] = 0.0;
@@ -366,10 +366,11 @@ fnft_nsep_opts_t * opts_ptr) {
         errs[1], error_bounds[1],
         errs[2], error_bounds[2]
     );
-    //print_buf2(K_exact, mainspec_exact, "mainspec_exact");
-    //print_buf2(K, mainspec, "mainspec");
-    //print_buf2(M_exact, auxspec_exact, "auxspec_exact");
-    //print_buf2(M, auxspec, "auxspec");
+    misc_print_buf(K_exact, mainspec_exact, "mainspec_exact");
+    misc_print_buf(K, mainspec, "mainspec");
+    misc_print_buf(M_exact, auxspec_exact, "auxspec_exact");
+    misc_print_buf(M, auxspec, "auxspec");
+
 #endif
 
     // Check if the errors are below the specified bounds. Organized such that

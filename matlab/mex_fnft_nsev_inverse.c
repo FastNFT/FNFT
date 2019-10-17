@@ -126,14 +126,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
             opts.discspec_type = fnft_nsev_inverse_dstype_RESIDUES;
 
-        } else if ( strcmp(str, "csmethod_use_seed_potential_intead") == 0 ) {
+        } else if ( strcmp(str, "csmethod_use_seed_potential_instead") == 0 ) {
 
             opts.contspec_inversion_method =
                 fnft_nsev_inverse_csmethod_USE_SEED_POTENTIAL_INSTEAD ;
             /* Extract initial potential */
             if ( k+1 == nrhs || !mxIsComplex(prhs[k+1])
                  || mxGetM(prhs[k+1]) != 1 || mxGetN(prhs[k+1]) != D ) {
-                snprintf(msg, sizeof msg, "'csmethod_use_seed_potential_intead' should be followed by a complex 1xD vector. Try passing complex(q0).");
+                snprintf(msg, sizeof msg, "'csmethod_use_seed_potential_instead' should be followed by a complex 1xD vector. Try passing complex(q0).");
                 goto on_error;
             }
             if ( M > 0 ) {

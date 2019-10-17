@@ -133,6 +133,80 @@ INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
 		        result[neig*8 + 7] = T[3][1];
             }
             break;
+
+        case akns_discretization_CF4_2: // forward-backward commutator-free fourth-order
+            
+            for (neig = 0; neig < K; neig++) { // iterate over lambda
+                l = lambda[neig]/2;
+                
+                COMPLEX T[4][4] =
+                    { {1,0,0,0}, {0,1,0,0},{0,0,1,0},{0,0,0,1} };
+                COMPLEX U[4][4] = {{ 0 }};
+               
+                for (n = D-1; n >= 0; n--){
+                    qn = q[n];
+                    rn = r[n];
+                    ks = ((q[n]*r[n])-(l*l));
+                    k = CSQRT(ks);
+                    ch = CCOSH(k*eps_t);
+                    chi = ch/ks;
+                    sh = CSINH(k*eps_t)/k;
+                    u1 = l*sh*I;
+                    ud1 = eps_t*l*l*chi*I;
+                    ud2 = l*(eps_t*ch-sh)/ks;
+                    
+		    if (ks != 0){
+                    U[0][0] = ch-u1;
+                    U[0][1] = qn*sh;
+                    U[1][0] = rn*sh;
+                    U[1][1] = ch + u1;
+                    U[2][0] = ud1-(l*eps_t+I+(l*l*I)/ks)*sh;
+                    U[2][1] = -qn*ud2;
+                    U[3][0] = -rn*ud2;
+                    U[3][1] = -ud1-(l*eps_t-I-(l*l*I)/ks)*sh;
+                    U[2][2] = ch-u1;
+                    U[2][3] = qn*sh;
+                    U[3][2] = rn*sh;
+                    U[3][3] = ch+u1;}
+                    else{
+                    U[0][0] = 1;
+                    U[0][1] = 0;
+                    U[1][0] = 0;
+                    U[1][1] = 1;
+                    U[2][0] = 1;
+                    U[2][1] = 0;
+                    U[3][0] = 0;
+                    U[3][1] = 1;
+                    U[2][2] = 1;
+                    U[2][3] = 0;
+                    U[3][2] = 0;
+                    U[3][3] = 1;}
+
+                    for (c1 = 0; c1 < 4; c1++) {
+                        for (c2 = 0; c2 < 4; c2++) {
+                            for (c3 = 0; c3 < 4; c3++) {
+                                sum = sum + T[c1][c3]*U[c3][c2];
+                            }
+                            TM[c1][c2] = sum;
+                            sum = 0;
+                        }
+                    }
+                    for (c1 = 0; c1 < 4; c1++) {
+                        for (c2 = 0; c2 < 4; c2++)
+                            T[c1][c2] = TM[c1][c2];
+                    }
+                }
+               
+		        result[neig*8] = T[0][0];
+		        result[neig*8 + 1] = T[0][1];
+		        result[neig*8 + 2] = T[1][0];
+		        result[neig*8 + 3] = T[1][1];
+		        result[neig*8 + 4] = 0.5*T[2][0];
+		        result[neig*8 + 5] = 0.5*T[2][1];
+		        result[neig*8 + 6] = 0.5*T[3][0];
+		        result[neig*8 + 7] = 0.5*T[3][1];
+            }
+            break;
             
         default: // Unknown discretization
             
