@@ -142,6 +142,9 @@ INT fnft__kdv_discretization_to_akns_discretization(kdv_discretization_t kdv_dis
         case kdv_discretization_4SPLIT4B:
             *akns_discretization = akns_discretization_4SPLIT4B;
             break;
+        case kdv_discretization_CF4_2:
+            *akns_discretization = akns_discretization_CF4_2;
+            break; 
             
         default: // Unknown discretization
             return E_INVALID_ARGUMENT(kdv_discretization);

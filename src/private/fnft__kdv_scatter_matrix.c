@@ -15,7 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
-* Shrinivas Chimmalgi (TU Delft) 2017-2018.
+* Shrinivas Chimmalgi (TU Delft) 2017-2019.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -58,7 +58,8 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
     ret_code = kdv_discretization_to_akns_discretization(discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);   
     
-    
+    UINT D_scale = akns_discretization_D_scale(akns_discretization);
+
     r = malloc(D*sizeof(COMPLEX));
     if (r == NULL) {
         ret_code = E_NOMEM;
@@ -66,7 +67,7 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
     }
     
     for (i = 0; i < D; i++)
-        r[i] = -1;
+        r[i] = -1/D_scale;
 
     
     ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result, akns_discretization);
