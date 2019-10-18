@@ -366,10 +366,12 @@ fnft_nsep_opts_t * opts_ptr) {
         errs[1], error_bounds[1],
         errs[2], error_bounds[2]
     );
+/*
     misc_print_buf(K_exact, mainspec_exact, "mainspec_exact");
     misc_print_buf(K, mainspec, "mainspec");
     misc_print_buf(M_exact, auxspec_exact, "auxspec_exact");
     misc_print_buf(M, auxspec, "auxspec");
+*/
 
 #endif
 

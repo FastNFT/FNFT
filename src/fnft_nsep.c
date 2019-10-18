@@ -96,7 +96,7 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
     
     
     // Check inputs
-    if (D < 2 || (D & (D-1)) != 0 )
+    if (D < 2)
         return E_INVALID_ARGUMENT(D);
     if (q == NULL)
         return E_INVALID_ARGUMENT(q);
@@ -202,15 +202,63 @@ static inline INT gridsearch(const UINT D,
     INT W = 0, *W_ptr = NULL;
     UINT K, K_filtered;
     UINT M;
-    UINT i;
+    UINT i, j, D_scale, D_effective;// D_scale*D gives the effective number of samples
     INT ret_code = SUCCESS;
-    
+    COMPLEX *q_effective = NULL;
+    COMPLEX *q_1 = NULL;
+    COMPLEX *q_2 = NULL;
     // Check inputs
     if (sheet_indices != NULL)
         return E_NOT_YET_IMPLEMENTED(sheet_indices, "Pass NULL");
     
+    D_scale = nse_discretization_D_scale(opts_ptr->discretization);
+    D_effective = D * D_scale;
+    
+    // Determine step size
+    const REAL eps_t = (T[1] - T[0])/D;
+    const REAL scl_factor = SQRT(3.0)/6.0;
+
+
+    if (D_scale == 2) {
+        q_1 = malloc(D * sizeof(COMPLEX));
+        q_2 = malloc(D * sizeof(COMPLEX));
+        q_effective = malloc(D_effective * sizeof(COMPLEX));
+        if (q_1 == NULL || q_2 == NULL || q_effective == NULL) {
+            ret_code = E_NOMEM;
+            goto release_mem;
+        }
+    }
+
+    q_effective = malloc(D_effective * sizeof(COMPLEX));
+    if (q_effective == NULL) {
+        ret_code = E_NOMEM;
+        goto release_mem;
+    }
+
+    // Create a resampled version of q if higher-order method is requested
+    if (D_scale == 2) {
+        ret_code = misc_resample(D, eps_t, q, -eps_t*scl_factor, q_1);
+        CHECK_RETCODE(ret_code, release_mem);
+        ret_code = misc_resample(D, eps_t, q, eps_t*scl_factor, q_2);
+        CHECK_RETCODE(ret_code, release_mem);
+
+        j = 0;
+        for (i=0; i < D; i++) {
+            q_effective[j] = (q_1[i]+q_2[i])/4.0 - (q_2[i]-q_1[i])*scl_factor;
+            j = j+2;
+        }
+        j = 1;
+        for (i=0; i < D; i++) {
+            q_effective[j] = (q_1[i]+q_2[i])/4.0 + (q_2[i]-q_1[i])*scl_factor;
+            j = j+2;
+        }
+
+    } else if (D_scale == 1) {
+        memcpy(q_effective, q, D * sizeof(COMPLEX));
+    }
+
     // Allocate memory for the transfer matrix
-    i = nse_fscatter_numel(D, opts_ptr->discretization);
+    i = nse_fscatter_numel(D_effective, opts_ptr->discretization);
     if (i == 0) { // since Dsub>=2, this means unknown discretization
         ret_code = E_INVALID_ARGUMENT(opts_ptr->discretization);
         goto release_mem;
@@ -220,14 +268,11 @@ static inline INT gridsearch(const UINT D,
         ret_code = E_NOMEM;
         goto release_mem;
     }
-    
-    // Determine step size
-    const REAL eps_t = (T[1] - T[0]) / D;
-    
+
     // Compute the transfer matrix
     if (opts_ptr->normalization_flag)
         W_ptr = &W;
-    ret_code = nse_fscatter(D, q, eps_t, kappa, transfer_matrix, &deg,
+    ret_code = nse_fscatter(D_effective, q_effective, eps_t, kappa, transfer_matrix, &deg,
             W_ptr, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
     
@@ -279,7 +324,7 @@ static inline INT gridsearch(const UINT D,
             ret_code = E_OTHER("Found more roots than memory is available.");
             goto release_mem;
         }
-        
+
         // Coordinate transform (from discrete-time to continuous-time domain)
         ret_code = nse_z_to_lambda(K, eps_t, roots, opts_ptr->discretization);
         CHECK_RETCODE(ret_code, release_mem);
@@ -378,6 +423,9 @@ static inline INT gridsearch(const UINT D,
         free(transfer_matrix);
         free(p);
         free(roots);
+        free(q_1);
+        free(q_2);
+        free(q_effective);
         
         return ret_code;
 }
