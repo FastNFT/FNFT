@@ -31,9 +31,9 @@ kappa = +1;     % focusing nonlinear Schroedinger equation
 
 %%% Setup the signal %%%
 
-t = T(1) + (0:D-1)*(T(2) - T(1))/D;
-% Note: The location of the 1st sample is T(1), but the location of the
-% sample if T(2) - (T(2)-T(1)/D.
+t = linspace(T(1),T(2),D);
+% Note: in the previous version of FNFT The location of the 1st sample is T(1), but the location of the
+% sample if T(2) - (T(2)-T(1)/D, i.e. t = T(1) + (0:D-1)*(T(2) - T(1))/D.
 q = 3*exp(3j*t);
 
 %%% Compute the nonlinear Fourier transform %%%

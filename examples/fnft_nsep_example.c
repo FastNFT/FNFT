@@ -36,12 +36,12 @@ int main()
     FNFT_COMPLEX q[D];
 
     // Location of the 1st time-domain sample and the beginning of the next
-    // period. Note: The last sample is thus located at t=T[1]-(T[1]-T[0])/D.
+    // period. Location of last sample is T[1]. In previous version it was T[1]-eps_t
     FNFT_REAL T[2] = { 0.0, 2.0*FNFT_PI };
 
     // Define a simple rectangular signal
     for (FNFT_UINT i=0; i<D; i++) {
-        FNFT_REAL t = T[0] + i*(T[1]-T[0])/D;
+        FNFT_REAL t = T[0] + i*(T[1]-T[0])/(D-1);
         q[i] = FNFT_CEXP(2.0*I*t);
     }
 

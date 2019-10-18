@@ -8,7 +8,7 @@
 %   Provides an interface to the C routine fnft_nsep.
 %
 % INPUTS
-%   q               Complex row vector of length D=2^n
+%   q               Complex row vector of length D>2
 %   T               Real 1x2 vector
 %   kappa           +1.0 or -1.0
 %

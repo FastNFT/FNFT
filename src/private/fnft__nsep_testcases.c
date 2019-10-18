@@ -113,7 +113,7 @@ INT nsep_testcases(nsep_testcases_t tc, const UINT D,
 
         T[0] = 0.0; // location of first sample and begin of period
         T[1] = 2.0*PI; // end of period
-        eps_t = 2.0*PI/D; // location of last sample is T[1]-eps_t
+        eps_t = 2.0*PI/(D-1); // location of last sample is T[1]. In previous version it was T[1]-eps_t
 
         for (i=0; i<D; i++)
             (*q_ptr)[i] = 2.0*CEXP( 3.0*I*(T[0] + i*eps_t) );
@@ -154,6 +154,7 @@ INT nsep_testcases(nsep_testcases_t tc, const UINT D,
 
         break;
 
+
    case nsep_testcases_CONSTANT_DEFOCUSING:
 
     /*  The following Matlab code was used to construct this test case. Note
@@ -184,7 +185,7 @@ INT nsep_testcases(nsep_testcases_t tc, const UINT D,
 
         T[0] = 0; // location of 1st sample
         T[1] = 1.0; // end of period
-        eps_t = (T[1] - T[0])/D; // location of last sample is T[1]-eps_t
+        eps_t = (T[1] - T[0])/(D - 1); // location of last sample is T[1]. In previous version it was T[1]-eps_t
 
         for (i=0; i<D; i++)
             (*q_ptr)[i] = (1.0 + 2.0*I)/5.0;
@@ -366,12 +367,12 @@ fnft_nsep_opts_t * opts_ptr) {
         errs[1], error_bounds[1],
         errs[2], error_bounds[2]
     );
-/*
+
     misc_print_buf(K_exact, mainspec_exact, "mainspec_exact");
     misc_print_buf(K, mainspec, "mainspec");
     misc_print_buf(M_exact, auxspec_exact, "auxspec_exact");
     misc_print_buf(M, auxspec, "auxspec");
-*/
+
 
 #endif
 

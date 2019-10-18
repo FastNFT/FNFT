@@ -90,9 +90,10 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
         const INT kappa, fnft_nsep_opts_t * opts_ptr)
 {
     INT ret_code = SUCCESS;
-    UINT K1, K2, M1, M2;// D_scale*D gives the effective number of samples
+    UINT i, K1, K2, M1, M2, D_effective;
     INT warn_flags[2] = { 0, 0 }; // 0 = no warning about too many points so
     // far, 1st val is for main spec, 2nd for aux
+    COMPLEX *q_effective = NULL;
     
     
     // Check inputs
@@ -115,8 +116,26 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
     if (opts_ptr->filtering != fnft_nsep_filt_NONE && main_spec == NULL && aux_spec != NULL)
         return E_INVALID_ARGUMENT(main_spec. Filtering of the auxiliary spectrum is not possible if the main spectrum is not computed.);
         
-        
-        
+    COMPLEX m_q = q[D-1]/q[0];
+  
+    if (CABS(1-CABS(m_q)) > 1e-2)
+        WARN("Signal q may not be (quasi-)periodic. abs(1-abs(q[D-1]/q[0]))>1e-2.");
+
+    REAL Lam_shift = CARG(m_q)/(-2*(T[1] - T[0]));
+    const REAL eps_t = (T[1] - T[0])/(D - 1);
+    D_effective = D-1;
+    q_effective = malloc(D_effective * sizeof(COMPLEX));
+    if (q_effective == NULL) {
+        ret_code = E_NOMEM;
+        goto leave_fun;
+    }
+
+    // Removing phase rotation along q
+    for (i=0; i < D_effective; i++)
+         q_effective[i] = q[i]*CEXP(2*I*Lam_shift*(T[0]+eps_t*i));
+    // Last sample is dropped as it is the beginning of next period
+
+
         switch (opts_ptr->localization) {
             
             case fnft_nsep_loc_MIXED:
@@ -129,13 +148,13 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
                 // Compute non-real points in the spectra via subsample & refine
                 
                 if (kappa == +1) {
-                    ret_code = subsample_and_refine(D, q, T, &K1, main_spec,
+                    ret_code = subsample_and_refine(D_effective, q_effective, T, &K1, main_spec,
                             &M1, aux_spec, sheet_indices, kappa, opts_ptr,
                             1 /*skip_real_flag*/, warn_flags);
                     CHECK_RETCODE(ret_code, leave_fun);
                 } else { // no non-real main spec in the defocusing case, pass NULL
                     K1 = 0;
-                    ret_code = subsample_and_refine(D, q, T, &K1, NULL,
+                    ret_code = subsample_and_refine(D_effective, q_effective, T, &K1, NULL,
                             &M1, aux_spec, sheet_indices, kappa, opts_ptr,
                             1 /*skip_real_flag*/, warn_flags);
                     CHECK_RETCODE(ret_code, leave_fun);
@@ -150,7 +169,7 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
                 
                 // Compute real points in the spectra via gridsearch
                 
-                ret_code = gridsearch(D, q, T, &K2, main_spec+K1,
+                ret_code = gridsearch(D_effective, q_effective, T, &K2, main_spec+K1,
                         &M2, aux_spec+M1, sheet_indices, kappa, opts_ptr, warn_flags);
                 CHECK_RETCODE(ret_code, leave_fun);
                 
@@ -163,7 +182,7 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
                 
             case fnft_nsep_loc_SUBSAMPLE_AND_REFINE:
                 
-                ret_code = subsample_and_refine(D, q, T, K_ptr, main_spec,
+                ret_code = subsample_and_refine(D_effective, q_effective, T, K_ptr, main_spec,
                         M_ptr, aux_spec, sheet_indices, kappa, opts_ptr,
                         0/*skip_real_flag*/, warn_flags);
                 CHECK_RETCODE(ret_code, leave_fun);
@@ -171,7 +190,7 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
                 
             case fnft_nsep_loc_GRIDSEARCH:
                 
-                ret_code = gridsearch(D, q, T, K_ptr, main_spec,
+                ret_code = gridsearch(D_effective, q_effective, T, K_ptr, main_spec,
                         M_ptr, aux_spec, sheet_indices, kappa, opts_ptr, warn_flags);
                 CHECK_RETCODE(ret_code, leave_fun);
                 break;
@@ -180,8 +199,12 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
                 
                 return E_INVALID_ARGUMENT(opts_ptr->discretization);
         }
-        
+    for (i=0; i < *K_ptr; i++)
+         main_spec[i] += Lam_shift;
+    for (i=0; i < *M_ptr; i++)
+         aux_spec[i] += Lam_shift;
         leave_fun:
+            free(q_effective);
             return ret_code;
             
 }
@@ -315,7 +338,7 @@ static inline INT gridsearch(const UINT D,
             p[i] = transfer_matrix[i] + CONJ(transfer_matrix[deg-i]);
         p[deg/2] += 2.0 * POW(2.0, -W); // the pow arises because
         // nse_fscatter rescales
-        
+        misc_print_buf(deg, p, "p"); 
         // Find the roots of p(z)
         K = oversampling_factor*deg;
         ret_code = poly_roots_fftgridsearch(deg, p, &K, PHI, roots);
@@ -328,7 +351,7 @@ static inline INT gridsearch(const UINT D,
         // Coordinate transform (from discrete-time to continuous-time domain)
         ret_code = nse_z_to_lambda(K, eps_t, roots, opts_ptr->discretization);
         CHECK_RETCODE(ret_code, release_mem);
-        
+
         // Filter the roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
             ret_code = misc_filter(&K, roots, NULL, opts_ptr->bounding_box);
