@@ -341,41 +341,47 @@ INT misc_resample(const UINT D, const REAL eps_t, COMPLEX const * const q,
     INT ret_code;
     UINT i;
     // Allocate memory
-    const UINT len = fft_wrapper_next_fft_length(D);
-    const UINT lenmem = len * sizeof(COMPLEX);
+
+
+    const UINT lenmem = D * sizeof(COMPLEX);
     buf0 = fft_wrapper_malloc(lenmem);
     buf1 = fft_wrapper_malloc(lenmem);
-    freq = malloc(len * sizeof(REAL));
+    freq = malloc(D * sizeof(REAL));
     if (buf0 == NULL || buf1 == NULL || freq == NULL) {
         ret_code = E_NOMEM;
         goto release_mem;
     }
 
-    ret_code = fft_wrapper_create_plan(&plan_fwd, len, buf0, buf1, -1);
+    ret_code = fft_wrapper_create_plan(&plan_fwd, D, buf0, buf1, -1);
     CHECK_RETCODE(ret_code, release_mem);
 
 
-    ret_code = fft_wrapper_create_plan(&plan_inv, len, buf0, buf1, 1);
+    ret_code = fft_wrapper_create_plan(&plan_inv, D, buf0, buf1, 1);
     CHECK_RETCODE(ret_code, release_mem);
 
-    // Zero padding and FFT of q
+    // Continuing the signal periodically
     for (i = 0; i < D; i++)
         buf0[i] = q[i];
-    for (i = D; i < len; i++)
-        buf0[i] = 0.0;
 
     ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf1);
     CHECK_RETCODE(ret_code, release_mem);
 
+    // Check that the signal spectrum decays sufficiently to ensure accurate interpolation
+    REAL tmp = CABS(buf1[0]);
+    for (i = 1; i<D; i++)
+        if (CABS(buf1[i]) > tmp)
+           tmp = CABS(buf1[i]);
+    if (CABS(buf1[D/2-1])/tmp > SQRT(EPSILON) || CABS(buf1[D/2+1])/tmp > SQRT(EPSILON))
+       WARN("Interplolation result maybe inaccurate. Signal may have discontinuity or insufficient samples provided.");
 
-    const REAL scl_factor = (REAL)len*eps_t;
+    const REAL scl_factor = (REAL)D*eps_t;
     // Applying phase shift
-    for (i = 0; i <len/2; i++)
+    for (i = 0; i <D/2; i++)
         freq[i] = i/scl_factor;
-    for (i = len/2; i < len; i++)
-        freq[i] = ((REAL)i - (REAL)len)/scl_factor;
+    for (i = D/2; i < D; i++)
+        freq[i] = ((REAL)i - (REAL)D)/scl_factor;
 
-    for (i = 0; i < len; i++) {
+    for (i = 0; i < D; i++) {
         buf1[i] *= CEXP(2*I*PI*delta*freq[i]);
     }
 
@@ -383,7 +389,7 @@ INT misc_resample(const UINT D, const REAL eps_t, COMPLEX const * const q,
     ret_code = fft_wrapper_execute_plan(plan_inv, buf1, buf0);
     CHECK_RETCODE(ret_code, release_mem);
     for (i = 0; i < D; i++)
-        q_new[i] = buf0[i]/len;
+        q_new[i] = buf0[i]/D;
 
 
 release_mem:  

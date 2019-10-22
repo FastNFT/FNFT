@@ -341,12 +341,13 @@ static inline INT gridsearch(const UINT D,
 
         // First, determine p(z) for the positive sign (+)
         for (i=0; i<=deg; i++)
-            p[i] = transfer_matrix[i] + CONJ(transfer_matrix[deg-i]);
+            p[i] = transfer_matrix[i] + transfer_matrix[3*(deg+1)+i]; //CONJ(transfer_matrix[deg-i]);
         if (deg%2 == 0)
             p[deg/2] += 2.0 * POW(2.0, -W); // the pow arises because
         else{
-            p[(deg-1)/2] += 1.0 * POW(2.0, -W);
-            p[(deg+1)/2] += 1.0 * POW(2.0, -W);
+            //p[(deg-1)/2] += 1.0 * POW(2.0, -W);
+            //p[(deg+1)/2] += 1.0 * POW(2.0, -W);
+            p[(INT)CEIL(deg/2)] += 2.0 * POW(2.0, -W);
         }
         //misc_print_buf(deg+1,p,"p");
         // Find the roots of p(z)
@@ -383,8 +384,9 @@ static inline INT gridsearch(const UINT D,
         if (deg%2 == 0)
             p[deg/2] -= 4.0 * POW(2.0, -W);
         else{
-            p[(deg-1)/2] -= 2.0 * POW(2.0, -W);
-            p[(deg+1)/2] -= 2.0 * POW(2.0, -W);
+            //p[(deg-1)/2] -= 2.0 * POW(2.0, -W);
+            //p[(deg+1)/2] -= 2.0 * POW(2.0, -W);
+            p[(INT)CEIL(deg/2)] -= 4.0 * POW(2.0, -W);
         }
         
         // Find the roots of the new p(z)
@@ -520,7 +522,9 @@ static inline INT subsample_and_refine(const UINT D,
             goto release_mem;
         }
     }
-    Dsub = POW(2.0, CEIL( 0.5 * LOG2(D * LOG2(D) * LOG2(D)) ));
+    //Dsub = POW(2.0, CEIL( 0.5 * LOG2(D * LOG2(D) * LOG2(D)) ));
+    Dsub = SQRT(D * LOG2(D) * LOG2(D));
+    //Dsub = D;
     nskip_per_step = ROUND((REAL)D / Dsub);
     Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
 
@@ -636,8 +640,9 @@ static inline INT subsample_and_refine(const UINT D,
         if (deg%2 == 0)
             p[deg/2] += 2.0 * POW(2.0, -W); // the pow arises because
         else{
-            p[(deg-1)/2] += 1.0 * POW(2.0, -W);
-            p[(deg+1)/2] += 1.0 * POW(2.0, -W);
+            //p[(deg-1)/2] += 1.0 * POW(2.0, -W);
+            //p[(deg+1)/2] += 1.0 * POW(2.0, -W);
+            p[(INT)CEIL(deg/2)] += 2.0 * POW(2.0, -W);
         }
         
         // Find the roots of p(z)
@@ -689,8 +694,9 @@ static inline INT subsample_and_refine(const UINT D,
         if (deg%2 == 0)
             p[deg/2] -= 4.0 * POW(2.0, -W);
         else{
-            p[(deg-1)/2] -= 2.0 * POW(2.0, -W);
-            p[(deg+1)/2] -= 2.0 * POW(2.0, -W);
+            //p[(deg-1)/2] -= 2.0 * POW(2.0, -W);
+            //p[(deg+1)/2] -= 2.0 * POW(2.0, -W);
+            p[(INT)CEIL(deg/2)] -= 4.0 * POW(2.0, -W);
         }
         
         // Find the roots of the new p(z)
