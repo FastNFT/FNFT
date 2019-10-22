@@ -52,6 +52,9 @@
 %   'discr_2split2A' Use split Boffetta-Osborne discretization.
 %   'discr_2split4A' Use fifth order splitting with 4th degree polynomial.
 %   'discr_2split4B' Use fifth order splitting with 2nd degree polynomial.
+%   'discr_4split4B' Fourth-order method. Uses fifth order splitting with 
+%                    2nd degree polynomial.
+%   'RE'       Use Richardson extrpolation to improve accuracy.
 %   'dstype_residues'   Return residues instead of norming constants
 %   'cstype_ab'     Returns values of a(xi) and b(xi) individually instead
 %                   of the values of reflection coefficient b(xi)/a(xi)

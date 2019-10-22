@@ -16,6 +16,7 @@
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
  * Marius Brehler (TU Dortmund) 2018.
+ * Shrinivas Chimmalgi (TU Delft) 2019.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -203,9 +204,9 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
          main_spec[i] += Lam_shift;
     for (i=0; i < *M_ptr; i++)
          aux_spec[i] += Lam_shift;
-        leave_fun:
-            free(q_effective);
-            return ret_code;
+  leave_fun:
+        free(q_effective);
+        return ret_code;
             
 }
 
@@ -332,13 +333,22 @@ static inline INT gridsearch(const UINT D,
             ret_code = E_NOMEM;
             goto release_mem;
         }
-        
+        printf("D_effective=%d\n",D_effective);
+        printf("deg=%d\n",deg);
+        printf("eps=%f\n",eps_t);
+        //misc_print_buf(deg+1,transfer_matrix,"p1");
+        //misc_print_buf(deg+1,transfer_matrix+3*(deg+1),"p4");
+
         // First, determine p(z) for the positive sign (+)
         for (i=0; i<=deg; i++)
             p[i] = transfer_matrix[i] + CONJ(transfer_matrix[deg-i]);
-        p[deg/2] += 2.0 * POW(2.0, -W); // the pow arises because
-        // nse_fscatter rescales
-        misc_print_buf(deg, p, "p"); 
+        if (deg%2 == 0)
+            p[deg/2] += 2.0 * POW(2.0, -W); // the pow arises because
+        else{
+            p[(deg-1)/2] += 1.0 * POW(2.0, -W);
+            p[(deg+1)/2] += 1.0 * POW(2.0, -W);
+        }
+        //misc_print_buf(deg+1,p,"p");
         // Find the roots of p(z)
         K = oversampling_factor*deg;
         ret_code = poly_roots_fftgridsearch(deg, p, &K, PHI, roots);
@@ -347,6 +357,7 @@ static inline INT gridsearch(const UINT D,
             ret_code = E_OTHER("Found more roots than memory is available.");
             goto release_mem;
         }
+
 
         // Coordinate transform (from discrete-time to continuous-time domain)
         ret_code = nse_z_to_lambda(K, eps_t, roots, opts_ptr->discretization);
@@ -369,7 +380,12 @@ static inline INT gridsearch(const UINT D,
         memcpy(main_spec, roots, K * sizeof(COMPLEX));
         
         // Second, determine p(z) for the negative sign (-)
-        p[deg/2] -= 4.0 * POW(2.0, -W);
+        if (deg%2 == 0)
+            p[deg/2] -= 4.0 * POW(2.0, -W);
+        else{
+            p[(deg-1)/2] -= 2.0 * POW(2.0, -W);
+            p[(deg+1)/2] -= 2.0 * POW(2.0, -W);
+        }
         
         // Find the roots of the new p(z)
         K_filtered = oversampling_factor*deg;
@@ -617,8 +633,12 @@ static inline INT subsample_and_refine(const UINT D,
         // First, determine p(z) for the positive sign (+)
         for (i=0; i<=deg; i++)
             p[i] = transfer_matrix[i] + CONJ(transfer_matrix[deg-i]);
-        p[deg/2] += 2.0 * POW(2.0, -W); // the pow arises because
-        // nse_fscatter rescales
+        if (deg%2 == 0)
+            p[deg/2] += 2.0 * POW(2.0, -W); // the pow arises because
+        else{
+            p[(deg-1)/2] += 1.0 * POW(2.0, -W);
+            p[(deg+1)/2] += 1.0 * POW(2.0, -W);
+        }
         
         // Find the roots of p(z)
         ret_code = poly_roots_fasteigen(deg, p, roots);
@@ -666,7 +686,12 @@ static inline INT subsample_and_refine(const UINT D,
         memcpy(main_spec, roots, K * sizeof(COMPLEX));
         
         // Second, determine p(z) for the negative sign (-)
-        p[deg/2] -= 4.0 * POW(2.0, -W);
+        if (deg%2 == 0)
+            p[deg/2] -= 4.0 * POW(2.0, -W);
+        else{
+            p[(deg-1)/2] -= 2.0 * POW(2.0, -W);
+            p[(deg+1)/2] -= 2.0 * POW(2.0, -W);
+        }
         
         // Find the roots of the new p(z)
         ret_code = poly_roots_fasteigen(deg, p, roots);

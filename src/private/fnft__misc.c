@@ -369,10 +369,10 @@ INT misc_resample(const UINT D, const REAL eps_t, COMPLEX const * const q,
 
 
     const REAL scl_factor = (REAL)len*eps_t;
-    // Applying frequency shift
-    for (i = 0; i <=len/2; i++)
+    // Applying phase shift
+    for (i = 0; i <len/2; i++)
         freq[i] = i/scl_factor;
-    for (i = len/2+1; i < len; i++)
+    for (i = len/2; i < len; i++)
         freq[i] = ((REAL)i - (REAL)len)/scl_factor;
 
     for (i = 0; i < len; i++) {

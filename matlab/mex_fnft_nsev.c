@@ -210,6 +210,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             
             opts.discretization = fnft_nse_discretization_2SPLIT4B;
             
+        } else if ( strcmp(str, "discr_4split4B") == 0 ) {
+            
+            opts.discretization = fnft_nse_discretization_4SPLIT4B; 
+            
+        } else if ( strcmp(str, "RE") == 0 ) {
+            
+            opts.richardson_extrapolation_flag  = 1;
+            
         } else if ( strcmp(str, "dstype_residues") == 0 ) {
             
             opts.discspec_type = fnft_nsev_dstype_RESIDUES;
