@@ -38,7 +38,7 @@ INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
 {
      
     INT ret_code = SUCCESS;
-    UINT i, D_scale;
+    UINT i;
     akns_discretization_t akns_discretization;
     COMPLEX *r = NULL;
     

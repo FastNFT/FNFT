@@ -94,6 +94,11 @@ REAL fnft__akns_discretization_boundary_coeff(akns_discretization_t discretizati
         case akns_discretization_2SPLIT8A:
         case akns_discretization_2SPLIT8B:
         case akns_discretization_2SPLIT2_MODAL:
+        case akns_discretization_BO:
+        case akns_discretization_CF4_2:
+        case akns_discretization_CF4_3:
+        case akns_discretization_CF5_3:
+        case akns_discretization_CF6_4:
             return 0.5;
             
         default: // Unknown discretization
@@ -133,6 +138,11 @@ UINT fnft__akns_discretization_D_scale(akns_discretization_t discretization)
         case akns_discretization_4SPLIT4B:
         case akns_discretization_CF4_2:
             return 2;
+        case akns_discretization_CF4_3:
+        case akns_discretization_CF5_3:
+            return 3;
+        case akns_discretization_CF6_4:
+            return 4;
             
         default: // Unknown discretization
             return 0;

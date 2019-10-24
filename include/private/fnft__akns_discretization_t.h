@@ -107,7 +107,10 @@ typedef enum {
     fnft__akns_discretization_BO,
     fnft__akns_discretization_4SPLIT4A,
     fnft__akns_discretization_4SPLIT4B,
-    fnft__akns_discretization_CF4_2
+    fnft__akns_discretization_CF4_2,
+    fnft__akns_discretization_CF4_3,
+    fnft__akns_discretization_CF5_3,
+    fnft__akns_discretization_CF6_4
 } fnft__akns_discretization_t;
 
 
@@ -134,8 +137,11 @@ typedef enum {
 #define akns_discretization_BO fnft__akns_discretization_BO
 #define akns_discretization_4SPLIT4A fnft__akns_discretization_4SPLIT4A
 #define akns_discretization_4SPLIT4B fnft__akns_discretization_4SPLIT4B
-#define akns_discretization_t fnft__akns_discretization_t
 #define akns_discretization_CF4_2 fnft__akns_discretization_CF4_2
+#define akns_discretization_CF4_3 fnft__akns_discretization_CF4_3
+#define akns_discretization_CF5_3 fnft__akns_discretization_CF5_3
+#define akns_discretization_CF6_4 fnft__akns_discretization_CF6_4
+#define akns_discretization_t fnft__akns_discretization_t
 #endif
 
 #endif

@@ -100,10 +100,13 @@ typedef enum {
     fnft_kdv_discretization_2SPLIT7B,
     fnft_kdv_discretization_2SPLIT8A,
     fnft_kdv_discretization_2SPLIT8B,
+    fnft_kdv_discretization_4SPLIT4A,
+    fnft_kdv_discretization_4SPLIT4B,
     fnft_kdv_discretization_BO,
     fnft_kdv_discretization_CF4_2,
-    fnft_kdv_discretization_4SPLIT4A,
-    fnft_kdv_discretization_4SPLIT4B
+    fnft_kdv_discretization_CF4_3,
+    fnft_kdv_discretization_CF5_3,
+    fnft_kdv_discretization_CF6_4
 } fnft_kdv_discretization_t;
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
@@ -125,10 +128,13 @@ typedef enum {
 #define kdv_discretization_2SPLIT7B fnft_kdv_discretization_2SPLIT7B
 #define kdv_discretization_2SPLIT8A fnft_kdv_discretization_2SPLIT8A
 #define kdv_discretization_2SPLIT8B fnft_kdv_discretization_2SPLIT8B
-#define kdv_discretization_BO fnft_kdv_discretization_BO
-#define kdv_discretization_CF4_2 fnft_kdv_discretization_CF4_2
 #define kdv_discretization_4SPLIT4A fnft_kdv_discretization_4SPLIT4A
 #define kdv_discretization_4SPLIT4B fnft_kdv_discretization_4SPLIT4B
+#define kdv_discretization_BO fnft_kdv_discretization_BO
+#define kdv_discretization_CF4_2 fnft_kdv_discretization_CF4_2
+#define kdv_discretization_CF4_3 fnft_kdv_discretization_CF4_3
+#define kdv_discretization_CF5_3 fnft_kdv_discretization_CF5_3
+#define kdv_discretization_CF6_4 fnft_kdv_discretization_CF6_4
 #define kdv_discretization_t fnft_kdv_discretization_t
 #endif
 

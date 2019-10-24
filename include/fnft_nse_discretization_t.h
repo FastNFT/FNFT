@@ -107,7 +107,10 @@ typedef enum {
     fnft_nse_discretization_2SPLIT8B,
     fnft_nse_discretization_4SPLIT4A,
     fnft_nse_discretization_4SPLIT4B,
-    fnft_nse_discretization_CF4_2
+    fnft_nse_discretization_CF4_2,
+    fnft_nse_discretization_CF4_3,
+    fnft_nse_discretization_CF5_3,
+    fnft_nse_discretization_CF6_4
 } fnft_nse_discretization_t;
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
@@ -135,6 +138,9 @@ typedef enum {
 #define nse_discretization_4SPLIT4A fnft_nse_discretization_4SPLIT4A
 #define nse_discretization_4SPLIT4B fnft_nse_discretization_4SPLIT4B
 #define nse_discretization_CF4_2 fnft_nse_discretization_CF4_2
+#define nse_discretization_CF4_3 fnft_nse_discretization_CF4_3
+#define nse_discretization_CF5_3 fnft_nse_discretization_CF5_3
+#define nse_discretization_CF6_4 fnft_nse_discretization_CF6_4
 #endif
 
 #endif
