@@ -868,7 +868,6 @@ static inline INT tf2normconsts_or_residues(
 {
     
     COMPLEX *a_vals = NULL, *aprime_vals = NULL;
-    UINT trunc_index;
     UINT i, offset = 0;
     INT ret_code = SUCCESS;
     nse_discretization_t discretization = nse_discretization_BO;
@@ -883,11 +882,7 @@ static inline INT tf2normconsts_or_residues(
     // Reuse no longer used parts of the transfer matrix as buffers
     a_vals = transfer_matrix + (deg+1);
     aprime_vals = transfer_matrix + 3*(deg+1);
-    
-    // trunc_index is the index where we will split
-    // trunc_index should be integer between 0 and D-1
-    // trunc_index = D corresponds to splitting based on L1-norm
-    trunc_index = D;
+
     const UINT D_scale = nse_discretization_D_scale(opts->discretization);
     if (D_scale == 0) {
         ret_code = E_INVALID_ARGUMENT(opts->discretization);
@@ -897,7 +892,7 @@ static inline INT tf2normconsts_or_residues(
         discretization  = nse_discretization_BO;
     else if (D_scale == 2)
         discretization  = nse_discretization_CF4_2;
-    ret_code = nse_scatter_bound_states(D, q, T, &trunc_index, K,
+    ret_code = nse_scatter_bound_states(D, q, T, K,
             bound_states, a_vals, aprime_vals, normconsts_or_residues, discretization);
     CHECK_RETCODE(ret_code, leave_fun);
     
@@ -941,8 +936,6 @@ static inline INT refine_roots_newton(
     COMPLEX a_val, b_val, aprime_val, error;
     REAL eprecision = EPSILON * 100;
     REAL re_bound_val, im_bound_val = NAN;
-    UINT trunc_index;
-    trunc_index = D;
     COMPLEX *q_tmp = NULL;
     // Check inputs
     if (K == 0) // no bound states to refine
@@ -990,7 +983,7 @@ static inline INT refine_roots_newton(
         iter = 0;
         do {
             // Compute a(lam) and a'(lam) at the current root
-            ret_code = nse_scatter_bound_states(D, q, T, &trunc_index, 1,
+            ret_code = nse_scatter_bound_states(D, q, T, 1,
                     bound_states + i, &a_val, &aprime_val, &b_val, discretization);
             if (ret_code != SUCCESS)
                 return E_SUBROUTINE(ret_code);

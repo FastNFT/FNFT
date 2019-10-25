@@ -49,10 +49,6 @@
  *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$)
  * @param[in] T Array of length 2, contains the position in time of the first and
  *  of the last sample. It should be T[0]<T[1].
- * @param[in,out] trunc_index_ptr Pointer containing sample location where the signal will be
- * split to compute the norming constants using the forward-backward scheme. The value should be
- * between 0 and D-1. If the value is D then L1-norm is used to compute the best 
- * sample location to split the signal.
  * @param[in] K Number of bound-states.
  * @param[in] bound_states Array of length K, contains the bound-states \f$\lambda\f$.
  * @param[out] a_vals Array of length K, contains the values of \f$a(\lambda)\f$.
@@ -67,7 +63,7 @@
  * @ingroup nse
  */
 FNFT_INT fnft__nse_scatter_bound_states(const FNFT_UINT D, FNFT_COMPLEX const *const q,
-    FNFT_REAL const *const T,  FNFT_UINT *trunc_index_ptr, FNFT_UINT K,
+    FNFT_REAL const *const T, FNFT_UINT K,
     FNFT_COMPLEX *bound_states, FNFT_COMPLEX *a_vals,
     FNFT_COMPLEX *aprime_vals, FNFT_COMPLEX *b,
     fnft_nse_discretization_t discretization);

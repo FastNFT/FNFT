@@ -24,6 +24,7 @@
 #include "fnft__nse_discretization.h" // for nse_discretization_degree
 #ifdef DEBUG
 #include <stdio.h>
+#include <string.h> // for memcpy
 #endif
 
 INT nsev_testcases(nsev_testcases_t tc, const UINT D,
@@ -557,6 +558,7 @@ const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
     // Allocate memory
     contspec = malloc(3*M * sizeof(COMPLEX));
     K = nse_discretization_degree(opts->discretization) * D;
+//K = 3;
     bound_states = malloc(K * sizeof(COMPLEX));
     normconsts_and_residues = malloc(2*D * sizeof(COMPLEX));
     if ( q == NULL || contspec == NULL || bound_states == NULL
@@ -564,8 +566,11 @@ const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
         ret_code = E_NOMEM;
         goto release_mem;
     }
+//printf("%ld",K_exact);
 
-    // Compute the NFT
+   // memcpy(bound_states,bound_states_exact,K * sizeof(COMPLEX)); //TODO
+//misc_print_buf(K_exact,bound_states_exact,"BS");    
+// Compute the NFT
     opts->contspec_type = fnft_nsev_cstype_BOTH;
     opts->discspec_type = fnft_nsev_dstype_BOTH;
     ret_code = fnft_nsev(D, q, T, M, contspec, XI, &K, bound_states,

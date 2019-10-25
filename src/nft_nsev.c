@@ -62,6 +62,7 @@ static fnft_nsev_opts_t default_opts = {
 static inline INT refine_roots_newton(
         const UINT D,
         COMPLEX const * const q,
+        COMPLEX const * const r,
         REAL const * const T,
         const UINT K,
         COMPLEX * bound_states,
@@ -339,12 +340,14 @@ static inline INT nft_nsev_base(
         fnft_nsev_opts_t *opts)
 {
     INT ret_code = SUCCESS;
-    UINT i, D_scale, D_given;
+    UINT i, D_scale, D_given, K;
     COMPLEX * scatter_coeffs = NULL;
     COMPLEX * xi = NULL;
     UINT offset = 0;
     REAL phase_factor_rho = NAN, phase_factor_a = NAN, phase_factor_b = NAN;
     akns_discretization_t akns_discretization;
+    REAL bounding_box[4] = { NAN };
+    COMPLEX * buffer = NULL;
     
     // Check inputs
     if (D < 2)
@@ -448,15 +451,34 @@ static inline INT nft_nsev_base(
         }
     }
     
-//     // Compute the discrete spectrum
-//     if (kappa == +1 && bound_states != NULL) {
-//
-//         // Compute the bound states
-//         ret_code = tf2boundstates(D, q, deg, transfer_matrix, T,
-//                 eps_t, K_ptr, bound_states, opts);
-//         CHECK_RETCODE(ret_code, release_mem);
-//
-//
+    // Compute the discrete spectrum
+    if (kappa == +1 && bound_states != NULL) {
+
+  
+        // Compute the bound states
+        // Localize bound states ...
+        switch (opts->bound_state_localization) {
+            
+            // ... using Newton's method
+            case nsev_bsloc_NEWTON:
+                
+                K = *K_ptr;
+                buffer = bound_states; // Store intermediate results directly
+                
+                // Perform Newton iterations. Initial guesses of bound-states
+                // should be in the continuous-time domain.
+                ret_code = refine_roots_newton(D, q, r, T, K, buffer,
+                        opts->discretization, opts->niter);
+                CHECK_RETCODE(ret_code, release_mem);
+                break;
+                
+            default:
+                
+                return E_INVALID_ARGUMENT(opts->bound_state_localization);
+        }
+        for (i=0;i<K;i++)
+            printf("%1.15e+i%1.15e\n",CREAL(buffer[i]),CIMAG(buffer[i]));
+        
 //         // Norming constants and/or residues)
 //         if (normconsts_or_residues != NULL && *K_ptr != 0) {
 //
@@ -464,11 +486,11 @@ static inline INT nft_nsev_base(
 //                     transfer_matrix, deg, bound_states, normconsts_or_residues,
 //                     opts);
 //             CHECK_RETCODE(ret_code, release_mem);
-//
+        
 //         }
-//     } else if (K_ptr != NULL) {
-//         *K_ptr = 0;
-//     }
+    } else if (K_ptr != NULL) {
+        *K_ptr = 0;
+    }
 //
     release_mem:
         free(scatter_coeffs);
@@ -508,6 +530,7 @@ static inline REAL im_bound(const UINT D, COMPLEX const * const q,
 static inline INT refine_roots_newton(
         const UINT D,
         COMPLEX const * const q,
+        COMPLEX const * const r,
         REAL const * const T,
         const UINT K,
         COMPLEX * bound_states,
@@ -516,12 +539,13 @@ static inline INT refine_roots_newton(
 {
     INT ret_code = SUCCESS;
     UINT i, iter, D_scale, j, D_given;
-    COMPLEX a_val, b_val, aprime_val, error;
+    COMPLEX * scatter_coeffs, error;
     REAL eprecision = EPSILON * 100;
     REAL re_bound_val, im_bound_val = NAN;
     UINT trunc_index;
     trunc_index = D;
-    COMPLEX *q_tmp = NULL;
+    akns_discretization_t akns_discretization;
+    
     // Check inputs
     if (K == 0) // no bound states to refine
         return SUCCESS;
@@ -534,48 +558,42 @@ static inline INT refine_roots_newton(
     if (T == NULL)
         return E_INVALID_ARGUMENT(T);
     
+    ret_code = nse_discretization_to_akns_discretization(discretization, &akns_discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
+    
     D_scale = nse_discretization_D_scale(discretization);
     if (D_scale == 0)
         return E_INVALID_ARGUMENT(discretization);
     D_given = D/D_scale;
+    
+    scatter_coeffs = malloc(8 * sizeof(COMPLEX));
+    if (scatter_coeffs == NULL) {
+        ret_code = E_NOMEM;
+        goto leave_fun;
+    }
     const REAL eps_t = (T[1] - T[0])/(D_given - 1);
     
-    //This step is required as q contains scaled values on a
-    // non-equispaced grid for D_scale = 2
-    if (D_scale == 2){
-        q_tmp = malloc(D_given * sizeof(COMPLEX));
-        if (q_tmp == NULL) {
-            ret_code = E_NOMEM;
-            goto leave_fun;
-        }
-        j = 0;
-        for (i = 0; i < D_given; i++) {
-            q_tmp[i] = 2*q[j];
-            j = j+2;
-        }
-        im_bound_val = im_bound(D_given, q_tmp, T);
-        
-    } else if (D_scale == 1) {
-        im_bound_val = im_bound(D_given, q, T);
-    }
+    im_bound_val = im_bound(D, q, T);
+    
     if (im_bound_val == NAN)
         return E_OTHER("Upper bound on imaginary part of bound states is NaN");
     
     re_bound_val = re_bound(eps_t, 2.0);
     
+
     // Perform iterations of Newton's method
     for (i = 0; i < K; i++) {
         iter = 0;
         do {
             // Compute a(lam) and a'(lam) at the current root
-            ret_code = nse_scatter_bound_states(D, q, T, &trunc_index, 1,
-                    bound_states + i, &a_val, &aprime_val, &b_val, discretization);
+            ret_code = akns_scatter_matrix(D, q, r, eps_t, 1,
+                    bound_states + i, scatter_coeffs, akns_discretization);
             if (ret_code != SUCCESS)
                 return E_SUBROUTINE(ret_code);
             // Perform Newton updates: lam[i] <- lam[i] - a(lam[i])/a'(lam[i])
-            if (aprime_val == 0.0)
+            if (scatter_coeffs[4] == 0.0)
                 return E_DIV_BY_ZERO;
-            error = a_val / aprime_val;
+            error = scatter_coeffs[0] / scatter_coeffs[4];
             bound_states[i] -= error;
             iter++;
             if (CIMAG(bound_states[i]) > im_bound_val
@@ -588,7 +606,6 @@ static inline INT refine_roots_newton(
     }
     
     leave_fun:
-        free(q_tmp);
         return ret_code;
 }
 
@@ -767,7 +784,7 @@ static inline INT signal_effective_from_signal(
             goto  release_mem;
     }
     
- 
+    
     release_mem:
         free(q_1);
         free(q_2);

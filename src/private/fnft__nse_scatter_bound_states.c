@@ -15,7 +15,7 @@
  *
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
- * Shrinivas Chimmalgi (TU Delft) 2017.
+ * Shrinivas Chimmalgi (TU Delft) 2017, 2019.
  * Marius Brehler (TU Dortmund) 2018.
  */
 #define FNFT_ENABLE_SHORT_NAMES
@@ -29,18 +29,20 @@
  * Default scheme should be set as BO.
  */
 INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
-        REAL const *const T,  UINT *trunc_index_ptr, UINT K,
+        REAL const *const T, UINT K,
         COMPLEX *bound_states, COMPLEX *a_vals,
         COMPLEX *aprime_vals, COMPLEX *b,
         nse_discretization_t discretization)
 {
     
     INT ret_code = SUCCESS;
-    REAL norm_left, norm_right;
-    UINT i0, i1, neig;
-    UINT n, c1, c2, c3;
+    UINT neig;
+    UINT c1, c2, c3;
+    UINT n;
     COMPLEX l, qn, qnc, ks, k, sum=0, TM[4][4],ch,chi,sh,u1,ud1,ud2;
-    
+    REAL eps_t_n = 0, eps_t = 0;
+    COMPLEX * PHI1 = NULL, * PHI2 = NULL;
+    COMPLEX * PSI1 = NULL, * PSI2 = NULL;
     // Check inputs
     if (D == 0)
         return E_INVALID_ARGUMENT(D);
@@ -48,8 +50,6 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
         return E_INVALID_ARGUMENT(q);
     if (T == NULL)
         return E_INVALID_ARGUMENT(eps_t);
-    if (trunc_index_ptr == NULL || *trunc_index_ptr>D )
-        return E_INVALID_ARGUMENT(trunc_index_ptr);
     if (K <= 0.0)
         return E_INVALID_ARGUMENT(K);
     if (bound_states == NULL)
@@ -62,37 +62,21 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
         return E_INVALID_ARGUMENT(b);
     
     
-    REAL eps_t;
-    
+    PHI1 = malloc((D+1) * sizeof(COMPLEX));
+    PHI2 = malloc((D+1) * sizeof(COMPLEX));
+    PSI1 = malloc((D+1) * sizeof(COMPLEX));
+    PSI2 = malloc((D+1) * sizeof(COMPLEX));
+    if (PHI1 == NULL || PHI2 == NULL || PSI1 == NULL || PSI2 == NULL) {
+        ret_code = E_NOMEM;
+        goto release_mem;
+    }
     switch (discretization) {
         
         case nse_discretization_BO: // forward-backward bofetta-osborne scheme
             
             
             eps_t = (T[1] - T[0])/(D - 1);
-            
-            if (*trunc_index_ptr == D){
-                // Heuristic for where to split the potential: Find the point where the
-                // L1 norm of the left half is equal to that of the right half
-                i0 = 0;
-                i1 = D-1;
-                norm_left = 0.0;
-                norm_right = 0.0;
-                while (i0 < i1) {
-                    if (norm_left < norm_right) {
-                        i0++;
-                        norm_left += eps_t*CABS(q[i0]);
-                    } else {
-                        i1--;
-                        norm_right += eps_t*CABS(q[i1]);
-                    }
-                }
-                // i0 is now the index where we will split
-                *trunc_index_ptr = i0;
-                
-            }
-            else
-                i0 = *trunc_index_ptr;
+            eps_t_n = -eps_t;
             
             for (neig = 0; neig < K; neig++) { // iterate over bound states
                 l = bound_states[neig];
@@ -101,7 +85,56 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 COMPLEX SL[4][4] = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
                 COMPLEX U[4][4] = {{0}};
                 
-                for (n = D-1; n >= i0; n--){
+                PSI1[D] = SR[0][1]*CEXP(I*l*(T[1]+eps_t/2));
+                PSI2[D] = SR[1][1]*CEXP(I*l*(T[1]+eps_t/2));
+                n = D;
+                do{
+                    n--;
+                    qn = q[n];
+                    qnc = CONJ(qn);
+                    ks = (-(CABS(qn)*CABS(qn))-(l*l)); //TODO:ks==0 case
+                    k = CSQRT(ks);
+                    ch = CCOSH(k*eps_t_n);
+                    chi = ch/ks;
+                    sh = CSINH(k*eps_t_n)/k;
+                    u1 = l*sh*I;
+                    ud1 = eps_t_n*l*l*chi*I;
+                    ud2 = l*(eps_t_n*ch-sh)/ks;
+                    
+                    U[0][0] = ch-u1;
+                    U[0][1] = qn*sh;
+                    U[1][0] = -qnc*sh;
+                    U[1][1] = ch + u1;
+                    U[2][0] = ud1-(l*eps_t_n+I+(l*l*I)/ks)*sh;
+                    U[2][1] = -qn*ud2;
+                    U[3][0] = qnc*ud2;
+                    U[3][1] = -ud1-(l*eps_t_n-I-(l*l*I)/ks)*sh;
+                    U[2][2] = ch-u1;
+                    U[2][3] = qn*sh;
+                    U[3][2] = -qnc*sh;
+                    U[3][3] = ch+u1;
+                    for (c1 = 0; c1 < 4; c1++) {
+                        for (c2 = 0; c2 < 4; c2++) {
+                            for (c3 = 0; c3 < 4; c3++) {
+                                sum = sum + U[c1][c3]*SR[c3][c2];
+                            }
+                            TM[c1][c2] = sum;
+                            sum = 0;
+                        }
+                    }
+                    for (c1 = 0; c1 < 4; c1++) {
+                        for (c2 = 0; c2 < 4; c2++)
+                            SR[c1][c2] = TM[c1][c2];
+                    }
+                    
+                    PSI1[n] = SR[0][1]*CEXP(I*l*(T[1]+eps_t/2));
+                    PSI2[n] = SR[1][1]*CEXP(I*l*(T[1]+eps_t/2));
+                    
+                } while (n > 0);
+                
+                PHI1[0] = SL[0][0]*CEXP(-I*l*(T[0]-eps_t/2));
+                PHI2[0] = SL[1][0]*CEXP(-I*l*(T[0]-eps_t/2));
+                for (n = 0; n < D; n++){
                     qn = q[n];
                     qnc = CONJ(qn);
                     ks = (-(CABS(qn)*CABS(qn))-(l*l));
@@ -112,11 +145,10 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     u1 = l*sh*I;
                     ud1 = eps_t*l*l*chi*I;
                     ud2 = l*(eps_t*ch-sh)/ks;
-                    
                     U[0][0] = ch-u1;
                     U[0][1] = qn*sh;
                     U[1][0] = -qnc*sh;
-                    U[1][1] = ch + u1;
+                    U[1][1] = ch+u1;
                     U[2][0] = ud1-(l*eps_t+I+(l*l*I)/ks)*sh;
                     U[2][1] = -qn*ud2;
                     U[3][0] = qnc*ud2;
@@ -128,7 +160,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     for (c1 = 0; c1 < 4; c1++) {
                         for (c2 = 0; c2 < 4; c2++) {
                             for (c3 = 0; c3 < 4; c3++) {
-                                sum = sum + SR[c1][c3]*U[c3][c2];
+                                sum = sum + U[c1][c3]*SL[c3][c2];
                             }
                             TM[c1][c2] = sum;
                             sum = 0;
@@ -136,70 +168,26 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     }
                     for (c1 = 0; c1 < 4; c1++) {
                         for (c2 = 0; c2 < 4; c2++)
-                            SR[c1][c2] = TM[c1][c2];
+                            SL[c1][c2] = TM[c1][c2];
                     }
+                    PHI1[n+1] = SL[0][0]*CEXP(-I*l*(T[0]-eps_t/2));
+                    PHI2[n+1] = SL[1][0]*CEXP(-I*l*(T[0]-eps_t/2));
                 }
                 
-                // Note that n is unsigned. A normal for (n=i0-1; n>=0; n--)
-                // would therefore not stop when n==0.
-                if (i0 > 1) {
-                    n = i0;
-                    do {
-                        n--;
-                        qn = q[n];
-                        qnc = CONJ(qn);
-                        ks = (-(CABS(qn)*CABS(qn))-(l*l));
-                        k = CSQRT(ks);
-                        ch = CCOSH(k*eps_t);
-                        chi = ch/ks;
-                        sh = CSINH(k*eps_t)/k;
-                        u1 = l*sh*I;
-                        ud1 = eps_t*l*l*chi*I;
-                        ud2 = l*(eps_t*ch-sh)/ks;
-                        U[0][0] = ch-u1;
-                        U[0][1] = qn*sh;
-                        U[1][0] = -qnc*sh;
-                        U[1][1] = ch+u1;
-                        U[2][0] = ud1-(l*eps_t+I+(l*l*I)/ks)*sh;
-                        U[2][1] = -qn*ud2;
-                        U[3][0] = qnc*ud2;
-                        U[3][1] = -ud1-(l*eps_t-I-(l*l*I)/ks)*sh;
-                        U[2][2] = ch-u1;
-                        U[2][3] = qn*sh;
-                        U[3][2] = -qnc*sh;
-                        U[3][3] = ch+u1;
-                        for (c1 = 0; c1 < 4; c1++) {
-                            for (c2 = 0; c2 < 4; c2++) {
-                                for (c3 = 0; c3 < 4; c3++) {
-                                    sum = sum + SL[c1][c3]*U[c3][c2];
-                                }
-                                TM[c1][c2] = sum;
-                                sum = 0;
-                            }
-                        }
-                        for (c1 = 0; c1 < 4; c1++) {
-                            for (c2 = 0; c2 < 4; c2++)
-                                SL[c1][c2] = TM[c1][c2];
-                        }
-                    } while (n > 0);
-                }
+                a_vals[neig] = SL[0][0]*CEXP(-I*l*(T[0]-eps_t/2))*CEXP(I*l*(T[1]+eps_t/2));
+                aprime_vals[neig] = (SL[2][0]+I*(T[1]+eps_t-T[0])*SL[0][0])*CEXP(I*l*(-T[0]+T[1]+eps_t));
                 
-                // Compute the total transfer matrix (TM) from SL and SR
-                for (c1 = 0; c1 < 4; c1++) {
-                    for (c2 = 0; c2 < 4; c2++) {
-                        for (c3 = 0; c3 < 4; c3++) {
-                            sum = sum + SR[c1][c3]*SL[c3][c2];
-                        }
-                        TM[c1][c2] = sum;
-                        sum = 0;
+                // Calculation of b assuming a=0
+                // Uses the metric from DOI: 10.1109/ACCESS.2019.2932256 for choosing the
+                // computation point
+                REAL error_metric = INFINITY, tmp = INFINITY;
+                for (n = 0; n <= D; n++){
+                    tmp = CABS((0.5*LOG(CABS((PHI2[n]/PSI2[n])/(PHI1[n]/PSI1[n])))));
+                    if (tmp < error_metric){
+                        b[neig] = PHI1[n]/PSI1[n];
+                        error_metric = tmp;
                     }
                 }
-                a_vals[neig] = TM[0][0]*CEXP(-I*l*(T[0]-eps_t/2))*CEXP(I*l*(T[1]+eps_t/2));
-                aprime_vals[neig] = (TM[2][0]+I*(T[1]+eps_t/2)*(TM[0][0]+TM[2][2]))*CEXP(-I*l*(T[0]-eps_t/2))*CEXP(I*l*(T[1]+eps_t/2));
-                if (CIMAG(l) == 0)
-                    b[neig] = TM[1][0]*CEXP(-I*l*(T[0]-eps_t/2))*CEXP(-I*l*(T[1]+eps_t/2));
-                else
-                    b[neig] = SL[1][0]/SR[0][0];
             }
             break;
             
@@ -207,37 +195,66 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
             
             // The routine requires interleaved non-equispaced samples
             eps_t = (T[1] - T[0])/(D/2 - 1);
-            if (*trunc_index_ptr == D){
-                // Heuristic for where to split the potential: Find the point where the
-                // L1 norm of the left half is equal to that of the right half
-                i0 = 0;
-                i1 = D-1;
-                norm_left = 0.0;
-                norm_right = 0.0;
-                while (i0 < i1) {
-                    if (norm_left < norm_right) {
-                        i0 += 2;
-                        norm_left += eps_t*CABS(q[i0] + q[i0+1]);
-                    } else {
-                        i1 -= 2;
-                        norm_right += eps_t*CABS(q[i1] + q[i1-1]);
-                    }
-                }
-                // i0 is now the index where we will split
-                *trunc_index_ptr = i0;
-                
-            }
-            else
-                i0 = *trunc_index_ptr;
-            COMPLEX l_curr;
+            eps_t_n = -eps_t;
+            COMPLEX l_curr = 0;
             for (neig = 0; neig < K; neig++) { // iterate over bound states
-                l = bound_states[neig]/2;
-                l_curr =  bound_states[neig];
+                l_curr = bound_states[neig];
+                l = l_curr/2;
+                
                 COMPLEX SR[4][4] = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
                 COMPLEX SL[4][4] = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
                 COMPLEX U[4][4] = {{0}};
                 
-                for (n = D-1; n >= i0; n--){
+                PSI1[D] = SR[0][1]*CEXP(I*l*(T[1]+eps_t/2));
+                PSI2[D] = SR[1][1]*CEXP(I*l*(T[1]+eps_t/2));
+                n = D;
+                do{
+                    n--;
+                    qn = q[n];
+                    qnc = CONJ(qn);
+                    ks = (-(CABS(qn)*CABS(qn))-(l*l)); //TODO:ks==0 case
+                    k = CSQRT(ks);
+                    ch = CCOSH(k*eps_t_n);
+                    chi = ch/ks;
+                    sh = CSINH(k*eps_t_n)/k;
+                    u1 = l*sh*I;
+                    ud1 = eps_t_n*l*l*chi*I;
+                    ud2 = l*(eps_t_n*ch-sh)/ks;
+                    
+                    U[0][0] = ch-u1;
+                    U[0][1] = qn*sh;
+                    U[1][0] = -qnc*sh;
+                    U[1][1] = ch + u1;
+                    U[2][0] = ud1-(l*eps_t_n+I+(l*l*I)/ks)*sh;
+                    U[2][1] = -qn*ud2;
+                    U[3][0] = qnc*ud2;
+                    U[3][1] = -ud1-(l*eps_t_n-I-(l*l*I)/ks)*sh;
+                    U[2][2] = ch-u1;
+                    U[2][3] = qn*sh;
+                    U[3][2] = -qnc*sh;
+                    U[3][3] = ch+u1;
+                    for (c1 = 0; c1 < 4; c1++) {
+                        for (c2 = 0; c2 < 4; c2++) {
+                            for (c3 = 0; c3 < 4; c3++) {
+                                sum = sum + U[c1][c3]*SR[c3][c2];
+                            }
+                            TM[c1][c2] = sum;
+                            sum = 0;
+                        }
+                    }
+                    for (c1 = 0; c1 < 4; c1++) {
+                        for (c2 = 0; c2 < 4; c2++)
+                            SR[c1][c2] = TM[c1][c2];
+                    }
+                    
+                    PSI1[n] = SR[0][1]*CEXP(I*l*(T[1]+eps_t/2));
+                    PSI2[n] = SR[1][1]*CEXP(I*l*(T[1]+eps_t/2));
+                    
+                } while (n > 0);
+                
+                PHI1[0] = SL[0][0]*CEXP(-I*l*(T[0]-eps_t/2));
+                PHI2[0] = SL[1][0]*CEXP(-I*l*(T[0]-eps_t/2));
+                for (n = 0; n < D; n++){
                     qn = q[n];
                     qnc = CONJ(qn);
                     ks = (-(CABS(qn)*CABS(qn))-(l*l));
@@ -248,11 +265,10 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     u1 = l*sh*I;
                     ud1 = eps_t*l*l*chi*I;
                     ud2 = l*(eps_t*ch-sh)/ks;
-                    
                     U[0][0] = ch-u1;
                     U[0][1] = qn*sh;
                     U[1][0] = -qnc*sh;
-                    U[1][1] = ch + u1;
+                    U[1][1] = ch+u1;
                     U[2][0] = ud1-(l*eps_t+I+(l*l*I)/ks)*sh;
                     U[2][1] = -qn*ud2;
                     U[3][0] = qnc*ud2;
@@ -264,7 +280,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     for (c1 = 0; c1 < 4; c1++) {
                         for (c2 = 0; c2 < 4; c2++) {
                             for (c3 = 0; c3 < 4; c3++) {
-                                sum = sum + SR[c1][c3]*U[c3][c2];
+                                sum = sum + U[c1][c3]*SL[c3][c2];
                             }
                             TM[c1][c2] = sum;
                             sum = 0;
@@ -272,71 +288,26 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     }
                     for (c1 = 0; c1 < 4; c1++) {
                         for (c2 = 0; c2 < 4; c2++)
-                            SR[c1][c2] = TM[c1][c2];
+                            SL[c1][c2] = TM[c1][c2];
                     }
+                    PHI1[n+1] = SL[0][0]*CEXP(-I*l*(T[0]-eps_t/2));
+                    PHI2[n+1] = SL[1][0]*CEXP(-I*l*(T[0]-eps_t/2));
                 }
                 
-                // Note that n is unsigned. A normal for (n=i0-1; n>=0; n--)
-                // would therefore not stop when n==0.
-                if (i0 > 1) {
-                    n = i0;
-                    do {
-                        n--;
-                        qn = q[n];
-                        qnc = CONJ(qn);
-                        ks = (-(CABS(qn)*CABS(qn))-(l*l));
-                        k = CSQRT(ks);
-                        ch = CCOSH(k*eps_t);
-                        chi = ch/ks;
-                        sh = CSINH(k*eps_t)/k;
-                        u1 = l*sh*I;
-                        ud1 = eps_t*l*l*chi*I;
-                        ud2 = l*(eps_t*ch-sh)/ks;
-                        U[0][0] = ch-u1;
-                        U[0][1] = qn*sh;
-                        U[1][0] = -qnc*sh;
-                        U[1][1] = ch+u1;
-                        U[2][0] = ud1-(l*eps_t+I+(l*l*I)/ks)*sh;
-                        U[2][1] = -qn*ud2;
-                        U[3][0] = qnc*ud2;
-                        U[3][1] = -ud1-(l*eps_t-I-(l*l*I)/ks)*sh;
-                        U[2][2] = ch-u1;
-                        U[2][3] = qn*sh;
-                        U[3][2] = -qnc*sh;
-                        U[3][3] = ch+u1;
-                        for (c1 = 0; c1 < 4; c1++) {
-                            for (c2 = 0; c2 < 4; c2++) {
-                                for (c3 = 0; c3 < 4; c3++) {
-                                    sum = sum + SL[c1][c3]*U[c3][c2];
-                                }
-                                TM[c1][c2] = sum;
-                                sum = 0;
-                            }
-                        }
-                        for (c1 = 0; c1 < 4; c1++) {
-                            for (c2 = 0; c2 < 4; c2++)
-                                SL[c1][c2] = TM[c1][c2];
-                        }
-                    } while (n > 0);
-                }
+                a_vals[neig] = SL[0][0]*CEXP(I*l_curr*(-T[0]+T[1]+eps_t));
+                aprime_vals[neig] = 0.5*(SL[2][0]+I*(T[1]+eps_t-T[0])*SL[0][0])*CEXP(I*l_curr*(-T[0]+T[1]+eps_t));
                 
-                // Compute the total transfer matrix (TM) from SL and SR
-                for (c1 = 0; c1 < 4; c1++) {
-                    for (c2 = 0; c2 < 4; c2++) {
-                        for (c3 = 0; c3 < 4; c3++) {
-                            sum = sum + SR[c1][c3]*SL[c3][c2];
-                        }
-                        TM[c1][c2] = sum;
-                        sum = 0;
+                // Calculation of b assuming a=0
+                // Uses the metric from DOI: 10.1109/ACCESS.2019.2932256 for choosing the
+                // computation point
+                REAL error_metric = INFINITY, tmp = INFINITY;
+                for (n = 0; n <= D; n++){
+                    tmp = CABS((0.5*LOG(CABS((PHI2[n]/PSI2[n])/(PHI1[n]/PSI1[n])))));
+                    if (tmp < error_metric){
+                        b[neig] = PHI1[n]/PSI1[n];
+                        error_metric = tmp;
                     }
                 }
-                a_vals[neig] = TM[0][0]*CEXP(-I*l_curr*(T[0]-eps_t/2))*CEXP(I*l_curr*(T[1]+eps_t/2));
-                aprime_vals[neig] = 0.5*(TM[2][0]+I*(T[1]+eps_t/2)*(TM[0][0]+TM[2][2]))*CEXP(-I*l_curr*(T[0]-eps_t/2))*CEXP(I*l_curr*(T[1]+eps_t/2));
-                //aprime_vals[neig] = 0.5 * (TM[2][0]+I*(T[1]+T[0])*TM[0][0])*CEXP(-I*l_curr*(T[0]-eps_t/2))*CEXP(I*l_curr*(T[1]+eps_t/2));
-                if (CIMAG(l_curr) == 0)
-                    b[neig] = TM[1][0]*CEXP(-I*l_curr*(T[0]-eps_t/2))*CEXP(-I*l_curr*(T[1]+eps_t/2));
-                else
-                    b[neig] = SL[1][0]/SR[0][0];
             }
             break;
             
@@ -344,5 +315,11 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
             
             ret_code = E_INVALID_ARGUMENT(discretization);
     }
-    return ret_code;
+    
+    release_mem:
+        free(PHI1);
+        free(PSI1);
+        free(PHI2);
+        free(PSI2);
+        return ret_code;
 }

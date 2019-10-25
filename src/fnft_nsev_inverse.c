@@ -778,9 +778,8 @@ static INT add_discrete_spectrum(
             //When continuous spectrum exists, the non-solitonic component
             // of the potential contributes to the residues and needs to be
             // removed.
-            UINT trunc_index;
-            trunc_index = D;
-            ret_code = nse_scatter_bound_states(D, q, T, &trunc_index, K,
+
+            ret_code = nse_scatter_bound_states(D, q, T, K,
                     bnd_states, acoeff_cs, acoeff_cs+K, acoeff_cs+2*K, nse_discretization_BO);
             CHECK_RETCODE(ret_code, leave_fun);
         }

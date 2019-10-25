@@ -35,7 +35,6 @@ INT nse_scatter_bound_states_test_bo()
     COMPLEX q[256];
     COMPLEX a_vals[3], aprime_vals[3], b_vals[3];
     COMPLEX bound_states[3] = {0.5*I, 1.5*I, 2.5*I};
-    UINT trunc_index = D;
     eps_t = (T[1] - T[0])/(D - 1);
 
     COMPLEX a_vals_exact[3] = {
@@ -111,7 +110,7 @@ INT nse_scatter_bound_states_test_bo()
     */
     for (i=0; i<D; i++)
         q[i] = 3.0*misc_sech(T[0] + i*eps_t);
-    ret_code = nse_scatter_bound_states(D, q, T, &trunc_index, 3,
+    ret_code = nse_scatter_bound_states(D, q, T, 3,
         bound_states, a_vals, aprime_vals, b_vals, nse_discretization_BO);
     if (ret_code != SUCCESS)
         return E_SUBROUTINE(ret_code);
@@ -136,8 +135,6 @@ INT nse_scatter_bound_states_test_bo()
     if (!(errs[1] <= error_bounds[1]))
         ret_code = E_TEST_FAILED;
     if (!(errs[2] <= error_bounds[2]))
-        ret_code = E_TEST_FAILED;
-    if (trunc_index != 128)
         ret_code = E_TEST_FAILED;
 
     return SUCCESS;
