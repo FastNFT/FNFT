@@ -827,7 +827,7 @@ static inline INT refine_mainspec(
     UINT m, best_m;
     const UINT max_m = 4; // led to the lowest number of function evals in
     // an example
-    
+    COMPLEX * r = NULL;
     
     for (k=0; k<K; k++) { // Iterate over the provided main spectrum estimates.
         
@@ -836,7 +836,7 @@ static inline INT refine_mainspec(
         // f=a(lam)+a~(lam)+rhs as well as of f' = df/dlam. (The main spectrum
         // consists of the roots of f for rhs=+/- 2.0.)
         
-        ret_code = nse_scatter_matrix(D, q, eps_t, kappa, 1,
+        ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, 1,
                 &mainspec[k], M, discretization);
         if (ret_code != SUCCESS)
             return E_SUBROUTINE(ret_code);
@@ -863,7 +863,7 @@ static inline INT refine_mainspec(
             best_m = 1;
             for (m=1; m<=max_m; m++) {
                 lam = mainspec[k] - m*incr;
-                ret_code = nse_scatter_matrix(D, q, eps_t, kappa, 1, &lam, M, discretization);
+                ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, 1, &lam, M, discretization);
                 if (ret_code != SUCCESS)
                     return E_SUBROUTINE(ret_code);
                 tmp = M[0] + M[3] + rhs;
@@ -886,6 +886,7 @@ static inline INT refine_mainspec(
         };
         //printf("==> used %zu evaluations\n", nevals);
     }
+    free(r);
     return SUCCESS;
 }
 
@@ -900,13 +901,13 @@ static inline INT refine_auxspec(
     COMPLEX M[8];
     COMPLEX f, f_prime, prev_f;
     INT ret_code;
-    
+    COMPLEX * r = NULL;
     for (k=0; k<K; k++) {
         
         prev_f = NAN;
         for (nevals=0; nevals<max_evals; nevals++) {
             
-            ret_code = nse_scatter_matrix(D, q, eps_t, kappa, 1,
+            ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, 1,
                     &auxspec[k], M, discretization);
             if (ret_code != SUCCESS)
                 return E_SUBROUTINE(ret_code);
@@ -925,7 +926,7 @@ static inline INT refine_auxspec(
             prev_f = f;
         }
     }
-    
+    free(r);
     return SUCCESS;
 }
 

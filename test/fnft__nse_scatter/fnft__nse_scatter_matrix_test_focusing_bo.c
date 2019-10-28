@@ -29,6 +29,7 @@ INT nse_scatter_matrix_test_focusing_bo()
     INT ret_code;
     const REAL eps_t = 0.13;
     COMPLEX q[8];
+    COMPLEX * r = NULL;
     COMPLEX result[2*8];
     COMPLEX lam[2] = {2, 1+0.5*I};
     COMPLEX result_exact[16] = { \
@@ -74,7 +75,7 @@ INT nse_scatter_matrix_test_focusing_bo()
     for (i=0; i<D; i++)
         q[i] = 0.4*cos(i+1) + 0.5*I*sin(0.3*(i+1));
 
-    ret_code = nse_scatter_matrix(D, q, eps_t, +1, 2, lam, result, nse_discretization_BO);
+    ret_code = nse_scatter_matrix(D, q, r, eps_t, +1, 2, lam, result, nse_discretization_BO);
     if (ret_code != SUCCESS)
         return E_SUBROUTINE(ret_code);
     if (misc_rel_err(16, result, result_exact) > 10*EPSILON)

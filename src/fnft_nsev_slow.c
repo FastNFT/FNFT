@@ -346,7 +346,7 @@ static inline INT fnft_nsev_slow_base(
     COMPLEX * xi = NULL;
     UINT offset = 0;
     REAL phase_factor_rho = NAN, phase_factor_a = NAN, phase_factor_b = NAN;
-    akns_discretization_t akns_discretization;
+//     akns_discretization_t akns_discretization;
     REAL bounding_box[4] = { NAN };
     COMPLEX * buffer = NULL;
     
@@ -382,8 +382,8 @@ static inline INT fnft_nsev_slow_base(
     D_given = D/D_scale;
     const REAL eps_t = (T[1] - T[0])/(D_given - 1);
     
-    ret_code = nse_discretization_to_akns_discretization(opts->discretization, &akns_discretization);
-    CHECK_RETCODE(ret_code, release_mem);
+//     ret_code = nse_discretization_to_akns_discretization(opts->discretization, &akns_discretization);
+//     CHECK_RETCODE(ret_code, release_mem);
     
     // Compute the continuous spectrum
     if (contspec != NULL && M > 0) {
@@ -399,8 +399,8 @@ static inline INT fnft_nsev_slow_base(
             xi[i] = XI[0] + eps_xi*i;
         
         
-        ret_code = akns_scatter_matrix(D, q, r, eps_t, M,
-                xi, scatter_coeffs, akns_discretization);
+        ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, M,
+                xi, scatter_coeffs, opts->discretization);
         CHECK_RETCODE(ret_code, release_mem);
         
         REAL boundary_coeff;
@@ -545,7 +545,6 @@ static inline INT refine_roots_newton(
     REAL re_bound_val, im_bound_val = NAN;
     UINT trunc_index;
     trunc_index = D;
-    akns_discretization_t akns_discretization;
     
     // Check inputs
     if (K == 0) // no bound states to refine
@@ -559,9 +558,7 @@ static inline INT refine_roots_newton(
     if (T == NULL)
         return E_INVALID_ARGUMENT(T);
     
-    ret_code = nse_discretization_to_akns_discretization(discretization, &akns_discretization);
-    CHECK_RETCODE(ret_code, leave_fun);
-    
+   
     D_scale = nse_discretization_D_scale(discretization);
     if (D_scale == 0)
         return E_INVALID_ARGUMENT(discretization);
@@ -587,8 +584,8 @@ static inline INT refine_roots_newton(
         iter = 0;
         do {
             // Compute a(lam) and a'(lam) at the current root
-            ret_code = akns_scatter_matrix(D, q, r, eps_t, 1,
-                    bound_states + i, scatter_coeffs, akns_discretization);
+            ret_code = nse_scatter_matrix(D, q, r, eps_t, 1, 1,
+                    bound_states + i, scatter_coeffs, discretization);
             if (ret_code != SUCCESS)
                 return E_SUBROUTINE(ret_code);
             // Perform Newton updates: lam[i] <- lam[i] - a(lam[i])/a'(lam[i])

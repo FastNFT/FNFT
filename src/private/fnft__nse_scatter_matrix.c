@@ -32,15 +32,15 @@
  * Default scheme should be set as BO.
  */
 INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
-    const REAL eps_t, const INT kappa, const UINT K, 
-    COMPLEX const * const lambda,
+    COMPLEX * r, const REAL eps_t, const INT kappa, 
+    const UINT K, COMPLEX const * const lambda,
     COMPLEX * const result, nse_discretization_t discretization)
 {
      
     INT ret_code = SUCCESS;
     UINT i;
     akns_discretization_t akns_discretization;
-    COMPLEX *r = NULL;
+    
     
     // Check inputs
     if (D == 0)
@@ -60,26 +60,26 @@ INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
 
     ret_code = nse_discretization_to_akns_discretization(discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
-
-
-    r = malloc(D*sizeof(COMPLEX));
+    
     if (r == NULL) {
-        ret_code = E_NOMEM;
-        goto leave_fun;
+        r = malloc(D*sizeof(COMPLEX));
+        if (r == NULL) {
+            ret_code = E_NOMEM;
+            goto leave_fun;
+        }
+        
+        
+        if (kappa == 1){
+            for (i = 0; i < D; i++)
+                r[i] = -CONJ(q[i]);
+        }
+        else{
+            for (i = 0; i < D; i++)
+                r[i] = CONJ(q[i]);
+        }
     }
-    
-    if (kappa == 1){
-        for (i = 0; i < D; i++)
-            r[i] = -CONJ(q[i]);
-        }
-    else{
-        for (i = 0; i < D; i++)
-            r[i] = CONJ(q[i]);
-        }
-    
     ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result, akns_discretization);
 
 leave_fun:
-    free(r);
     return ret_code;
 }
