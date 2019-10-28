@@ -20,17 +20,17 @@
 
 #define FNFT_ENABLE_SHORT_NAMES
 
-#include "fnft__nsev_testcases.h"
+#include "fnft__nsev_slow_testcases.h"
 #include "fnft__errwarn.h"
 
 INT main()
 {
     INT ret_code, i;
     fnft_nsev_opts_t opts;
-    const nsev_testcases_t tc = nsev_testcases_SECH_DEFOCUSING;
+    const nsev_slow_testcases_t tc = nsev_slow_testcases_SECH_DEFOCUSING;
     UINT D = 256;
     REAL error_bounds[6] = { 
-        8.8e-6,     // reflection coefficient
+        3.0e-5,     // reflection coefficient
         INFINITY,   // a
         INFINITY,   // b
         0.0,        // bound states
@@ -39,23 +39,23 @@ INT main()
     };
 
     opts = fnft_nsev_default_opts();
-    opts.discretization = nse_discretization_CF6_4;
+    opts.discretization = nse_discretization_CF4_3;
 
-    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
+    ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Check the case where D is not a power of two. The error bounds have to
     // be tight but not too tight for this to make sense!
-    ret_code = nsev_testcases_test_fnft(tc, D+1, error_bounds, &opts);
+    ret_code = nsev_slow_testcases_test_fnft(tc, D+1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = nsev_testcases_test_fnft(tc, D-1, error_bounds, &opts);
+    ret_code = nsev_slow_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    // Check for 6th order error decay
+    // Check for 4th order error decay
     D *= 2;
     for (i=0; i<6; i++)
-        error_bounds[i] /= 64.0;
-    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
+        error_bounds[i] /= 16.0;
+    ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
     

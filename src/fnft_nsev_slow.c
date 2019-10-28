@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include "fnft__errwarn.h"
 #include "fnft_nsev.h"
+#include "fnft_nsev_slow.h"
 #include "fnft__nse_scatter.h"
 #include "fnft__nse_discretization.h"
 #include "fnft__akns_discretization.h"
@@ -69,7 +70,7 @@ static inline INT refine_roots_newton(
         nse_discretization_t discretization,
         const UINT niter);
 
-static inline INT nft_nsev_base(
+static inline INT fnft_nsev_slow_base(
         const UINT D,
         COMPLEX * const q,
         COMPLEX * const r,
@@ -92,7 +93,7 @@ static inline INT signal_effective_from_signal(
  * equation with vanishing boundary conditions.
  * See the header file for documentation.
  */
-INT nft_nsev(
+INT fnft_nsev_slow(
         const UINT D,
         COMPLEX * const q,
         REAL const * const T,
@@ -170,7 +171,7 @@ INT nft_nsev(
     CHECK_RETCODE(ret_code, release_mem);
     
     
-    ret_code = nft_nsev_base(D_effective, q_effective, r_effective, T, M, contspec, XI, K_ptr,
+    ret_code = fnft_nsev_slow_base(D_effective, q_effective, r_effective, T, M, contspec, XI, K_ptr,
             bound_states, normconsts_or_residues, kappa, opts);
     CHECK_RETCODE(ret_code, release_mem);
     
@@ -325,7 +326,7 @@ INT nft_nsev(
         free(q_effective);
         return ret_code;
 }
-static inline INT nft_nsev_base(
+static inline INT fnft_nsev_slow_base(
         const UINT D,
         COMPLEX * const q,
         COMPLEX * const r,
@@ -476,8 +477,8 @@ static inline INT nft_nsev_base(
                 
                 return E_INVALID_ARGUMENT(opts->bound_state_localization);
         }
-        for (i=0;i<K;i++)
-            printf("%1.15e+i%1.15e\n",CREAL(buffer[i]),CIMAG(buffer[i]));
+       // for (i=0;i<K;i++)
+           // printf("%1.15e+i%1.15e\n",CREAL(buffer[i]),CIMAG(buffer[i]));
         
 //         // Norming constants and/or residues)
 //         if (normconsts_or_residues != NULL && *K_ptr != 0) {

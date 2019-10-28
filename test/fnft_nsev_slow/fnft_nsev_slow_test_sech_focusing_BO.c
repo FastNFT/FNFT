@@ -15,55 +15,55 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
-* Shrnivas Chimmalgi (TU Delft) 2019.
+* Shrinivas Chimmalgi (TU Delft) 2017-2018.
 */
-
 #define FNFT_ENABLE_SHORT_NAMES
 
-#include "fnft__nsev_testcases.h"
+#include "fnft__nsev_slow_testcases.h"
 #include "fnft__errwarn.h"
 
 INT main()
 {
     INT ret_code, i;
     fnft_nsev_opts_t opts;
-    const nsev_testcases_t tc = nsev_testcases_SECH_DEFOCUSING;
-    UINT D = 512;
+    UINT D = 4096;
+    const nsev_slow_testcases_t tc = nsev_slow_testcases_SECH_FOCUSING;
     REAL error_bounds[6] = { 
-        2.02e-6,     // reflection coefficient
-        INFINITY,   // a
-        INFINITY,   // b
-        0.0,        // bound states
-        0.0,        // norming constants
-        0.0         // residues 
+        3.9e-6,     // reflection coefficient
+        6.3e-6,     // a
+        2.0e-6,     // b
+        1.6e-5,     // bound states
+        INFINITY,//5e-14,      // norming constants
+        INFINITY//2.1e-6      // residues
     };
 
     opts = fnft_nsev_default_opts();
-    opts.discretization = nse_discretization_CF5_3;
+    opts.bound_state_localization = nsev_bsloc_NEWTON;
+    opts.discretization = nse_discretization_BO;
 
-    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
+    ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Check the case where D is not a power of two. The error bounds have to
     // be tight but not too tight for this to make sense!
-    ret_code = nsev_testcases_test_fnft(tc, D+1, error_bounds, &opts);
+    ret_code = nsev_slow_testcases_test_fnft(tc, D+1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = nsev_testcases_test_fnft(tc, D-1, error_bounds, &opts);
+    ret_code = nsev_slow_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-
-    // Check for 4th order error decay
+ 
+    // Check for quadratic error decay (error_bounds[4] stays as it is
+    // already close to machine precision)
     D *= 2;
     for (i=0; i<6; i++)
-        error_bounds[i] /= 32.0;
-    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
+        error_bounds[i] /= 4.0;
+    error_bounds[4] *= 4.0;
+    ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    
-    
 
 leave_fun:
     if (ret_code != SUCCESS)
         return EXIT_FAILURE;
     else
-	return EXIT_SUCCESS;
+	    return EXIT_SUCCESS;
 }
 
