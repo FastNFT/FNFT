@@ -68,14 +68,14 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
     PSI2 = malloc((D+1) * sizeof(COMPLEX));
     if (PHI1 == NULL || PHI2 == NULL || PSI1 == NULL || PSI2 == NULL) {
         ret_code = E_NOMEM;
-        goto release_mem;
+        goto leave_fun;
     }
     
     if (r == NULL) {
         r = malloc(D*sizeof(COMPLEX));
         if (r == NULL) {
             ret_code = E_NOMEM;
-            goto release_mem;
+            goto leave_fun;
         }
         
         for (n = 0; n < D; n++)
@@ -85,33 +85,78 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
     l = malloc(D*sizeof(COMPLEX));
     if (l == NULL) {
         ret_code = E_NOMEM;
-        goto release_mem;
+        goto leave_fun;
     }
-    
-    
-    
     
     
     for (neig = 0; neig < K; neig++) { // iterate over bound states
         l_curr = bound_states[neig];
         switch (discretization) {
             
-            case nse_discretization_BO: // forward-backward bofetta-osborne scheme
+            case nse_discretization_BO: //  bofetta-osborne scheme
                 scl_factor = 1;
                 for (n = 0; n < D; n++)
                     l[n] = l_curr;
                 break;
                 
-            case nse_discretization_CF4_2: // forward-backward commutator-free fourth-order
+            case nse_discretization_CF4_2: // commutator-free fourth-order
+                if (D%2 != 0){
+                    ret_code = E_ASSERTION_FAILED;
+                    goto leave_fun;
+                }
                 scl_factor = 0.5;
                 for (n = 0; n < D; n++)
                     l[n] = l_curr/2.0;
                 break;
                 
+            case nse_discretization_CF4_3: // commutator-free fourth-order
+                if (D%3 != 0){
+                    ret_code = E_ASSERTION_FAILED;
+                    goto leave_fun;
+                }
+                scl_factor = 1.0/3.0;
+                for (n = 0; n < D; n = n+3)
+                    l[n] = l_curr*0.275;
+                for (n = 1; n < D; n = n+3)
+                    l[n] = l_curr*0.45;
+                for (n = 2; n < D; n = n+3)
+                    l[n] = l_curr*0.275;
+                break;
+                
+            case nse_discretization_CF5_3: // commutator-free fifth-order
+                if (D%3 != 0){
+                    ret_code = E_ASSERTION_FAILED;
+                    goto leave_fun;
+                }
+                scl_factor = 1.0/3.0;
+                for (n = 0; n < D; n = n+3)
+                    l[n] = (0.3+0.1*I)*l_curr;
+                for (n = 1; n < D; n = n+3)
+                    l[n] = l_curr*0.4;
+                for (n = 2; n < D; n = n+3)
+                    l[n] = (0.3-0.1*I)*l_curr;
+                break;
+                
+            case nse_discretization_CF6_4: // commutator-free sixth-order
+                if (D%4 != 0){
+                    ret_code = E_ASSERTION_FAILED;
+                    goto leave_fun;
+                }
+                scl_factor = 0.25;
+                for (n = 0; n < D; n = n+4)
+                    l[n] = (0.210073786808785 + 0.046600721949282*I)*l_curr;
+                for (n = 1; n < D; n = n+4)
+                    l[n] = (0.289926213191215 - 0.046600721949282*I)*l_curr;
+                for (n = 2; n < D; n = n+4)
+                    l[n] = (0.289926213191215 - 0.046600721949282*I)*l_curr;
+                for (n = 3; n < D; n = n+4)
+                    l[n] = (0.210073786808785 + 0.046600721949282*I)*l_curr;
+                break;
                 
             default: // Unknown discretization
                 
                 ret_code = E_INVALID_ARGUMENT(discretization);
+                goto leave_fun;
                 
         }
         
@@ -237,7 +282,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
         }
         
     }
-    release_mem:
+    leave_fun:
         free(PHI1);
         free(PSI1);
         free(PHI2);
