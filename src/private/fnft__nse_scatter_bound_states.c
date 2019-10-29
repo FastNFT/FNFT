@@ -29,17 +29,17 @@
  * Default scheme should be set as BO.
  */
 INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
-        REAL const *const T, UINT K,
+        COMPLEX *r, REAL const *const T, UINT K,
         COMPLEX *bound_states, COMPLEX *a_vals,
         COMPLEX *aprime_vals, COMPLEX *b,
-        nse_discretization_t discretization)
+        nse_discretization_t discretization, UINT skip_b_flag)
 {
     
     INT ret_code = SUCCESS;
     UINT neig;
     UINT c1, c2, c3;
     UINT n;
-    COMPLEX l, qn, qnc, ks, k, sum=0, TM[4][4],ch,chi,sh,u1,ud1,ud2;
+    COMPLEX l, qn, rn, ks, k, sum=0, TM[4][4],ch,chi,sh,u1,ud1,ud2;
     REAL eps_t_n = 0, eps_t = 0;
     COMPLEX * PHI1 = NULL, * PHI2 = NULL;
     COMPLEX * PSI1 = NULL, * PSI2 = NULL;
@@ -70,6 +70,19 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
         ret_code = E_NOMEM;
         goto release_mem;
     }
+    
+    if (r == NULL) {
+        r = malloc(D*sizeof(COMPLEX));
+        if (r == NULL) {
+            ret_code = E_NOMEM;
+            goto release_mem;
+        }
+        
+        for (n = 0; n < D; n++)
+            r[n] = -CONJ(q[n]);
+        
+    }
+    
     switch (discretization) {
         
         case nse_discretization_BO: // forward-backward bofetta-osborne scheme
@@ -87,75 +100,83 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 
                 PSI1[D] = SR[0][1]*CEXP(I*l*(T[1]+eps_t/2));
                 PSI2[D] = SR[1][1]*CEXP(I*l*(T[1]+eps_t/2));
-                n = D;
-                do{
-                    n--;
-                    qn = q[n];
-                    qnc = CONJ(qn);
-                    ks = (-(CABS(qn)*CABS(qn))-(l*l)); //TODO:ks==0 case
-                    k = CSQRT(ks);
-                    ch = CCOSH(k*eps_t_n);
-                    chi = ch/ks;
-                    sh = CSINH(k*eps_t_n)/k;
-                    u1 = l*sh*I;
-                    ud1 = eps_t_n*l*l*chi*I;
-                    ud2 = l*(eps_t_n*ch-sh)/ks;
-                    
-                    U[0][0] = ch-u1;
-                    U[0][1] = qn*sh;
-                    U[1][0] = -qnc*sh;
-                    U[1][1] = ch + u1;
-                    U[2][0] = ud1-(l*eps_t_n+I+(l*l*I)/ks)*sh;
-                    U[2][1] = -qn*ud2;
-                    U[3][0] = qnc*ud2;
-                    U[3][1] = -ud1-(l*eps_t_n-I-(l*l*I)/ks)*sh;
-                    U[2][2] = ch-u1;
-                    U[2][3] = qn*sh;
-                    U[3][2] = -qnc*sh;
-                    U[3][3] = ch+u1;
-                    for (c1 = 0; c1 < 4; c1++) {
-                        for (c2 = 0; c2 < 4; c2++) {
-                            for (c3 = 0; c3 < 4; c3++) {
-                                sum = sum + U[c1][c3]*SR[c3][c2];
-                            }
-                            TM[c1][c2] = sum;
-                            sum = 0;
-                        }
-                    }
-                    for (c1 = 0; c1 < 4; c1++) {
-                        for (c2 = 0; c2 < 4; c2++)
-                            SR[c1][c2] = TM[c1][c2];
-                    }
-                    
-                    PSI1[n] = SR[0][1]*CEXP(I*l*(T[1]+eps_t/2));
-                    PSI2[n] = SR[1][1]*CEXP(I*l*(T[1]+eps_t/2));
-                    
-                } while (n > 0);
                 
+                if (skip_b_flag == 0){
+                    n = D;
+                    do{
+                        n--;
+                        qn = q[n];
+                        rn = r[n];
+                        ks = ((q[n]*r[n])-(l*l));
+                        k = CSQRT(ks);
+                        ch = CCOSH(k*eps_t_n);
+                        chi = ch/ks;
+                        if (ks != 0)
+                            sh = CSINH(k*eps_t_n)/k;
+                        else
+                            sh = eps_t_n;
+                        u1 = l*sh*I;
+                        ud1 = eps_t*l*l*chi*I;
+                        ud2 = l*(eps_t_n*ch-sh)/ks;
+                        U[0][0] = ch-u1;
+                        U[0][1] = qn*sh;
+                        U[1][0] = rn*sh;
+                        U[1][1] = ch + u1;
+                        U[2][0] = ud1-(l*eps_t_n+I+(l*l*I)/ks)*sh;
+                        U[2][1] = -qn*ud2;
+                        U[3][0] = -rn*ud2;
+                        U[3][1] = -ud1-(l*eps_t_n-I-(l*l*I)/ks)*sh;
+                        U[2][2] = ch-u1;
+                        U[2][3] = qn*sh;
+                        U[3][2] = rn*sh;
+                        U[3][3] = ch+u1;
+                        
+                        for (c1 = 0; c1 < 4; c1++) {
+                            for (c2 = 0; c2 < 4; c2++) {
+                                for (c3 = 0; c3 < 4; c3++) {
+                                    sum = sum + U[c1][c3]*SR[c3][c2];
+                                }
+                                TM[c1][c2] = sum;
+                                sum = 0;
+                            }
+                        }
+                        for (c1 = 0; c1 < 4; c1++) {
+                            for (c2 = 0; c2 < 4; c2++)
+                                SR[c1][c2] = TM[c1][c2];
+                        }
+                        
+                        PSI1[n] = SR[0][1]*CEXP(I*l*(T[1]+eps_t/2));
+                        PSI2[n] = SR[1][1]*CEXP(I*l*(T[1]+eps_t/2));
+                        
+                    } while (n > 0);
+                }
                 PHI1[0] = SL[0][0]*CEXP(-I*l*(T[0]-eps_t/2));
                 PHI2[0] = SL[1][0]*CEXP(-I*l*(T[0]-eps_t/2));
                 for (n = 0; n < D; n++){
                     qn = q[n];
-                    qnc = CONJ(qn);
-                    ks = (-(CABS(qn)*CABS(qn))-(l*l));
+                    rn = r[n];
+                    ks = ((q[n]*r[n])-(l*l));
                     k = CSQRT(ks);
                     ch = CCOSH(k*eps_t);
                     chi = ch/ks;
-                    sh = CSINH(k*eps_t)/k;
+                    if (ks != 0)
+                        sh = CSINH(k*eps_t)/k;
+                    else
+                        sh = eps_t_n;
                     u1 = l*sh*I;
                     ud1 = eps_t*l*l*chi*I;
                     ud2 = l*(eps_t*ch-sh)/ks;
                     U[0][0] = ch-u1;
                     U[0][1] = qn*sh;
-                    U[1][0] = -qnc*sh;
-                    U[1][1] = ch+u1;
+                    U[1][0] = rn*sh;
+                    U[1][1] = ch + u1;
                     U[2][0] = ud1-(l*eps_t+I+(l*l*I)/ks)*sh;
                     U[2][1] = -qn*ud2;
-                    U[3][0] = qnc*ud2;
+                    U[3][0] = -rn*ud2;
                     U[3][1] = -ud1-(l*eps_t-I-(l*l*I)/ks)*sh;
                     U[2][2] = ch-u1;
                     U[2][3] = qn*sh;
-                    U[3][2] = -qnc*sh;
+                    U[3][2] = rn*sh;
                     U[3][3] = ch+u1;
                     for (c1 = 0; c1 < 4; c1++) {
                         for (c2 = 0; c2 < 4; c2++) {
@@ -177,15 +198,17 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 a_vals[neig] = SL[0][0]*CEXP(-I*l*(T[0]-eps_t/2))*CEXP(I*l*(T[1]+eps_t/2));
                 aprime_vals[neig] = (SL[2][0]+I*(T[1]+eps_t-T[0])*SL[0][0])*CEXP(I*l*(-T[0]+T[1]+eps_t));
                 
-                // Calculation of b assuming a=0
-                // Uses the metric from DOI: 10.1109/ACCESS.2019.2932256 for choosing the
-                // computation point
-                REAL error_metric = INFINITY, tmp = INFINITY;
-                for (n = 0; n <= D; n++){
-                    tmp = CABS((0.5*LOG(CABS((PHI2[n]/PSI2[n])/(PHI1[n]/PSI1[n])))));
-                    if (tmp < error_metric){
-                        b[neig] = PHI1[n]/PSI1[n];
-                        error_metric = tmp;
+                if (skip_b_flag == 0){
+                    // Calculation of b assuming a=0
+                    // Uses the metric from DOI: 10.1109/ACCESS.2019.2932256 for choosing the
+                    // computation point
+                    REAL error_metric = INFINITY, tmp = INFINITY;
+                    for (n = 0; n <= D; n++){
+                        tmp = CABS((0.5*LOG(CABS((PHI2[n]/PSI2[n])/(PHI1[n]/PSI1[n])))));
+                        if (tmp < error_metric){
+                            b[neig] = PHI1[n]/PSI1[n];
+                            error_metric = tmp;
+                        }
                     }
                 }
             }
@@ -207,75 +230,82 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 
                 PSI1[D] = SR[0][1]*CEXP(I*l*(T[1]+eps_t/2));
                 PSI2[D] = SR[1][1]*CEXP(I*l*(T[1]+eps_t/2));
-                n = D;
-                do{
-                    n--;
-                    qn = q[n];
-                    qnc = CONJ(qn);
-                    ks = (-(CABS(qn)*CABS(qn))-(l*l)); //TODO:ks==0 case
-                    k = CSQRT(ks);
-                    ch = CCOSH(k*eps_t_n);
-                    chi = ch/ks;
-                    sh = CSINH(k*eps_t_n)/k;
-                    u1 = l*sh*I;
-                    ud1 = eps_t_n*l*l*chi*I;
-                    ud2 = l*(eps_t_n*ch-sh)/ks;
-                    
-                    U[0][0] = ch-u1;
-                    U[0][1] = qn*sh;
-                    U[1][0] = -qnc*sh;
-                    U[1][1] = ch + u1;
-                    U[2][0] = ud1-(l*eps_t_n+I+(l*l*I)/ks)*sh;
-                    U[2][1] = -qn*ud2;
-                    U[3][0] = qnc*ud2;
-                    U[3][1] = -ud1-(l*eps_t_n-I-(l*l*I)/ks)*sh;
-                    U[2][2] = ch-u1;
-                    U[2][3] = qn*sh;
-                    U[3][2] = -qnc*sh;
-                    U[3][3] = ch+u1;
-                    for (c1 = 0; c1 < 4; c1++) {
-                        for (c2 = 0; c2 < 4; c2++) {
-                            for (c3 = 0; c3 < 4; c3++) {
-                                sum = sum + U[c1][c3]*SR[c3][c2];
+                if (skip_b_flag == 0){
+                    n = D;
+                    do{
+                        n--;
+                        qn = q[n];
+                        rn = r[n];
+                        ks = ((q[n]*r[n])-(l*l));
+                        k = CSQRT(ks);
+                        ch = CCOSH(k*eps_t_n);
+                        chi = ch/ks;
+                        if (ks != 0)
+                            sh = CSINH(k*eps_t_n)/k;
+                        else
+                            sh = eps_t_n;
+                        u1 = l*sh*I;
+                        ud1 = eps_t*l*l*chi*I;
+                        ud2 = l*(eps_t_n*ch-sh)/ks;
+                        U[0][0] = ch-u1;
+                        U[0][1] = qn*sh;
+                        U[1][0] = rn*sh;
+                        U[1][1] = ch + u1;
+                        U[2][0] = ud1-(l*eps_t_n+I+(l*l*I)/ks)*sh;
+                        U[2][1] = -qn*ud2;
+                        U[3][0] = -rn*ud2;
+                        U[3][1] = -ud1-(l*eps_t_n-I-(l*l*I)/ks)*sh;
+                        U[2][2] = ch-u1;
+                        U[2][3] = qn*sh;
+                        U[3][2] = rn*sh;
+                        U[3][3] = ch+u1;
+                        
+                        for (c1 = 0; c1 < 4; c1++) {
+                            for (c2 = 0; c2 < 4; c2++) {
+                                for (c3 = 0; c3 < 4; c3++) {
+                                    sum = sum + U[c1][c3]*SR[c3][c2];
+                                }
+                                TM[c1][c2] = sum;
+                                sum = 0;
                             }
-                            TM[c1][c2] = sum;
-                            sum = 0;
                         }
-                    }
-                    for (c1 = 0; c1 < 4; c1++) {
-                        for (c2 = 0; c2 < 4; c2++)
-                            SR[c1][c2] = TM[c1][c2];
-                    }
-                    
-                    PSI1[n] = SR[0][1]*CEXP(I*l*(T[1]+eps_t/2));
-                    PSI2[n] = SR[1][1]*CEXP(I*l*(T[1]+eps_t/2));
-                    
-                } while (n > 0);
-                
+                        for (c1 = 0; c1 < 4; c1++) {
+                            for (c2 = 0; c2 < 4; c2++)
+                                SR[c1][c2] = TM[c1][c2];
+                        }
+                        
+                        PSI1[n] = SR[0][1]*CEXP(I*l*(T[1]+eps_t/2));
+                        PSI2[n] = SR[1][1]*CEXP(I*l*(T[1]+eps_t/2));
+                        
+                    } while (n > 0);
+                }
                 PHI1[0] = SL[0][0]*CEXP(-I*l*(T[0]-eps_t/2));
                 PHI2[0] = SL[1][0]*CEXP(-I*l*(T[0]-eps_t/2));
                 for (n = 0; n < D; n++){
                     qn = q[n];
-                    qnc = CONJ(qn);
-                    ks = (-(CABS(qn)*CABS(qn))-(l*l));
+                    rn = r[n];
+                    ks = ((q[n]*r[n])-(l*l));
                     k = CSQRT(ks);
                     ch = CCOSH(k*eps_t);
                     chi = ch/ks;
-                    sh = CSINH(k*eps_t)/k;
+                    if (ks != 0)
+                        sh = CSINH(k*eps_t)/k;
+                    else
+                        sh = eps_t_n;
                     u1 = l*sh*I;
                     ud1 = eps_t*l*l*chi*I;
                     ud2 = l*(eps_t*ch-sh)/ks;
                     U[0][0] = ch-u1;
                     U[0][1] = qn*sh;
-                    U[1][0] = -qnc*sh;
-                    U[1][1] = ch+u1;
+                    U[1][0] = rn*sh;
+                    U[1][1] = ch + u1;
                     U[2][0] = ud1-(l*eps_t+I+(l*l*I)/ks)*sh;
                     U[2][1] = -qn*ud2;
-                    U[3][0] = qnc*ud2;
+                    U[3][0] = -rn*ud2;
                     U[3][1] = -ud1-(l*eps_t-I-(l*l*I)/ks)*sh;
                     U[2][2] = ch-u1;
                     U[2][3] = qn*sh;
-                    U[3][2] = -qnc*sh;
+                    U[3][2] = rn*sh;
                     U[3][3] = ch+u1;
                     for (c1 = 0; c1 < 4; c1++) {
                         for (c2 = 0; c2 < 4; c2++) {
@@ -297,15 +327,17 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 a_vals[neig] = SL[0][0]*CEXP(I*l_curr*(-T[0]+T[1]+eps_t));
                 aprime_vals[neig] = 0.5*(SL[2][0]+I*(T[1]+eps_t-T[0])*SL[0][0])*CEXP(I*l_curr*(-T[0]+T[1]+eps_t));
                 
-                // Calculation of b assuming a=0
-                // Uses the metric from DOI: 10.1109/ACCESS.2019.2932256 for choosing the
-                // computation point
-                REAL error_metric = INFINITY, tmp = INFINITY;
-                for (n = 0; n <= D; n++){
-                    tmp = CABS((0.5*LOG(CABS((PHI2[n]/PSI2[n])/(PHI1[n]/PSI1[n])))));
-                    if (tmp < error_metric){
-                        b[neig] = PHI1[n]/PSI1[n];
-                        error_metric = tmp;
+                if (skip_b_flag == 0){
+                    // Calculation of b assuming a=0
+                    // Uses the metric from DOI: 10.1109/ACCESS.2019.2932256 for choosing the
+                    // computation point
+                    REAL error_metric = INFINITY, tmp = INFINITY;
+                    for (n = 0; n <= D; n++){
+                        tmp = CABS((0.5*LOG(CABS((PHI2[n]/PSI2[n])/(PHI1[n]/PSI1[n])))));
+                        if (tmp < error_metric){
+                            b[neig] = PHI1[n]/PSI1[n];
+                            error_metric = tmp;
+                        }
                     }
                 }
             }

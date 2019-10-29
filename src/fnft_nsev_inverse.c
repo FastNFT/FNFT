@@ -711,6 +711,7 @@ static INT add_discrete_spectrum(
     COMPLEX * acoeff_cs = NULL;
     COMPLEX * phi = NULL;
     COMPLEX * psi = NULL;
+    COMPLEX * r = NULL;
     UINT i,j;
     UINT zc_point = 0; //index of zero-crossing of time
     INT ret_code = SUCCESS;
@@ -779,8 +780,8 @@ static INT add_discrete_spectrum(
             // of the potential contributes to the residues and needs to be
             // removed.
 
-            ret_code = nse_scatter_bound_states(D, q, T, K,
-                    bnd_states, acoeff_cs, acoeff_cs+K, acoeff_cs+2*K, nse_discretization_BO);
+            ret_code = nse_scatter_bound_states(D, q, r, T, K,
+                    bnd_states, acoeff_cs, acoeff_cs+K, acoeff_cs+2*K, nse_discretization_BO, 1);
             CHECK_RETCODE(ret_code, leave_fun);
         }
         else {
@@ -909,6 +910,7 @@ static INT add_discrete_spectrum(
         free(bnd_states_diff);
         free(norm_consts);
         free(acoeff_cs);
+        free(r);
         return ret_code;
 }
 

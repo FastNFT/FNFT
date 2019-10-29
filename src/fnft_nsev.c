@@ -867,7 +867,7 @@ static inline INT tf2normconsts_or_residues(
         fnft_nsev_opts_t * const opts)
 {
     
-    COMPLEX *a_vals = NULL, *aprime_vals = NULL;
+    COMPLEX *a_vals = NULL, *aprime_vals = NULL, *r = NULL;
     UINT i, offset = 0;
     INT ret_code = SUCCESS;
     nse_discretization_t discretization = nse_discretization_BO;
@@ -892,8 +892,9 @@ static inline INT tf2normconsts_or_residues(
         discretization  = nse_discretization_BO;
     else if (D_scale == 2)
         discretization  = nse_discretization_CF4_2;
-    ret_code = nse_scatter_bound_states(D, q, T, K,
-            bound_states, a_vals, aprime_vals, normconsts_or_residues, discretization);
+    
+    ret_code = nse_scatter_bound_states(D, q, r, T, K,
+            bound_states, a_vals, aprime_vals, normconsts_or_residues, discretization, 0);
     CHECK_RETCODE(ret_code, leave_fun);
     
     // Update to or add residues if requested
@@ -918,6 +919,7 @@ static inline INT tf2normconsts_or_residues(
     }
     
     leave_fun:
+        free(r);
         return ret_code;
 }
 
@@ -936,7 +938,7 @@ static inline INT refine_roots_newton(
     COMPLEX a_val, b_val, aprime_val, error;
     REAL eprecision = EPSILON * 100;
     REAL re_bound_val, im_bound_val = NAN;
-    COMPLEX *q_tmp = NULL;
+    COMPLEX *q_tmp = NULL, *r = NULL;
     // Check inputs
     if (K == 0) // no bound states to refine
         return SUCCESS;
@@ -973,6 +975,7 @@ static inline INT refine_roots_newton(
     } else if (D_scale == 1) {
         im_bound_val = im_bound(D_given, q, T);
     }
+
     if (im_bound_val == NAN)
         return E_OTHER("Upper bound on imaginary part of bound states is NaN");
     
@@ -983,8 +986,8 @@ static inline INT refine_roots_newton(
         iter = 0;
         do {
             // Compute a(lam) and a'(lam) at the current root
-            ret_code = nse_scatter_bound_states(D, q, T, 1,
-                    bound_states + i, &a_val, &aprime_val, &b_val, discretization);
+            ret_code = nse_scatter_bound_states(D, q, r, T, 1,
+                    bound_states + i, &a_val, &aprime_val, &b_val, discretization, 1);
             if (ret_code != SUCCESS)
                 return E_SUBROUTINE(ret_code);
             // Perform Newton updates: lam[i] <- lam[i] - a(lam[i])/a'(lam[i])
@@ -1004,5 +1007,6 @@ static inline INT refine_roots_newton(
     
     leave_fun:
         free(q_tmp);
+        free(r);
         return ret_code;
 }

@@ -63,10 +63,10 @@
  * @ingroup nse
  */
 FNFT_INT fnft__nse_scatter_bound_states(const FNFT_UINT D, FNFT_COMPLEX const *const q,
-    FNFT_REAL const *const T, FNFT_UINT K,
+    FNFT_COMPLEX * r, FNFT_REAL const *const T, FNFT_UINT K,
     FNFT_COMPLEX *bound_states, FNFT_COMPLEX *a_vals,
     FNFT_COMPLEX *aprime_vals, FNFT_COMPLEX *b,
-    fnft_nse_discretization_t discretization);
+    fnft_nse_discretization_t discretization, FNFT_UINT skip_b_flag);
 
 /**
  * @brief Computes the scattering matrix and its derivative.
