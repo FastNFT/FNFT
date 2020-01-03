@@ -41,7 +41,8 @@ static fnft_nsep_opts_t default_opts = {
     .normalization_flag = 1,
     .discretization = nse_discretization_2SPLIT2A,
     .floquet_range = {-1, 1},
-    .floquet_nvals = 2
+    .floquet_nvals = 2,
+    .Dsub = 0 // => the algorithm chooses Dsub automatically
 };
 
 static const UINT oversampling_factor = 32;
@@ -193,7 +194,7 @@ static inline INT gridsearch(const UINT D,
     COMPLEX * roots = NULL;
     REAL degree1step, map_coeff;
     REAL PHI[2] = { 0.0, 2.0*PI };
-  UINT deg;
+    UINT deg;
     INT W = 0, *W_ptr = NULL;
     UINT K, K_filtered;
     UINT M;
@@ -405,7 +406,11 @@ static inline INT subsample_and_refine(const UINT D,
 
     // Create a subsampled version of q for computing initial guesses. (The
     // refinement will be carried out based on the original signal.)
-    Dsub = POW(2.0, CEIL( 0.5 * LOG2(D * LOG2(D) * LOG2(D)) ));
+    Dsub = opts_ptr->Dsub;
+    if (Dsub == 0) // users wants Dsub to be chosen automatically
+        Dsub = POW(2.0, CEIL( 0.5 * LOG2(D * LOG2(D) * LOG2(D)) ));
+    else
+        Dsub = POW(2.0, ROUND(LOG2(Dsub)));
     UINT first_last_index[2] = { 0, 0 };
     ret_code = misc_downsample(D, q, &Dsub, &qsub, first_last_index);
     if ( first_last_index[0] != 0 || first_last_index[1]+1 != D )
@@ -612,6 +617,9 @@ static inline INT refine_mainspec(
     const UINT max_m = 4; // led to the lowest number of function evals in
                             // an example
 
+    if (max_evals == 0)
+        return SUCCESS;
+
     for (k=0; k<K; k++) { // Iterate over the provided main spectrum estimates.
 
         // Initilization. Computes the monodromy matrix at the current main
@@ -683,6 +691,9 @@ static inline INT refine_auxspec(
     COMPLEX M[8];
     COMPLEX f, f_prime, prev_f;
     INT ret_code;
+
+    if (max_evals == 0)
+        return SUCCESS;
 
     for (k=0; k<K; k++) {
 

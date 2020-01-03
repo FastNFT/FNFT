@@ -115,7 +115,13 @@ typedef enum {
  *   the spines (or bands) connecting the points in the main spectrum.
  *
  * @var fnft_nsep_opts_t::floquet_nvals
- *  See \link fnft_nsep_opts_t::floquet_range \endlink.
+ *   See \link fnft_nsep_opts_t::floquet_range \endlink.
+ *
+ * @var fnft_nsep_opts_t::Dsub
+ *   Approximate number of samples after subsampling when SUBSAMPLE_AND_REFINE
+ *   is used during localization. See \link fnft_nsep_loc_t \endlink.
+ *   When set to zero (default), the algorithm will choose Dsub automatically
+ *   such that the complexity of finding initial guesses is O(D log^2 D).
  */
 typedef struct {
     fnft_nsep_loc_t localization;
@@ -126,6 +132,7 @@ typedef struct {
     FNFT_INT normalization_flag;
     FNFT_REAL floquet_range[2];
     FNFT_UINT floquet_nvals;
+    FNFT_UINT Dsub;
 } fnft_nsep_opts_t;
 
 /**
@@ -143,6 +150,9 @@ typedef struct {
  *  bounding_box[3] = FNFT_INF\n
  *  normalization_flag = 1\n
  *  discretization = fnft_nse_discretization_2SPLIT2A\n
+ *  floquet_range = {-1, 1}\n
+ *  floquet_nvals = 2\n
+ *  Dsub = 0
  */
 fnft_nsep_opts_t fnft_nsep_default_opts();
 

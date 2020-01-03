@@ -116,12 +116,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "floquet_nvals") == 0 ) {
 
             if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
-                 || mxGetNumberOfElements(prhs[k+1]) != 1) {
+                 || mxGetNumberOfElements(prhs[k+1]) != 1
+                 || mxGetScalar(prhs[k+1]) < 0.0 ) {
                 snprintf(msg, sizeof msg, "'floquet_nvals' should be followed by non-negative real number. See the help.");
                 goto on_error;
             }
-            double const * const tmp = mxGetPr(prhs[k+1]);
-            opts.floquet_nvals = (FNFT_UINT)tmp[0];
+            opts.floquet_nvals = (FNFT_UINT)mxGetScalar(prhs[k+1]);
             k++;
 
         } else if ( strcmp(str, "loc_mixed") == 0 ) {
@@ -135,6 +135,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "loc_gridsearch") == 0 ) {
 
             opts.localization = fnft_nsep_loc_GRIDSEARCH;
+
+        } else if ( strcmp(str, "loc_max_evals") == 0 ) {
+
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+                 || mxGetNumberOfElements(prhs[k+1]) != 1
+                 || mxGetScalar(prhs[k+1]) < 0.0 ) {
+                snprintf(msg, sizeof msg, "'loc_max_evals' should be followed by non-negative real number. See the help.");
+                goto on_error;
+            }
+            opts.max_evals = (FNFT_UINT)mxGetScalar(prhs[k+1]);
+            k++;
+
+        } else if ( strcmp(str, "loc_Dsub") == 0 ) {
+
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+                 || mxGetNumberOfElements(prhs[k+1]) != 1
+                 || mxGetScalar(prhs[k+1]) < 0.0 ) {
+                snprintf(msg, sizeof msg, "'loc_Dsub' should be followed by non-negative real number. See the help.");
+                goto on_error;
+            }
+            opts.Dsub = (FNFT_UINT)mxGetScalar(prhs[k+1]);
+            k++;
 
         } else if ( strcmp(str, "quiet") == 0 ) {
 
