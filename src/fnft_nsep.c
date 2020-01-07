@@ -42,7 +42,8 @@ static fnft_nsep_opts_t default_opts = {
     .discretization = nse_discretization_2SPLIT2A,
     .floquet_range = {-1, 1},
     .floquet_nvals = 2,
-    .Dsub = 0 // => the algorithm chooses Dsub automatically
+    .Dsub = 0, // => the algorithm chooses Dsub automatically
+    .tol = -1 // negative tol => the algorithm chooses tol automatically
 };
 
 static const UINT oversampling_factor = 32;
@@ -55,16 +56,15 @@ fnft_nsep_opts_t fnft_nsep_default_opts()
 }
 
 // Auxiliary routines.
-static inline INT refine_mainspec(
-    const UINT D, COMPLEX const * const q,
-    const REAL eps_t, const UINT K,
-    COMPLEX * const mainspec, const UINT max_evals,
-    REAL rhs, INT kappa);
-static inline INT refine_auxspec(
-    const UINT D, COMPLEX const * const q,
-    const REAL eps_t, const UINT K,
-    COMPLEX * const auxspec, const UINT max_evals,
-    const INT kappa);
+static inline INT refine_mainspec(const UINT D, COMPLEX const * const q,
+                                  const REAL eps_t, const UINT K,
+                                  COMPLEX * const mainspec,
+                                  const UINT max_evals, REAL rhs,
+                                  const REAL tol, INT kappa);
+static inline INT refine_auxspec(const UINT D, COMPLEX const * const q,
+                                 const REAL eps_t, const UINT K,
+                                 COMPLEX * const auxspec, const UINT max_evals,
+                                 const REAL tol, const INT kappa);
 static inline INT subsample_and_refine(const UINT D,
     COMPLEX const * const q,
     REAL const * const T, UINT * const K_ptr,
@@ -392,6 +392,7 @@ static inline INT subsample_and_refine(const UINT D,
     COMPLEX * qsub = NULL;
     REAL degree1step, map_coeff;
     REAL tol_im;
+    REAL refine_tol;
     UINT deg;
     UINT Dsub;
     INT W = 0, *W_ptr = NULL;
@@ -417,6 +418,12 @@ static inline INT subsample_and_refine(const UINT D,
         return E_ASSERTION_FAILED; // Correct update of T for general
                                    // downsampling still needs to be
                                    // implemented
+
+    // Determine the tolerance for the refinement steps
+    if (opts_ptr->tol < 0)
+        refine_tol = SQRT(EPSILON);
+    else
+        refine_tol = opts_ptr->tol;
 
     // Allocate memory for the transfer matrix
     i = nse_fscatter_numel(Dsub, opts_ptr->discretization);
@@ -514,7 +521,8 @@ static inline INT subsample_and_refine(const UINT D,
 
             // Refine the remaining roots
             ret_code = refine_mainspec(D, q, eps_t, K_new, roots,
-                                       opts_ptr->max_evals, -rhs, kappa);
+                                       opts_ptr->max_evals, -rhs,
+                                       refine_tol, kappa);
             CHECK_RETCODE(ret_code, release_mem);
 
             // Filter the refined roots
@@ -563,8 +571,8 @@ static inline INT subsample_and_refine(const UINT D,
         }
 
         // Refine the roots
-        ret_code = refine_auxspec(D, q, eps_t, M, roots,
-            opts_ptr->max_evals, kappa);
+        ret_code = refine_auxspec(D, q, eps_t, M, roots, opts_ptr->max_evals,
+                                  refine_tol, kappa);
         CHECK_RETCODE(ret_code, release_mem);
 
         // Filter the refined roots
@@ -601,11 +609,11 @@ release_mem:
 }
 
 // Uses Newton's method for roots of higher order to refine the main spectrum.
-static inline INT refine_mainspec(
-    const UINT D, COMPLEX const * const q,
-    const REAL eps_t, const UINT K,
-    COMPLEX * const mainspec,
-    const UINT max_evals, const REAL rhs, const INT kappa)
+static inline INT refine_mainspec(const UINT D, COMPLEX const * const q,
+                                  const REAL eps_t, const UINT K,
+                                  COMPLEX * const mainspec,
+                                  const UINT max_evals, const REAL rhs,
+                                  const REAL tol, const INT kappa)
 {
     UINT k;
     COMPLEX M[8];
@@ -614,8 +622,7 @@ static inline INT refine_mainspec(
     UINT nevals;
     INT ret_code;
     UINT m, best_m;
-    const UINT max_m = 4; // led to the lowest number of function evals in
-                            // an example
+    const UINT max_m = 2; // roots might be single or double
 
     if (max_evals == 0)
         return SUCCESS;
@@ -628,18 +635,18 @@ static inline INT refine_mainspec(
         // consists of the roots of f for rhs=+/- 2.0.)
 
         ret_code = nse_scatter_matrix(D, q, eps_t, kappa, 1,
-            &mainspec[k], M, nse_discretization_BO);
+                                      &mainspec[k], M, nse_discretization_BO);
         if (ret_code != SUCCESS)
             return E_SUBROUTINE(ret_code);
         next_f = M[0] + M[3] + rhs; // f = a(lam) + atil(lam) + rhs
-        next_f_prime = 2.0*( M[4] + M[7] ); // f' = 2*[a'(lam) + atil'(lam)]
+        next_f_prime = M[4] + M[7]; // f' = a'(lam) + atil'(lam)
 
         // Iteratively refine the current main spectrum poINT by applying
         // Newton's method for higher order roots: next_x=x-m*f/f', where
         // m is the order of the root. Since we do not know m, several values
         // are tested in a line search-like procedure. Per iterion, max_m
         // values of m are tested, leading to max_m monodromoy mat evaluations.
-        for (nevals=1; nevals<=max_evals; nevals+=max_m) {
+        for (nevals=1; nevals<=max_evals;) {
 
             // The current values of f and f' at lam = mainspec[k]
             f = next_f;
@@ -654,9 +661,11 @@ static inline INT refine_mainspec(
             best_m = 1;
             for (m=1; m<=max_m; m++) {
                 lam = mainspec[k] - m*incr;
-                ret_code = nse_scatter_matrix(D, q, eps_t, kappa, 1, &lam, M, nse_discretization_BO);
+                ret_code = nse_scatter_matrix(D, q, eps_t, kappa, 1, &lam, M,
+                                              nse_discretization_BO);
                 if (ret_code != SUCCESS)
                     return E_SUBROUTINE(ret_code);
+                nevals++;
                 tmp = M[0] + M[3] + rhs;
                 cur_abs = CABS(tmp);
                 // keep this m if the new value of |f| would be lower than the
@@ -665,15 +674,24 @@ static inline INT refine_mainspec(
                     min_abs = cur_abs;
                     best_m = m;
                     next_f = tmp;
-                    next_f_prime = 2.0*( M[4] + M[7] );
+                    next_f_prime = M[4] + M[7];
+                    if ( cur_abs < tol )
+                        break;
                 }
             }
 
-            //printf("MAIN k=%zu, nevals=%zu: lam=%g+%gj, |f|=%g, |f_prime|=%g, |incr|=%g\n", k, nevals, CREAL(mainspec[k]), CIMAG(mainspec[k]), CABS(f), CABS(f_prime),CABS(incr));
-            if ( min_abs >= CABS(f) ) // stop if no improvement
-                break;
+            mainspec[k] -= best_m*incr; // Newton step
 
-            mainspec[k] -= best_m*incr;
+            //printf("MAIN k=%zu, nevals=%zu: lam=%g+%gj, |f|=%g, |f_prime|=%g, |incr|=%g\n", k, nevals, CREAL(mainspec[k]), CIMAG(mainspec[k]), CABS(next_f), CABS(next_f_prime),CABS(incr));
+
+            if ( min_abs < tol ) {
+                // We already know f and f_prime at the new mainspec[k], so
+                // let's use that for a final first-order Newton step.
+                if (next_f_prime == 0.0)
+                    return E_DIV_BY_ZERO;
+                mainspec[k] -= next_f / next_f_prime;
+                break;
+            }
         };
         //printf("==> used %zu evaluations\n", nevals);
     }
@@ -681,15 +699,14 @@ static inline INT refine_mainspec(
 }
 
 // Uses Newton's method to refine the aux spectrum.
-static inline INT refine_auxspec(
-    const UINT D, COMPLEX const * const q,
-    const REAL eps_t, const UINT K,
-    COMPLEX * const auxspec, const UINT max_evals,
-    const INT kappa)
+static inline INT refine_auxspec(const UINT D, COMPLEX const * const q,
+                                 const REAL eps_t, const UINT K,
+                                 COMPLEX * const auxspec, const UINT max_evals,
+                                 const REAL tol, const INT kappa)
 {
     UINT k, nevals;
     COMPLEX M[8];
-    COMPLEX f, f_prime, prev_f;
+    COMPLEX f, f_prime;
     INT ret_code;
 
     if (max_evals == 0)
@@ -697,26 +714,26 @@ static inline INT refine_auxspec(
 
     for (k=0; k<K; k++) {
 
-        prev_f = NAN;
-        for (nevals=0; nevals<max_evals; nevals++) {
+        for (nevals=0; nevals<max_evals;) {
 
             ret_code = nse_scatter_matrix(D, q, eps_t, kappa, 1,
                 &auxspec[k], M, nse_discretization_BO);
             if (ret_code != SUCCESS)
                 return E_SUBROUTINE(ret_code);
+            nevals++;
 
             f = M[2]; // f = b(lam)
             f_prime = M[6]; // f' = b'(lam)
             if (f_prime == 0.0)
                 return E_DIV_BY_ZERO;
 
-            if ( CABS(f) >= CABS(prev_f) ) // stop if no improvement
-                break;
-
-            // printf("AUX k=%zu, iter=%zu: lam=%g+%gj, |f|=%g, |f_prime|=%g\n", k, iter, CREAL(auxspec[k]), CIMAG(auxspec[k]), CABS(f), CABS(f_prime));
+            //printf("AUX k=%zu, nevals=%zu: lam=%g+%gj, |f|=%g, |f_prime|=%g\n", k, nevals, CREAL(auxspec[k]), CIMAG(auxspec[k]), CABS(f), CABS(f_prime));
 
             auxspec[k] -= f / f_prime;
-            prev_f = f;
+            if ( CABS(f) < tol ) // Intentionally put after the previous line
+                // => we use the already known values for f and f_prime for a
+                // last Newton step even if already |f|<tol.
+                break;
        }
     }
 

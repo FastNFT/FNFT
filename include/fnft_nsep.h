@@ -133,6 +133,7 @@ typedef struct {
     FNFT_REAL floquet_range[2];
     FNFT_UINT floquet_nvals;
     FNFT_UINT Dsub;
+    FNFT_REAL tol;
 } fnft_nsep_opts_t;
 
 /**
