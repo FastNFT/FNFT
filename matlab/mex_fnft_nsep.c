@@ -113,15 +113,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             /* Increase k to account for bounding box vector */
             k++;
 
-        } else if ( strcmp(str, "floquet_nvals") == 0 ) {
+        } else if ( strcmp(str, "points_per_spine") == 0 ) {
 
             if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
                  || mxGetNumberOfElements(prhs[k+1]) != 1
                  || mxGetScalar(prhs[k+1]) < 0.0 ) {
-                snprintf(msg, sizeof msg, "'floquet_nvals' should be followed by non-negative real number. See the help.");
+                snprintf(msg, sizeof msg, "'points_per_spine' should be followed by non-negative real number. See the help.");
                 goto on_error;
             }
-            opts.floquet_nvals = (FNFT_UINT)mxGetScalar(prhs[k+1]);
+            opts.points_per_spine = (FNFT_UINT)mxGetScalar(prhs[k+1]);
             k++;
 
         } else if ( strcmp(str, "loc_mixed") == 0 ) {
@@ -171,7 +171,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     /* Allocate memory */
     q = mxMalloc(D * sizeof(double complex));
-    K = (opts.floquet_nvals)*D + 1;
+    K = (opts.points_per_spine)*D + 1;
     M = D;
     main_spec = mxMalloc(K * sizeof(double complex));
     aux_spec = mxMalloc(M * sizeof(double complex));

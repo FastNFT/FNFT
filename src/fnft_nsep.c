@@ -41,7 +41,7 @@ static fnft_nsep_opts_t default_opts = {
     .normalization_flag = 1,
     .discretization = nse_discretization_2SPLIT2A,
     .floquet_range = {-1, 1},
-    .floquet_nvals = 2,
+    .points_per_spine = 2,
     .Dsub = 0, // => the algorithm chooses Dsub automatically
     .tol = -1 // negative tol => the algorithm chooses tol automatically
 };
@@ -480,12 +480,12 @@ static inline INT subsample_and_refine(const UINT D,
 
         // Below, we'll search for solutions of Delta(z)=rhs, where rhs
         // iterates through a grid of nvals values between rhs_0 and rhs_1.
-        // Normally, we use rhs_0=-2, rhs_1=2 and nvals=2, which provides
-        // us the main spectrum. Using higher values for nvals allows us
-        // to compute spines.
+        // Normally, we use rhs_0=-2, rhs_1=2 and points_per_spine=2, which
+        // provides us the main spectrum (= endpoints of spines). Using higher
+        // values for points_per_spine allows us to compute spines.
         const REAL rhs_0 = opts_ptr->floquet_range[0];
         const REAL rhs_1 = opts_ptr->floquet_range[1];
-        const UINT nvals = opts_ptr->floquet_nvals;
+        const UINT nvals = opts_ptr->points_per_spine;
         REAL rhs_step = rhs_1 - rhs_0;
         if (nvals>1)
             rhs_step /= nvals - 1;

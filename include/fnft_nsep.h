@@ -108,13 +108,14 @@ typedef enum {
  *   Array of two reals. The mainspec variable will contain the z that solve
  *   Delta(z)=rhs, where Delta(z)=0.5 trace{monodromy matrix(z)} and rhs is
  *   varied over a equidistant grid of
- *   \link fnft_nsep_opts_t::floquet_nvals \endlink values with the first grid
- *   point being floquet_range[0] and last grid point being floquet_range[1].
- *   By default, floquet_range={-1,1} and floquet_nvals=2, which corresponds to
- *   the conventional main spectrum. By choosing larger nvals, one can determine
- *   the spines (or bands) connecting the points in the main spectrum.
+ *   \link fnft_nsep_opts_t::points_per_spine \endlink values with the first
+ *   grid point being floquet_range[0] and last grid point being
+ *   floquet_range[1]. By default, floquet_range={-1,1} and points_per_spine=2,
+ *   which corresponds to the conventional main spectrum (=endpoints of spines).
+ *   By choosing more points_per_spine, one can determine the spines (or bands)
+ *   connecting the points in the main spectrum.
  *
- * @var fnft_nsep_opts_t::floquet_nvals
+ * @var fnft_nsep_opts_t::points_per_spine
  *   See \link fnft_nsep_opts_t::floquet_range \endlink.
  *
  * @var fnft_nsep_opts_t::Dsub
@@ -131,7 +132,7 @@ typedef struct {
     fnft_nse_discretization_t discretization;
     FNFT_INT normalization_flag;
     FNFT_REAL floquet_range[2];
-    FNFT_UINT floquet_nvals;
+    FNFT_UINT points_per_spine;
     FNFT_UINT Dsub;
     FNFT_REAL tol;
 } fnft_nsep_opts_t;
