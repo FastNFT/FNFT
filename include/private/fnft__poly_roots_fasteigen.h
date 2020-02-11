@@ -1,6 +1,6 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
+* This file is part of FNFT.
+*
 * FNFT is free software; you can redistribute it and/or
 * modify it under the terms of the version 2 of the GNU General
 * Public License as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-*                                                                      
+*
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
@@ -30,7 +30,7 @@
 
 /**
  * @brief Fast computation of polynomial roots.
- * 
+ *
  * @ingroup poly
  * This routine compute the roots of a polynomial
  *
@@ -51,8 +51,13 @@
 FNFT_INT fnft__poly_roots_fasteigen(const FNFT_UINT deg,
     FNFT_COMPLEX const * const p, FNFT_COMPLEX * const roots);
 
+// Fortran version
+FNFT_INT fnft__poly_roots_fasteigen_(const FNFT_UINT deg,
+                                     FNFT_COMPLEX const * const p, FNFT_COMPLEX * const roots);
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define poly_roots_fasteigen(...) fnft__poly_roots_fasteigen(__VA_ARGS__)
+#define poly_roots_fasteigen_(...) fnft__poly_roots_fasteigen_(__VA_ARGS__)
 #endif
 
 #endif
