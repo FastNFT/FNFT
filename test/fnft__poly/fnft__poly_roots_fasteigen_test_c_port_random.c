@@ -25,7 +25,9 @@
 #include <stdio.h>
 #endif
 
-INT poly_roots_fasteigen_test_c_port()
+// Test case is a random polynomial of degree 172
+
+INT poly_roots_fasteigen_test_c_port_random()
 {
     const UINT deg = 172;
     COMPLEX p[173] = {
@@ -411,7 +413,7 @@ INT poly_roots_fasteigen_test_c_port()
 
 INT main()
 {
-    if ( poly_roots_fasteigen_test_c_port() != SUCCESS )
+    if ( poly_roots_fasteigen_test_c_port_random() != SUCCESS )
         return EXIT_FAILURE;
 
     return EXIT_SUCCESS;
