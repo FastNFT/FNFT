@@ -722,8 +722,8 @@ static inline INT refine_auxspec(const UINT D, COMPLEX const * const q,
                 return E_SUBROUTINE(ret_code);
             nevals++;
 
-            f = M[2]; // f = b(lam)
-            f_prime = M[6]; // f' = b'(lam)
+            f = M[1]; // f = b(lam)
+            f_prime = M[5]; // f' = b'(lam)
             if (f_prime == 0.0)
                 return E_DIV_BY_ZERO;
 
@@ -734,7 +734,7 @@ static inline INT refine_auxspec(const UINT D, COMPLEX const * const q,
                 // => we use the already known values for f and f_prime for a
                 // last Newton step even if already |f|<tol.
                 break;
-       }
+        }
     }
 
     return SUCCESS;
