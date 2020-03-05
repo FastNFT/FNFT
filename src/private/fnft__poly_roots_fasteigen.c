@@ -18,6 +18,9 @@
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
+#include <stdio.h>
+#include <string.h>
+
 #include "fnft__errwarn.h"
 #include "fnft__poly_roots_fasteigen.h"
 
@@ -28,6 +31,10 @@
 #define MAT_EL(A, M, m, n) (A[((M)*((n)-1)) + (m)-1]) // matrix element,
 // M = number of rows, m = row, n = column
 #define DO(i,from,to) for((i)=(from); (i)<=(to); (i)++)
+#define RANDOM_NUMBER() ((rand() % (RAND_MAX-1))/RAND_MAX) // random number in
+// the half-open interval [0,1) -- we use the modulus since rand()/(RAND_MAX+1)
+// might result in integer overflow; the probability of zero is slightly
+// increased by this, but let's hope that's ok...
 
 // Interface to the EISCOR routies
 extern int z_poly_roots_modified_(INT *N, double complex const * const coeffs,
@@ -43,6 +50,10 @@ extern int z_upr1fact_deflationcheck_(int *vec, int *N_ptr, int *P, double *Q,
                                       double *D, double *C, double *B,
                                       int *M_ptr, double complex *V,
                                       int *zero_ptr);
+extern int z_upr1fact_singleshift_(int *P, double *Q, double *D, double *C,
+                                   double *B, double complex *shift);
+extern int z_upr1fact_buildbulge_(int *P, double *Q, double *D, double *C,
+                                  double *B, double complex *shift, double *G);
 extern int z_upr1utri_unimodscale_(int *row, double *D, double *C, double *B,
                                    double complex *scl);
 extern int z_upr1fact_singlestep_(int *vec, int (*fun)(int *, int *),
@@ -51,6 +62,8 @@ extern int z_upr1fact_singlestep_(int *vec, int (*fun)(int *, int *),
                                   double complex *V, int *ITCNT);
 extern int z_upr1utri_decompress_(int *diag, int *N_ptr, double *D, double *C,
                                  double *B, double complex *T);
+extern int z_upr1utri_rot3swap_(int *dir, double *D, double *C, double *B,
+                                double *G);
 extern int z_upr1fact_startchase_(int *vec, int *N_ptr, int *P, double *Q,
                                   double *D, double *C, double *B, int *M_ptr,
                                   double complex *V, int *ITCNT, double *G);
@@ -66,6 +79,7 @@ extern int z_rot3_vec3gen_(double *AR, double *AI, double *B, double *CR,
                            double *CI, double *S, double *nrm);
 extern int z_rot3_vec4gen_(double *AR, double *AI, double *BR, double *BI,
                            double *CR, double *CI, double *S, double *nrm);
+extern int z_rot3_fusion_(int *flag, double *G1, double *G2);
 extern int u_fixedseed_initialize_(int *info);
 
 void d_rot2_vec2gen(double *A_ptr, double *B_ptr, double *C_ptr, double *S_ptr,
@@ -320,6 +334,129 @@ void z_upr1fact_deflationcheck(int *vec_ptr, int *N_ptr, int *P, double *Q,
 
     *zero_ptr = zero;
 }
+void z_upr1fact_startchase(int *vec_ptr, int *N_ptr, int *P, double *Q,
+                           double *D, double *C, double *B, int *M_ptr,
+                           double complex *V, int *ITCNT_ptr, double *G)
+{
+    int ir1, ir2, id1, id2;
+    int tp[2] = {0};
+    double Ginv[3];
+    double tq[6] = {0}, td[6] = {0}, tc[9] = {0}, tb[9] = {0};
+    double complex shift = 0;
+    int i, m;
+
+    const int vec = *vec_ptr;
+    const int N = *N_ptr;
+    const int M = *M_ptr;
+    const int ITCNT = *ITCNT_ptr;
+
+    if ((ITCNT%20 == 0) && (ITCNT > 0)) {
+
+        VEC_EL(G, 1) = 0.5;//RANDOM_NUMBER();
+        VEC_EL(G, 2) = 0.25;//RANDOM_NUMBER();
+        shift = VEC_EL(G, 1) + I*VEC_EL(G, 2);
+
+    } else {
+
+        if (N < 3) {
+
+            // note: tp, tq, td, tc, and tb were initialized to zero (see above)
+            VEC_EL(tq, 1) = 1;
+            DO(i, 4, 6)
+                VEC_EL(tq, i) = VEC_EL(Q, i-3);
+
+            VEC_EL(td, 1) = 1;
+            DO(i, 3, 6)
+                VEC_EL(td, i) = VEC_EL(D, i-2);
+
+            VEC_EL(tc, 3) = 1;
+            DO(i, 4, 9)
+                VEC_EL(tc, i) = VEC_EL(C, i-3);
+
+            VEC_EL(tb, 3) = -1;
+            DO(i, 4, 9)
+                VEC_EL(tb, i) = VEC_EL(B, i-3);
+
+        } else {
+
+            if (N == 3) {
+                VEC_EL(tp, 1) = 0;
+                VEC_EL(tp, 2) = VEC_EL(P, N-2);
+            } else {
+                VEC_EL(tp, 1) = VEC_EL(P, N-3);
+                VEC_EL(tp, 2) = VEC_EL(P, N-2);
+            }
+
+            ir2 = 3*N; ir1 = ir2 - 8;
+            id2 = 2*N; id1 = id2 - 5;
+            DO (i, ir1, ir2-3)
+                VEC_EL(tq, i-ir1+1) = VEC_EL(Q, i);
+            DO (i, id1, id2)
+                VEC_EL(td, i-id1+1) = VEC_EL(D, i);
+            DO (i, ir1, ir2) {
+                VEC_EL(tc, i-ir1+1) = VEC_EL(C, i);
+                VEC_EL(tb, i-ir1+1) = VEC_EL(B, i);
+            }
+
+        }
+
+        z_upr1fact_singleshift_(tp, tq, td, tc, tb, &shift);
+    }
+
+    z_upr1fact_buildbulge_(P, Q, D, C, B, &shift, G);
+    VEC_EL(Ginv, 1) = VEC_EL(G, 1);
+    VEC_EL(Ginv, 2) = -VEC_EL(G, 2);
+    VEC_EL(Ginv, 3) = -VEC_EL(G, 3);
+
+    if (vec) {
+        const double complex A11 = VEC_EL(G, 1) + I*VEC_EL(G, 2);
+        const double complex A21 = VEC_EL(G, 3);
+        const double complex A12 = -A21;
+        const double complex A22 = conj(A11);
+
+        DO (m, 1, M) {
+            const double complex Vm1 = MAT_EL(V, M, m, 1)*A11
+                + MAT_EL(V, M, m, 2)*A21;
+            const double complex Vm2 = MAT_EL(V, M, m, 1)*A12
+                + MAT_EL(V, M, m, 2)*A22;
+            MAT_EL(V, M, m, 1) = Vm1;
+            MAT_EL(V, M, m, 2) = Vm2;
+        }
+    }
+
+    int f = 0;
+    int t = 1;
+
+    if (! VEC_EL(P, 1)) {
+
+        z_rot3_fusion_(&f, Ginv, Q);
+        z_upr1utri_rot3swap_(&f, D, C, B, G);
+        double complex tmp = VEC_EL(Ginv, 1) + I*VEC_EL(Ginv, 2);
+        if (vec) {
+            DO (m, 1, M) {
+                MAT_EL(V, M, m, 1) *= tmp;
+                MAT_EL(V, M, m, 2) *= conj(tmp);
+            }
+        }
+        z_upr1utri_unimodscale(&f, D, C, B, &tmp);
+        tmp = VEC_EL(Ginv, 1) - I*VEC_EL(Ginv, 2);
+        z_upr1utri_unimodscale(&f, &VEC_EL(D, 3), &VEC_EL(C, 4), &VEC_EL(B, 4),
+                               &tmp);
+
+    } else {
+
+        z_upr1utri_rot3swap_(&f, D, C, B, G);
+        z_rot3_fusion_(&t, Q, G);
+        double complex tmp = VEC_EL(G, 1) + I*VEC_EL(G, 2);
+        z_upr1utri_unimodscale(&t, D, C, B, &tmp);
+        tmp = VEC_EL(G, 1) - I*VEC_EL(G, 2);
+        z_upr1utri_unimodscale(&t, &VEC_EL(D, 3), &VEC_EL(C, 4), &VEC_EL(B, 4),
+                               &tmp);
+        DO (i, 1, 3)
+            VEC_EL(G, i) = VEC_EL(Ginv, i);
+
+    }
+}
 
 void z_upr1fact_singlestep(int *vec, int (*fun)(int *, int *),
                            int *N_ptr, int *P, double *Q, double *D,
@@ -327,7 +464,7 @@ void z_upr1fact_singlestep(int *vec, int (*fun)(int *, int *),
                            double complex *V, int *ITCNT)
 {
     int i, ir1, id1, final_flag;
-    double misfit[3];
+    double misfit[3] = {0};
     const int N = *N_ptr;
     const int M = *M_ptr;
 
@@ -337,7 +474,8 @@ void z_upr1fact_singlestep(int *vec, int (*fun)(int *, int *),
         final_flag = (*fun)(N_ptr, P);
 
     z_upr1fact_startchase_(vec, N_ptr, P, Q, D, C, B, M_ptr,
-                           &MAT_EL(V, M, 1, 1), ITCNT, misfit);
+                          &MAT_EL(V, M, 1, 1), ITCNT, misfit);
+
     DO(i, 1, N-3) {
         ir1 = 3*i+1;
         // ir2 = 3*(i+2); // not needed
@@ -452,7 +590,7 @@ INT z_poly_roots_modified(int *N_ptr, double complex const * const coeffs,
     D1 = malloc( 2*(N+1) * sizeof(double) );
     C1 = malloc( 3*N * sizeof(double) );
     B1 = malloc( 3*N * sizeof(double) );
-    V = malloc( N * sizeof(double complex) );
+    V = malloc( N*N * sizeof(double complex) );
     W = malloc( N * sizeof(double complex) );
     if (P == NULL || ITS == NULL || Q == NULL || D1 == NULL || C1 == NULL
         || B1 == NULL || V == NULL || W == NULL ) {
