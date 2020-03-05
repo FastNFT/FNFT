@@ -1,0 +1,13 @@
+<map id="include/private/fnft__nse_finvscatter.h" name="include/private/fnft__nse_finvscatter.h">
+<area shape="rect" id="node1" title="Recovers the signal from a scattering matrix." alt="" coords="91,5,239,47"/>
+<area shape="rect" id="node2" href="$fnft__nse__discretization__t_8h.html" title="Lists discretizations for the nonlinear Schroedinger equation." alt="" coords="67,95,262,121"/>
+<area shape="rect" id="node3" href="$fnft_8h_source.html" title=" " alt="" coords="136,169,193,196"/>
+<area shape="rect" id="node4" title=" " alt="" coords="46,244,150,271"/>
+<area shape="rect" id="node5" href="$fnft__errwarn_8h.html" title="Controls error messages." alt="" coords="174,244,289,271"/>
+<area shape="rect" id="node6" href="$fnft__numtypes_8h.html" title=" " alt="" coords="167,319,296,345"/>
+<area shape="rect" id="node7" title=" " alt="" coords="5,393,73,420"/>
+<area shape="rect" id="node8" title=" " alt="" coords="98,393,162,420"/>
+<area shape="rect" id="node9" title=" " alt="" coords="186,393,277,420"/>
+<area shape="rect" id="node10" title=" " alt="" coords="301,393,372,420"/>
+<area shape="rect" id="node11" title=" " alt="" coords="396,393,467,420"/>
+</map>

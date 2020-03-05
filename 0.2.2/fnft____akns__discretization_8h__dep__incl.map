@@ -1,0 +1,11 @@
+<map id="include/private/fnft__akns_discretization.h" name="include/private/fnft__akns_discretization.h">
+<area shape="rect" id="node1" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="268,5,443,47"/>
+<area shape="rect" id="node2" href="$fnft____akns__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="197,95,343,136"/>
+<area shape="rect" id="node5" href="$fnft____akns__scatter_8h.html" title="Slow forward scattering." alt="" coords="367,95,514,136"/>
+<area shape="rect" id="node8" href="$fnft____kdv__discretization_8h.html" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="5,95,172,136"/>
+<area shape="rect" id="node9" href="$fnft____nse__discretization_8h.html" title="Properties of the discretizations for the nonlinear Schroedinger equation." alt="" coords="539,95,705,136"/>
+<area shape="rect" id="node3" href="$fnft____kdv__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="26,184,173,225"/>
+<area shape="rect" id="node4" href="$fnft____nse__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="375,184,522,225"/>
+<area shape="rect" id="node6" href="$fnft____kdv__scatter_8h.html" title="Slow forward scattering." alt="" coords="202,184,349,225"/>
+<area shape="rect" id="node7" href="$fnft____nse__scatter_8h.html" title="Slow forward scattering." alt="" coords="547,184,694,225"/>
+</map>
