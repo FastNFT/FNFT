@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018, 2020.
 */
 
 /**
@@ -103,6 +103,26 @@ typedef enum {
  *
  * @var fnft_nsep_opts_t::normalization_flag
  *  See \link fnft_nsev_opts_t::normalization_flag \endlink.
+ *
+ * @var fnft_nsep_opts_t::floquet_range
+ *   Array of two reals. The mainspec variable will contain the z that solve
+ *   Delta(z)=rhs, where Delta(z)=0.5 trace{monodromy matrix(z)} and rhs is
+ *   varied over a equidistant grid of
+ *   \link fnft_nsep_opts_t::points_per_spine \endlink values with the first
+ *   grid point being floquet_range[0] and last grid point being
+ *   floquet_range[1]. By default, floquet_range={-1,1} and points_per_spine=2,
+ *   which corresponds to the conventional main spectrum (=endpoints of spines).
+ *   By choosing more points_per_spine, one can determine the spines (or bands)
+ *   connecting the points in the main spectrum.
+ *
+ * @var fnft_nsep_opts_t::points_per_spine
+ *   See \link fnft_nsep_opts_t::floquet_range \endlink.
+ *
+ * @var fnft_nsep_opts_t::Dsub
+ *   Approximate number of samples after subsampling when SUBSAMPLE_AND_REFINE
+ *   is used during localization. See \link fnft_nsep_loc_t \endlink.
+ *   When set to zero (default), the algorithm will choose Dsub automatically
+ *   such that the complexity of finding initial guesses is O(D log^2 D).
  */
 typedef struct {
     fnft_nsep_loc_t localization;
@@ -111,6 +131,10 @@ typedef struct {
     FNFT_UINT max_evals;
     fnft_nse_discretization_t discretization;
     FNFT_INT normalization_flag;
+    FNFT_REAL floquet_range[2];
+    FNFT_UINT points_per_spine;
+    FNFT_UINT Dsub;
+    FNFT_REAL tol;
 } fnft_nsep_opts_t;
 
 /**
@@ -128,6 +152,9 @@ typedef struct {
  *  bounding_box[3] = FNFT_INF\n
  *  normalization_flag = 1\n
  *  discretization = fnft_nse_discretization_2SPLIT2A\n
+ *  floquet_range = {-1, 1}\n
+ *  floquet_nvals = 2\n
+ *  Dsub = 0
  */
 fnft_nsep_opts_t fnft_nsep_default_opts();
 

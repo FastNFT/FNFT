@@ -13,12 +13,13 @@
 % along with this program. If not, see <http://www.gnu.org/licenses/>.
 %
 % Contributors:
-% Sander Wahls (TU Delft) 2017-2018.
+% Sander Wahls (TU Delft) 2017-2018, 2020.
 
 % This examples demonstrates how the nonlinear Fourier transform with
 % respect to the nonlinear Schroedinger equation with periodic boundary
 % conditions can be computed using mex_fnft_nsev. The signal is the same
-% plane wave as in the paper https://doi.org/10.1109/TIT.2015.2485944
+% plane wave as in Section VII.A of the paper
+% https://doi.org/10.1109/TIT.2015.2485944
 
 clear all;
 close all;
@@ -39,6 +40,20 @@ q = 3*exp(3j*t);
 %%% Compute the nonlinear Fourier transform %%%
 
 [main_spec, aux_spec] = mex_fnft_nsep(q, T, kappa);
+
+%%% Compute the spines %%%
+
+% This signal has one non-degenerate spine, i.e., the imaginary
+% interval [-3j, 3j]. Furthermore, there are degenerate spines
+% of length zero at the degenerate points of the main spectrum.
+
+spines = mex_fnft_nsep(q, T, kappa, 'points_per_spine', 100);
+
+% Increase the number of points per spine above to improve the
+% resolution of the spine (at the cost of increased run times).
+%
+% To learn more about this and other options of mex_fnft_nsep,
+% run the command "help mex_fnft_nsep" in Matlab.
 
 %%% Plot results %%%
 
@@ -62,8 +77,18 @@ grid on;
 figure;
 plot(real(aux_spec), imag(aux_spec), '+r');
 title('Auxiliary Spectrum');
-xlabel('Re(\lambda_k)');
-ylabel('Im(\lambda_k)');
+xlabel('Re(\mu_k)');
+ylabel('Im(\mu_k)');
+xlim([-4 4]);
+ylim([-4 4]);
+axis equal;
+grid on;
+
+figure;
+plot(real(spines), imag(spines), '.r');
+title('Spines');
+xlabel('Re(\lambda)');
+ylabel('Im(\lambda)');
 xlim([-4 4]);
 ylim([-4 4]);
 axis equal;
