@@ -1,6 +1,6 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
+* This file is part of FNFT.
+*
 * FNFT is free software; you can redistribute it and/or
 * modify it under the terms of the version 2 of the GNU General
 * Public License as published by the Free Software Foundation.
@@ -9,12 +9,12 @@
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-*                                                                      
+*
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018, 2020.
 */
 
 #include <string.h>
@@ -70,7 +70,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     // Default options for fnft_nsep
     opts = fnft_nsep_default_opts();
-    
+
     /* Redirect FNFT error messages and warnings to Matlabs command window */
     fnft_errwarn_setprintf(mexPrintf);
 
@@ -92,12 +92,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* Try to interpret value of string input */
         if ( strcmp(str, "filt_none") == 0 ) {
 
-			opts.filtering = fnft_nsep_filt_NONE;
-        
-		} else if ( strcmp(str, "filt_manual") == 0 ) {
- 
+            opts.filtering = fnft_nsep_filt_NONE;
+
+        } else if ( strcmp(str, "filt_manual") == 0 ) {
+
             opts.filtering = fnft_nsep_filt_MANUAL;
-            
+
             /* Extract bounding box for manual filltering */
             if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
             || mxGetM(prhs[k+1]) != 1 || mxGetN(prhs[k+1]) != 4) {
@@ -112,25 +112,58 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
             /* Increase k to account for bounding box vector */
             k++;
- 
-		} else if ( strcmp(str, "loc_mixed") == 0 ) {
-            
+
+        } else if ( strcmp(str, "points_per_spine") == 0 ) {
+
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+                 || mxGetNumberOfElements(prhs[k+1]) != 1
+                 || mxGetScalar(prhs[k+1]) < 0.0 ) {
+                snprintf(msg, sizeof msg, "'points_per_spine' should be followed by non-negative real number. See the help.");
+                goto on_error;
+            }
+            opts.points_per_spine = (FNFT_UINT)mxGetScalar(prhs[k+1]);
+            k++;
+
+        } else if ( strcmp(str, "loc_mixed") == 0 ) {
+
             opts.localization = fnft_nsep_loc_MIXED;
 
-		} else if ( strcmp(str, "loc_subsample_and_refine") == 0 ) {
-            
+        } else if ( strcmp(str, "loc_subsample_and_refine") == 0 ) {
+
             opts.localization = fnft_nsep_loc_SUBSAMPLE_AND_REFINE;
 
-		} else if ( strcmp(str, "loc_gridsearch") == 0 ) {
-            
+        } else if ( strcmp(str, "loc_gridsearch") == 0 ) {
+
             opts.localization = fnft_nsep_loc_GRIDSEARCH;
+
+        } else if ( strcmp(str, "loc_max_evals") == 0 ) {
+
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+                 || mxGetNumberOfElements(prhs[k+1]) != 1
+                 || mxGetScalar(prhs[k+1]) < 0.0 ) {
+                snprintf(msg, sizeof msg, "'loc_max_evals' should be followed by non-negative real number. See the help.");
+                goto on_error;
+            }
+            opts.max_evals = (FNFT_UINT)mxGetScalar(prhs[k+1]);
+            k++;
+
+        } else if ( strcmp(str, "loc_Dsub") == 0 ) {
+
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+                 || mxGetNumberOfElements(prhs[k+1]) != 1
+                 || mxGetScalar(prhs[k+1]) < 0.0 ) {
+                snprintf(msg, sizeof msg, "'loc_Dsub' should be followed by non-negative real number. See the help.");
+                goto on_error;
+            }
+            opts.Dsub = (FNFT_UINT)mxGetScalar(prhs[k+1]);
+            k++;
 
         } else if ( strcmp(str, "quiet") == 0 ) {
 
             fnft_errwarn_setprintf(NULL);
 
         } else {
-            snprintf(msg, sizeof msg, "%uth input has invalid value.", 
+            snprintf(msg, sizeof msg, "%uth input has invalid value.",
                 (unsigned int)(k+1));
             goto on_error;
         }
@@ -138,7 +171,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     /* Allocate memory */
     q = mxMalloc(D * sizeof(double complex));
-    K = 2*D + 1;
+    K = (opts.points_per_spine)*D + 1;
     M = D;
     main_spec = mxMalloc(K * sizeof(double complex));
     aux_spec = mxMalloc(M * sizeof(double complex));
