@@ -1,0 +1,18 @@
+<map id="include/private/fnft__kdv_fscatter.h" name="include/private/fnft__kdv_fscatter.h">
+<area shape="rect" id="node1" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="126,5,243,47"/>
+<area shape="rect" id="node2" href="$fnft____kdv__discretization_8h.html" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="25,95,179,121"/>
+<area shape="rect" id="node16" href="$fnft____akns__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="203,95,334,121"/>
+<area shape="rect" id="node3" href="$fnft__kdv__discretization__t_8h.html" title="Lists discretizations for the Korteweg&#45;de Vries equation." alt="" coords="5,169,164,196"/>
+<area shape="rect" id="node13" href="$fnft____akns__discretization_8h.html" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="188,169,349,196"/>
+<area shape="rect" id="node4" href="$fnft_8h_source.html" title=" " alt="" coords="185,319,232,345"/>
+<area shape="rect" id="node5" href="$fnft__config_8h_source.html" title=" " alt="" coords="167,393,251,420"/>
+<area shape="rect" id="node6" href="$fnft__errwarn_8h.html" title="Controls error messages." alt="" coords="279,393,378,420"/>
+<area shape="rect" id="node7" href="$fnft__numtypes_8h.html" title=" " alt="" coords="277,468,380,495"/>
+<area shape="rect" id="node8" title=" " alt="" coords="136,543,191,569"/>
+<area shape="rect" id="node9" title=" " alt="" coords="215,543,269,569"/>
+<area shape="rect" id="node10" title=" " alt="" coords="293,543,365,569"/>
+<area shape="rect" id="node11" title=" " alt="" coords="389,543,449,569"/>
+<area shape="rect" id="node12" title=" " alt="" coords="474,543,533,569"/>
+<area shape="rect" id="node14" href="$fnft____akns__discretization__t_8h.html" title="Lists discretizations of AKNS system." alt="" coords="123,244,295,271"/>
+<area shape="rect" id="node15" href="$fnft____errwarn_8h.html" title=" " alt="" coords="277,319,383,345"/>
+</map>

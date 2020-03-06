@@ -1,0 +1,5 @@
+<map id="include/private/fnft__kdv_discretization.h" name="include/private/fnft__kdv_discretization.h">
+<area shape="rect" id="node1" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="65,5,204,47"/>
+<area shape="rect" id="node2" href="$fnft____kdv__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="5,95,123,136"/>
+<area shape="rect" id="node3" href="$fnft____kdv__scatter_8h.html" title="Slow forward scattering." alt="" coords="147,95,264,136"/>
+</map>

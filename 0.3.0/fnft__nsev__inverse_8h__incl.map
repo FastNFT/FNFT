@@ -1,0 +1,13 @@
+<map id="include/fnft_nsev_inverse.h" name="include/fnft_nsev_inverse.h">
+<area shape="rect" id="node1" title="Fast inverse nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="58,5,221,32"/>
+<area shape="rect" id="node2" href="$fnft__nse__discretization__t_8h.html" title="Lists discretizations for the nonlinear Schroedinger equation." alt="" coords="60,80,219,107"/>
+<area shape="rect" id="node3" href="$fnft_8h_source.html" title=" " alt="" coords="116,155,163,181"/>
+<area shape="rect" id="node4" href="$fnft__config_8h_source.html" title=" " alt="" coords="40,229,124,256"/>
+<area shape="rect" id="node5" href="$fnft__errwarn_8h.html" title="Controls error messages." alt="" coords="149,229,247,256"/>
+<area shape="rect" id="node6" href="$fnft__numtypes_8h.html" title=" " alt="" coords="147,304,249,331"/>
+<area shape="rect" id="node7" title=" " alt="" coords="5,379,60,405"/>
+<area shape="rect" id="node8" title=" " alt="" coords="85,379,138,405"/>
+<area shape="rect" id="node9" title=" " alt="" coords="162,379,234,405"/>
+<area shape="rect" id="node10" title=" " alt="" coords="259,379,319,405"/>
+<area shape="rect" id="node11" title=" " alt="" coords="343,379,402,405"/>
+</map>
