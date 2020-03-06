@@ -27,8 +27,8 @@
 // These macros allow us to use the same indices as in the Fortran
 // sources, where the first element on ar array is at index 1 and not 0
 // and matrices are stored column-wise and not row-wise.
-#define VEC_EL(A, n) (A[(n)-1]) // vector element
-#define MAT_EL(A, M, m, n) (A[((M)*((n)-1)) + (m)-1]) // matrix element,
+#define VEC(A, n) (A[(n)-1]) // vector element
+#define MAT(A, M, m, n) (A[((M)*((n)-1)) + (m)-1]) // matrix element,
 // M = number of rows, m = row, n = column
 #define DO(i,from,to) for((i)=(from); (i)<=(to); (i)++)
 #define RANDOM_NUMBER() ((rand() % (RAND_MAX-1))/RAND_MAX) // random number in
@@ -80,6 +80,8 @@ extern int z_rot3_vec3gen_(double *AR, double *AI, double *B, double *CR,
 extern int z_rot3_vec4gen_(double *AR, double *AI, double *BR, double *BI,
                            double *CR, double *CI, double *S, double *nrm);
 extern int z_rot3_fusion_(int *flag, double *G1, double *G2);
+extern int z_2x2array_eig_(int *flag, double complex *A, double complex *B,
+                           double complex *Q, double complex *Z);
 extern int u_fixedseed_initialize_(int *info);
 
 void d_rot2_vec2gen(double *A_ptr, double *B_ptr, double *C_ptr, double *S_ptr,
@@ -179,54 +181,54 @@ void z_compmat_compress(int *N_ptr, int *P, double complex *coeffs,
     const int N = *N_ptr;
 
     DO(i, 1, 3*(N-1))
-        VEC_EL(Q, i) = 0;
+        VEC(Q, i) = 0;
     DO(i, 1, N-1)
-        VEC_EL(Q, 3*i) = 1;
+        VEC(Q, 3*i) = 1;
 
     DO(i, 1, N-2)
-        if (VEC_EL(P, N-i-1)) {
-            temp = VEC_EL(coeffs, N-i);
+        if (VEC(P, N-i-1)) {
+            temp = VEC(coeffs, N-i);
             if ((N-i-1)%2 == 1)
                 temp = -temp;
             for (int j=N-i; j>=2; j--)
-                VEC_EL(coeffs, j) = VEC_EL(coeffs, j-1);
-            VEC_EL(coeffs, N-i) = temp;
+                VEC(coeffs, j) = VEC(coeffs, j-1);
+            VEC(coeffs, N-i) = temp;
         }
 
     DO(i, 1, 2*N)
-        VEC_EL(D, i) = 0;
+        VEC(D, i) = 0;
     DO(i, 1, N)
-        VEC_EL(D, 2*i-1) = 1;
+        VEC(D, 2*i-1) = 1;
     DO(i, 1, 3*N) {
-        VEC_EL(B, i) = 0;
-        VEC_EL(C, i) = 0;
+        VEC(B, i) = 0;
+        VEC(C, i) = 0;
     }
 
-    double *dc = (double*)&VEC_EL(coeffs, N);
+    double *dc = (double*)&VEC(coeffs, N);
     d_rot2_vec2gen(&dc[0], &dc[1], &phr, &phi, &beta);
 
-    VEC_EL(D, 2*N-1) = phr;
-    VEC_EL(D, 2*N) = phi;
+    VEC(D, 2*N-1) = phr;
+    VEC(D, 2*N) = phi;
 
     double min_one = -1;
-    d_rot2_vec2gen(&beta, &min_one, &VEC_EL(C, 3*N-2), &VEC_EL(C, 3*N), &nrm);
+    d_rot2_vec2gen(&beta, &min_one, &VEC(C, 3*N-2), &VEC(C, 3*N), &nrm);
 
-    VEC_EL(B, 3*N-2) = VEC_EL(C, 3*N);
-    VEC_EL(B, 3*N) = VEC_EL(C, 3*N-2);
+    VEC(B, 3*N-2) = VEC(C, 3*N);
+    VEC(B, 3*N) = VEC(C, 3*N-2);
 
     temp = nrm;
     DO(i, 1, N-1) {
-        dc = (double*)&VEC_EL(coeffs, N-i);
+        dc = (double*)&VEC(coeffs, N-i);
         double *dt = (double*)&temp;
-        z_rot3_vec4gen_(&dc[0], &dc[1], &dt[0], &dt[1], &VEC_EL(C, 3*(N-i)-2),
-                        &VEC_EL(C, 3*(N-i)-1), &VEC_EL(C, 3*(N-i)), &nrm);
+        z_rot3_vec4gen_(&dc[0], &dc[1], &dt[0], &dt[1], &VEC(C, 3*(N-i)-2),
+                        &VEC(C, 3*(N-i)-1), &VEC(C, 3*(N-i)), &nrm);
 
-        VEC_EL(B, 3*(N-i)-2) = VEC_EL(C, 3*(N-i)-2);
-        VEC_EL(B, 3*(N-i)-1) = -VEC_EL(C, 3*(N-i)-1);
-        VEC_EL(B, 3*(N-i)) = -VEC_EL(C, 3*(N-i));
+        VEC(B, 3*(N-i)-2) = VEC(C, 3*(N-i)-2);
+        VEC(B, 3*(N-i)-1) = -VEC(C, 3*(N-i)-1);
+        VEC(B, 3*(N-i)) = -VEC(C, 3*(N-i));
 
-        temp = (VEC_EL(C, 3*(N-i)-2) - I*VEC_EL(C, 3*(N-i)-1))*VEC_EL(coeffs, N-i)
-            + VEC_EL(C, 3*(N-i))*temp;
+        temp = (VEC(C, 3*(N-i)-2) - I*VEC(C, 3*(N-i)-1))*VEC(coeffs, N-i)
+            + VEC(C, 3*(N-i))*temp;
     }
 }
 void z_upr1utri_unimodscale(int *row, double *D, double *C, double *B,
@@ -239,15 +241,15 @@ void z_upr1utri_unimodscale(int *row, double *D, double *C, double *B,
 
     const double complex scl = *scl_ptr;
 
-    temp = scl*(VEC_EL(D, 1) + I*VEC_EL(D, 2));
-    d_rot2_vec2gen(temp_re, temp_im, &VEC_EL(D, 1), &VEC_EL(D, 2), &nrm);
+    temp = scl*(VEC(D, 1) + I*VEC(D, 2));
+    d_rot2_vec2gen(temp_re, temp_im, &VEC(D, 1), &VEC(D, 2), &nrm);
     if (! *row) {
-        temp = scl*(VEC_EL(B, 1) + I*VEC_EL(B, 2));
-        z_rot3_vec3gen(temp_re, temp_im, &VEC_EL(B, 3), &VEC_EL(B, 1),
-                       &VEC_EL(B, 2), &VEC_EL(B, 3), &nrm);
-        temp = CONJ(scl)*(VEC_EL(C, 1) + I*VEC_EL(C, 2));
-        z_rot3_vec3gen(temp_re, temp_im, &VEC_EL(C, 3), &VEC_EL(C, 1),
-                       &VEC_EL(C, 2), &VEC_EL(C, 3), &nrm);
+        temp = scl*(VEC(B, 1) + I*VEC(B, 2));
+        z_rot3_vec3gen(temp_re, temp_im, &VEC(B, 3), &VEC(B, 1),
+                       &VEC(B, 2), &VEC(B, 3), &nrm);
+        temp = CONJ(scl)*(VEC(C, 1) + I*VEC(C, 2));
+        z_rot3_vec3gen(temp_re, temp_im, &VEC(C, 3), &VEC(C, 1),
+                       &VEC(C, 2), &VEC(C, 3), &nrm);
     }
 }
 
@@ -269,64 +271,64 @@ void z_upr1fact_deflationcheck(int *vec_ptr, int *N_ptr, int *P, double *Q,
     int f = 0;
 
     DO(i, 1, N-1) {
-        nrm = FABS(VEC_EL(Q, 3*(N-i)));
+        nrm = FABS(VEC(Q, 3*(N-i)));
         if (nrm < tol) {
             zero = N-i;
             if (zero < 0)
                 zero = 0;
 
-            qr = VEC_EL(Q, 3*zero-2);
-            qi = VEC_EL(Q, 3*zero-1);
+            qr = VEC(Q, 3*zero-2);
+            qi = VEC(Q, 3*zero-1);
 
-            VEC_EL(Q, 3*zero-2) = 1;
-            VEC_EL(Q, 3*zero-1) = 0;
-            VEC_EL(Q, 3*zero) = 0;
+            VEC(Q, 3*zero-2) = 1;
+            VEC(Q, 3*zero-1) = 0;
+            VEC(Q, 3*zero) = 0;
 
             if (zero == 1) {
                 scl = qr + I*qi;
-                z_upr1utri_unimodscale(&t, &VEC_EL(D, 2*zero-1),
-                                       &VEC_EL(C, 3*zero-2),
-                                       &VEC_EL(B, 3*zero-2),
+                z_upr1utri_unimodscale(&t, &VEC(D, 2*zero-1),
+                                       &VEC(C, 3*zero-2),
+                                       &VEC(B, 3*zero-2),
                                        &scl);
-            } else if (! VEC_EL(P, zero-1)) {
+            } else if (! VEC(P, zero-1)) {
                 scl = qr + I*qi;
-                z_upr1utri_unimodscale(&t, &VEC_EL(D, 2*zero-1),
-                                       &VEC_EL(C, 3*zero-2),
-                                       &VEC_EL(B, 3*zero-2),
+                z_upr1utri_unimodscale(&t, &VEC(D, 2*zero-1),
+                                       &VEC(C, 3*zero-2),
+                                       &VEC(B, 3*zero-2),
                                        &scl);
             } else {
                 scl = qr + I*qi;
-                z_upr1utri_unimodscale(&f, &VEC_EL(D, 2*zero-1),
-                                       &VEC_EL(C, 3*zero-2),
-                                       &VEC_EL(B, 3*zero-2),
+                z_upr1utri_unimodscale(&f, &VEC(D, 2*zero-1),
+                                       &VEC(C, 3*zero-2),
+                                       &VEC(B, 3*zero-2),
                                        &scl);
                 if (vec) {
                     DO(k, 1, M)
-                        MAT_EL(V, M, k, zero) *= qr + I*qi;
+                        MAT(V, M, k, zero) *= qr + I*qi;
                 }
             }
 
             if (zero == N-1) {
                 scl = qr - I*qi;
-                z_upr1utri_unimodscale(&t, &VEC_EL(D, 2*zero+1),
-                                       &VEC_EL(C, 3*zero+1),
-                                       &VEC_EL(B, 3*zero+1),
+                z_upr1utri_unimodscale(&t, &VEC(D, 2*zero+1),
+                                       &VEC(C, 3*zero+1),
+                                       &VEC(B, 3*zero+1),
                                        &scl);
-            } else if (! VEC_EL(P, zero)) {
+            } else if (! VEC(P, zero)) {
                 scl = qr - I*qi;
-                z_upr1utri_unimodscale(&f, &VEC_EL(D, 2*zero+1),
-                                       &VEC_EL(C, 3*zero+1),
-                                       &VEC_EL(B, 3*zero+1),
+                z_upr1utri_unimodscale(&f, &VEC(D, 2*zero+1),
+                                       &VEC(C, 3*zero+1),
+                                       &VEC(B, 3*zero+1),
                                        &scl);
                 if (vec) {
                     DO(k, 1, M)
-                        MAT_EL(V, M, k, zero+1) *= qr - I*qi;
+                        MAT(V, M, k, zero+1) *= qr - I*qi;
                 }
             } else {
                 scl = qr - I*qi;
-                z_upr1utri_unimodscale(&t, &VEC_EL(D, 2*zero+1),
-                                       &VEC_EL(C, 3*zero+1),
-                                       &VEC_EL(B, 3*zero+1),
+                z_upr1utri_unimodscale(&t, &VEC(D, 2*zero+1),
+                                       &VEC(C, 3*zero+1),
+                                       &VEC(B, 3*zero+1),
                                        &scl);
             }
         }
@@ -334,6 +336,104 @@ void z_upr1fact_deflationcheck(int *vec_ptr, int *N_ptr, int *P, double *Q,
 
     *zero_ptr = zero;
 }
+void z_upr1fact_singleshift(int *P, double *Q, double *D, double *C,
+                            double *B, double complex *shift_ptr)
+{
+    int f = 0, t = 1;
+    int N = 3;
+    int n, m;
+    double complex R1[9], R2[9] = {0}, H[4], K[4];
+    double complex r1, r2;
+    double complex rho, shift;
+
+    z_upr1utri_decompress_(&f, &N, D, C, B, R1);
+
+    // R2 has be initialized to zero above
+    MAT(R2, 3, 1, 1) = 1;
+    MAT(R2, 3, 2, 2) = 1;
+    MAT(R2, 3, 3, 3) = 1;
+
+    if (VEC(P, 2)) {
+        MAT(H, 2, 1, 1) = VEC(Q, 4) - I*VEC(Q, 5);
+        MAT(H, 2, 2, 1) = -VEC(Q, 6);
+        MAT(H, 2, 1, 2) = VEC(Q, 6);
+        MAT(H, 2, 2, 2) = VEC(Q, 4) + I*VEC(Q, 5);
+        DO (n, 1, 3) {
+            r1 = MAT(R2, 3, 2, n);
+            r2 = MAT(R2, 3, 3, n);
+            MAT(R2, 3, 2, n) = MAT(H, 2, 1, 1)*r1 + MAT(H, 2, 1, 2)*r2;
+            MAT(R2, 3, 3, n) = MAT(H, 2, 2, 1)*r1 + MAT(H, 2, 2, 2)*r2;
+        }
+    } else {
+        MAT(H, 2, 1, 1) = VEC(Q, 4) + I*VEC(Q, 5);
+        MAT(H, 2, 2, 1) = VEC(Q, 6);
+        MAT(H, 2, 1, 2) = -VEC(Q, 6);
+        MAT(H, 2, 2, 2) = VEC(Q, 4) - I*VEC(Q, 5);
+        DO (n, 1, 3) {
+            r1 = MAT(R1, 3, 2, n);
+            r2 = MAT(R1, 3, 3, n);
+            MAT(R1, 3, 2, n) = MAT(H, 2, 1, 1)*r1 + MAT(H, 2, 1, 2)*r2;
+            MAT(R1, 3, 3, n) = MAT(H, 2, 2, 1)*r1 + MAT(H, 2, 2, 2)*r2;
+        }
+    }
+
+    if (VEC(P, 1)) {
+        MAT(H, 2, 1, 1) = VEC(Q, 1) - I*VEC(Q, 2);
+        MAT(H, 2, 2, 1) = -VEC(Q, 3);
+        MAT(H, 2, 1, 2) = VEC(Q, 3);
+        MAT(H, 2, 2, 2) = VEC(Q, 1) + I*VEC(Q, 2);
+        DO (n, 1, 3) {
+            r1 = MAT(R2, 3, 1, n);
+            r2 = MAT(R2, 3, 2, n);
+            MAT(R2, 3, 1, n) = MAT(H, 2, 1, 1)*r1 + MAT(H, 2, 1, 2)*r2;
+            MAT(R2, 3, 2, n) = MAT(H, 2, 2, 1)*r1 + MAT(H, 2, 2, 2)*r2;
+        }
+    } else {
+        MAT(H, 2, 1, 1) = VEC(Q, 1) + I*VEC(Q, 2);
+        MAT(H, 2, 2, 1) = VEC(Q, 3);
+        MAT(H, 2, 1, 2) = -VEC(Q, 3);
+        MAT(H, 2, 2, 2) = VEC(Q, 1) - I*VEC(Q, 2);
+        DO (n, 1, 3) {
+            r1 = MAT(R1, 3, 1, n);
+            r2 = MAT(R1, 3, 2, n);
+            MAT(R1, 3, 1, n) = MAT(H, 2, 1, 1)*r1 + MAT(H, 2, 1, 2)*r2;
+            MAT(R1, 3, 2, n) = MAT(H, 2, 2, 1)*r1 + MAT(H, 2, 2, 2)*r2;
+        }
+    }
+
+    rho = MAT(R1, 3, 3, 3) / MAT(R2, 3, 3, 3);
+
+    double complex R1_slice[4], R2_slice[4];
+    DO (m, 1, 2) {
+        DO (n, 1, 2) {
+            MAT(R1_slice, 2, m, n) = MAT(R1, 3, m+1, n+1);
+            MAT(R2_slice, 2, m, n) = MAT(R2, 3, m+1, n+1);
+        }
+    }
+    z_2x2array_eig_(&t, R1_slice, R2_slice, H, K);
+    DO (m, 1, 2) {
+        DO (n, 1, 2) {
+            MAT(R1, 3, m+1, n+1) = MAT(R1_slice, 2, m, n);
+            MAT(R2, 3, m+1, n+1) = MAT(R2_slice, 2, m, n);
+        }
+    }
+
+    const double complex r1_22 = MAT(R1, 3, 2, 2);
+    const double complex r1_33 = MAT(R1, 3, 3, 3);
+    const double complex r2_22 = MAT(R2, 3, 2, 2);
+    const double complex r2_33 = MAT(R2, 3, 3, 3);
+    if (cabs(r1_33/r2_33 - rho) < cabs(r1_22/r2_22 - rho))
+        shift = r1_33 / r2_33;
+    else
+        shift = r1_22 / r2_22;
+
+    // TODO: Update DBL_MAX below
+    if (shift != shift || cabs(shift) > DBL_MAX)
+        shift = 1e9;
+    *shift_ptr = shift;
+}
+
+
 void z_upr1fact_startchase(int *vec_ptr, int *N_ptr, int *P, double *Q,
                            double *D, double *C, double *B, int *M_ptr,
                            double complex *V, int *ITCNT_ptr, double *G)
@@ -352,108 +452,108 @@ void z_upr1fact_startchase(int *vec_ptr, int *N_ptr, int *P, double *Q,
 
     if ((ITCNT%20 == 0) && (ITCNT > 0)) {
 
-        VEC_EL(G, 1) = 0.5;//RANDOM_NUMBER();
-        VEC_EL(G, 2) = 0.25;//RANDOM_NUMBER();
-        shift = VEC_EL(G, 1) + I*VEC_EL(G, 2);
+        VEC(G, 1) = 0.5;//RANDOM_NUMBER();
+        VEC(G, 2) = 0.25;//RANDOM_NUMBER();
+        shift = VEC(G, 1) + I*VEC(G, 2);
 
     } else {
 
         if (N < 3) {
 
             // note: tp, tq, td, tc, and tb were initialized to zero (see above)
-            VEC_EL(tq, 1) = 1;
+            VEC(tq, 1) = 1;
             DO(i, 4, 6)
-                VEC_EL(tq, i) = VEC_EL(Q, i-3);
+                VEC(tq, i) = VEC(Q, i-3);
 
-            VEC_EL(td, 1) = 1;
+            VEC(td, 1) = 1;
             DO(i, 3, 6)
-                VEC_EL(td, i) = VEC_EL(D, i-2);
+                VEC(td, i) = VEC(D, i-2);
 
-            VEC_EL(tc, 3) = 1;
+            VEC(tc, 3) = 1;
             DO(i, 4, 9)
-                VEC_EL(tc, i) = VEC_EL(C, i-3);
+                VEC(tc, i) = VEC(C, i-3);
 
-            VEC_EL(tb, 3) = -1;
+            VEC(tb, 3) = -1;
             DO(i, 4, 9)
-                VEC_EL(tb, i) = VEC_EL(B, i-3);
+                VEC(tb, i) = VEC(B, i-3);
 
         } else {
 
             if (N == 3) {
-                VEC_EL(tp, 1) = 0;
-                VEC_EL(tp, 2) = VEC_EL(P, N-2);
+                VEC(tp, 1) = 0;
+                VEC(tp, 2) = VEC(P, N-2);
             } else {
-                VEC_EL(tp, 1) = VEC_EL(P, N-3);
-                VEC_EL(tp, 2) = VEC_EL(P, N-2);
+                VEC(tp, 1) = VEC(P, N-3);
+                VEC(tp, 2) = VEC(P, N-2);
             }
 
             ir2 = 3*N; ir1 = ir2 - 8;
             id2 = 2*N; id1 = id2 - 5;
             DO (i, ir1, ir2-3)
-                VEC_EL(tq, i-ir1+1) = VEC_EL(Q, i);
+                VEC(tq, i-ir1+1) = VEC(Q, i);
             DO (i, id1, id2)
-                VEC_EL(td, i-id1+1) = VEC_EL(D, i);
+                VEC(td, i-id1+1) = VEC(D, i);
             DO (i, ir1, ir2) {
-                VEC_EL(tc, i-ir1+1) = VEC_EL(C, i);
-                VEC_EL(tb, i-ir1+1) = VEC_EL(B, i);
+                VEC(tc, i-ir1+1) = VEC(C, i);
+                VEC(tb, i-ir1+1) = VEC(B, i);
             }
 
         }
 
-        z_upr1fact_singleshift_(tp, tq, td, tc, tb, &shift);
+        z_upr1fact_singleshift(tp, tq, td, tc, tb, &shift);
     }
 
     z_upr1fact_buildbulge_(P, Q, D, C, B, &shift, G);
-    VEC_EL(Ginv, 1) = VEC_EL(G, 1);
-    VEC_EL(Ginv, 2) = -VEC_EL(G, 2);
-    VEC_EL(Ginv, 3) = -VEC_EL(G, 3);
+    VEC(Ginv, 1) = VEC(G, 1);
+    VEC(Ginv, 2) = -VEC(G, 2);
+    VEC(Ginv, 3) = -VEC(G, 3);
 
     if (vec) {
-        const double complex A11 = VEC_EL(G, 1) + I*VEC_EL(G, 2);
-        const double complex A21 = VEC_EL(G, 3);
+        const double complex A11 = VEC(G, 1) + I*VEC(G, 2);
+        const double complex A21 = VEC(G, 3);
         const double complex A12 = -A21;
         const double complex A22 = conj(A11);
 
         DO (m, 1, M) {
-            const double complex Vm1 = MAT_EL(V, M, m, 1)*A11
-                + MAT_EL(V, M, m, 2)*A21;
-            const double complex Vm2 = MAT_EL(V, M, m, 1)*A12
-                + MAT_EL(V, M, m, 2)*A22;
-            MAT_EL(V, M, m, 1) = Vm1;
-            MAT_EL(V, M, m, 2) = Vm2;
+            const double complex Vm1 = MAT(V, M, m, 1)*A11
+                + MAT(V, M, m, 2)*A21;
+            const double complex Vm2 = MAT(V, M, m, 1)*A12
+                + MAT(V, M, m, 2)*A22;
+            MAT(V, M, m, 1) = Vm1;
+            MAT(V, M, m, 2) = Vm2;
         }
     }
 
     int f = 0;
     int t = 1;
 
-    if (! VEC_EL(P, 1)) {
+    if (! VEC(P, 1)) {
 
         z_rot3_fusion_(&f, Ginv, Q);
         z_upr1utri_rot3swap_(&f, D, C, B, G);
-        double complex tmp = VEC_EL(Ginv, 1) + I*VEC_EL(Ginv, 2);
+        double complex tmp = VEC(Ginv, 1) + I*VEC(Ginv, 2);
         if (vec) {
             DO (m, 1, M) {
-                MAT_EL(V, M, m, 1) *= tmp;
-                MAT_EL(V, M, m, 2) *= conj(tmp);
+                MAT(V, M, m, 1) *= tmp;
+                MAT(V, M, m, 2) *= conj(tmp);
             }
         }
         z_upr1utri_unimodscale(&f, D, C, B, &tmp);
-        tmp = VEC_EL(Ginv, 1) - I*VEC_EL(Ginv, 2);
-        z_upr1utri_unimodscale(&f, &VEC_EL(D, 3), &VEC_EL(C, 4), &VEC_EL(B, 4),
+        tmp = VEC(Ginv, 1) - I*VEC(Ginv, 2);
+        z_upr1utri_unimodscale(&f, &VEC(D, 3), &VEC(C, 4), &VEC(B, 4),
                                &tmp);
 
     } else {
 
         z_upr1utri_rot3swap_(&f, D, C, B, G);
         z_rot3_fusion_(&t, Q, G);
-        double complex tmp = VEC_EL(G, 1) + I*VEC_EL(G, 2);
+        double complex tmp = VEC(G, 1) + I*VEC(G, 2);
         z_upr1utri_unimodscale(&t, D, C, B, &tmp);
-        tmp = VEC_EL(G, 1) - I*VEC_EL(G, 2);
-        z_upr1utri_unimodscale(&t, &VEC_EL(D, 3), &VEC_EL(C, 4), &VEC_EL(B, 4),
+        tmp = VEC(G, 1) - I*VEC(G, 2);
+        z_upr1utri_unimodscale(&t, &VEC(D, 3), &VEC(C, 4), &VEC(B, 4),
                                &tmp);
         DO (i, 1, 3)
-            VEC_EL(G, i) = VEC_EL(Ginv, i);
+            VEC(G, i) = VEC(Ginv, i);
 
     }
 }
@@ -473,18 +573,18 @@ void z_upr1fact_singlestep(int *vec, int (*fun)(int *, int *),
     else
         final_flag = (*fun)(N_ptr, P);
 
-    z_upr1fact_startchase_(vec, N_ptr, P, Q, D, C, B, M_ptr,
-                          &MAT_EL(V, M, 1, 1), ITCNT, misfit);
+    z_upr1fact_startchase(vec, N_ptr, P, Q, D, C, B, M_ptr,
+                          &MAT(V, M, 1, 1), ITCNT, misfit);
 
     DO(i, 1, N-3) {
         ir1 = 3*i+1;
         // ir2 = 3*(i+2); // not needed
         id1 = 2*i+1;
         // id2 = 2*(i+2); // not needed
-        z_upr1fact_chasedown_(vec, &VEC_EL(P, i), &VEC_EL(Q, ir1-3),
-                              &VEC_EL(D, id1), &VEC_EL(C, ir1),
-                              &VEC_EL(B, ir1), M_ptr,
-                              &MAT_EL(V, M, 1, i+1), misfit);
+        z_upr1fact_chasedown_(vec, &VEC(P, i), &VEC(Q, ir1-3),
+                              &VEC(D, id1), &VEC(C, ir1),
+                              &VEC(B, ir1), M_ptr,
+                              &MAT(V, M, 1, i+1), misfit);
     }
     z_upr1fact_endchase_(vec, N_ptr, P, Q, D, C, B, M_ptr, V, misfit,
                          &final_flag);
@@ -507,14 +607,14 @@ void z_upr1fact_qr(int *vec, int *id, int (*fun)(int *, int *),
     // here that have not been ported.
 
     DO(i, 1, N-1)
-        VEC_EL(ITS, i) = 0;
+        VEC(ITS, i) = 0;
 
     if (*vec && *id) {
         DO(i, 1, M)
             DO(k, 1, N)
-                MAT_EL(V, M, i, k) = 0;
+                MAT(V, M, i, k) = 0;
         DO(i, 1, N)
-            MAT_EL(V, M, i, i) = 1;
+            MAT(V, M, i, i) = 1;
     }
 
     STR = 1;
@@ -527,12 +627,12 @@ void z_upr1fact_qr(int *vec, int *id, int (*fun)(int *, int *),
         if (STP <= 0)
             return;
         temp = STP-STR+2;
-        z_upr1fact_deflationcheck(vec, &temp, &VEC_EL(P, STR),
-                                  &VEC_EL(Q, 3*STR-2), &VEC_EL(D, 2*STR-1),
-                                  &VEC_EL(C, 3*STR-2), &VEC_EL(B, 3*STR-2),
-                                  M_ptr, &MAT_EL(V, M, 1, STR), &ZERO);
+        z_upr1fact_deflationcheck(vec, &temp, &VEC(P, STR),
+                                  &VEC(Q, 3*STR-2), &VEC(D, 2*STR-1),
+                                  &VEC(C, 3*STR-2), &VEC(B, 3*STR-2),
+                                  M_ptr, &MAT(V, M, 1, STR), &ZERO);
         if (STP == STR+ZERO-1) {
-            VEC_EL(ITS, STR+ZERO-1) = ITCNT;
+            VEC(ITS, STR+ZERO-1) = ITCNT;
             ITCNT = 0;
             STP--;
             ZERO = 0;
@@ -541,14 +641,14 @@ void z_upr1fact_qr(int *vec, int *id, int (*fun)(int *, int *),
             if (ZERO > 0) {
                 STR += ZERO;
                 ZERO = 0;
-                VEC_EL(ITS, STR+ZERO-1) = ITCNT;
+                VEC(ITS, STR+ZERO-1) = ITCNT;
                 ITCNT = 0;
             }
             temp = STP-STR+2;
-            z_upr1fact_singlestep(vec, fun, &temp, &VEC_EL(P, STR),
-                                  &VEC_EL(Q, 3*STR-2), &VEC_EL(D, 2*STR-1),
-                                  &VEC_EL(C, 3*STR-2), &VEC_EL(B, 3*STR-2),
-                                  M_ptr, &MAT_EL(V, M, 1, STR), &ITCNT);
+            z_upr1fact_singlestep(vec, fun, &temp, &VEC(P, STR),
+                                  &VEC(Q, 3*STR-2), &VEC(D, 2*STR-1),
+                                  &VEC(C, 3*STR-2), &VEC(B, 3*STR-2),
+                                  M_ptr, &MAT(V, M, 1, STR), &ITCNT);
             if (ITCNT == -1)
                 ITCNT = 1;
             else
@@ -557,7 +657,7 @@ void z_upr1fact_qr(int *vec, int *id, int (*fun)(int *, int *),
 
         if (k == ITMAX) {
             *info = 1;
-            VEC_EL(ITS, STR+STP-1) = ITCNT;
+            VEC(ITS, STR+STP-1) = ITCNT;
         }
     }
 }
@@ -599,14 +699,14 @@ INT z_poly_roots_modified(int *N_ptr, double complex const * const coeffs,
     }
 
     DO(i, 1, N-2)
-          VEC_EL(P, i) = 0;
+          VEC(P, i) = 0;
 
-    sclc = VEC_EL(coeffs, 1);
-    VEC_EL(V, N) = VEC_EL(coeffs, N+1)/sclc;
+    sclc = VEC(coeffs, 1);
+    VEC(V, N) = VEC(coeffs, N+1)/sclc;
     if (N%2 == 1)
-        VEC_EL(V, N) = -VEC_EL(V, N);
+        VEC(V, N) = -VEC(V, N);
     DO(i, 1, N-1)
-        VEC_EL(V, i) = -VEC_EL(coeffs, N+1-i)/sclc;
+        VEC(V, i) = -VEC(coeffs, N+1-i)/sclc;
 
     z_compmat_compress(N_ptr, P, V, Q, D1, C1, B1);
     z_upr1fact_qr(&f, &f, &l_upr1fact_hess, N_ptr, P, Q, D1, C1, B1, N_ptr, V,
