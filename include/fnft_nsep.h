@@ -35,7 +35,7 @@
  * @ingroup data_types
  *  fnft_nsep_opts_loc_SUBSAMPLE_AND_REFINE: Similar approach as for
  *  fnft_nsev_opts_dsloc_SUBSAMPLE_AND_REFINE (see
- *  \link fnft_nsev_opts_t::bound_state_localization\endlink.)\n\n
+ *  \link fnft_nsev_opts_t::bound_state_localization \endlink.)\n\n
  *  fnft_nsep_opts_loc_GRIDSEARCH: Uses a grid search to localize roots. Can
  *  only find main and auxiliary spectrum points on the real axis. In the
  *  defocusing case, the main spectrum is always real.\n\n
@@ -123,6 +123,11 @@ typedef enum {
  *   is used during localization. See \link fnft_nsep_loc_t \endlink.
  *   When set to zero (default), the algorithm will choose Dsub automatically
  *   such that the complexity of finding initial guesses is O(D log^2 D).
+ *
+ * @var fnft_nsep_opts_t::tol
+ *   Tolerance used to stop the refinement of main and auxiliary spectrum.
+ *   Should be positive or -1. In latter case, the algorithm chooses the
+ *   tolerance.
  */
 typedef struct {
     fnft_nsep_loc_t localization;

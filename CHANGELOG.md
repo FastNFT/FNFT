@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.3.0] -- 2020-03-06
+
+### Added
+
+- The routine fnft_nsep for the NFT of the periodic nonlinear Schroedinger equation can now visualize spines (see the new points_per_spine option)
+- The subsampling and refinement processes in fnft_nsep can now be better controlled using the new Dsub and max_evals options
+- The Matlab routine mex_fnft_nsep has been updated accordingly
+
+### Fixed
+
+- The Matlab interface now builds also with the most recent versions of Matlab
+- The refinement of the auxiliary spectrum in fnft_nsep was refining the complex conjugate of mu_k instead of mu_k
+
+### Changed
+
+- The refinement of the main spectrum in fnft_nsep has been improved
+- The polynomial rootfinder in fnft__poly_roots_fasteigen now always uses the QR algorithm
+
 ## [0.2.2] -- 2018-12-13
 
 ### Added
