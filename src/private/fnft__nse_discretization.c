@@ -168,8 +168,7 @@ INT fnft__nse_z_to_lambda(const UINT n, const REAL eps_t,
 INT fnft__nse_phase_factor_rho(const REAL eps_t, const REAL T1,
         REAL * const phase_factor_rho, nse_discretization_t nse_discretization)
 {
-    REAL boundary_coeff;
-    boundary_coeff = nse_discretization_boundary_coeff(nse_discretization);
+    const REAL boundary_coeff = nse_discretization_boundary_coeff(nse_discretization);
     if (boundary_coeff == NAN)
         return E_INVALID_ARGUMENT(nse_discretization);
     if (nse_discretization == nse_discretization_2SPLIT2A || nse_discretization == nse_discretization_2SPLIT2_MODAL){
@@ -190,8 +189,7 @@ INT fnft__nse_phase_factor_rho(const REAL eps_t, const REAL T1,
 INT fnft__nse_phase_factor_a(const REAL eps_t, const UINT D, REAL const * const T,
         REAL * const phase_factor_a, nse_discretization_t nse_discretization)
 {
-    REAL boundary_coeff;
-    boundary_coeff = nse_discretization_boundary_coeff(nse_discretization);
+    const REAL boundary_coeff = nse_discretization_boundary_coeff(nse_discretization);
     if (boundary_coeff == NAN)
         return E_INVALID_ARGUMENT(nse_discretization);
     *phase_factor_a = -eps_t*D + (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
@@ -205,8 +203,7 @@ INT fnft__nse_phase_factor_a(const REAL eps_t, const UINT D, REAL const * const 
 INT fnft__nse_phase_factor_b(const REAL eps_t, const UINT D, REAL const * const T,
         REAL * const phase_factor_b, nse_discretization_t nse_discretization)
 {
-    REAL boundary_coeff;
-    boundary_coeff = nse_discretization_boundary_coeff(nse_discretization);
+    const REAL boundary_coeff = nse_discretization_boundary_coeff(nse_discretization);
     if (boundary_coeff == NAN)
         return E_INVALID_ARGUMENT(nse_discretization);
     if (nse_discretization == nse_discretization_2SPLIT2A || nse_discretization == nse_discretization_2SPLIT2_MODAL){

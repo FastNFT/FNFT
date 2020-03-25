@@ -134,7 +134,7 @@ static INT tf2contspec_negxi(UINT deg,
     COMPLEX *H21_vals = NULL;
     COMPLEX *H22_vals = NULL;
     COMPLEX A, V, sqrt_z;
-    REAL boundary_coeff, degree1step;
+    REAL boundary_coeff;
     REAL xi;
     UINT i;
     INT ret_code = SUCCESS;
@@ -143,7 +143,7 @@ static INT tf2contspec_negxi(UINT deg,
         return E_INVALID_ARGUMENT(opts_ptr);
     
     // Determine discretization-specific coefficients
-    degree1step = kdv_discretization_degree(opts_ptr->discretization);
+    const REAL degree1step = kdv_discretization_degree(opts_ptr->discretization);
     boundary_coeff = kdv_discretization_boundary_coeff(opts_ptr->discretization);
     if (degree1step == NAN || boundary_coeff == NAN)
         return E_INVALID_ARGUMENT(opts_ptr->discretization);

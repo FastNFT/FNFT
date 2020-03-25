@@ -265,7 +265,7 @@ static inline INT tf2contspec(
 {
     COMPLEX *H11_vals, *H21_vals;
     COMPLEX A, V;
-    REAL xi, boundary_coeff, scale;
+    REAL xi, boundary_coeff;
     REAL phase_factor_rho, phase_factor_a, phase_factor_b;
     INT ret_code;
     UINT i, offset = 0;
@@ -340,7 +340,7 @@ static inline INT tf2contspec(
 
     case nsev_cstype_AB:
 
-        scale = POW(2.0, W); // needed since the transfer matrix might
+        const REAL scale = POW(2.0, W); // needed since the transfer matrix might
                                   // have been scaled by nse_fscatter
   
         ret_code = nse_phase_factor_a(eps_t, D, T, &phase_factor_a,opts->discretization);
@@ -412,16 +412,15 @@ static inline INT tf2boundstates(
     COMPLEX * const bound_states,
     fnft_nsev_opts_t * const opts)
 {
-    REAL degree1step, map_coeff;
     UINT K;
     REAL bounding_box[4] = { NAN };
     COMPLEX * buffer = NULL;
     INT ret_code = SUCCESS;
 
-    degree1step = nse_discretization_degree(opts->discretization);
+    const REAL degree1step = nse_discretization_degree(opts->discretization);
     if (degree1step == 0)
         return E_INVALID_ARGUMENT(opts->discretization);
-    map_coeff = 2/degree1step;
+    const REAL map_coeff = 2.0/degree1step;
 
     // Localize bound states ...
     switch (opts->bound_state_localization) {
@@ -586,8 +585,7 @@ static inline INT refine_roots_newton(
     INT ret_code = SUCCESS;
     UINT i, iter;
     COMPLEX a_val, b_val, aprime_val, error;
-    REAL eprecision = EPSILON * 100;
-    REAL re_bound_val, im_bound_val;
+    const REAL eprecision = EPSILON * 100;
     UINT trunc_index;
     trunc_index = D;
     const REAL eps_t = (T[1] - T[0])/(D - 1);
@@ -604,11 +602,11 @@ static inline INT refine_roots_newton(
     if (T == NULL)
         return E_INVALID_ARGUMENT(T);
     
-    im_bound_val = im_bound(D, q, T);
+    const REAL im_bound_val = im_bound(D, q, T);
     if (im_bound_val == NAN)
         return E_OTHER("Upper bound on imaginary part of bound states is NaN");
     
-    re_bound_val = re_bound(eps_t, discretization);
+    const REAL re_bound_val = re_bound(eps_t, discretization);
         
     // Perform iterations of Newton's method
     for (i = 0; i < K; i++) {

@@ -104,9 +104,8 @@ REAL fnft__akns_discretization_boundary_coeff(akns_discretization_t discretizati
 INT fnft__akns_lambda_to_z(const UINT n, const REAL eps_t, 
         COMPLEX * const vals, akns_discretization_t discretization)
 {
-    REAL degree1step;
     UINT i;
-    degree1step = akns_discretization_degree(discretization);
+    const REAL degree1step = akns_discretization_degree(discretization);
     if (degree1step == 0)
          return E_INVALID_ARGUMENT(discretization);
     for (i = 0; i < n; i++)
@@ -121,9 +120,8 @@ INT fnft__akns_lambda_to_z(const UINT n, const REAL eps_t,
 INT fnft__akns_z_to_lambda(const UINT n, const REAL eps_t, 
         COMPLEX * const vals, akns_discretization_t discretization)
 {
-    REAL degree1step;
     UINT i;
-    degree1step = akns_discretization_degree(discretization);
+    const REAL degree1step = akns_discretization_degree(discretization);
     if (degree1step == 0)
          return E_INVALID_ARGUMENT(discretization);
     for (i = 0; i < n; i++)

@@ -192,7 +192,6 @@ static inline INT gridsearch(const UINT D,
     COMPLEX * transfer_matrix = NULL;
     COMPLEX * p = NULL;
     COMPLEX * roots = NULL;
-    REAL degree1step, map_coeff;
     REAL PHI[2] = { 0.0, 2.0*PI };
     UINT deg;
     INT W = 0, *W_ptr = NULL;
@@ -228,10 +227,10 @@ static inline INT gridsearch(const UINT D,
     CHECK_RETCODE(ret_code, release_mem);
 
     // Will be required later for coordinate transforms
-    degree1step = nse_discretization_degree(opts_ptr->discretization);
+    const REAL degree1step = nse_discretization_degree(opts_ptr->discretization);
     if (degree1step == NAN)
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
-    map_coeff = 2/degree1step;
+    const REAL map_coeff = 2.0/degree1step;
     update_bounding_box_if_auto(eps_t, map_coeff, opts_ptr);
     PHI[0] = map_coeff*eps_t*opts_ptr->bounding_box[0];
     PHI[1] = map_coeff*eps_t*opts_ptr->bounding_box[1];
@@ -390,7 +389,6 @@ static inline INT subsample_and_refine(const UINT D,
     COMPLEX * p = NULL;
     COMPLEX * roots = NULL;
     COMPLEX * qsub = NULL;
-    REAL degree1step, map_coeff;
     REAL tol_im;
     REAL refine_tol;
     UINT deg;
@@ -449,10 +447,10 @@ static inline INT subsample_and_refine(const UINT D,
     CHECK_RETCODE(ret_code, release_mem);
 
     // Will be required later for coordinate transforms and filtering
-    degree1step = nse_discretization_degree(opts_ptr->discretization);
+    const REAL degree1step = nse_discretization_degree(opts_ptr->discretization);
     if (degree1step == NAN)
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
-    map_coeff = 2/degree1step;
+    const REAL map_coeff = 2.0/degree1step;
     update_bounding_box_if_auto(eps_t_sub, map_coeff, opts_ptr);
     tol_im = opts_ptr->bounding_box[1] - opts_ptr->bounding_box[0];
     tol_im /= oversampling_factor*(D - 1);

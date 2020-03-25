@@ -71,7 +71,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
     
     INT i, ret_code;
     COMPLEX *p, *p11, *p12, *p21, *p22;
-    UINT n, len;
+    UINT n;
     COMPLEX e_Bstorage[21], scl;
     // These variables are used to store the values of matrix exponentials
     // e_aB = expm([0,q;r,0]*a*eps_t/degree1step)
@@ -94,7 +94,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
         return E_INVALID_ARGUMENT(deg_ptr);
 
     // Allocate buffers
-    len = akns_fscatter_numel(D, discretization);
+    const UINT len = akns_fscatter_numel(D, discretization);
     if (len == 0) { // size D>0, this means unknown discretization
         return E_INVALID_ARGUMENT(discretization);
     }
