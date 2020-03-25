@@ -35,7 +35,6 @@ INT nsep_testcases(nsep_testcases_t tc, const UINT D,
 {
     UINT i, j;
     INT ret_code;
-    REAL eps_t;
 
     // Check inputs
     if (D < 2)
@@ -113,7 +112,7 @@ INT nsep_testcases(nsep_testcases_t tc, const UINT D,
 
         T[0] = 0.0; // location of first sample and begin of period
         T[1] = 2.0*PI; // end of period
-        eps_t = 2.0*PI/D; // location of last sample is T[1]-eps_t
+        const REAL eps_t = 2.0*PI/D; // location of last sample is T[1]-eps_t
 
         for (i=0; i<D; i++)
             (*q_ptr)[i] = 2.0*CEXP( 3.0*I*(T[0] + i*eps_t) );
@@ -184,7 +183,6 @@ INT nsep_testcases(nsep_testcases_t tc, const UINT D,
 
         T[0] = 0; // location of 1st sample
         T[1] = 1.0; // end of period
-        eps_t = (T[1] - T[0])/D; // location of last sample is T[1]-eps_t
 
         for (i=0; i<D; i++)
             (*q_ptr)[i] = (1.0 + 2.0*I)/5.0;
