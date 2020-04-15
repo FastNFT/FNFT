@@ -23,6 +23,7 @@
 
 #include "fnft__errwarn.h"
 #include "fnft__poly_roots_fasteigen.h"
+#include "fnft__misc.h"
 
 // These macros allow us to use the same indices as in the Fortran
 // sources, where the first element on ar array is at index 1 and not 0
@@ -83,6 +84,7 @@ extern int z_rot3_fusion_(int *flag, double *G1, double *G2);
 extern int z_2x2array_eig_(int *flag, double complex *A, double complex *B,
                            double complex *Q, double complex *Z);
 extern int u_fixedseed_initialize_(int *info);
+extern int my_matmul_(int *M, int *N, double complex *A, double complex *B);
 
 void d_rot2_vec2gen(double *A_ptr, double *B_ptr, double *C_ptr, double *S_ptr,
                     double *nrm_ptr)
@@ -336,6 +338,31 @@ void z_upr1fact_deflationcheck(int *vec_ptr, int *N_ptr, int *P, double *Q,
 
     *zero_ptr = zero;
 }
+
+// Auxiliary function for z_upr1fact_singleshift. Fortran matmul
+// gives slightly different results than a direct implementation.
+// For now we call Fortran so that we can still compare the C port
+// easily to the Fortran version (same result w/o optimization).
+static void matmul_aux(int first_col, double complex *H, double complex *R)
+{
+    int n;
+    double complex tmp[6] = {0};
+
+    DO (n, 1, 3) {
+        MAT(tmp, 2, 1, n) = MAT(R, 3, first_col, n);
+        MAT(tmp, 2, 2, n) = MAT(R, 3, first_col+1, n);
+    }
+
+    int MM = 2;
+    int NN = 3;
+    my_matmul_(&MM, &NN, H, tmp);
+
+    DO (n, 1, 3) {
+        MAT(R, 3, first_col, n) = MAT(tmp, 2, 1, n);
+        MAT(R, 3, first_col+1, n) = MAT(tmp, 2, 2, n);
+    }
+}
+
 void z_upr1fact_singleshift(int *P, double *Q, double *D, double *C,
                             double *B, double complex *shift_ptr)
 {
@@ -343,7 +370,6 @@ void z_upr1fact_singleshift(int *P, double *Q, double *D, double *C,
     int N = 3;
     int n, m;
     double complex R1[9], R2[9] = {0}, H[4], K[4];
-    double complex r1, r2;
     double complex rho, shift;
 
     z_upr1utri_decompress_(&f, &N, D, C, B, R1);
@@ -358,23 +384,13 @@ void z_upr1fact_singleshift(int *P, double *Q, double *D, double *C,
         MAT(H, 2, 2, 1) = -VEC(Q, 6);
         MAT(H, 2, 1, 2) = VEC(Q, 6);
         MAT(H, 2, 2, 2) = VEC(Q, 4) + I*VEC(Q, 5);
-        DO (n, 1, 3) {
-            r1 = MAT(R2, 3, 2, n);
-            r2 = MAT(R2, 3, 3, n);
-            MAT(R2, 3, 2, n) = MAT(H, 2, 1, 1)*r1 + MAT(H, 2, 1, 2)*r2;
-            MAT(R2, 3, 3, n) = MAT(H, 2, 2, 1)*r1 + MAT(H, 2, 2, 2)*r2;
-        }
+        matmul_aux(2, H, R2);
     } else {
         MAT(H, 2, 1, 1) = VEC(Q, 4) + I*VEC(Q, 5);
         MAT(H, 2, 2, 1) = VEC(Q, 6);
         MAT(H, 2, 1, 2) = -VEC(Q, 6);
         MAT(H, 2, 2, 2) = VEC(Q, 4) - I*VEC(Q, 5);
-        DO (n, 1, 3) {
-            r1 = MAT(R1, 3, 2, n);
-            r2 = MAT(R1, 3, 3, n);
-            MAT(R1, 3, 2, n) = MAT(H, 2, 1, 1)*r1 + MAT(H, 2, 1, 2)*r2;
-            MAT(R1, 3, 3, n) = MAT(H, 2, 2, 1)*r1 + MAT(H, 2, 2, 2)*r2;
-        }
+        matmul_aux(2, H, R1);
     }
 
     if (VEC(P, 1)) {
@@ -382,23 +398,13 @@ void z_upr1fact_singleshift(int *P, double *Q, double *D, double *C,
         MAT(H, 2, 2, 1) = -VEC(Q, 3);
         MAT(H, 2, 1, 2) = VEC(Q, 3);
         MAT(H, 2, 2, 2) = VEC(Q, 1) + I*VEC(Q, 2);
-        DO (n, 1, 3) {
-            r1 = MAT(R2, 3, 1, n);
-            r2 = MAT(R2, 3, 2, n);
-            MAT(R2, 3, 1, n) = MAT(H, 2, 1, 1)*r1 + MAT(H, 2, 1, 2)*r2;
-            MAT(R2, 3, 2, n) = MAT(H, 2, 2, 1)*r1 + MAT(H, 2, 2, 2)*r2;
-        }
+        matmul_aux(1, H, R2);
     } else {
         MAT(H, 2, 1, 1) = VEC(Q, 1) + I*VEC(Q, 2);
         MAT(H, 2, 2, 1) = VEC(Q, 3);
         MAT(H, 2, 1, 2) = -VEC(Q, 3);
         MAT(H, 2, 2, 2) = VEC(Q, 1) - I*VEC(Q, 2);
-        DO (n, 1, 3) {
-            r1 = MAT(R1, 3, 1, n);
-            r2 = MAT(R1, 3, 2, n);
-            MAT(R1, 3, 1, n) = MAT(H, 2, 1, 1)*r1 + MAT(H, 2, 1, 2)*r2;
-            MAT(R1, 3, 2, n) = MAT(H, 2, 2, 1)*r1 + MAT(H, 2, 2, 2)*r2;
-        }
+        matmul_aux(1, H, R1);
     }
 
     rho = MAT(R1, 3, 3, 3) / MAT(R2, 3, 3, 3);
@@ -426,13 +432,11 @@ void z_upr1fact_singleshift(int *P, double *Q, double *D, double *C,
         shift = r1_33 / r2_33;
     else
         shift = r1_22 / r2_22;
-
     // TODO: Update DBL_MAX below
     if (shift != shift || cabs(shift) > DBL_MAX)
         shift = 1e9;
     *shift_ptr = shift;
 }
-
 
 void z_upr1fact_startchase(int *vec_ptr, int *N_ptr, int *P, double *Q,
                            double *D, double *C, double *B, int *M_ptr,
