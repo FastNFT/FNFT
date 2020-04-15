@@ -339,6 +339,42 @@ void z_upr1fact_deflationcheck(int *vec_ptr, int *N_ptr, int *P, double *Q,
     *zero_ptr = zero;
 }
 
+void z_upr1fact_buildbulge(int *P, double *Q, double *D, double *C,
+                           double *B, double complex *shift_ptr, double *G)
+{
+    double complex R[4], vec1[2], vec2[2];
+    double nrm;
+
+    int f = 0;
+    int N = 2;
+    z_upr1utri_decompress_(&f, &N, D, C, B, R);
+
+    if (!(*P)) {
+        VEC(vec1, 1) = (VEC(Q, 1) + I*VEC(Q, 2)) * MAT(R, 2, 1, 1);
+        VEC(vec1, 2) = VEC(Q, 3) * MAT(R, 2, 1, 1);
+        VEC(vec2, 1) = 1;
+        VEC(vec2, 2) = 0;
+    } else {
+        VEC(vec2, 1) = VEC(Q, 1) - I*VEC(Q, 2);
+        VEC(vec2, 2) = -VEC(Q, 3);
+        VEC(vec2, 2) /= MAT(R, 2, 2, 2);
+        VEC(vec2, 1) = (VEC(vec2, 1) - MAT(R, 2, 1, 2)*VEC(vec2, 2))/MAT(R, 2, 1, 1);
+        VEC(vec1, 1) = 1;
+        VEC(vec1, 2) = 0;
+    }
+
+    const double complex shift = *shift_ptr;
+    VEC(vec1, 1) -= shift*VEC(vec2, 1);
+    VEC(vec1, 2) -= shift*VEC(vec2, 2);
+
+    double buf[4] = { creal(VEC(vec1, 1)),
+                      cimag(VEC(vec1, 1)),
+                      creal(VEC(vec1, 2)),
+                      cimag(VEC(vec1, 2)) };
+    z_rot3_vec4gen(&buf[0], &buf[1], &buf[2], &buf[3],
+                   &VEC(G, 1), &VEC(G, 2), &VEC(G, 3), &nrm);
+}
+
 // Auxiliary function for z_upr1fact_singleshift. Fortran matmul
 // gives slightly different results than a direct implementation.
 // For now we call Fortran so that we can still compare the C port
@@ -507,7 +543,7 @@ void z_upr1fact_startchase(int *vec_ptr, int *N_ptr, int *P, double *Q,
         z_upr1fact_singleshift(tp, tq, td, tc, tb, &shift);
     }
 
-    z_upr1fact_buildbulge_(P, Q, D, C, B, &shift, G);
+    z_upr1fact_buildbulge(P, Q, D, C, B, &shift, G);
     VEC(Ginv, 1) = VEC(G, 1);
     VEC(Ginv, 2) = -VEC(G, 2);
     VEC(Ginv, 3) = -VEC(G, 3);
