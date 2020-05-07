@@ -15,7 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
-* Shrinivas Chimmalgi (TU Delft) 2017-2018.
+* Shrinivas Chimmalgi (TU Delft) 2017-2019.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -26,15 +26,24 @@ INT main()
 {
     INT ret_code, i;
     fnft_nsev_opts_t opts;
-    UINT D = 4096;
+    UINT D = 2048;
     const nsev_slow_testcases_t tc = nsev_slow_testcases_SECH_FOCUSING;
+    /*REAL error_bounds[6] = { 
+        6.7e-6,     // reflection coefficient
+        1.2e-5,     // a
+        3.4e-6,     // b
+        2.6e-5,     // bound states
+        5e-14,      // norming constants
+        3.6e-6      // residues
+    };*/
+
     REAL error_bounds[6] = { 
-        3.9e-6,     // reflection coefficient
-        6.3e-6,     // a
-        2.0e-6,     // b
-        1.6e-5,     // bound states
-        INFINITY,//5e-14,      // norming constants
-        INFINITY//2.1e-6      // residues
+        5.7e-2,     // reflection coefficient
+        2.8e-2,     // a
+        9.1e-3,     // b
+        8.9e-3,     // bound states
+        5e-14,      // norming constants
+        1.6e-2      // residues
     };
 
     opts = fnft_nsev_default_opts();

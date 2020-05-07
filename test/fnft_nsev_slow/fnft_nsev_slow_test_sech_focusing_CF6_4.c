@@ -26,15 +26,24 @@ INT main()
 {
     INT ret_code, i;
     fnft_nsev_opts_t opts;
-    UINT D = 200;
+    UINT D = 400;
     const nsev_slow_testcases_t tc = nsev_slow_testcases_SECH_FOCUSING;
+    /*REAL error_bounds[6] = { 
+        5.1e-7,     // reflection coefficient
+        2.5e-8,     // a
+        5.4e-7,     // b
+        2.6e-7,     // bound states
+        6.0e-9,      // norming constants
+        1.9e-6      // residues
+    };*/
+
     REAL error_bounds[6] = { 
-        3.3e-8,     // reflection coefficient
-        3.7e-9,     // a
-        3.5e-8,     // b
-        4.8e-8,     // bound states
-        INFINITY,//5e-14,      // norming constants
-        INFINITY,//2.1e-6      // residues
+        1.7e-4,     // reflection coefficient
+        7.9e-5,     // a
+        2.4e-5,     // b
+        4.3e-5,     // bound states
+        4.0e-14,      // norming constants
+        7.7e-5      // residues
     };
 
     opts = fnft_nsev_default_opts();
@@ -55,8 +64,9 @@ INT main()
     // already close to machine precision)
     D *= 2;
     for (i=0; i<6; i++)
-        error_bounds[i] /= 43.0; //TODO: Should be 64
-    error_bounds[4] *= 4.0;
+        error_bounds[i] /= 64.0; 
+    error_bounds[4] *= 64.0;
+    error_bounds[5] *= 6.0;// Residue has lower order.
     ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 

@@ -938,7 +938,7 @@ static inline INT refine_roots_newton(
     COMPLEX a_val, b_val, aprime_val, error;
     REAL eprecision = EPSILON * 100;
     REAL re_bound_val, im_bound_val = NAN;
-    COMPLEX *q_tmp = NULL, *r = NULL;
+    COMPLEX *r = NULL;
     // Check inputs
     if (K == 0) // no bound states to refine
         return SUCCESS;
@@ -957,27 +957,12 @@ static inline INT refine_roots_newton(
     D_given = D/D_scale;
     const REAL eps_t = (T[1] - T[0])/(D_given - 1);
     
-    //This step is required as q contains scaled values on a
-    // non-equispaced grid for D_scale = 2
-    if (D_scale == 2){
-        q_tmp = malloc(D_given * sizeof(COMPLEX));
-        if (q_tmp == NULL) {
-            ret_code = E_NOMEM;
-            goto leave_fun;
-        }
-        j = 0;
-        for (i = 0; i < D_given; i++) {
-            q_tmp[i] = 2*q[j];
-            j = j+2;
-        }
-        im_bound_val = im_bound(D_given, q_tmp, T);
-        
-    } else if (D_scale == 1) {
-        im_bound_val = im_bound(D_given, q, T);
-    }
 
-    if (im_bound_val == NAN)
-        return E_OTHER("Upper bound on imaginary part of bound states is NaN");
+    im_bound_val = D_scale*D_scale*im_bound(D, q, T);
+    if (im_bound_val == NAN){
+        ret_code = E_OTHER("Upper bound on imaginary part of bound states is NaN");
+        CHECK_RETCODE(ret_code, leave_fun);
+    }
     
     re_bound_val = re_bound(eps_t, 2.0);
     
@@ -988,8 +973,10 @@ static inline INT refine_roots_newton(
             // Compute a(lam) and a'(lam) at the current root
             ret_code = nse_scatter_bound_states(D, q, r, T, 1,
                     bound_states + i, &a_val, &aprime_val, &b_val, discretization, 1);
-            if (ret_code != SUCCESS)
-                return E_SUBROUTINE(ret_code);
+            if (ret_code != SUCCESS){
+                ret_code = E_SUBROUTINE(ret_code);
+                CHECK_RETCODE(ret_code, leave_fun);
+            }
             // Perform Newton updates: lam[i] <- lam[i] - a(lam[i])/a'(lam[i])
             if (aprime_val == 0.0)
                 return E_DIV_BY_ZERO;
@@ -1006,7 +993,6 @@ static inline INT refine_roots_newton(
     }
     
     leave_fun:
-        free(q_tmp);
         free(r);
         return ret_code;
 }

@@ -26,17 +26,25 @@ INT main()
 {
     INT ret_code, i;
     fnft_nsev_opts_t opts;
-    UINT D = 256;
+    UINT D = 512;
     const nsev_slow_testcases_t tc = nsev_slow_testcases_SECH_FOCUSING;
-    REAL error_bounds[6] = { 
-        2.15e-7,     // reflection coefficient
-        3.7e-7,     // a
-        2.0e-7,     // b
-        5.15e-7,     // bound states
-        INFINITY,//5e-14,      // norming constants
-        INFINITY,//2.1e-6      // residues
-    };
+    /*REAL error_bounds[6] = { 
+        6.4e-7,     // reflection coefficient
+        1.2e-6,     // a
+        6.0e-7,     // b
+        1.6e-6,     // bound states
+        2.9e-11,      // norming constants
+        2.4e-5      // residues
+    };*/
 
+    REAL error_bounds[6] = { 
+        2.8e-4,     // reflection coefficient
+        1.5e-4,     // a
+        4.1e-5,     // b
+        1.6e-4,     // bound states
+        4.0e-14,      // norming constants
+        6.2e-4      // residues
+    };
     opts = fnft_nsev_default_opts();
     opts.bound_state_localization = nsev_bsloc_NEWTON;
     opts.discretization = nse_discretization_CF4_3;
@@ -56,7 +64,8 @@ INT main()
     D *= 2;
     for (i=0; i<6; i++)
         error_bounds[i] /= 16.0;
-    error_bounds[4] *= 4.0;
+    error_bounds[4] *= 16.0;
+    error_bounds[5] *= 4.0;
     ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 

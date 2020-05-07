@@ -15,7 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
-* Shrinivas Chimmalgi (TU Delft) 2017-2018.
+* Shrinivas Chimmalgi (TU Delft) 2017-2019.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -26,15 +26,24 @@ INT main()
 {
     INT ret_code, i;
     fnft_nsev_opts_t opts;
-    UINT D = 256;
+    UINT D = 400;
     const nsev_slow_testcases_t tc = nsev_slow_testcases_SECH_FOCUSING;
+   /* REAL error_bounds[6] = { 
+        3.5e-7,     // reflection coefficient
+       6.5e-9,     // a
+       3.8e-7,     // b
+       1.4e-8,     // bound states
+       1.9e-6,      // norming constants
+       3.1e-6      // residues
+    };*/
+
     REAL error_bounds[6] = { 
-        8.1e-8,     // reflection coefficient
-        1.3e-9,     // a
-        8.8e-8,     // b
-        2.6e-9,     // bound states
-        INFINITY,//5e-14,      // norming constants
-        INFINITY,//2.1e-6      // residues
+        7.5e-5,     // reflection coefficient
+       4.2e-5,     // a
+       4.2e-5,     // b
+       4.1e-5,     // bound states
+       2.8e-4,      // norming constants
+       2.7e-4      // residues
     };
 
     opts = fnft_nsev_default_opts();
@@ -51,12 +60,10 @@ INT main()
     ret_code = nsev_slow_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
  
-    // Check for quadratic error decay (error_bounds[4] stays as it is
-    // already close to machine precision)
+    // Check for quadratic error decay 
     D *= 2;
     for (i=0; i<6; i++)
         error_bounds[i] /= 32.0;
-    error_bounds[4] *= 4.0;
     ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 

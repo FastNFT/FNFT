@@ -93,6 +93,7 @@ include_directories(include)
 include_directories(include/3rd_party/eiscor)
 include(CheckCCompilerFlag)
 
+
 # configure C compiler
 if (CMAKE_COMPILER_IS_GNUCC) # gcc
   if (DEBUG)
@@ -195,6 +196,7 @@ if (BUILD_TESTS)
   endforeach()
 endif()
 
+
 # Try to build the Matlab interface if requested
 if (WITH_MATLAB)
     check_language(CXX)
@@ -204,7 +206,10 @@ if (WITH_MATLAB)
         message("++ Could not find a C++ compiler, which is sometimes required to localize Matlab.")
         message("++ If the build process fails, deactivate the localization with the -DWITH_MATLAB=OFF switch.")
     endif()
+
+  #SET(Matlab_ROOT_DIR "/usr/local/MATLAB/R2019a" )
   find_package(Matlab COMPONENTS MX_LIBRARY)
+
   if (Matlab_FOUND)
     file(GLOB MEX_SOURCES "matlab/mex_*.c")
     foreach (srcfile ${MEX_SOURCES})

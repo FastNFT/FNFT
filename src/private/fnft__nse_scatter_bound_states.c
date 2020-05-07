@@ -23,6 +23,7 @@
 #include "fnft__errwarn.h"
 #include "fnft__nse_scatter.h"
 #include <stdio.h>
+#include "fnft__misc.h"
 
 /**
  * Returns the a, a_prime and b computed using the chosen scheme.
@@ -38,7 +39,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
     INT ret_code = SUCCESS;
     UINT neig;
     UINT c1, c2, c3;
-    UINT n;
+    UINT n, D_scale, D_given, n_given, count;
     COMPLEX * l, qn, rn, ks, k, sum=0, TM[4][4],ch,chi,sh,u1,ud1,ud2, l_curr;
     REAL eps_t_n = 0, eps_t = 0, scl_factor = 0;
     COMPLEX * PHI1 = NULL, * PHI2 = NULL;
@@ -62,15 +63,6 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
         return E_INVALID_ARGUMENT(b);
     
     
-    PHI1 = malloc((D+1) * sizeof(COMPLEX));
-    PHI2 = malloc((D+1) * sizeof(COMPLEX));
-    PSI1 = malloc((D+1) * sizeof(COMPLEX));
-    PSI2 = malloc((D+1) * sizeof(COMPLEX));
-    if (PHI1 == NULL || PHI2 == NULL || PSI1 == NULL || PSI2 == NULL) {
-        ret_code = E_NOMEM;
-        goto leave_fun;
-    }
-    
     if (r == NULL) {
         r = malloc(D*sizeof(COMPLEX));
         if (r == NULL) {
@@ -88,7 +80,22 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
         goto leave_fun;
     }
     
-    
+    D_scale = nse_discretization_D_scale(discretization);
+    if (D_scale == 0){
+        ret_code =  E_INVALID_ARGUMENT(discretization);
+        goto leave_fun;
+    }
+    D_given = D/D_scale;
+    PHI1 = malloc((D_given+1) * sizeof(COMPLEX));
+    PHI2 = malloc((D_given+1) * sizeof(COMPLEX));
+    PSI1 = malloc((D_given+1) * sizeof(COMPLEX));
+    PSI2 = malloc((D_given+1) * sizeof(COMPLEX));
+    if (PHI1 == NULL || PHI2 == NULL || PSI1 == NULL || PSI2 == NULL) {
+        ret_code = E_NOMEM;
+        goto leave_fun;
+    }
+    eps_t = (T[1] - T[0])/(D_given - 1);
+    eps_t_n = -eps_t;
     for (neig = 0; neig < K; neig++) { // iterate over bound states
         l_curr = bound_states[neig];
         switch (discretization) {
@@ -160,18 +167,18 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 
         }
         
-        eps_t = (T[1] - T[0])/(D*scl_factor - 1);
-        eps_t_n = -eps_t;
         
         COMPLEX SR[4][4] = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
         COMPLEX SL[4][4] = {{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
         COMPLEX U[4][4] = {{0}};
         
-        PSI1[D] = SR[0][1]*CEXP(I*l_curr*(T[1]+eps_t/2));
-        PSI2[D] = SR[1][1]*CEXP(I*l_curr*(T[1]+eps_t/2));
+        PSI1[D_given] = SR[0][1]*CEXP(I*l_curr*(T[1]+eps_t/2));
+        PSI2[D_given] = SR[1][1]*CEXP(I*l_curr*(T[1]+eps_t/2));
         
         if (skip_b_flag == 0){
             n = D;
+            n_given = D_given;
+            count = D_scale-1;
             do{
                 n--;
                 qn = q[n];
@@ -214,13 +221,22 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                         SR[c1][c2] = TM[c1][c2];
                 }
                 
-                PSI1[n] = SR[0][1]*CEXP(I*l[n]*(T[1]+eps_t/2));
-                PSI2[n] = SR[1][1]*CEXP(I*l[n]*(T[1]+eps_t/2));
+                if (count == 0){
+                    count = D_scale - 1;
+                    n_given--;
+                    PSI1[n_given] = SR[0][1]*CEXP(I*l_curr*(T[1]+eps_t/2));
+                    PSI2[n_given] = SR[1][1]*CEXP(I*l_curr*(T[1]+eps_t/2));
+                }
+                else
+                    count--;
+                
                 
             } while (n > 0);
         }
         PHI1[0] = SL[0][0]*CEXP(-I*l_curr*(T[0]-eps_t/2));
         PHI2[0] = SL[1][0]*CEXP(-I*l_curr*(T[0]-eps_t/2));
+        n_given = 0;
+        count = D_scale - 1;
         for (n = 0; n < D; n++){
             qn = q[n];
             rn = r[n];
@@ -260,19 +276,30 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 for (c2 = 0; c2 < 4; c2++)
                     SL[c1][c2] = TM[c1][c2];
             }
-            PHI1[n+1] = SL[0][0]*CEXP(-I*l[n]*(T[0]-eps_t/2));
-            PHI2[n+1] = SL[1][0]*CEXP(-I*l[n]*(T[0]-eps_t/2));
+            
+            if (count == 0){
+                count = D_scale - 1;
+                n_given++;
+                PHI1[n_given] = SL[0][0]*CEXP(-I*l_curr*(T[0]-eps_t/2));
+                PHI2[n_given] = SL[1][0]*CEXP(-I*l_curr*(T[0]-eps_t/2));
+            }
+            else
+                count--;
         }
         
         a_vals[neig] = SL[0][0]*CEXP(I*l_curr*(-T[0]+T[1]+eps_t));
         aprime_vals[neig] = scl_factor*(SL[2][0]+I*(T[1]+eps_t-T[0])*SL[0][0])*CEXP(I*l_curr*(-T[0]+T[1]+eps_t));
+                //printf("SL00=%1.15e+i%1.15e\n",CREAL(SL[0][0]),CIMAG(SL[0][0]));
+
+       // printf("SL20=%1.15e+i%1.15e\n",CREAL(SL[2][0]),CIMAG(SL[2][0]));
+        //printf("aprime=%1.15e+i%1.15e\n",CREAL(aprime_vals[neig]),CIMAG(aprime_vals[neig]));
         
         if (skip_b_flag == 0){
             // Calculation of b assuming a=0
             // Uses the metric from DOI: 10.1109/ACCESS.2019.2932256 for choosing the
             // computation point
             REAL error_metric = INFINITY, tmp = INFINITY;
-            for (n = 0; n <= D; n++){
+            for (n = 0; n <= D_given; n++){
                 tmp = CABS((0.5*LOG(CABS((PHI2[n]/PSI2[n])/(PHI1[n]/PSI1[n])))));
                 if (tmp < error_metric){
                     b[neig] = PHI1[n]/PSI1[n];
