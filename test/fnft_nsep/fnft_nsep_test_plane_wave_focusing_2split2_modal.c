@@ -25,7 +25,7 @@ INT main()
 {
     INT ret_code, i;
     const fnft__nsep_testcases_t tc = nsep_testcases_PLANE_WAVE_FOCUSING;
-    UINT D = 1024;
+    UINT D = 1025;
     REAL error_bounds[3] = {
         3.5e-4, // main spectrum
         3.1e-4, // aux spectrum

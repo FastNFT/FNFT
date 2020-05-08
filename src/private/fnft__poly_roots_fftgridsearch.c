@@ -73,7 +73,7 @@ INT poly_roots_fftgridsearch(const UINT deg,
         ret_code = poly_chirpz(deg, p, A, W, M, vals + (k+1)*M);
         CHECK_RETCODE(ret_code, release_mem);
     }
-    //misc_print_buf(3*M,vals,"vals");
+   
     // Approximate the roots
     for (i=1; i<M-1; i++) {
 
@@ -145,7 +145,6 @@ INT poly_roots_fftgridsearch(const UINT deg,
         // Save the root
         roots[nroots++] = zr;
     }
-
     // Save the number of detected roots
     *M_ptr = nroots;
 
