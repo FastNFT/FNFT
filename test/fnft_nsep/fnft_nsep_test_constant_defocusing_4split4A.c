@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
+* Shrinivas Chimmalgi (TU Delft) 2020.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -25,17 +26,17 @@ INT main()
 {
     INT ret_code;
     const fnft__nsep_testcases_t tc = nsep_testcases_CONSTANT_DEFOCUSING;
-    UINT D = 2048;
+    UINT D = 68;
     REAL error_bounds[3] = {
-        7.6e-5, // main spectrum
-        7.6e-8, // aux spectrum
+        6.8e-4, // main spectrum
+        1.9e-6, // aux spectrum
         0.0     // sheet indices (zero since not yet implemented)
     };
     fnft_nsep_opts_t opts;
 
     opts = fnft_nsep_default_opts();
-    opts.discretization = nse_discretization_2SPLIT2_MODAL;
-    opts.localization = fnft_nsep_loc_MIXED;
+    opts.discretization = nse_discretization_4SPLIT4A;
+    opts.localization = fnft_nsep_loc_SUBSAMPLE_AND_REFINE;//MIXED;
     opts.filtering = fnft_nsep_filt_MANUAL;
     opts.bounding_box[0] = -10;
     opts.bounding_box[1] = 10;
@@ -49,8 +50,8 @@ INT main()
     // since spectrum on real line is found with poly_roots_fftgridsearch
     D *= 2;
     error_bounds[0] /= 2.0;
-    error_bounds[1] /= 4.0;
-    error_bounds[2] /= 4.0;
+    error_bounds[1] /= 16.0;
+    error_bounds[2] /= 16.0;
     ret_code = nsep_testcases_test_fnft(tc, D+1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 

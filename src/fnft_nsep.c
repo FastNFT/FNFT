@@ -350,8 +350,6 @@ static inline INT gridsearch(const UINT D,
             goto release_mem;
         }
 
-        
-        misc_print_buf(K,roots,"zi");
         // Coordinate transform (from discrete-time to continuous-time domain)
         ret_code = nse_z_to_lambda(K, eps_t, roots, opts_ptr->discretization);
         CHECK_RETCODE(ret_code, release_mem);
