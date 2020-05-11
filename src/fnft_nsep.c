@@ -46,7 +46,7 @@ static fnft_nsep_opts_t default_opts = {
     .discretization = nse_discretization_2SPLIT2A
 };
 
-static const UINT oversampling_factor = 1; //TODO
+static const UINT oversampling_factor = 32; 
 
 // Returns an options object for the main routine with default settings.
 // See the header file for a detailed description.
@@ -98,7 +98,7 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
     
     
     // Check inputs
-    if (D < 2)
+    if (D < 2 || D%2 == 0)
         return E_INVALID_ARGUMENT(D);
     if (q == NULL)
         return E_INVALID_ARGUMENT(q);
@@ -333,23 +333,14 @@ static inline INT gridsearch(const UINT D,
             ret_code = E_NOMEM;
             goto release_mem;
         }
-        printf("D_effective=%d\n",D_effective);
-        printf("deg=%d\n",deg);
-        printf("eps=%f\n",eps_t);
-        misc_print_buf(deg+1,transfer_matrix,"p1");
-        misc_print_buf(deg+1,transfer_matrix+3*(deg+1),"p4");
+
 
         // First, determine p(z) for the positive sign (+)
         for (i=0; i<=deg; i++)
             p[i] = transfer_matrix[i] + transfer_matrix[3*(deg+1)+i]; //CONJ(transfer_matrix[deg-i]);
-        if (deg%2 == 0)
-            p[deg/2] += 2.0 * POW(2.0, -W); // the pow arises because
-        else{
-            p[(deg-1)/2] += 1.0 * POW(2.0, -W);
-            p[(deg+1)/2] += 1.0 * POW(2.0, -W);
-            //p[(INT)CEIL(deg/2)] += 2.0 * POW(2.0, -W);
-        }
-        //misc_print_buf(deg+1,p,"p");
+        
+        p[deg/2] += 2.0 * POW(2.0, -W); // the pow arises because
+
         // Find the roots of p(z)
         K = oversampling_factor*deg;
         ret_code = poly_roots_fftgridsearch(deg, p, &K, PHI, roots);
@@ -359,11 +350,11 @@ static inline INT gridsearch(const UINT D,
             goto release_mem;
         }
 
-
+        
+        misc_print_buf(K,roots,"zi");
         // Coordinate transform (from discrete-time to continuous-time domain)
         ret_code = nse_z_to_lambda(K, eps_t, roots, opts_ptr->discretization);
         CHECK_RETCODE(ret_code, release_mem);
-        misc_print_buf(K,roots,"proots");
         // Filter the roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
             ret_code = misc_filter(&K, roots, NULL, opts_ptr->bounding_box);
@@ -382,13 +373,8 @@ static inline INT gridsearch(const UINT D,
         memcpy(main_spec, roots, K * sizeof(COMPLEX));
         
         // Second, determine p(z) for the negative sign (-)
-        if (deg%2 == 0)
-            p[deg/2] -= 4.0 * POW(2.0, -W);
-        else{
-            p[(deg-1)/2] -= 2.0 * POW(2.0, -W);
-            p[(deg+1)/2] -= 2.0 * POW(2.0, -W);
-            //p[(INT)CEIL(deg/2)] -= 4.0 * POW(2.0, -W);
-        }
+        p[deg/2] -= 4.0 * POW(2.0, -W);
+
         
         // Find the roots of the new p(z)
         K_filtered = oversampling_factor*deg;
@@ -410,7 +396,6 @@ static inline INT gridsearch(const UINT D,
                     opts_ptr->bounding_box);
             CHECK_RETCODE(ret_code, release_mem);
         }
-        misc_print_buf(K_filtered,roots,"nroots");
         // Copy to user-provided array
         if (K + K_filtered > *K_ptr) {
             if (warn_flags[0] == 0) {
@@ -499,7 +484,6 @@ static inline INT subsample_and_refine(const UINT D,
     COMPLEX *q_effective = NULL;
     COMPLEX *q_1 = NULL;
     COMPLEX *q_2 = NULL;
-    REAL Tsub[2] = {0.0 ,0.0};
     UINT first_last_index[2];
     UINT nskip_per_step;
     nse_discretization_t nse_discretization = 0;
@@ -523,12 +507,12 @@ static inline INT subsample_and_refine(const UINT D,
             goto release_mem;
         }
     }
-    //Dsub = POW(2.0, CEIL( 0.5 * LOG2(D * LOG2(D) * LOG2(D)) ));
+
     Dsub = ROUND(SQRT(D * LOG2(D) * LOG2(D)));
-    //Dsub = D;
     nskip_per_step = ROUND((REAL)D / Dsub);
     Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
-   
+    if (Dsub%2 == 1)
+        Dsub --;
 
     qsub_effective = malloc(Dsub * D_scale * sizeof(COMPLEX));
     q_effective = malloc(D_effective * sizeof(COMPLEX));
@@ -582,9 +566,6 @@ static inline INT subsample_and_refine(const UINT D,
         nse_discretization = nse_discretization_BO;
     }
     
-    
-    //Tsub[0] = T[0] + first_last_index[0]*eps_t;
-    //Tsub[1] = T[0] + first_last_index[1]*eps_t;
 
    
     // Allocate memory for the transfer matrix
@@ -600,7 +581,6 @@ static inline INT subsample_and_refine(const UINT D,
     }
     
     // Determine step size
-    //const REAL eps_t_sub = (Tsub[1] - Tsub[0]) / Dsub;
     const REAL eps_t_sub = nskip_per_step*eps_t;
     
     // Compute the transfer matrix
@@ -637,14 +617,10 @@ static inline INT subsample_and_refine(const UINT D,
         
         // First, determine p(z) for the positive sign (+)
         for (i=0; i<=deg; i++)
-            p[i] = transfer_matrix[i] + CONJ(transfer_matrix[deg-i]);
+            p[i] = transfer_matrix[i] + CONJ(transfer_matrix[deg-i]);      
         
-        if (deg%2 == 0)
-            p[deg/2] += 2.0 * POW(2.0, -W); // the pow arises because
-        else{
-            p[(deg-1)/2] += 1.0 * POW(2.0, -W);
-            p[(deg+1)/2] += 1.0 * POW(2.0, -W);
-        }
+        p[deg/2] += 2.0 * POW(2.0, -W); // the pow arises because
+
         
         // Find the roots of p(z)
         ret_code = poly_roots_fasteigen(deg, p, roots);
@@ -679,7 +655,7 @@ static inline INT subsample_and_refine(const UINT D,
             ret_code = misc_filter_nonreal(&K, roots, tol_im);
             CHECK_RETCODE(ret_code, release_mem);
         }
-
+        
         // Copy to user-provided array
         if (K > *K_ptr) {
             if (warn_flags[0] == 0) {
@@ -691,12 +667,8 @@ static inline INT subsample_and_refine(const UINT D,
         memcpy(main_spec, roots, K * sizeof(COMPLEX));
          
         // Second, determine p(z) for the negative sign (-)
-        if (deg%2 == 0)
-            p[deg/2] -= 4.0 * POW(2.0, -W);
-        else{
-            p[(deg-1)/2] -= 2.0 * POW(2.0, -W);
-            p[(deg+1)/2] -= 2.0 * POW(2.0, -W);
-        }
+        p[deg/2] -= 4.0 * POW(2.0, -W);
+
 
         // Find the roots of the new p(z)
         ret_code = poly_roots_fasteigen(deg, p, roots);
@@ -731,7 +703,7 @@ static inline INT subsample_and_refine(const UINT D,
             ret_code = misc_filter_nonreal(&K_filtered, roots, tol_im);
             CHECK_RETCODE(ret_code, release_mem);
         }
-
+        
         // Copy to user-provided array
         if (K_filtered + K > *K_ptr) {
             if (warn_flags[0] == 0) {
