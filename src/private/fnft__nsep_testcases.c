@@ -114,7 +114,6 @@ INT nsep_testcases(nsep_testcases_t tc, const UINT D,
         T[0] = 0.0; // location of first sample and begin of period
         T[1] = 2.0*PI; // end of period
         eps_t = 2.0*PI/(D-1); // location of last sample is T[1]. In previous version it was T[1]-eps_t
-
         for (i=0; i<D; i++)
             (*q_ptr)[i] = 2.0*CEXP( 3.0*I*(T[0] + i*eps_t) );
 

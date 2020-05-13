@@ -28,7 +28,7 @@ INT main()
     UINT D = 1024;
     REAL error_bounds[3] = { 
         6.3e-5, // main spectrum
-        4.4e-5, // aux spectrum
+        4.6e-5, // aux spectrum
         0.0     // sheet indices (zero since not yet implemented)
     };
     fnft_nsep_opts_t opts;
@@ -57,7 +57,7 @@ INT main()
     // Repeat tests without real spectrum
     opts.bounding_box[2] = 0.1;
     D = 1024;
-    error_bounds[0] = 4.4e-5;
+    error_bounds[0] = 4.7e-5;
     error_bounds[1] = 4.4e-5;
     error_bounds[2] = 0.0;
     ret_code = nsep_testcases_test_fnft(tc, D+1, error_bounds, &opts);

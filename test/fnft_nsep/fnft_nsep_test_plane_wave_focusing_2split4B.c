@@ -57,7 +57,7 @@ INT main()
     // Repeat tests without real spectrum
     opts.bounding_box[2] = 0.1;
     D = 1024;
-    error_bounds[0] = 4.4e-5;
+    error_bounds[0] = 4.7e-5;
     error_bounds[1] = 4.4e-5;
     error_bounds[2] = 0.0;
     ret_code = nsep_testcases_test_fnft(tc, D+1, error_bounds, &opts);
