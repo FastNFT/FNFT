@@ -30,7 +30,7 @@ void misc_print_buf(const INT len, COMPLEX const * const buf,
     INT i;
     printf("%s = [", varname);
     for (i = 0; i < len; i++) {
-        printf("%g+%gj", CREAL(buf[i]), CIMAG(buf[i]));
+        printf("%1.12e+%1.12ej", CREAL(buf[i]), CIMAG(buf[i]));
         if (i != len-1)
             printf(", ");
     }

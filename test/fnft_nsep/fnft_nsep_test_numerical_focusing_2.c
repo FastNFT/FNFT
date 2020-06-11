@@ -67,14 +67,12 @@ Fm = 0.5*integral(f,c^2,Inf);
 K0 = 1i*c*exp(Dm*del-Fm);
 %%
 T = [0, Ap];  % T(1) is the beginning of the period, T(2) is the end
-D = 2^8;        % number of samples
+D = 2^8+1;        % number of samples
 kappa = +1;     % focusing nonlinear Schroedinger equation
 
 %%% Setup the signal %%%
-ep = (T(2) - T(1))/(D);
-X = T(1) + (0:D-1)*ep;
-% Note: The location of the 1st sample is T(1), but the location of the
-% sample if T(2) - (T(2)-T(1)/D.
+X = linspace(T(1),T(2),D);
+
 
 %% Building the signal
 

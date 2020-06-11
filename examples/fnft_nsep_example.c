@@ -30,7 +30,7 @@ int main()
     /** Step 1: Set up the signal **/
 
     // Number of time-domain samples. Increase to improve precision of results.
-    FNFT_UINT D = 256;
+    FNFT_UINT D = 257;
 
     // Contains the samples of q(t)
     FNFT_COMPLEX q[D];

@@ -207,7 +207,7 @@ if (WITH_MATLAB)
         message("++ If the build process fails, deactivate the localization with the -DWITH_MATLAB=OFF switch.")
     endif()
 
-  #SET(Matlab_ROOT_DIR "/usr/local/MATLAB/R2019a" )
+  SET(Matlab_ROOT_DIR "/usr/local/MATLAB/R2019a" )
   find_package(Matlab COMPONENTS MX_LIBRARY)
 
   if (Matlab_FOUND)
@@ -216,6 +216,7 @@ if (WITH_MATLAB)
       get_filename_component(mexfile ${srcfile} NAME_WE)
       matlab_add_mex(NAME ${mexfile} SRC ${srcfile} LINK_TO fnft ${LIBM} ${FFTW3_LIB})
       set_target_properties(${mexfile} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/matlab")
+      #set_target_properties(${mexfile} PROPERTIES LINK_FLAGS "/export:mexFunction")
       target_compile_options(${mexfile} PRIVATE -DMEX_DOUBLE_HANDLE)
       # -DMEX_DOUBLE_HANDLE avoids the new complex interleaved API
     endforeach()

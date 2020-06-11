@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
+* Shrinivas Chimmalgi (TU Delft) 2019-2020.
 */
 
 #include <string.h>

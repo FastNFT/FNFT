@@ -30,13 +30,12 @@
 #include "fnft__nse_scatter.h"
 #include "fnft__nse_fscatter.h"
 #include <string.h> // for memcpy
-#include <stdio.h> // for printf
 
 
 static fnft_nsep_opts_t default_opts = {
     .localization = fnft_nsep_loc_MIXED,
     .filtering = fnft_nsep_filt_AUTO,
-    .max_evals = 20,
+    .max_evals = 20, 
     .bounding_box[0] = -FNFT_INF,
     .bounding_box[1] = FNFT_INF,
     .bounding_box[2] = -FNFT_INF,
@@ -138,8 +137,13 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
         for (i=0; i < D_effective; i++)
             q_effective[i] = q[i]*CEXP(2*I*Lam_shift*(T[0]+eps_t*i));
         // Last sample is dropped as it is the beginning of next period
-        
-        
+    
+    // Bounding box needs to be shifted to ensure it works properly for
+    // quasi-periodic signals    
+    if (opts_ptr->filtering == fnft_nsep_filt_MANUAL){
+        opts_ptr->bounding_box[0] -= Lam_shift;
+        opts_ptr->bounding_box[1] -= Lam_shift;
+    }
         switch (opts_ptr->localization) {
             
             case fnft_nsep_loc_MIXED:
@@ -203,7 +207,6 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
                 
                 return E_INVALID_ARGUMENT(opts_ptr->discretization);
         }
-
         if (main_spec != NULL) { 
         for (i=0; i < *K_ptr; i++)
             main_spec[i] += Lam_shift;
@@ -212,6 +215,12 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
         for (i=0; i < *M_ptr; i++)
             aux_spec[i] += Lam_shift;
         }
+        
+    // Restoring changed limits    
+    if (opts_ptr->filtering == fnft_nsep_filt_MANUAL){
+        opts_ptr->bounding_box[0] += Lam_shift;
+        opts_ptr->bounding_box[1] += Lam_shift;
+    }
         leave_fun:
             free(q_effective);
             return ret_code;
@@ -328,6 +337,7 @@ static inline INT gridsearch(const UINT D,
         goto release_mem;
     }
     
+    
     // Compute main spectrum if desired
     if (main_spec != NULL) {
         
@@ -341,12 +351,10 @@ static inline INT gridsearch(const UINT D,
             ret_code = E_NOMEM;
             goto release_mem;
         }
-        
-        
+     
         // First, determine p(z) for the positive sign (+)
         for (i=0; i<=deg; i++)
             p[i] = transfer_matrix[i] + CONJ(transfer_matrix[deg-i]);
-        
         p[deg/2] += 2.0 * POW(2.0, -W); // the pow arises because
         // nse_fscatter rescales
         
@@ -354,6 +362,7 @@ static inline INT gridsearch(const UINT D,
         K = oversampling_factor*deg;
         ret_code = poly_roots_fftgridsearch(deg, p, &K, PHI, roots);
         CHECK_RETCODE(ret_code, release_mem);
+
         if (K > deg) {
             ret_code = E_OTHER("Found more roots than memory is available.");
             goto release_mem;
@@ -367,7 +376,6 @@ static inline INT gridsearch(const UINT D,
             ret_code = misc_filter(&K, roots, NULL, opts_ptr->bounding_box);
             CHECK_RETCODE(ret_code, release_mem);
         }
-        
         
         // Copy to user-provided array
         if (K > *K_ptr) {
@@ -388,6 +396,7 @@ static inline INT gridsearch(const UINT D,
         ret_code = poly_roots_fftgridsearch(deg, p, &K_filtered, PHI,
                 roots);
         CHECK_RETCODE(ret_code, release_mem);
+
         if (K_filtered > deg) {
             ret_code = E_OTHER("Found more roots than memory is available.");
             goto release_mem;
@@ -403,6 +412,7 @@ static inline INT gridsearch(const UINT D,
                     opts_ptr->bounding_box);
             CHECK_RETCODE(ret_code, release_mem);
         }
+        
         // Copy to user-provided array
         if (K + K_filtered > *K_ptr) {
             if (warn_flags[0] == 0) {
@@ -419,7 +429,6 @@ static inline INT gridsearch(const UINT D,
         // Set number of points in the main spectrum
         K += K_filtered;
     }
-    
     // Compute auxiliary spectrum (real line only)
     if (aux_spec != NULL) {
         
@@ -427,7 +436,7 @@ static inline INT gridsearch(const UINT D,
         ret_code = poly_roots_fftgridsearch(deg, transfer_matrix+(deg+1), &M,
                 PHI, roots);
         CHECK_RETCODE(ret_code, release_mem);
-        
+
         // Coordinate transform (from discrete-time to continuous-time domain)
         ret_code = nse_z_to_lambda(M, eps_t, roots, opts_ptr->discretization);
         CHECK_RETCODE(ret_code, release_mem);
@@ -448,7 +457,6 @@ static inline INT gridsearch(const UINT D,
         }
         memcpy(aux_spec, roots, M * sizeof(COMPLEX));
     }
-    
     // Update number of main spectrum points and auxiliary spectrum points
     *K_ptr = K;
     *M_ptr = M;
@@ -522,9 +530,7 @@ static inline INT subsample_and_refine(const UINT D,
         Dsub = ROUND(SQRT(D * LOG2(D) * LOG2(D)));
     nskip_per_step = ROUND((REAL)D / Dsub);
     Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
-    if (Dsub%2 == 1)
-        Dsub --;
-    
+
     qsub_effective = malloc(Dsub * D_scale * sizeof(COMPLEX));
     q_effective = malloc(D_effective * sizeof(COMPLEX));
     if (qsub_effective == NULL || q_effective == NULL) {
@@ -541,7 +547,6 @@ static inline INT subsample_and_refine(const UINT D,
         CHECK_RETCODE(ret_code, release_mem);
         ret_code = misc_downsample(D, q_2, &Dsub, &qsub_2, first_last_index);
         CHECK_RETCODE(ret_code, release_mem);
-        
         j = 0;
         for (i=0; i < Dsub; i++) {
             qsub_effective[j] = (qsub_1[i]+qsub_2[i])/4.0 - (qsub_2[i]-qsub_1[i])*scl_factor;
@@ -579,7 +584,7 @@ static inline INT subsample_and_refine(const UINT D,
     
     // Determine the tolerance for the refinement steps
     if (opts_ptr->tol < 0)
-        refine_tol = SQRT(EPSILON);
+        refine_tol = SQRT(EPSILON); 
     else
         refine_tol = opts_ptr->tol;
     
@@ -604,7 +609,7 @@ static inline INT subsample_and_refine(const UINT D,
     ret_code = nse_fscatter(Dsub*D_scale, qsub_effective, eps_t_sub, kappa, transfer_matrix, &deg,
             W_ptr, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
-    
+
     // Will be required later for coordinate transforms and filtering
     degree1step = nse_discretization_degree(opts_ptr->discretization);
     if (degree1step == NAN)
@@ -691,6 +696,7 @@ static inline INT subsample_and_refine(const UINT D,
                 CHECK_RETCODE(ret_code, release_mem);
             }
             
+
             // Copy to user-provided array
             if (K+K_new > *K_ptr) {
                 if (warn_flags[0] == 0) {
@@ -704,6 +710,7 @@ static inline INT subsample_and_refine(const UINT D,
             if (warn_flags[0] == 1)
                 break; // user-provided array for main spectrum is full
         }
+        
     }
 
     // Compute aux spectrum if desired
@@ -840,7 +847,7 @@ static inline INT refine_mainspec(
             }
             
             mainspec[k] -= best_m*incr; // Newton step
-            //printf("MAIN k=%zu, nevals=%zu: lam=%g+%gj, |f|=%g, |f_prime|=%g, |incr|=%g\n", k, nevals, CREAL(mainspec[k]), CIMAG(mainspec[k]), CABS(f), CABS(f_prime),CABS(incr));
+            //printf("MAIN k=%zu, nevals=%zu: lam=%e+%ej, |f|=%e, |f_prime|=%e, |incr|=%e, best_m=%d\n", k, nevals, CREAL(mainspec[k]), CIMAG(mainspec[k]), CABS(f), CABS(f_prime),CABS(incr),best_m);
             if ( min_abs < tol ) {
                 // We already know f and f_prime at the new mainspec[k], so
                 // let's use that for a final first-order Newton step.
@@ -887,7 +894,7 @@ static inline INT refine_auxspec(
             if (f_prime == 0.0)
                 return E_DIV_BY_ZERO;
             
-            // printf("AUX k=%zu, iter=%zu: lam=%g+%gj, |f|=%g, |f_prime|=%g\n", k, iter, CREAL(auxspec[k]), CIMAG(auxspec[k]), CABS(f), CABS(f_prime));
+            //printf("AUX k=%zu, iter=%zu: lam=%g+%gj, |f|=%g, |f_prime|=%g\n", k, iter, CREAL(auxspec[k]), CIMAG(auxspec[k]), CABS(f), CABS(f_prime));
             
             auxspec[k] -= f / f_prime;
             if ( CABS(f) < tol ) // Intentionally put after the previous line

@@ -14,10 +14,11 @@
 %
 % Contributors:
 % Sander Wahls (TU Delft) 2017-2018.
+% Shrinivas Chimmalgi (TU Delft) 2020.
 
 % This examples demonstrates how the nonlinear Fourier transform with
 % respect to the nonlinear Schroedinger equation with periodic boundary
-% conditions can be computed using mex_fnft_nsev. The signal is the same
+% conditions can be computed using mex_fnft_nsep. The signal is the same
 % plane wave as in the paper https://doi.org/10.1109/TIT.2015.2485944
 
 clear all;
@@ -26,7 +27,7 @@ close all;
 %%% Setup parameters %%%
 
 T = [0, 2*pi];  % T(1) is the beginning of the period, T(2) is the end
-D = 2^8;        % number of samples
+D = 2^8+1;        % number of samples
 kappa = +1;     % focusing nonlinear Schroedinger equation  
 
 %%% Setup the signal %%%
