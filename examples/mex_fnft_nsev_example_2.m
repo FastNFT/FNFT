@@ -18,7 +18,7 @@
 
 % This example compares the accuracy-execution tradeoff of the various algorithms for
 % the focusing nonlinear Schroedinger equation with vanishing boundaries.
-% It ties to recreate Fig. 13 from doi: 10.1109/ACCESS.2019.2945480.
+% It tries to recreate Fig. 13 from doi: 10.1109/ACCESS.2019.2945480.
 % NOTE: The results do not exactly match the results in the paper due to slight
 % differences in implementations. The overall trends are the same.
 

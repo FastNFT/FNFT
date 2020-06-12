@@ -15,7 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
-* Shrnivas Chimmalgi (TU Delft) 2019.
+* Shrnivas Chimmalgi (TU Delft) 2019-2020.
 */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -51,7 +51,7 @@ INT main()
     ret_code = nsev_slow_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    // Check for 4th order error decay
+    // Check for 2nd order error decay
     D *= 2;
     for (i=0; i<6; i++)
         error_bounds[i] /= 4.0;
@@ -59,7 +59,26 @@ INT main()
     CHECK_RETCODE(ret_code, leave_fun);
     
     
-
+    D = 512;
+    REAL error_bounds_RE[6] = { 
+        2.8e-4,     // reflection coefficient
+        INFINITY,   // a
+        INFINITY,   // b
+        0.0,        // bound states
+        0.0,        // norming constants
+        0.0         // residues 
+    };
+    opts.richardson_extrapolation_flag = 1;
+    
+    ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);    
+    // Check for 4th order error decay
+    D *= 2;
+    for (i=0; i<6; i++)
+        error_bounds_RE[i] /= 16.0;
+    ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+    
 leave_fun:
     if (ret_code != SUCCESS)
         return EXIT_FAILURE;

@@ -15,7 +15,7 @@
  *
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
- * Shrinivas Chimmalgi (TU Delft) 2017-2019.
+ * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Marius Brehler (TU Dortmund) 2018.
  */
 
@@ -79,7 +79,7 @@ static inline INT compute_normconsts_or_residues(
         COMPLEX * const bound_states,
         COMPLEX * const normconsts_or_residues,
         fnft_nsev_opts_t * const opts);
-        
+
 static inline INT fnft_nsev_slow_base(
         const UINT D,
         COMPLEX * const q,
@@ -95,8 +95,15 @@ static inline INT fnft_nsev_slow_base(
         fnft_nsev_opts_t *opts);
 
 static inline INT signal_effective_from_signal(
-        const UINT D, COMPLEX const * const q, REAL const eps_t, const INT kappa,
-        COMPLEX * q_effective, COMPLEX * r_effective, nse_discretization_t discretization);
+        const UINT D,
+        COMPLEX const * const q,
+        REAL const eps_t,
+        const INT kappa,
+        UINT * const Dsub_ptr,
+        COMPLEX **q_effective_ptr,
+        COMPLEX **r_effective_ptr,
+        UINT * const first_last_index,
+        nse_discretization_t discretization);
 
 /**
  * Slow nonlinear Fourier transform for the nonlinear Schroedinger
@@ -118,16 +125,16 @@ INT fnft_nsev_slow(
 {
     
     COMPLEX *q_effective = NULL, *r_effective = NULL;
-    /*
-     * UINT first_last_index[2];
-     * UINT K_sub;
-     * COMPLEX *contspec_sub = NULL;
-     * COMPLEX *bound_states_sub = NULL;
-     * COMPLEX  *normconsts_or_residues_sub = NULL;
-     * COMPLEX  *normconsts_or_residues_reserve = NULL;
-     * INT bs_loc_opt = 0, ds_type_opt = 0;
-     * UINT nskip_per_step;
-     **/
+    
+    UINT first_last_index[2];
+    UINT K_sub;
+    COMPLEX *contspec_sub = NULL;
+    COMPLEX *bound_states_sub = NULL;
+    COMPLEX *normconsts_or_residues_sub = NULL;
+    COMPLEX *normconsts_or_residues_reserve = NULL;
+    INT bs_loc_opt = 0, ds_type_opt = 0;
+    UINT nskip_per_step;
+    COMPLEX *qsub_effective = NULL, *rsub_effective = NULL;
     INT ret_code = SUCCESS;
     UINT i, j, D_scale, D_effective;// D_scale*D gives the effective number of samples
     
@@ -151,190 +158,179 @@ INT fnft_nsev_slow(
     if (opts == NULL)
         opts = &default_opts;
     
+    
+    // Determine step size
+    const REAL eps_t = (T[1] - T[0])/(D - 1);
+    
+    normconsts_or_residues_reserve = normconsts_or_residues;
+    if (opts->richardson_extrapolation_flag == 1){
+        ds_type_opt = opts->discspec_type;
+        if (ds_type_opt == nsev_dstype_RESIDUES){
+            opts->discspec_type = nsev_dstype_BOTH;
+            normconsts_or_residues_reserve = malloc(*K_ptr*2 * sizeof(COMPLEX));
+            if (normconsts_or_residues_reserve == NULL) {
+                ret_code = E_NOMEM;
+                goto release_mem;
+            }
+        }
+    }
     D_scale = nse_discretization_D_scale(opts->discretization);
     if (D_scale == 0){
         ret_code =  E_INVALID_ARGUMENT(discretization);
         goto release_mem;
     }
-    D_effective = D * D_scale;
-    q_effective = malloc(D * D_scale * sizeof(COMPLEX));
-    r_effective = malloc(D * D_scale * sizeof(COMPLEX));
-    if (q_effective == NULL || r_effective == NULL) {
-        ret_code = E_NOMEM;
-        goto release_mem;
-    }
-    // Determine step size
-    const REAL eps_t = (T[1] - T[0])/(D - 1);
     
-    /*
-     * normconsts_or_residues_reserve = normconsts_or_residues;
-     * if (opts->richardson_extrapolation_flag == 1){
-     * ds_type_opt = opts->discspec_type;
-     * if (ds_type_opt == nsev_dstype_RESIDUES){
-     * opts->discspec_type = nsev_dstype_BOTH;
-     * normconsts_or_residues_reserve = malloc(*K_ptr*2 * sizeof(COMPLEX));
-     * if (normconsts_or_residues_reserve == NULL) {
-     * ret_code = E_NOMEM;
-     * goto release_mem;
-     * }
-     * }
-     * }
-     */
+    UINT Dsub = D;
     // Resample signal
-    ret_code = signal_effective_from_signal(D, q, eps_t, kappa, q_effective, r_effective, opts->discretization);
+    ret_code = signal_effective_from_signal(D, q, eps_t, kappa, &Dsub, &q_effective, &r_effective,
+            first_last_index, opts->discretization);
     CHECK_RETCODE(ret_code, release_mem);
     
-    
-    ret_code = fnft_nsev_slow_base(D_effective, q_effective, r_effective, T, M, contspec, XI, K_ptr,
+    ret_code = fnft_nsev_slow_base(D*D_scale, q_effective, r_effective, T, M, contspec, XI, K_ptr,
             bound_states, normconsts_or_residues, kappa, opts);
     CHECK_RETCODE(ret_code, release_mem);
     
-    /*
-     * if (opts->richardson_extrapolation_flag == 1){
-     * // TODO - Optimize memory allocation
-     * // Allocating memory
-     * UINT contspec_len = 0;
-     * if (contspec != NULL && M > 0){
-     * switch (opts->contspec_type) {
-     * case nsev_cstype_BOTH:
-     * contspec_len = 3*M;
-     * break;
-     * case nsev_cstype_REFLECTION_COEFFICIENT:
-     * contspec_len = M;
-     * break;
-     * case nsev_cstype_AB:
-     * contspec_len = 2*M;
-     * break;
-     * default:
-     * ret_code = E_INVALID_ARGUMENT(opts->contspec_type);
-     * goto release_mem;
-     * }
-     * contspec_sub = malloc(contspec_len * sizeof(COMPLEX));
-     * if (contspec_sub == NULL) {
-     * ret_code = E_NOMEM;
-     * goto release_mem;
-     * }
-     * }
-     * UINT discspec_len = 0;
-     * if (kappa == +1 && bound_states != NULL && *K_ptr != 0) {
-     * K_sub = *K_ptr;
-     * bound_states_sub = malloc(K_sub * sizeof(COMPLEX));
-     * discspec_len = K_sub;
-     * switch (opts->discspec_type) {
-     * case nsev_dstype_BOTH:
-     * case nsev_dstype_RESIDUES:
-     * discspec_len = 2*K_sub;
-     * break;
-     * case nsev_dstype_NORMING_CONSTANTS:
-     * discspec_len = K_sub;
-     * break;
-     * default:
-     * ret_code = E_INVALID_ARGUMENT(opts->discspec_type);
-     * goto release_mem;
-     * }
-     * normconsts_or_residues_sub = malloc(discspec_len * sizeof(COMPLEX));
-     * if (normconsts_or_residues_sub == NULL || bound_states_sub == NULL) {
-     * ret_code = E_NOMEM;
-     * goto release_mem;
-     * }
-     * for (i=0; i<K_sub; i++)
-     * bound_states_sub[i] = bound_states[i];
-     * }
-     * // Preparing q_effective
-     * REAL method_order = 2.0;
-     * Dsub = CEIL(D/2);
-     * nskip_per_step = ROUND((REAL)D / Dsub);
-     * Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
-     * if (D_scale == 2) {
-     * method_order = 4.0;
-     * ret_code = misc_resample(D, eps_t, q, -eps_t*scl_factor*nskip_per_step, q_1);
-     * CHECK_RETCODE(ret_code, release_mem);
-     * ret_code = misc_resample(D, eps_t, q, eps_t*scl_factor*nskip_per_step, q_2);
-     * CHECK_RETCODE(ret_code, release_mem);
-     * ret_code = misc_downsample(D, q_1, &Dsub, &qsub_1, first_last_index);
-     * CHECK_RETCODE(ret_code, release_mem);
-     * ret_code = misc_downsample(D, q_2, &Dsub, &qsub_2, first_last_index);
-     * CHECK_RETCODE(ret_code, release_mem);
-     * qsub_effective = malloc(Dsub * D_scale * sizeof(COMPLEX));
-     * if (qsub_effective == NULL) {
-     * ret_code = E_NOMEM;
-     * goto release_mem;
-     * }
-     * j = 0;
-     * for (i=0; i < Dsub; i++) {
-     * qsub_effective[j] = (qsub_1[i]+qsub_2[i])/4.0 - (qsub_2[i]-qsub_1[i])*scl_factor;
-     * j = j+2;
-     * }
-     * j = 1;
-     * for (i=0; i < Dsub; i++) {
-     * qsub_effective[j] = (qsub_1[i]+qsub_2[i])/4.0 + (qsub_2[i]-qsub_1[i])*scl_factor;
-     * j = j+2;
-     * }
-     * } else if (D_scale == 1) {
-     * method_order = 2.0;
-     * ret_code = misc_downsample(D, q, &Dsub, &qsub_effective, first_last_index);
-     * CHECK_RETCODE(ret_code, release_mem);
-     * }
-     * Tsub[0] = T[0] + first_last_index[0]*eps_t;
-     * Tsub[1] = T[0] + first_last_index[1]*eps_t;
-     * const REAL eps_t_sub = (Tsub[1] - Tsub[0])/(Dsub - 1);
-     * // Calling fnft_nsev_base with subsampled signal
-     * bs_loc_opt = opts->bound_state_localization;
-     * opts->bound_state_localization = nsev_bsloc_NEWTON;
-     * ret_code = fnft_nsev_base(Dsub * D_scale, qsub_effective, Tsub, M, contspec_sub, XI, &K_sub,
-     * bound_states_sub, normconsts_or_residues_sub, kappa, opts);
-     * CHECK_RETCODE(ret_code, release_mem);
-     * opts->bound_state_localization = bs_loc_opt;
-     * opts->discspec_type = ds_type_opt;
-     * // Richardson step
-     * REAL const scl_num = POW(nskip_per_step,method_order);
-     * REAL const scl_den = scl_num - 1.0;
-     * REAL const dxi = (XI[1]-XI[0])/(M-1);
-     * if (contspec != NULL && M > 0){
-     * for (i=0; i<M; i++){
-     * if (FABS(XI[0]+dxi*i) < 0.9*PI/(2.0*eps_t_sub)){
-     * for (j=0; j<contspec_len; j+=M)
-     * contspec[i+j] = (scl_num*contspec[i+j] - contspec_sub[i+j])/scl_den;
-     * }
-     * }
-     * }
-     * if (kappa == +1 && bound_states != NULL && *K_ptr != 0 && K_sub != 0) {
-     * UINT loc = K_sub;
-     * REAL bs_err_thres = eps_t;
-     * REAL bs_err = eps_t;
-     * UINT K = *K_ptr;
-     *
-     *
-     * for (i=0; i<K; i++){
-     * loc = K_sub;
-     * bs_err_thres = eps_t;
-     * for (j=0; j<K_sub; j++){
-     * bs_err = CABS(bound_states[i]-bound_states_sub[j])/CABS(bound_states[i]);
-     * if (bs_err < bs_err_thres){
-     * bs_err_thres = bs_err;
-     * loc = j;
-     * }
-     * }
-     * if (loc < K_sub){
-     * bound_states[i] = (scl_num*bound_states[i] - bound_states_sub[loc])/scl_den;
-     * if (ds_type_opt == nsev_dstype_RESIDUES || ds_type_opt == nsev_dstype_BOTH){
-     * // Computing aprimes from residues and norming constants
-     * normconsts_or_residues_reserve[K+i] = normconsts_or_residues_reserve[i]/normconsts_or_residues_reserve[K+i];
-     * normconsts_or_residues_sub[K_sub+loc] = normconsts_or_residues_sub[loc]/normconsts_or_residues_sub[K_sub+loc];
-     * // Richardson step on aprime
-     * normconsts_or_residues_reserve[K+i] = (scl_num*normconsts_or_residues_reserve[K+i] - normconsts_or_residues_sub[loc+K_sub])/scl_den;
-     * // Computing residue
-     * normconsts_or_residues_reserve[K+i] = normconsts_or_residues_reserve[i]/normconsts_or_residues_reserve[K+i];
-     * }
-     * }
-     * }
-     * if (ds_type_opt == nsev_dstype_RESIDUES)
-     * memcpy(normconsts_or_residues,normconsts_or_residues_reserve+K,K* sizeof(COMPLEX));
-     * else if(ds_type_opt == nsev_dstype_BOTH)
-     * memcpy(normconsts_or_residues,normconsts_or_residues_reserve,2*K* sizeof(COMPLEX));
-     *
-     * }
-     * }*/
+    
+    if (opts->richardson_extrapolation_flag == 1){
+        // TODO - Optimize memory allocation
+        // Allocating memory
+        UINT contspec_len = 0;
+        if (contspec != NULL && M > 0){
+            switch (opts->contspec_type) {
+                case nsev_cstype_BOTH:
+                    contspec_len = 3*M;
+                    break;
+                case nsev_cstype_REFLECTION_COEFFICIENT:
+                    contspec_len = M;
+                    break;
+                case nsev_cstype_AB:
+                    contspec_len = 2*M;
+                    break;
+                default:
+                    ret_code = E_INVALID_ARGUMENT(opts->contspec_type);
+                    goto release_mem;
+            }
+            contspec_sub = malloc(contspec_len * sizeof(COMPLEX));
+            if (contspec_sub == NULL) {
+                ret_code = E_NOMEM;
+                goto release_mem;
+            }
+        }
+        UINT discspec_len = 0;
+        if (kappa == +1 && bound_states != NULL && *K_ptr != 0) {
+            K_sub = *K_ptr;
+            bound_states_sub = malloc(K_sub * sizeof(COMPLEX));
+            discspec_len = K_sub;
+            switch (opts->discspec_type) {
+                case nsev_dstype_BOTH:
+                case nsev_dstype_RESIDUES:
+                    discspec_len = 2*K_sub;
+                    break;
+                case nsev_dstype_NORMING_CONSTANTS:
+                    discspec_len = K_sub;
+                    break;
+                default:
+                    ret_code = E_INVALID_ARGUMENT(opts->discspec_type);
+                    goto release_mem;
+            }
+            normconsts_or_residues_sub = malloc(discspec_len * sizeof(COMPLEX));
+            if (normconsts_or_residues_sub == NULL || bound_states_sub == NULL) {
+                ret_code = E_NOMEM;
+                goto release_mem;
+            }
+            for (i=0; i<K_sub; i++)
+                bound_states_sub[i] = bound_states[i];
+        }
+        // Preparing q_effective
+        REAL method_order = 2.0;
+        switch (opts->discretization) {
+            
+            case nse_discretization_BO: // Bofetta-Osborne scheme
+                method_order = 2.0;
+                break;
+            case nse_discretization_CF4_2:
+                method_order = 4.0;
+                break;
+            case nse_discretization_CF4_3:
+                method_order = 4.0;
+                break;
+            case nse_discretization_CF5_3:
+                method_order = 5.0;
+                break;
+            case nse_discretization_CF6_4:
+                method_order = 6.0;
+                break;
+            default: // Unknown discretization
+                ret_code = E_INVALID_ARGUMENT(discretization);
+                goto  release_mem;
+        }
+        
+        Dsub = CEIL(D/2);
+        ret_code = signal_effective_from_signal(D, q, eps_t, kappa, &Dsub, &q_effective, &r_effective,
+                first_last_index, opts->discretization);
+        CHECK_RETCODE(ret_code, release_mem);
+        
+        REAL Tsub[2] = {0,0};
+        Tsub[0] = T[0] + first_last_index[0]*eps_t;
+        Tsub[1] = T[0] + first_last_index[1]*eps_t;
+        const REAL eps_t_sub = (Tsub[1] - Tsub[0])/(Dsub - 1);
+        // Calling fnft_nsev_base with subsampled signal
+        bs_loc_opt = opts->bound_state_localization;
+        opts->bound_state_localization = nsev_bsloc_NEWTON;
+        ret_code = fnft_nsev_slow_base(Dsub*D_scale, q_effective, r_effective, Tsub, M, contspec_sub,
+                XI, &K_sub, bound_states_sub, normconsts_or_residues_sub, kappa, opts);
+        CHECK_RETCODE(ret_code, release_mem);
+        opts->bound_state_localization = bs_loc_opt;
+        opts->discspec_type = ds_type_opt;
+        // Richardson step
+        REAL const scl_num = POW(((REAL)D / (REAL)Dsub),method_order);
+        REAL const scl_den = scl_num - 1.0;
+        REAL const dxi = (XI[1]-XI[0])/(M-1);
+        if (contspec != NULL && M > 0){
+            for (i=0; i<M; i++){
+                if (FABS(XI[0]+dxi*i) < 0.9*PI/(2.0*eps_t_sub)){
+                    for (j=0; j<contspec_len; j+=M)
+                        contspec[i+j] = (scl_num*contspec[i+j] - contspec_sub[i+j])/scl_den;
+                }
+            }
+        }
+        if (kappa == +1 && bound_states != NULL && *K_ptr != 0 && K_sub != 0) {
+            UINT loc = K_sub;
+            REAL bs_err_thres = eps_t;
+            REAL bs_err = eps_t;
+            UINT K = *K_ptr;
+            
+            
+            for (i=0; i<K; i++){
+                loc = K_sub;
+                bs_err_thres = eps_t;
+                for (j=0; j<K_sub; j++){
+                    bs_err = CABS(bound_states[i]-bound_states_sub[j])/CABS(bound_states[i]);
+                    if (bs_err < bs_err_thres){
+                        bs_err_thres = bs_err;
+                        loc = j;
+                    }
+                }
+                if (loc < K_sub){
+                    bound_states[i] = (scl_num*bound_states[i] - bound_states_sub[loc])/scl_den;
+                    if (ds_type_opt == nsev_dstype_RESIDUES || ds_type_opt == nsev_dstype_BOTH){
+                        // Computing aprimes from residues and norming constants
+                        normconsts_or_residues_reserve[K+i] = normconsts_or_residues_reserve[i]/normconsts_or_residues_reserve[K+i];
+                        normconsts_or_residues_sub[K_sub+loc] = normconsts_or_residues_sub[loc]/normconsts_or_residues_sub[K_sub+loc];
+                        // Richardson step on aprime
+                        normconsts_or_residues_reserve[K+i] = (scl_num*normconsts_or_residues_reserve[K+i] - normconsts_or_residues_sub[loc+K_sub])/scl_den;
+                        // Computing residue
+                        normconsts_or_residues_reserve[K+i] = normconsts_or_residues_reserve[i]/normconsts_or_residues_reserve[K+i];
+                    }
+                }
+            }
+            if (ds_type_opt == nsev_dstype_RESIDUES)
+                memcpy(normconsts_or_residues,normconsts_or_residues_reserve+K,K* sizeof(COMPLEX));
+            else if(ds_type_opt == nsev_dstype_BOTH)
+                memcpy(normconsts_or_residues,normconsts_or_residues_reserve,2*K* sizeof(COMPLEX));
+            
+        }
+    }
     
     release_mem:
         free(q_effective);
@@ -467,8 +463,8 @@ static inline INT fnft_nsev_slow_base(
     
     // Compute the discrete spectrum
     if (kappa == +1 && bound_states != NULL) {
-
-  
+        
+        
         // Compute the bound states
         // Localize bound states ...
         switch (opts->bound_state_localization) {
@@ -490,16 +486,16 @@ static inline INT fnft_nsev_slow_base(
                 
                 return E_INVALID_ARGUMENT(opts->bound_state_localization);
         }
-       //for (i=0;i<K;i++)
-         //  printf("%1.15e+i%1.15e\n",CREAL(buffer[i]),CIMAG(buffer[i]));
+        //for (i=0;i<K;i++)
+        //  printf("%1.15e+i%1.15e\n",CREAL(buffer[i]),CIMAG(buffer[i]));
         
 //         // Norming constants and/or residues)
         if (normconsts_or_residues != NULL && *K_ptr != 0) {
-
+            
             ret_code = compute_normconsts_or_residues(D, q, r, T, *K_ptr,
                     bound_states, normconsts_or_residues, opts);
             CHECK_RETCODE(ret_code, release_mem);
-        
+            
         }
     } else if (K_ptr != NULL) {
         *K_ptr = 0;
@@ -541,7 +537,7 @@ static inline INT compute_normconsts_or_residues(
         ret_code = E_NOMEM;
         goto leave_fun;
     }
-        
+    
     ret_code = nse_scatter_bound_states(D, q, r, T, K,
             bound_states, a_vals, aprime_vals, normconsts_or_residues, opts->discretization, 0);
     CHECK_RETCODE(ret_code, leave_fun);
@@ -635,14 +631,14 @@ static inline INT refine_roots_newton(
     
     D_given = D/D_scale;
     const REAL eps_t = (T[1] - T[0])/(D_given - 1);
-
+    
     im_bound_val = D_scale*D_scale*im_bound(D, q, T);
     if (im_bound_val == NAN){
         ret_code = E_OTHER("Upper bound on imaginary part of bound states is NaN");
         CHECK_RETCODE(ret_code, leave_fun);
-    }    
+    }
     re_bound_val = re_bound(eps_t, 2.0);
-
+    
     // Perform iterations of Newton's method
     for (i = 0; i < K; i++) {
         iter = 0;
@@ -675,10 +671,11 @@ static inline INT refine_roots_newton(
 
 static inline INT signal_effective_from_signal(
         const UINT D, COMPLEX const * const q, REAL const eps_t, const INT kappa,
-        COMPLEX * q_effective, COMPLEX * r_effective, nse_discretization_t discretization)
+        UINT * const Dsub_ptr, COMPLEX **q_effective_ptr, COMPLEX **r_effective_ptr,
+        UINT * const first_last_index,  nse_discretization_t discretization)
 {
     
-    UINT j, i;
+    UINT j, i, D_effective, isub;
     INT ret_code = SUCCESS;
     COMPLEX *q_1 = NULL;
     COMPLEX *q_2 = NULL;
@@ -687,28 +684,62 @@ static inline INT signal_effective_from_signal(
     COMPLEX *r_1 = NULL;
     COMPLEX *r_2 = NULL;
     COMPLEX *r_3 = NULL;
+    
     // Check inputs
     if (D < 2)
         return E_INVALID_ARGUMENT(D);
     if (q == NULL)
         return E_INVALID_ARGUMENT(q);
-    if (q_effective == NULL)
-        return E_INVALID_ARGUMENT(q_effective);
-    if (r_effective == NULL)
-        return E_INVALID_ARGUMENT(r_effective);
+    if (Dsub_ptr == NULL)
+        return E_INVALID_ARGUMENT(Dsub_ptr);
+    if (q_effective_ptr == NULL)
+        return E_INVALID_ARGUMENT(q_effective_ptr);
+    if (r_effective_ptr == NULL)
+        return E_INVALID_ARGUMENT(r_effective_ptr);
     if (eps_t <= 0.0)
         return E_INVALID_ARGUMENT(esp_t);
     if (abs(kappa) != 1)
         return E_INVALID_ARGUMENT(kappa);
+    if (first_last_index == NULL)
+        return E_INVALID_ARGUMENT(first_last_index);
     
-
     
+    
+    // Determine number of samples after downsampling, Dsub
+    UINT Dsub = *Dsub_ptr; // desired Dsub
+    if (Dsub < 2)
+        Dsub = 2;
+    if (Dsub > D)
+        Dsub = D;
+    const UINT nskip_per_step = ROUND((REAL)D / Dsub);
+    Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
+    
+    UINT D_scale = nse_discretization_D_scale(discretization);
+    if (D_scale == 0){
+        ret_code =  E_INVALID_ARGUMENT(discretization);
+        goto release_mem;
+    }
+    D_effective = Dsub * D_scale;
+    COMPLEX * const q_effective = malloc(D_effective * sizeof(COMPLEX));
+    COMPLEX * const r_effective = malloc(D_effective * sizeof(COMPLEX));
+    if (q_effective == NULL || r_effective == NULL) {
+        ret_code = E_NOMEM;
+        goto release_mem;
+    }
+//
+//     printf("%d\n",nskip_per_step);
+//      printf("%d\n",D);
+//       printf("%d\n",Dsub);
+//         printf("%d\n",D_effective);
     switch (discretization) {
         
         case nse_discretization_BO: // Bofetta-Osborne scheme
-            memcpy(q_effective,q,D*sizeof(COMPLEX));
-            for (i=0; i < D; i++)
-                r_effective[i] = -kappa*CONJ(q_effective[i]);
+            i = 0;
+            for (isub=0; isub<D_effective; isub++) {
+                q_effective[isub] = q[i];
+                r_effective[isub] = -kappa*CONJ(q[i]);
+                i += nskip_per_step;
+            }
             break;
         case nse_discretization_CF4_2:
             q_1 = malloc(D * sizeof(COMPLEX));
@@ -718,23 +749,22 @@ static inline INT signal_effective_from_signal(
                 goto release_mem;
             }
             REAL scl_factor = SQRT(3.0)/6.0;
-            ret_code = misc_resample(D, eps_t, q, -eps_t*scl_factor, q_1);
+            ret_code = misc_resample(D, eps_t, q, -eps_t*scl_factor*nskip_per_step, q_1);
             CHECK_RETCODE(ret_code, release_mem);
-            ret_code = misc_resample(D, eps_t, q, eps_t*scl_factor, q_2);
+            ret_code = misc_resample(D, eps_t, q, eps_t*scl_factor*nskip_per_step, q_2);
             CHECK_RETCODE(ret_code, release_mem);
             
-            j = 0;
-            for (i=0; i < D; i++) {
-                q_effective[j] = (q_1[i]+q_2[i])/4.0 - (q_2[i]-q_1[i])*scl_factor;
-                j = j+2;
+            
+            i = 0;
+            for (isub=0; isub<D_effective; isub=isub+2) {
+                q_effective[isub] = (q_1[i]+q_2[i])/4.0 - (q_2[i]-q_1[i])*scl_factor;
+                q_effective[isub+1] = (q_1[i]+q_2[i])/4.0 + (q_2[i]-q_1[i])*scl_factor;
+                r_effective[isub] = -kappa*CONJ(q_effective[isub]);
+                r_effective[isub+1] = -kappa*CONJ(q_effective[isub+1]);
+                i += nskip_per_step;
             }
-            j = 1;
-            for (i=0; i < D; i++) {
-                q_effective[j] = (q_1[i]+q_2[i])/4.0 + (q_2[i]-q_1[i])*scl_factor;
-                j = j+2;
-            }
-            for (i=0; i < D*2; i++)
-                r_effective[i] = -kappa*CONJ(q_effective[i]);
+            
+            
             break;
         case nse_discretization_CF4_3:
             q_1 = malloc(D * sizeof(COMPLEX));
@@ -744,28 +774,23 @@ static inline INT signal_effective_from_signal(
                 goto release_mem;
             }
             
-            ret_code = misc_resample(D, eps_t, q, -eps_t*SQRT(3.0/20.0), q_1);
+            ret_code = misc_resample(D, eps_t, q, -eps_t*SQRT(3.0/20.0)*nskip_per_step, q_1);
             CHECK_RETCODE(ret_code, release_mem);
-            ret_code = misc_resample(D, eps_t, q, eps_t*SQRT(3.0/20.0), q_3);
+            ret_code = misc_resample(D, eps_t, q, eps_t*SQRT(3.0/20.0)*nskip_per_step, q_3);
             CHECK_RETCODE(ret_code, release_mem);
             
-            j = 0;
-            for (i=0; i < D; i++) {
-                q_effective[j] = 0.302556833188024*q_1[i]  -0.033333333333333*q[i] + 0.005776500145310*q_3[i];
-                j = j+3;
+            
+            i = 0;
+            for (isub=0; isub<D_effective; isub=isub+3) {
+                q_effective[isub] = 0.302556833188024*q_1[i]  -0.033333333333333*q[i] + 0.005776500145310*q_3[i];
+                q_effective[isub+1] = -0.030555555555556*q_1[i]+ 0.511111111111111*q[i] -0.030555555555556*q_3[i];
+                q_effective[isub+2] = 0.005776500145310*q_1[i] -0.033333333333333*q[i]+  0.302556833188024*q_3[i];
+                r_effective[isub] = -kappa*CONJ(q_effective[isub]);
+                r_effective[isub+1] = -kappa*CONJ(q_effective[isub+1]);
+                r_effective[isub+2] = -kappa*CONJ(q_effective[isub+2]);
+                i += nskip_per_step;
             }
-            j = 1;
-            for (i=0; i < D; i++) {
-                q_effective[j] = -0.030555555555556*q_1[i]+ 0.511111111111111*q[i] -0.030555555555556*q_3[i];
-                j = j+3;
-            }
-            j = 2;
-            for (i=0; i < D; i++) {
-                q_effective[j] = 0.005776500145310*q_1[i] -0.033333333333333*q[i]+  0.302556833188024*q_3[i];
-                j = j+3;
-            }
-            for (i=0; i < D*3; i++)
-                r_effective[i] = -kappa*CONJ(q_effective[i]);
+            
             break;
         case nse_discretization_CF5_3:
             q_1 = malloc(D * sizeof(COMPLEX));
@@ -778,9 +803,9 @@ static inline INT signal_effective_from_signal(
                 goto release_mem;
             }
             
-            ret_code = misc_resample(D, eps_t, q, -eps_t*SQRT(15.0)/10.0, q_1);
+            ret_code = misc_resample(D, eps_t, q, -eps_t*SQRT(15.0)/10.0*nskip_per_step, q_1);
             CHECK_RETCODE(ret_code, release_mem);
-            ret_code = misc_resample(D, eps_t, q, eps_t*SQRT(15.0)/10.0, q_3);
+            ret_code = misc_resample(D, eps_t, q, eps_t*SQRT(15.0)/10.0*nskip_per_step, q_3);
             CHECK_RETCODE(ret_code, release_mem);
             
             for (i=0; i < D; i++){
@@ -789,24 +814,18 @@ static inline INT signal_effective_from_signal(
                 r_3[i] = -kappa*CONJ(q_3[i]);
             }
             
-            j = 0;
-            for (i=0; i < D; i++) {
-                q_effective[j] = (0.320333759788527 + 0.055396500128741*I)*q_1[i]  + (-0.022222222222222 + 0.066666666666667*I)*q[i] + (0.001888462433695 - 0.022063166795408*I)*q_3[i];
-                r_effective[j] = (0.320333759788527 + 0.055396500128741*I)*r_1[i]  + (-0.022222222222222 + 0.066666666666667*I)*r_2[i] + (0.001888462433695 - 0.022063166795408*I)*r_3[i];
-                j = j+3;
+            
+            i = 0;
+            for (isub=0; isub<D_effective; isub=isub+3) {
+                q_effective[isub] = (0.320333759788527 + 0.055396500128741*I)*q_1[i]  + (-0.022222222222222 + 0.066666666666667*I)*q[i] + (0.001888462433695 - 0.022063166795408*I)*q_3[i];
+                r_effective[isub] = (0.320333759788527 + 0.055396500128741*I)*r_1[i]  + (-0.022222222222222 + 0.066666666666667*I)*r_2[i] + (0.001888462433695 - 0.022063166795408*I)*r_3[i];
+                q_effective[isub+1] = (-0.044444444444444 - 0.077459666924148*I)*q_1[i]+ (0.488888888888889)*q[i] + (-0.044444444444444 + 0.077459666924148*I)*q_3[i];
+                r_effective[isub+1] = (-0.044444444444444 - 0.077459666924148*I)*r_1[i]+ (0.488888888888889)*r_2[i] + (-0.044444444444444 + 0.077459666924148*I)*r_3[i];
+                q_effective[isub+2] = ( 0.001888462433695 + 0.022063166795408*I)*q_1[i] + (-0.022222222222222 - 0.066666666666667*I)*q[i] +  (0.320333759788527 - 0.055396500128741*I)*q_3[i];
+                r_effective[isub+2] = ( 0.001888462433695 + 0.022063166795408*I)*r_1[i] + (-0.022222222222222 - 0.066666666666667*I)*r_2[i] +  (0.320333759788527 - 0.055396500128741*I)*r_3[i];
+                i += nskip_per_step;
             }
-            j = 1;
-            for (i=0; i < D; i++) {
-                q_effective[j] = (-0.044444444444444 - 0.077459666924148*I)*q_1[i]+ (0.488888888888889)*q[i] + (-0.044444444444444 + 0.077459666924148*I)*q_3[i];
-                r_effective[j] = (-0.044444444444444 - 0.077459666924148*I)*r_1[i]+ (0.488888888888889)*r_2[i] + (-0.044444444444444 + 0.077459666924148*I)*r_3[i];
-                j = j+3;
-            }
-            j = 2;
-            for (i=0; i < D; i++) {
-                q_effective[j] = ( 0.001888462433695 + 0.022063166795408*I)*q_1[i] + (-0.022222222222222 - 0.066666666666667*I)*q[i] +  (0.320333759788527 - 0.055396500128741*I)*q_3[i];
-                r_effective[j] = ( 0.001888462433695 + 0.022063166795408*I)*r_1[i] + (-0.022222222222222 - 0.066666666666667*I)*r_2[i] +  (0.320333759788527 - 0.055396500128741*I)*r_3[i];
-                j = j+3;
-            }
+            
             break;
         case nse_discretization_CF6_4:
             q_1 = malloc(D * sizeof(COMPLEX));
@@ -819,9 +838,9 @@ static inline INT signal_effective_from_signal(
                 goto release_mem;
             }
             
-            ret_code = misc_resample(D, eps_t, q, -eps_t*SQRT(15.0)/10.0, q_1);
+            ret_code = misc_resample(D, eps_t, q, -eps_t*nskip_per_step*SQRT(15.0)/10.0, q_1);
             CHECK_RETCODE(ret_code, release_mem);
-            ret_code = misc_resample(D, eps_t, q, eps_t*SQRT(15.0)/10.0, q_3);
+            ret_code = misc_resample(D, eps_t, q, eps_t*nskip_per_step*SQRT(15.0)/10.0, q_3);
             CHECK_RETCODE(ret_code, release_mem);
             
             for (i=0; i < D; i++){
@@ -830,29 +849,18 @@ static inline INT signal_effective_from_signal(
                 r_3[i] = -kappa*CONJ(q_3[i]);
             }
             
-            j = 0;
-            for (i=0; i < D; i++) {
-                q_effective[j] = (0.245985577298764 + 0.038734389227165*I)*q_1[i]  + (-0.046806149832549 + 0.012442141491185*I)*q[i] + (0.010894359342569 - 0.004575808769067*I)*q_3[i];
-                r_effective[j] = (0.245985577298764 + 0.038734389227165*I)*r_1[i]  + (-0.046806149832549 + 0.012442141491185*I)*r_2[i] + (0.010894359342569 - 0.004575808769067*I)*r_3[i];
-                j = j+4;
-            }
-            j = 1;
-            for (i=0; i < D; i++) {
-                q_effective[j] = (0.062868370946917 - 0.048761268117765*I)*q_1[i]+ (0.269028372054771 - 0.012442141491185*I)*q[i] + (-0.041970529810473 + 0.014602687659668*I)*q_3[i];
-                r_effective[j] = (0.062868370946917 - 0.048761268117765*I)*r_1[i]+ (0.269028372054771 - 0.012442141491185*I)*r_2[i] + (-0.041970529810473 + 0.014602687659668*I)*r_3[i];
-                j = j+4;
-            }
-            j = 2;
-            for (i=0; i < D; i++) {
-                q_effective[j] = (-0.041970529810473 + 0.014602687659668*I)*q_1[i] + (0.269028372054771 - 0.012442141491185*I)*q[i] +  (0.062868370946917 - 0.048761268117765*I)*q_3[i];
-                r_effective[j] = (-0.041970529810473 + 0.014602687659668*I)*r_1[i] + (0.269028372054771 - 0.012442141491185*I)*r_2[i] +  (0.062868370946917 - 0.048761268117765*I)*r_3[i];
-                j = j+4;
-            }
-            j = 3;
-            for (i=0; i < D; i++) {
-                q_effective[j] = (0.010894359342569 - 0.004575808769067*I)*q_1[i] + (-0.046806149832549 + 0.012442141491185*I)*q[i] +  (0.245985577298764 + 0.038734389227165*I)*q_3[i];
-                r_effective[j] = (0.010894359342569 - 0.004575808769067*I)*r_1[i] + (-0.046806149832549 + 0.012442141491185*I)*r_2[i] +  (0.245985577298764 + 0.038734389227165*I)*r_3[i];
-                j = j+4;
+            
+            i = 0;
+            for (isub=0; isub<D_effective; isub=isub+4) {
+                q_effective[isub] = (0.245985577298764 + 0.038734389227165*I)*q_1[i]  + (-0.046806149832549 + 0.012442141491185*I)*q[i] + (0.010894359342569 - 0.004575808769067*I)*q_3[i];
+                r_effective[isub] = (0.245985577298764 + 0.038734389227165*I)*r_1[i]  + (-0.046806149832549 + 0.012442141491185*I)*r_2[i] + (0.010894359342569 - 0.004575808769067*I)*r_3[i];
+                q_effective[isub+1] = (0.062868370946917 - 0.048761268117765*I)*q_1[i]+ (0.269028372054771 - 0.012442141491185*I)*q[i] + (-0.041970529810473 + 0.014602687659668*I)*q_3[i];
+                r_effective[isub+1] = (0.062868370946917 - 0.048761268117765*I)*r_1[i]+ (0.269028372054771 - 0.012442141491185*I)*r_2[i] + (-0.041970529810473 + 0.014602687659668*I)*r_3[i];
+                q_effective[isub+2] = (-0.041970529810473 + 0.014602687659668*I)*q_1[i] + (0.269028372054771 - 0.012442141491185*I)*q[i] +  (0.062868370946917 - 0.048761268117765*I)*q_3[i];
+                r_effective[isub+2] = (-0.041970529810473 + 0.014602687659668*I)*r_1[i] + (0.269028372054771 - 0.012442141491185*I)*r_2[i] +  (0.062868370946917 - 0.048761268117765*I)*r_3[i];
+                q_effective[isub+3] = (0.010894359342569 - 0.004575808769067*I)*q_1[i] + (-0.046806149832549 + 0.012442141491185*I)*q[i] +  (0.245985577298764 + 0.038734389227165*I)*q_3[i];
+                r_effective[isub+3] = (0.010894359342569 - 0.004575808769067*I)*r_1[i] + (-0.046806149832549 + 0.012442141491185*I)*r_2[i] +  (0.245985577298764 + 0.038734389227165*I)*r_3[i];
+                i += nskip_per_step;
             }
             break;
         default: // Unknown discretization
@@ -861,6 +869,13 @@ static inline INT signal_effective_from_signal(
             goto  release_mem;
     }
     
+    // Original index of the first and last sample in qsub
+    first_last_index[0] = 0;
+    first_last_index[1] = i - nskip_per_step;
+    
+    *q_effective_ptr = q_effective;
+    *r_effective_ptr = r_effective;
+    *Dsub_ptr = Dsub;
     
     release_mem:
         free(q_1);

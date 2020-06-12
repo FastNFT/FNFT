@@ -58,7 +58,25 @@ INT main()
     ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
+    D = 512;
+    REAL error_bounds_RE[6] = { 
+        6.4e-7,     // reflection coefficient
+        INFINITY,   // a
+        INFINITY,   // b
+        0.0,        // bound states
+        0.0,        // norming constants
+        0.0         // residues 
+    };
+    opts.richardson_extrapolation_flag = 1;
     
+    ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);    
+    // Check for 6th order error decay
+    D *= 2;
+    for (i=0; i<6; i++)
+        error_bounds_RE[i] /= 64.0;
+    ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);    
 
 leave_fun:
     if (ret_code != SUCCESS)

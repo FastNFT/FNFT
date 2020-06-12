@@ -289,10 +289,6 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
         
         a_vals[neig] = SL[0][0]*CEXP(I*l_curr*(-T[0]+T[1]+eps_t));
         aprime_vals[neig] = scl_factor*(SL[2][0]+I*(T[1]+eps_t-T[0])*SL[0][0])*CEXP(I*l_curr*(-T[0]+T[1]+eps_t));
-                //printf("SL00=%1.15e+i%1.15e\n",CREAL(SL[0][0]),CIMAG(SL[0][0]));
-
-       // printf("SL20=%1.15e+i%1.15e\n",CREAL(SL[2][0]),CIMAG(SL[2][0]));
-        //printf("aprime=%1.15e+i%1.15e\n",CREAL(aprime_vals[neig]),CIMAG(aprime_vals[neig]));
         
         if (skip_b_flag == 0){
             // Calculation of b assuming a=0
