@@ -25,18 +25,9 @@
 INT main()
 {
     INT ret_code, i;
-    fnft_nsev_opts_t opts;
+    fnft_nsev_slow_opts_t opts;
     UINT D = 400;
     const nsev_slow_testcases_t tc = nsev_slow_testcases_SECH_FOCUSING;
-    /*REAL error_bounds[6] = {
-     * 5.1e-7,     // reflection coefficient
-     * 2.5e-8,     // a
-     * 5.4e-7,     // b
-     * 2.6e-7,     // bound states
-     * 6.0e-9,      // norming constants
-     * 1.9e-6      // residues
-     * };*/
-    
     REAL error_bounds[6] = {
         1.7e-4,     // reflection coefficient
         7.9e-5,     // a
@@ -46,7 +37,7 @@ INT main()
         7.7e-5      // residues
     };
     
-    opts = fnft_nsev_default_opts();
+    opts = fnft_nsev_slow_default_opts();
     opts.bound_state_localization = nsev_bsloc_NEWTON;
     opts.discretization = nse_discretization_CF6_4;
     

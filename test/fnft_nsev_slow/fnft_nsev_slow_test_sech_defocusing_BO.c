@@ -26,7 +26,7 @@
 INT main()
 {
     INT ret_code, i;
-    fnft_nsev_opts_t opts;
+    fnft_nsev_slow_opts_t opts;
     const nsev_slow_testcases_t tc = nsev_slow_testcases_SECH_DEFOCUSING;
     UINT D = 1024;
     REAL error_bounds[6] = { 
@@ -38,7 +38,7 @@ INT main()
         0.0         // residues 
     };
 
-    opts = fnft_nsev_default_opts();
+    opts = fnft_nsev_slow_default_opts();
     opts.discretization = nse_discretization_BO;
 
     ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds, &opts);

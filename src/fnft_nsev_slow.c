@@ -31,11 +31,10 @@
 #include "fnft__akns_discretization.h"
 #include "fnft__misc.h" // for l2norm
 
-static fnft_nsev_opts_t default_opts = {
+static fnft_nsev_slow_opts_t default_opts = {
     .bound_state_filtering = nsev_bsfilt_FULL,
     .bound_state_localization = nsev_bsloc_NEWTON,
     .niter = 10,
-    .Dsub = 0, // auto
     .discspec_type = nsev_dstype_NORMING_CONSTANTS,
     .contspec_type = nsev_cstype_REFLECTION_COEFFICIENT,
     .normalization_flag = 1,
@@ -43,14 +42,14 @@ static fnft_nsev_opts_t default_opts = {
     .richardson_extrapolation_flag = 0
 };
 
-// /**
-//  * Creates a new options variable for fnft_nsev with default settings.
-//  * See the header file for a detailed description.
-//  */
-// static fnft_nsev_opts_t fnft_nsev_default_opts()
-// {
-//     return default_opts;
-// }
+/**
+ * Creates a new options variable for fnft_nsev with default settings.
+ * See the header file for a detailed description.
+ */
+fnft_nsev_slow_opts_t fnft_nsev_slow_default_opts()
+{
+    return default_opts;
+}
 
 
 
@@ -78,7 +77,7 @@ static inline INT compute_normconsts_or_residues(
         const UINT K,
         COMPLEX * const bound_states,
         COMPLEX * const normconsts_or_residues,
-        fnft_nsev_opts_t * const opts);
+        fnft_nsev_slow_opts_t * const opts);
 
 static inline INT fnft_nsev_slow_base(
         const UINT D,
@@ -92,7 +91,7 @@ static inline INT fnft_nsev_slow_base(
         COMPLEX * const bound_states,
         COMPLEX * const normconsts_or_residues,
         const INT kappa,
-        fnft_nsev_opts_t *opts);
+        fnft_nsev_slow_opts_t *opts);
 
 static inline INT signal_effective_from_signal(
         const UINT D,
@@ -104,6 +103,11 @@ static inline INT signal_effective_from_signal(
         COMPLEX **r_effective_ptr,
         UINT * const first_last_index,
         nse_discretization_t discretization);
+
+static inline REAL re_bound(const REAL eps_t);
+
+static inline REAL im_bound(const UINT D, COMPLEX const * const q,
+        REAL const * const T);
 
 /**
  * Slow nonlinear Fourier transform for the nonlinear Schroedinger
@@ -121,7 +125,7 @@ INT fnft_nsev_slow(
         COMPLEX * const bound_states,
         COMPLEX * const normconsts_or_residues,
         const INT kappa,
-        fnft_nsev_opts_t *opts)
+        fnft_nsev_slow_opts_t *opts)
 {
     
     COMPLEX *q_effective = NULL, *r_effective = NULL;
@@ -133,10 +137,8 @@ INT fnft_nsev_slow(
     COMPLEX *normconsts_or_residues_sub = NULL;
     COMPLEX *normconsts_or_residues_reserve = NULL;
     INT bs_loc_opt = 0, ds_type_opt = 0;
-    UINT nskip_per_step;
-    COMPLEX *qsub_effective = NULL, *rsub_effective = NULL;
     INT ret_code = SUCCESS;
-    UINT i, j, D_scale, D_effective;// D_scale*D gives the effective number of samples
+    UINT i, j, D_scale;// D_scale*D gives the effective number of samples
     
     // Check inputs
     if (D < 2)
@@ -331,7 +333,6 @@ INT fnft_nsev_slow(
             
         }
     }
-    
     release_mem:
         free(q_effective);
         free(r_effective);
@@ -349,16 +350,17 @@ static inline INT fnft_nsev_slow_base(
         COMPLEX * const bound_states,
         COMPLEX * const normconsts_or_residues,
         const INT kappa,
-        fnft_nsev_opts_t *opts)
+        fnft_nsev_slow_opts_t *opts)
 {
     INT ret_code = SUCCESS;
-    UINT i, D_scale, D_given, K;
+    UINT i, j, D_scale, D_given, K;
     COMPLEX * scatter_coeffs = NULL;
     COMPLEX * xi = NULL;
     UINT offset = 0;
     REAL phase_factor_rho = NAN, phase_factor_a = NAN, phase_factor_b = NAN;
     REAL bounding_box[4] = { NAN };
     COMPLEX * buffer = NULL;
+    COMPLEX * q_tmp = NULL;
     
     // Check inputs
     if (D < 2)
@@ -486,10 +488,47 @@ static inline INT fnft_nsev_slow_base(
                 
                 return E_INVALID_ARGUMENT(opts->bound_state_localization);
         }
-        //for (i=0;i<K;i++)
-        //  printf("%1.15e+i%1.15e\n",CREAL(buffer[i]),CIMAG(buffer[i]));
         
-//         // Norming constants and/or residues)
+        // Filter bound states
+        if (opts->bound_state_filtering != nsev_bsfilt_NONE) {
+            
+            bounding_box[0] = -INFINITY;
+            bounding_box[1] = INFINITY;
+            bounding_box[2] = 0.0;
+            bounding_box[3] = INFINITY;
+            ret_code = misc_filter(&K, buffer, NULL, bounding_box);
+            CHECK_RETCODE(ret_code, release_mem);
+            
+        }
+        if (opts->bound_state_filtering == nsev_bsfilt_FULL) {
+            bounding_box[1] = re_bound(eps_t);
+            bounding_box[0] = -bounding_box[1];
+            bounding_box[2] = 0;
+            // This step is required as q contains scaled values on a
+            // non-equispaced grid 
+            if (D_scale == 1){
+                bounding_box[3] = im_bound(D_given, q, T);
+            } else {
+                q_tmp = malloc(D_given * sizeof(COMPLEX));
+                if (q_tmp == NULL) {
+                    ret_code = E_NOMEM;
+                    goto release_mem;
+                }
+                j = 1;
+                for (i = 0; i < D_given; i++) {
+                    q_tmp[i] = D_scale*q[j];
+                    j = j+D_scale;
+                }
+                bounding_box[3] = im_bound(D_given, q_tmp, T);
+            }
+            ret_code = misc_filter(&K, buffer, NULL, bounding_box);
+            CHECK_RETCODE(ret_code, release_mem);
+        }
+        
+        ret_code = misc_merge(&K, buffer, SQRT(EPSILON));
+        CHECK_RETCODE(ret_code, release_mem);
+       
+        // Norming constants and/or residues)
         if (normconsts_or_residues != NULL && *K_ptr != 0) {
             
             ret_code = compute_normconsts_or_residues(D, q, r, T, *K_ptr,
@@ -497,13 +536,14 @@ static inline INT fnft_nsev_slow_base(
             CHECK_RETCODE(ret_code, release_mem);
             
         }
+        *K_ptr = K;
     } else if (K_ptr != NULL) {
         *K_ptr = 0;
     }
-//
     release_mem:
         free(scatter_coeffs);
         free(xi);
+        free(q_tmp);
         return ret_code;
 }
 
@@ -517,7 +557,7 @@ static inline INT compute_normconsts_or_residues(
         const UINT K,
         COMPLEX * const bound_states,
         COMPLEX * const normconsts_or_residues,
-        fnft_nsev_opts_t * const opts)
+        fnft_nsev_slow_opts_t * const opts)
 {
     
     COMPLEX *a_vals = NULL, *aprime_vals = NULL;
@@ -572,15 +612,12 @@ static inline INT compute_normconsts_or_residues(
 
 // Auxiliary function for filtering: We assume that bound states must have
 // real part in the interval [-re_bound, re_bound].
-static inline REAL re_bound(const REAL eps_t, const REAL map_coeff)
+static inline REAL re_bound(const REAL eps_t)
 {
-    // At least for discretizations in which the continuous-time
-    // spectral parameter lam is mapped to z=exp(map_coeff*j*lam*eps_t), we
-    // can only resolve the region
-    // -pi/(map_coeff*eps_t)<Re(lam)<pi/(map_coeff*eps_t).
+    // -pi/(2*eps_t)<Re(lam)<pi/(2*eps_t).
     // Numerical artefacts often occur close to the border of this
     // region, which is why we filter such bound_states
-    return 0.9*PI/FABS(map_coeff * eps_t);
+    return 0.9*PI/FABS(2 * eps_t);
 }
 
 // Auxiliary function for filtering: We assume that bound states must have
@@ -637,7 +674,7 @@ static inline INT refine_roots_newton(
         ret_code = E_OTHER("Upper bound on imaginary part of bound states is NaN");
         CHECK_RETCODE(ret_code, leave_fun);
     }
-    re_bound_val = re_bound(eps_t, 2.0);
+    re_bound_val = re_bound(eps_t);
     
     // Perform iterations of Newton's method
     for (i = 0; i < K; i++) {
@@ -675,7 +712,7 @@ static inline INT signal_effective_from_signal(
         UINT * const first_last_index,  nse_discretization_t discretization)
 {
     
-    UINT j, i, D_effective, isub;
+    UINT i, D_effective, isub;
     INT ret_code = SUCCESS;
     COMPLEX *q_1 = NULL;
     COMPLEX *q_2 = NULL;

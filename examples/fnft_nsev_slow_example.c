@@ -75,7 +75,7 @@ int main()
     int kappa = +1;
 
     // Default options
-    fnft_nsev_opts_t opts = fnft_nsev_default_opts();
+    fnft_nsev_slow_opts_t opts = fnft_nsev_slow_default_opts();
     
     // Selecting options to use Newton search to find the eigenvalues with
     // CF4_2 discretization

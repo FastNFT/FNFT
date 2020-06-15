@@ -27,7 +27,6 @@
 #ifndef FNFT__NSEV_TESTCASES_H
 #define FNFT__NSEV_TESTCASES_H
 
-#include "fnft_nsev.h" // for fnft_nsev_opts_t
 #include "fnft_nsev_slow.h" 
 
 
@@ -64,7 +63,7 @@ typedef enum {
  * it returns an error code (normally, \link FNFT_EC_TEST_FAILED \endlink).
  */
 FNFT_INT fnft__nsev_slow_testcases_test_fnft(fnft__nsev_slow_testcases_t tc, FNFT_UINT D,
-	const FNFT_REAL eb[6], fnft_nsev_opts_t * const opts);
+	const FNFT_REAL eb[6], fnft_nsev_slow_opts_t * const opts);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define nsev_slow_testcases_t fnft__nsev_slow_testcases_t

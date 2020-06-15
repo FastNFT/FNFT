@@ -555,7 +555,7 @@ static INT nsev_slow_compare_nfs(const UINT M, const UINT K1, const UINT K2,
 }
 
 INT nsev_slow_testcases_test_fnft(nsev_slow_testcases_t tc, UINT D,
-        const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
+        const REAL error_bounds[6], fnft_nsev_slow_opts_t * const opts) {
     COMPLEX * q = NULL;
     COMPLEX * contspec = NULL;
     COMPLEX * bound_states = NULL;
