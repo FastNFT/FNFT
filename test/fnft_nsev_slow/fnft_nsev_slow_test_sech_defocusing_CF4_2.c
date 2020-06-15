@@ -15,7 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
-* Shrnivas Chimmalgi (TU Delft) 2019.
+* Shrnivas Chimmalgi (TU Delft) 2019-2020.
 */
 
 #define FNFT_ENABLE_SHORT_NAMES
