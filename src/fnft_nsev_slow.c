@@ -397,7 +397,7 @@ static inline INT fnft_nsev_slow_base(
     // Compute the continuous spectrum
     if (contspec != NULL && M > 0) {
         xi = malloc(M * sizeof(COMPLEX));
-        scatter_coeffs = malloc(8 * M * sizeof(COMPLEX));
+        scatter_coeffs = malloc(4 * M * sizeof(COMPLEX));
         if (xi == NULL || scatter_coeffs == NULL) {
             ret_code = E_NOMEM;
             goto release_mem;
@@ -409,7 +409,7 @@ static inline INT fnft_nsev_slow_base(
         
         
         ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, M,
-                xi, scatter_coeffs, opts->discretization);
+                xi, scatter_coeffs, opts->discretization, 0);
         CHECK_RETCODE(ret_code, release_mem);
         
         REAL boundary_coeff;
@@ -432,11 +432,11 @@ static inline INT fnft_nsev_slow_base(
                 phase_factor_rho =  -2.0*(T[1] + eps_t*boundary_coeff);
                 
                 for (i = 0; i < M; i++) {
-                    if (scatter_coeffs[i*8] == 0.0){
+                    if (scatter_coeffs[i*4] == 0.0){
                         return E_DIV_BY_ZERO;
                         goto release_mem;
                     }
-                    contspec[i] = scatter_coeffs[i*8 + 2] * CEXP(I*xi[i]*phase_factor_rho) / scatter_coeffs[i*8];
+                    contspec[i] = scatter_coeffs[i*4 + 2] * CEXP(I*xi[i]*phase_factor_rho) / scatter_coeffs[i*4];
                 }
                 
                 if (opts->contspec_type == nsev_cstype_REFLECTION_COEFFICIENT)
@@ -450,8 +450,8 @@ static inline INT fnft_nsev_slow_base(
                 phase_factor_b = - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
                 
                 for (i = 0; i < M; i++) {
-                    contspec[offset + i] = scatter_coeffs[i*8] * CEXP(I*xi[i]*phase_factor_a);
-                    contspec[offset + M + i] = scatter_coeffs[i*8 + 2] * CEXP(I*xi[i]*phase_factor_b);
+                    contspec[offset + i] = scatter_coeffs[i*4] * CEXP(I*xi[i]*phase_factor_a);
+                    contspec[offset + M + i] = scatter_coeffs[i*4 + 2] * CEXP(I*xi[i]*phase_factor_b);
                 }
                 
                 break;

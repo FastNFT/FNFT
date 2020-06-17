@@ -18,8 +18,8 @@
 % This example compares the accuracy the various slow algorithms for
 % the defocusing nonlinear Schroedinger equation with vanishing boundaries.
 % The example is taken from Section 5.3 of
-% https://doi.org/10.1364/OE.377140. Plots similar to those in Figs. 2 are
-% shown.
+% https://doi.org/10.1364/OE.377140. Plots similar to those in Figs. 2e and 2f
+% are shown.
 
 
 

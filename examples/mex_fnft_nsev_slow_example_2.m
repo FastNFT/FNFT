@@ -37,7 +37,7 @@ q_fun = @(t) qo*sech(t).*exp(-2i*t*lam0); %signal function
 bound_states_exact = lam0+1i*(qo+0.5-(1:floor(qo+0.5)));
 normconsts_exact = (-1).^(1:floor(qo+0.5));
  
-bound_states_guesses = bound_states_exact+0.03*exp(1i*pi*rand(1,5));%Adding some error
+bound_states_guesses = bound_states_exact+0.035*exp(1i*pi*rand(1,5));%Adding some error
 % NOTE: The initial guess has to be quite close to the actual value for the
 % Newton method to converge.
 
@@ -53,5 +53,5 @@ plot(bound_states_guesses,'*')
 plot(bound_states_computed,'xk')
 xlim([2.8,3.2])
 xlabel('Real part');
-xlabel('Imaginary part');
+ylabel('Imaginary part');
 legend('Exact bound state','Guess of bound state','Computed bound state');

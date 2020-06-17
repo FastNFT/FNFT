@@ -15,7 +15,7 @@
  *
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
- * Shrinivas Chimmalgi (TU Delft) 2017-2019.
+ * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -24,24 +24,23 @@
 #include <stdio.h>
 
 /**
- * Returns [S11 S12 S21 S22 S11' S12' S21' S22'] in result
- * where S = [S11, S12; S21, S22] is the scattering matrix.
- * computed using the chosen scheme.
- * Result should be preallocated with size 8 * K
- * Default scheme should be set as BO.
+ * If derivative_flag=0 returns [S11 S12 S21 S22] in result where
+ * S = [S11, S12; S21, S22] is the scattering matrix computed using the 
+ * chosen scheme.
+ * If derivative_flag=1 returns [S11 S12 S21 S22 S11' S12' S21' S22'] in 
+ * result where S11' is the derivative of S11 w.r.t to lambda.
+ * Result should be preallocated with size 4*K or 8*K accordingly.
  */
 INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
         COMPLEX const * const r, const REAL eps_t,
         const UINT K, COMPLEX const * const lambda,
-        COMPLEX * const result, akns_discretization_t discretization)
+        COMPLEX * const result, akns_discretization_t discretization,
+        const UINT derivative_flag)
 {
     
     INT ret_code = SUCCESS;
     UINT i, n;
     INT  c1, c2, c3;
-    COMPLEX *l = NULL, qn, rn, ks, k, sum=0, TM[4][4], ch,
-            chi, sh, u1, ud1, ud2, l_curr;
-    REAL scl_factor = 0;
     // Check inputs
     if (D == 0)
         return E_INVALID_ARGUMENT(D);
@@ -57,8 +56,12 @@ INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
         return E_INVALID_ARGUMENT(lambda);
     if (result == NULL)
         return E_INVALID_ARGUMENT(result);
+    if (derivative_flag != 0 && derivative_flag != 1)
+        return E_INVALID_ARGUMENT(derivative_flag);
     
-    
+    COMPLEX *l = NULL, qn, rn, ks, k, sum=0, ch, sh, u1, l_curr,chi, ud1, 
+            TM[4][4], ud2;
+    REAL scl_factor = 0;    
     
     l = malloc(D*sizeof(COMPLEX));
     if (l == NULL) {
@@ -136,65 +139,107 @@ INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
                 
         }
         
-        
-        COMPLEX T[4][4] =
-        { {1,0,0,0}, {0,1,0,0},{0,0,1,0},{0,0,0,1} };
-        COMPLEX U[4][4] = {{ 0 }};
-        
-        for (n = 0; n < D; n++){
-            qn = q[n];
-            rn = r[n];
-            ks = ((q[n]*r[n])-(l[n]*l[n]));
-            k = CSQRT(ks);
-            ch = CCOSH(k*eps_t);
-            chi = ch/ks;
-            if (ks != 0)
-                sh = CSINH(k*eps_t)/k;
-            else
-                sh = eps_t;
-            u1 = l[n]*sh*I;
-            ud1 = eps_t*l[n]*l[n]*chi*I;
-            ud2 = l[n]*(eps_t*ch-sh)/ks;
+        if (derivative_flag == 1){
+            COMPLEX T[4][4] =
+            { {1,0,0,0}, {0,1,0,0},{0,0,1,0},{0,0,0,1} };
+            COMPLEX U[4][4] = {{ 0 }};
             
-            U[0][0] = ch-u1;
-            U[0][1] = qn*sh;
-            U[1][0] = rn*sh;
-            U[1][1] = ch + u1;
-            U[2][0] = ud1-(l[n]*eps_t+I+(l[n]*l[n]*I)/ks)*sh;
-            U[2][1] = -qn*ud2;
-            U[3][0] = -rn*ud2;
-            U[3][1] = -ud1-(l[n]*eps_t-I-(l[n]*l[n]*I)/ks)*sh;
-            U[2][2] = ch-u1;
-            U[2][3] = qn*sh;
-            U[3][2] = rn*sh;
-            U[3][3] = ch+u1;
-            
-            
-            for (c1 = 0; c1 < 4; c1++) {
-                for (c2 = 0; c2 < 4; c2++) {
-                    for (c3 = 0; c3 < 4; c3++) {
-                        sum = sum + U[c1][c3]*T[c3][c2];
+            for (n = 0; n < D; n++){
+                qn = q[n];
+                rn = r[n];
+                ks = ((q[n]*r[n])-(l[n]*l[n]));
+                k = CSQRT(ks);
+                ch = CCOSH(k*eps_t);
+                chi = ch/ks;
+                if (ks != 0)
+                    sh = CSINH(k*eps_t)/k;
+                else
+                    sh = eps_t;
+                u1 = l[n]*sh*I;
+                ud1 = eps_t*l[n]*l[n]*chi*I;
+                ud2 = l[n]*(eps_t*ch-sh)/ks;
+                
+                U[0][0] = ch-u1;
+                U[0][1] = qn*sh;
+                U[1][0] = rn*sh;
+                U[1][1] = ch + u1;
+                U[2][0] = ud1-(l[n]*eps_t+I+(l[n]*l[n]*I)/ks)*sh;
+                U[2][1] = -qn*ud2;
+                U[3][0] = -rn*ud2;
+                U[3][1] = -ud1-(l[n]*eps_t-I-(l[n]*l[n]*I)/ks)*sh;
+                U[2][2] = ch-u1;
+                U[2][3] = qn*sh;
+                U[3][2] = rn*sh;
+                U[3][3] = ch+u1;
+                
+                
+                for (c1 = 0; c1 < 4; c1++) {
+                    for (c2 = 0; c2 < 4; c2++) {
+                        for (c3 = 0; c3 < 4; c3++) {
+                            sum = sum + U[c1][c3]*T[c3][c2];
+                        }
+                        TM[c1][c2] = sum;
+                        sum = 0;
                     }
-                    TM[c1][c2] = sum;
-                    sum = 0;
+                }
+                for (c1 = 0; c1 < 4; c1++) {
+                    for (c2 = 0; c2 < 4; c2++)
+                        T[c1][c2] = TM[c1][c2];
                 }
             }
-            for (c1 = 0; c1 < 4; c1++) {
-                for (c2 = 0; c2 < 4; c2++)
-                    T[c1][c2] = TM[c1][c2];
+            
+            result[i*8] = T[0][0];
+            result[i*8 + 1] = T[0][1];
+            result[i*8 + 2] = T[1][0];
+            result[i*8 + 3] = T[1][1];
+            result[i*8 + 4] = T[2][0]*scl_factor;
+            result[i*8 + 5] = T[2][1]*scl_factor;
+            result[i*8 + 6] = T[3][0]*scl_factor;
+            result[i*8 + 7] = T[3][1]*scl_factor;
+            
+        }else{
+            COMPLEX T[2][2] =
+            { {1,0}, {0,1}};
+            COMPLEX U[2][2] = {{ 0 }};
+            for (n = 0; n < D; n++){
+                qn = q[n];
+                rn = r[n];
+                ks = ((q[n]*r[n])-(l[n]*l[n]));
+                k = CSQRT(ks);
+                ch = CCOSH(k*eps_t);
+                if (ks != 0)
+                    sh = CSINH(k*eps_t)/k;
+                else
+                    sh = eps_t;
+                
+                u1 = l[n]*sh*I;
+                U[0][0] = ch-u1;
+                U[0][1] = qn*sh;
+                U[1][0] = rn*sh;
+                U[1][1] = ch + u1;
+                
+                for (c1 = 0; c1 < 2; c1++) {
+                    for (c2 = 0; c2 < 2; c2++) {
+                        for (c3 = 0; c3 < 2; c3++) {
+                            sum = sum + U[c1][c3]*T[c3][c2];
+                        }
+                        TM[c1][c2] = sum;
+                        sum = 0;
+                    }
+                }
+                for (c1 = 0; c1 < 2; c1++) {
+                    for (c2 = 0; c2 < 2; c2++)
+                        T[c1][c2] = TM[c1][c2];
+                }
             }
+            
+            result[i*4] = T[0][0];
+            result[i*4 + 1] = T[0][1];
+            result[i*4 + 2] = T[1][0];
+            result[i*4 + 3] = T[1][1];
         }
-        
-        result[i*8] = T[0][0];
-        result[i*8 + 1] = T[0][1];
-        result[i*8 + 2] = T[1][0];
-        result[i*8 + 3] = T[1][1];
-        result[i*8 + 4] = T[2][0]*scl_factor;
-        result[i*8 + 5] = T[2][1]*scl_factor;
-        result[i*8 + 6] = T[3][0]*scl_factor;
-        result[i*8 + 7] = T[3][1]*scl_factor;
     }
-    
+
     
     leave_fun:
         free(l);
