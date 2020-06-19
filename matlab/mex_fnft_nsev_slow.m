@@ -43,6 +43,10 @@
 %                   which requires three matrix exponentials per sample.
 %   'CF6_4'         Use sixth-order commutator-free exponential integrator
 %                   which requires four matrix exponentials per sample.
+%   'ES4'           Use fourth-order exponential integrator
+%                   which requires one matrix exponential per sample.
+%   'TES4'          Use fourth-order exponential integrator
+%                   which requires three matrix exponentials per sample.
 %   'RE'            Use Richardson extrpolation to improve accuracy.
 %   'dstype_residues'   Return residues instead of norming constants
 %   'cstype_ab'     Returns values of a(xi) and b(xi) individually instead

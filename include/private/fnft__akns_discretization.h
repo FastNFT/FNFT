@@ -81,6 +81,22 @@ FNFT_REAL fnft__akns_discretization_boundary_coeff(fnft__akns_discretization_t d
 FNFT_UINT fnft__akns_discretization_D_scale(fnft__akns_discretization_t discretization);
 
 /**
+ * @brief This routine returns the order of the method based on the
+ * discretization.
+ *
+ * Different numerical methods have different orders of accuray. This routine returns
+ * the order of the order based on the discretization of type \link fnft__akns_discretization_t \endlink.
+ * When the step-size of the signal samples is reduced by a factor s, the error in the
+ * computed values is expected to decrease by a factor s^order.
+ * @param[in] discretization The type of discretization to be used. Should be
+ * of type \link fnft__akns_discretization_t \endlink.
+ * @returns the method_order value, or 0.
+ *
+ * @ingroup akns
+ */
+FNFT_UINT fnft__akns_discretization_method_order(fnft__akns_discretization_t discretization);
+
+/**
  * @brief This routine maps lambda from continuous-time domain to
  * z in the discrete-time domain based on the discretization. 
  * 
@@ -127,6 +143,7 @@ FNFT_INT fnft__akns_z_to_lambda(const FNFT_UINT n, const FNFT_REAL eps_t,
 #define akns_discretization_degree(...) fnft__akns_discretization_degree(__VA_ARGS__)
 #define akns_discretization_boundary_coeff(...) fnft__akns_discretization_boundary_coeff(__VA_ARGS__)
 #define akns_discretization_D_scale(...) fnft__akns_discretization_D_scale(__VA_ARGS__)
+#define akns_discretization_method_order(...) fnft__akns_discretization_method_order(__VA_ARGS__)
 #define akns_lambda_to_z(...) fnft__akns_lambda_to_z(__VA_ARGS__)
 #define akns_z_to_lambda(...) fnft__akns_z_to_lambda(__VA_ARGS__)
 #endif

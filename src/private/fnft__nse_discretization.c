@@ -15,7 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017.
-* Shrinivas Chimmalgi (TU Delft) 2017-2019.
+* Shrinivas Chimmalgi (TU Delft) 2017-2020.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -66,6 +66,21 @@ UINT fnft__nse_discretization_D_scale(nse_discretization_t nse_discretization)
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);    
     D_scale = akns_discretization_D_scale(akns_discretization);
+    leave_fun:    
+        return D_scale;
+}
+
+/**
+ * This routine returns the order of the method based on the discretization.
+ */
+UINT fnft__nse_discretization_method_order(nse_discretization_t nse_discretization)
+{
+    akns_discretization_t akns_discretization = 0;
+    UINT D_scale = 0;
+    INT ret_code;
+    ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
+    CHECK_RETCODE(ret_code, leave_fun);    
+    D_scale = akns_discretization_method_order(akns_discretization);
     leave_fun:    
         return D_scale;
 }
@@ -156,7 +171,12 @@ INT fnft__nse_discretization_to_akns_discretization(nse_discretization_t nse_dis
         case nse_discretization_CF6_4:
             *akns_discretization = akns_discretization_CF6_4;
             break; 
-            
+        case nse_discretization_ES4:
+            *akns_discretization = akns_discretization_ES4;
+            break;
+        case nse_discretization_TES4:
+            *akns_discretization = akns_discretization_TES4;
+            break;   
         default: // Unknown discretization
             return E_INVALID_ARGUMENT(nse_discretization);
     }

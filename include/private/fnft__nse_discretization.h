@@ -80,6 +80,22 @@ FNFT_REAL fnft__nse_discretization_boundary_coeff(fnft_nse_discretization_t nse_
  */
 FNFT_UINT fnft__nse_discretization_D_scale(fnft_nse_discretization_t discretization);
 
+/**
+ * @brief This routine returns the order of the method based on the
+ * discretization.
+ *
+ * Different numerical methods have different orders of accuray. This routine returns
+ * the order of the order based on the discretization of type \link fnft__nse_discretization_t \endlink.
+ * When the step-size of the signal samples is reduced by a factor s, the error in the
+ * computed values is expected to decrease by a factor s^order.
+ * @param[in] discretization The type of discretization to be used. Should be
+ * of type \link fnft__nse_discretization_t \endlink.
+ * @returns the method_order value, or 0.
+ *
+ * @ingroup nse
+ */
+FNFT_UINT fnft__nse_discretization_method_order(fnft_nse_discretization_t discretization);
+
 
 /**
  * @brief This routine returns akns discretization related to the given
@@ -218,6 +234,7 @@ FNFT_INT fnft__nse_phase_factor_b(const FNFT_REAL eps_t, const FNFT_UINT D, FNFT
 #define nse_discretization_boundary_coeff(...) fnft__nse_discretization_boundary_coeff(__VA_ARGS__)
 #define nse_discretization_to_akns_discretization(...) fnft__nse_discretization_to_akns_discretization(__VA_ARGS__)
 #define nse_discretization_D_scale(...) fnft__nse_discretization_D_scale(__VA_ARGS__)
+#define nse_discretization_method_order(...) fnft__nse_discretization_method_order(__VA_ARGS__)
 #define nse_lambda_to_z(...) fnft__nse_lambda_to_z(__VA_ARGS__)
 #define nse_z_to_lambda(...) fnft__nse_z_to_lambda(__VA_ARGS__)
 #define nse_phase_factor_rho(...) fnft__nse_phase_factor_rho(__VA_ARGS__)

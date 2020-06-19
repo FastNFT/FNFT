@@ -181,17 +181,15 @@ INT fnft_nsev_slow(
         ret_code =  E_INVALID_ARGUMENT(discretization);
         goto release_mem;
     }
-    
     UINT Dsub = D;
     // Resample signal
     ret_code = signal_effective_from_signal(D, q, eps_t, kappa, &Dsub, &q_effective, &r_effective,
             first_last_index, opts->discretization);
     CHECK_RETCODE(ret_code, release_mem);
-    
+ 
     ret_code = fnft_nsev_slow_base(D*D_scale, q_effective, r_effective, T, M, contspec, XI, K_ptr,
             bound_states, normconsts_or_residues, kappa, opts);
     CHECK_RETCODE(ret_code, release_mem);
-    
     
     if (opts->richardson_extrapolation_flag == 1){
         // TODO - Optimize memory allocation
@@ -244,38 +242,23 @@ INT fnft_nsev_slow(
                 bound_states_sub[i] = bound_states[i];
         }
         // Preparing q_effective
-        REAL method_order = 2.0;
-        switch (opts->discretization) {
-            
-            case nse_discretization_BO: // Bofetta-Osborne scheme
-                method_order = 2.0;
-                break;
-            case nse_discretization_CF4_2:
-                method_order = 4.0;
-                break;
-            case nse_discretization_CF4_3:
-                method_order = 4.0;
-                break;
-            case nse_discretization_CF5_3:
-                method_order = 5.0;
-                break;
-            case nse_discretization_CF6_4:
-                method_order = 6.0;
-                break;
-            default: // Unknown discretization
-                ret_code = E_INVALID_ARGUMENT(discretization);
-                goto  release_mem;
+        UINT method_order;
+        method_order = nse_discretization_method_order(opts->discretization);
+        if (method_order == 0){
+            ret_code =  E_INVALID_ARGUMENT(discretization);
+            goto release_mem;
         }
-        
         Dsub = CEIL(D/2);
         ret_code = signal_effective_from_signal(D, q, eps_t, kappa, &Dsub, &q_effective, &r_effective,
                 first_last_index, opts->discretization);
         CHECK_RETCODE(ret_code, release_mem);
-        
+
+
         REAL Tsub[2] = {0,0};
         Tsub[0] = T[0] + first_last_index[0]*eps_t;
         Tsub[1] = T[0] + first_last_index[1]*eps_t;
         const REAL eps_t_sub = (Tsub[1] - Tsub[0])/(Dsub - 1);
+
         // Calling fnft_nsev_base with subsampled signal
         bs_loc_opt = opts->bound_state_localization;
         opts->bound_state_localization = nsev_bsloc_NEWTON;
@@ -900,6 +883,35 @@ static inline INT signal_effective_from_signal(
                 i += nskip_per_step;
             }
             break;
+        case nse_discretization_ES4:
+        case nse_discretization_TES4:
+            i = 0;
+            for (isub=0; isub<D_effective; isub=isub+3) {
+                q_effective[isub] = q[i];
+                i += nskip_per_step;
+            }
+            
+            REAL eps_t_sub = eps_t*nskip_per_step;
+            REAL eps_t_sub_2 = POW(eps_t_sub,2);        
+            q_effective[1] = (q_effective[3]-q_effective[0])/eps_t_sub; 
+            q_effective[2] = (q_effective[6]-2*q_effective[3]+q_effective[0])/eps_t_sub_2;
+            q_effective[D_effective-2] = (q_effective[D_effective-3]-q_effective[D_effective-6])/eps_t_sub; 
+            q_effective[D_effective-1] = (q_effective[D_effective-3]-2*q_effective[D_effective-6]+q_effective[D_effective-9])/eps_t_sub_2;
+//             q_effective[1] = (q_effective[3]-0)/(2*eps_t_sub); 
+//             q_effective[2] = (q_effective[3]-2*q_effective[0]+0)/eps_t_sub_2;
+//             q_effective[D_effective-2] = (0-q_effective[D_effective-6])/(2*eps_t_sub); 
+//             q_effective[D_effective-1] = (0-2*q_effective[D_effective-3]+q_effective[D_effective-6])/eps_t_sub_2;
+            
+
+            for (isub=3; isub<D_effective-3; isub=isub+3) {
+                q_effective[isub+1] = (q_effective[isub+3]-q_effective[isub-3])/(2*eps_t_sub); 
+                q_effective[isub+2] = (q_effective[isub+3]-2*q_effective[isub]+q_effective[isub-3])/eps_t_sub_2;
+            }
+
+            for (i=0; i<D_effective; i++) {
+                r_effective[i] = -kappa*CONJ(q_effective[i]);
+            }
+            break;
         default: // Unknown discretization
             
             ret_code = E_INVALID_ARGUMENT(discretization);
@@ -908,8 +920,7 @@ static inline INT signal_effective_from_signal(
     
     // Original index of the first and last sample in qsub
     first_last_index[0] = 0;
-    first_last_index[1] = i - nskip_per_step;
-    
+    first_last_index[1] = (Dsub-1)*nskip_per_step;
     *q_effective_ptr = q_effective;
     *r_effective_ptr = r_effective;
     *Dsub_ptr = Dsub;

@@ -192,6 +192,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "CF6_4") == 0 ) {
             
             opts.discretization = fnft_nse_discretization_CF6_4; 
+
+        } else if ( strcmp(str, "ES4") == 0 ) {
+            
+            opts.discretization = fnft_nse_discretization_ES4; 
+            
+        } else if ( strcmp(str, "TES4") == 0 ) {
+            
+            opts.discretization = fnft_nse_discretization_TES4;   
             
         } else if ( strcmp(str, "RE") == 0 ) {
             

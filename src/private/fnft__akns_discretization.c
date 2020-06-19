@@ -15,7 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
-* Shrinivas Chimmalgi (TU Delft) 2017-2019.
+* Shrinivas Chimmalgi (TU Delft) 2017-2020.
 * Peter J. Prins (TU Delft) 2018.
 */
 #define FNFT_ENABLE_SHORT_NAMES
@@ -99,6 +99,8 @@ REAL fnft__akns_discretization_boundary_coeff(akns_discretization_t discretizati
         case akns_discretization_CF4_3:
         case akns_discretization_CF5_3:
         case akns_discretization_CF6_4:
+        case akns_discretization_ES4:
+        case akns_discretization_TES4:
             return 0.5;
             
         default: // Unknown discretization
@@ -140,6 +142,8 @@ UINT fnft__akns_discretization_D_scale(akns_discretization_t discretization)
             return 2;
         case akns_discretization_CF4_3:
         case akns_discretization_CF5_3:
+        case akns_discretization_ES4:  
+        case akns_discretization_TES4: 
             return 3;
         case akns_discretization_CF6_4:
             return 4;
@@ -148,6 +152,51 @@ UINT fnft__akns_discretization_D_scale(akns_discretization_t discretization)
             return 0;
     }
 }
+/**
+ * This routine returns the order of the method based on the discretization.
+ */
+UINT fnft__akns_discretization_method_order(akns_discretization_t discretization)
+{
+
+    switch (discretization) {
+        case akns_discretization_2SPLIT1A:
+        case akns_discretization_2SPLIT1B:
+        case akns_discretization_2SPLIT2A:
+        case akns_discretization_2SPLIT2B:
+        case akns_discretization_2SPLIT2S:
+        case akns_discretization_2SPLIT3A:
+        case akns_discretization_2SPLIT3B:
+        case akns_discretization_2SPLIT3S:
+        case akns_discretization_2SPLIT4A:
+        case akns_discretization_2SPLIT4B:
+        case akns_discretization_2SPLIT5A:
+        case akns_discretization_2SPLIT5B:
+        case akns_discretization_2SPLIT6A:
+        case akns_discretization_2SPLIT6B:
+        case akns_discretization_2SPLIT7A:
+        case akns_discretization_2SPLIT7B:
+        case akns_discretization_2SPLIT8A:
+        case akns_discretization_2SPLIT8B:
+        case akns_discretization_2SPLIT2_MODAL:
+        case akns_discretization_BO:
+            return 2;
+        case akns_discretization_4SPLIT4A:
+        case akns_discretization_4SPLIT4B:
+        case akns_discretization_CF4_2:
+        case akns_discretization_CF4_3:
+        case akns_discretization_ES4:  
+        case akns_discretization_TES4: 
+            return 4;
+        case akns_discretization_CF5_3:
+            return 5;
+        case akns_discretization_CF6_4:
+            return 6;
+            
+        default: // Unknown discretization
+            return 0;
+    }
+}
+
 /**
  * This routine maps lambda from continuous-time domain to
  * z in the discrete-time domain based on the discretization. 

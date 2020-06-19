@@ -50,18 +50,26 @@ errorCF4_2_a= [];
 errorCF4_3_a = [];
 errorCF5_3_a= [];
 errorCF6_4_a= [];
+errorES4_a= [];
+errorTES4_a= [];
 
 errorBO_b = [];
 errorCF4_2_b= [];
 errorCF4_3_b = [];
 errorCF5_3_b= [];
 errorCF6_4_b= [];
+errorES4_b= [];
+errorTES4_b= [];
+
 
 timeBO = [];
 timeCF4_2= [];
 timeCF4_3 = [];
 timeCF5_3= [];
 timeCF6_4= [];
+timeES4= [];
+timeTES4= [];
+
 
 po = 7:11;
 NT = 2.^po;
@@ -84,7 +92,7 @@ for N = NT
     errorCF4_2_b= [errorCF4_2_b;sum((abs(ab(M+1:end)-b).^2)./(max(1,abs(b)).^2))/1025];
     
     tic
-    [ab]=mex_fnft_nsev_slow(q, T, XI, kappa,'M',M,'CF4_3','cstype_ab');
+    [ab]=mex_fnft_nsev_slow(q, T, XI, kappa,'M',M,'CF4_3','cstype_ab');    
     timeCF4_3= [timeCF4_3;toc];
     errorCF4_3_a= [errorCF4_3_a;sum((abs(ab(1:M)-a).^2)./(max(1,abs(a)).^2))/1025];
     errorCF4_3_b= [errorCF4_3_b;sum((abs(ab(M+1:end)-b).^2)./(max(1,abs(b)).^2))/1025];
@@ -101,6 +109,18 @@ for N = NT
     errorCF6_4_a= [errorCF6_4_a;sum((abs(ab(1:M)-a).^2)./(max(1,abs(a)).^2))/1025];
     errorCF6_4_b= [errorCF6_4_b;sum((abs(ab(M+1:end)-b).^2)./(max(1,abs(b)).^2))/1025];
     
+    tic
+    [ab]=mex_fnft_nsev_slow(q, T, XI, kappa,'M',M,'ES4','cstype_ab');   
+    timeES4= [timeES4;toc];
+    errorES4_a= [errorES4_a;sum((abs(ab(1:M)-a).^2)./(max(1,abs(a)).^2))/1025];
+    errorES4_b= [errorES4_b;sum((abs(ab(M+1:end)-b).^2)./(max(1,abs(b)).^2))/1025];    
+    
+    tic
+    [ab]=mex_fnft_nsev_slow(q, T, XI, kappa,'M',M,'TES4','cstype_ab');   
+    timeTES4= [timeTES4;toc];
+    errorTES4_a= [errorTES4_a;sum((abs(ab(1:M)-a).^2)./(max(1,abs(a)).^2))/1025];
+    errorTES4_b= [errorTES4_b;sum((abs(ab(M+1:end)-b).^2)./(max(1,abs(b)).^2))/1025];    
+
 end
 %% Plotting results
 
@@ -109,12 +129,14 @@ fs = 14;
 ms = 6;
 alw = 1;
 figure
-semilogy(po,errorBO_a,'o-','Color',[0.18,0.21,0.59],'MarkerFaceColor',[0.18,0.21,0.59],'linewidth',lw,'markersize',ms);
+semilogy(po,errorBO_a,'o-','linewidth',lw,'markersize',ms);
 hold on
-semilogy(po,errorCF4_2_a,'d-','Color',[0.93,0.11,0.16],'MarkerFaceColor',[0.93,0.11,0.16],'linewidth',lw,'markersize',ms);
-semilogy(po,errorCF4_3_a,'v-','MarkerFaceColor',[0.14,0.12,0.13],'Color',[0.14,0.12,0.13],'linewidth',lw,'markersize',ms);
-semilogy(po,errorCF5_3_a,'s-','MarkerFaceColor',[0.22,0.21,0.59],'Color',[0.22,0.21,0.59],'linewidth',lw,'markersize',ms);
-semilogy(po,errorCF6_4_a,'>-','MarkerFaceColor',[0.63 0.08 0.18],'Color',[0.63 0.08 0.18],'linewidth',lw,'markersize',ms);
+semilogy(po,errorCF4_2_a,'d-','linewidth',lw,'markersize',ms);
+semilogy(po,errorCF4_3_a,'v-','linewidth',lw,'markersize',ms);
+semilogy(po,errorCF5_3_a,'s-','linewidth',lw,'markersize',ms);
+semilogy(po,errorCF6_4_a,'>-','linewidth',lw,'markersize',ms);
+semilogy(po,errorES4_a,'*-','linewidth',lw,'markersize',ms);
+semilogy(po,errorTES4_a,'h-','linewidth',lw,'markersize',ms);
 
 ylim([1e-26,1e2])
 set(gca, 'Units','normalized','FontUnits','points',...
@@ -123,16 +145,18 @@ ylabel({'NMSE[$a(\xi)$]'},'Interpreter','latex','FontUnits','points','Fontsize',
 xlabel({'$\log_2(D)$'},'Interpreter','latex','FontUnits','points','Fontsize',fs,'FontName','Arial');
 grid on
 grid minor
-le = legend("BO","CF$^{[4]}_2$","CF$^{[4]}_3$","CF$^{[5]}_3$","CF$^{[6]}_4$");
-set(le,'interpreter','latex','FontUnits','points','Fontsize',fs-2,'FontName','Arial','Location','NorthEast','NumColumns',2);
+le = legend("BO","CF$^{[4]}_2$","CF$^{[4]}_3$","CF$^{[5]}_3$","CF$^{[6]}_4$","ES4","TES4");
+set(le,'interpreter','latex','FontUnits','points','Fontsize',fs-2,'FontName','Arial','Location','SouthWest','NumColumns',3);
 
 figure
-semilogy(po,errorBO_b,'o-','Color',[0.18,0.21,0.59],'MarkerFaceColor',[0.18,0.21,0.59],'linewidth',lw,'markersize',ms);
+semilogy(po,errorBO_b,'o-','linewidth',lw,'markersize',ms);
 hold on
-semilogy(po,errorCF4_2_b,'d-','Color',[0.93,0.11,0.16],'MarkerFaceColor',[0.93,0.11,0.16],'linewidth',lw,'markersize',ms);
-semilogy(po,errorCF4_3_b,'v-','MarkerFaceColor',[0.14,0.12,0.13],'Color',[0.14,0.12,0.13],'linewidth',lw,'markersize',ms);
-semilogy(po,errorCF5_3_b,'s-','MarkerFaceColor',[0.22,0.21,0.59],'Color',[0.22,0.21,0.59],'linewidth',lw,'markersize',ms);
-semilogy(po,errorCF6_4_b,'>-','MarkerFaceColor',[0.63 0.08 0.18],'Color',[0.63 0.08 0.18],'linewidth',lw,'markersize',ms);
+semilogy(po,errorCF4_2_b,'d-','linewidth',lw,'markersize',ms);
+semilogy(po,errorCF4_3_b,'v-','linewidth',lw,'markersize',ms);
+semilogy(po,errorCF5_3_b,'s-','linewidth',lw,'markersize',ms);
+semilogy(po,errorCF6_4_b,'>-','linewidth',lw,'markersize',ms);
+semilogy(po,errorES4_b,'*-','linewidth',lw,'markersize',ms);
+semilogy(po,errorTES4_b,'h-','linewidth',lw,'markersize',ms);
 
 ylim([1e-26,1e2])
 grid on
@@ -141,24 +165,27 @@ set(gca, 'Units','normalized','FontUnits','points',...
     'FontWeight','normal','FontSize',fs,'FontName','Arial','LineWidth',alw)
 ylabel({'NMSE[$b(\xi)$]'},'Interpreter','latex','FontUnits','points','Fontsize',fs,'FontName','Arial')
 xlabel({'$\log_2(D)$'},'Interpreter','latex','FontUnits','points','Fontsize',fs,'FontName','Arial');
-le = legend("BO","CF$^{[4]}_2$","CF$^{[4]}_3$","CF$^{[5]}_3$","CF$^{[6]}_4$");
-set(le,'interpreter','latex','FontUnits','points','Fontsize',fs-2,'FontName','Arial','Location','NorthEast','NumColumns',2);
+le = legend("BO","CF$^{[4]}_2$","CF$^{[4]}_3$","CF$^{[5]}_3$","CF$^{[6]}_4$","ES4","TES4");
+set(le,'interpreter','latex','FontUnits','points','Fontsize',fs-2,'FontName','Arial','Location','SouthWest','NumColumns',3);
 
 figure
-semilogy(po,timeBO,'o-','Color',[0.18,0.21,0.59],'MarkerFaceColor',[0.18,0.21,0.59],'linewidth',lw,'markersize',ms);
+semilogy(po,timeBO,'o-','linewidth',lw,'markersize',ms);
 hold on
-semilogy(po,timeCF4_2,'d-','Color',[0.93,0.11,0.16],'MarkerFaceColor',[0.93,0.11,0.16],'linewidth',lw,'markersize',ms);
-semilogy(po,timeCF4_3,'v-','MarkerFaceColor',[0.14,0.12,0.13],'Color',[0.14,0.12,0.13],'linewidth',lw,'markersize',ms);
-semilogy(po,timeCF5_3,'s-','MarkerFaceColor',[0.22,0.21,0.59],'Color',[0.22,0.21,0.59],'linewidth',lw,'markersize',ms);
-semilogy(po,timeCF6_4,'>-','MarkerFaceColor',[0.63 0.08 0.18],'Color',[0.63 0.08 0.18],'linewidth',lw,'markersize',ms);
+semilogy(po,timeCF4_2,'d-','linewidth',lw,'markersize',ms);
+semilogy(po,timeCF4_3,'v-','linewidth',lw,'markersize',ms);
+semilogy(po,timeCF5_3,'s-','linewidth',lw,'markersize',ms);
+semilogy(po,timeCF6_4,'>-','linewidth',lw,'markersize',ms);
+semilogy(po,timeES4,'*-','linewidth',lw,'markersize',ms);
+semilogy(po,timeTES4,'h-','linewidth',lw,'markersize',ms);
 
-ylim([0,1e2])
+
+ylim([0,2e1])
 grid on
 grid minor
 set(gca, 'Units','normalized','FontUnits','points',...
     'FontWeight','normal','FontSize',fs,'FontName','Arial','LineWidth',alw)
 ylabel({'Execution time'},'Interpreter','latex','FontUnits','points','Fontsize',fs,'FontName','Arial')
 xlabel({'$\log_2(D)$'},'Interpreter','latex','FontUnits','points','Fontsize',fs,'FontName','Arial');
-le = legend("BO","CF$^{[4]}_2$","CF$^{[4]}_3$","CF$^{[5]}_3$","CF$^{[6]}_4$");
-set(le,'interpreter','latex','FontUnits','points','Fontsize',fs-2,'FontName','Arial','Location','NorthEast','NumColumns',2);
+le = legend("BO","CF$^{[4]}_2$","CF$^{[4]}_3$","CF$^{[5]}_3$","CF$^{[6]}_4$","ES4","TES4");
+set(le,'interpreter','latex','FontUnits','points','Fontsize',fs-2,'FontName','Arial','Location','NorthWest','NumColumns',3);
 

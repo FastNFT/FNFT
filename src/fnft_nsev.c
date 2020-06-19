@@ -15,7 +15,7 @@
  *
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
- * Shrinivas Chimmalgi (TU Delft) 2017-2019.
+ * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Marius Brehler (TU Dortmund) 2018.
  */
 
@@ -353,12 +353,16 @@ INT fnft_nsev(
                 bound_states_sub[i] = bound_states[i];
         }
         // Preparing q_effective
-        REAL method_order = 2.0;
+        UINT method_order;
+        method_order = nse_discretization_method_order(opts->discretization);
+        if (method_order == 0){
+            ret_code =  E_INVALID_ARGUMENT(discretization);
+            goto release_mem;
+        }
         Dsub = CEIL(D/2);
         nskip_per_step = ROUND((REAL)D / Dsub);
         Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
         if (D_scale == 2) {
-            method_order = 4.0;
             ret_code = misc_resample(D, eps_t, q, -eps_t*scl_factor*nskip_per_step, q_1);
             CHECK_RETCODE(ret_code, release_mem);
             ret_code = misc_resample(D, eps_t, q, eps_t*scl_factor*nskip_per_step, q_2);
@@ -383,7 +387,6 @@ INT fnft_nsev(
                 j = j+2;
             }
         } else if (D_scale == 1) {
-            method_order = 2.0;
             ret_code = misc_downsample(D, q, &Dsub, &qsub_effective, first_last_index);
             CHECK_RETCODE(ret_code, release_mem);
         }

@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017.
+* Shrinivas Chimmalgi (TU Delft) 2019-2020.
 */
 
 /**
@@ -110,7 +111,9 @@ typedef enum {
     fnft_nse_discretization_CF4_2,
     fnft_nse_discretization_CF4_3,
     fnft_nse_discretization_CF5_3,
-    fnft_nse_discretization_CF6_4
+    fnft_nse_discretization_CF6_4,
+    fnft_nse_discretization_ES4,
+    fnft_nse_discretization_TES4
 } fnft_nse_discretization_t;
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
@@ -141,6 +144,10 @@ typedef enum {
 #define nse_discretization_CF4_3 fnft_nse_discretization_CF4_3
 #define nse_discretization_CF5_3 fnft_nse_discretization_CF5_3
 #define nse_discretization_CF6_4 fnft_nse_discretization_CF6_4
+#define nse_discretization_ES4 fnft_nse_discretization_ES4
+#define nse_discretization_TES4 fnft_nse_discretization_TES4
+
+
 #endif
 
 #endif
