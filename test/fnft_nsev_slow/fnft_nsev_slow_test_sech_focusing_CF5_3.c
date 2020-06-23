@@ -51,31 +51,31 @@ INT main()
     ret_code = nsev_slow_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
-    // Check for quadratic error decay
+    // Check for 5th-order error decay
     D *= 2;
     for (i=0; i<6; i++)
         error_bounds[i] /= 32.0;
     ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
-    D = 501;
+    D = 701;
     REAL error_bounds_RE[6] = {
-        6.4e-5,     // reflection coefficient
-        2.9e-5,     // a
-        4.2e-5,     // b
-        9.5e-5,     // bound states
-        2.9e-4,      // norming constants
-        2.3e-4      // residues
+        3e-6,     // reflection coefficient
+        1.5e-6,     // a
+        4.5e-7,     // b
+        1.6e-6,     // bound states
+        1.8e-5,      // norming constants
+        1.7e-5      // residues
     };
     opts.richardson_extrapolation_flag = 1;
     ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    // Check for 6th-order error decay (error_bounds[4] stays as it is
-    // already close to machine precision)
+    // Check for at least 6th-order error decay (error_bounds_RE[4] corresponding
+    // to the norming constants decays with only 5th-order)
     D *= 2;
     for (i=0; i<6; i++)
-        error_bounds_RE[i] /= 128.0;
-//     error_bounds_RE[4] *= 64.0;
+        error_bounds_RE[i] /= 64.0;
+    error_bounds_RE[4] *= 2.0;
     ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun)
     

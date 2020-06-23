@@ -671,6 +671,10 @@ static inline INT refine_roots_newton(
                 CHECK_RETCODE(ret_code, leave_fun);
             }
             // Perform Newton updates: lam[i] <- lam[i] - a(lam[i])/a'(lam[i])
+//             
+//             printf("l=%1.5e+%1.5e;\t",CREAL(bound_states[i]),CIMAG(bound_states[i]));
+//             printf("a=%1.5e+%1.5e;\t",CREAL(a_val),CIMAG(a_val));
+//             printf("aprime=%1.5e+%1.5e;\n",CREAL(aprime_val),CIMAG(aprime_val));
             if (aprime_val == 0.0)
                 return E_DIV_BY_ZERO;
             error = a_val / aprime_val;
@@ -893,14 +897,14 @@ static inline INT signal_effective_from_signal(
             
             REAL eps_t_sub = eps_t*nskip_per_step;
             REAL eps_t_sub_2 = POW(eps_t_sub,2);        
-            q_effective[1] = (q_effective[3]-q_effective[0])/eps_t_sub; 
-            q_effective[2] = (q_effective[6]-2*q_effective[3]+q_effective[0])/eps_t_sub_2;
-            q_effective[D_effective-2] = (q_effective[D_effective-3]-q_effective[D_effective-6])/eps_t_sub; 
-            q_effective[D_effective-1] = (q_effective[D_effective-3]-2*q_effective[D_effective-6]+q_effective[D_effective-9])/eps_t_sub_2;
-//             q_effective[1] = (q_effective[3]-0)/(2*eps_t_sub); 
-//             q_effective[2] = (q_effective[3]-2*q_effective[0]+0)/eps_t_sub_2;
-//             q_effective[D_effective-2] = (0-q_effective[D_effective-6])/(2*eps_t_sub); 
-//             q_effective[D_effective-1] = (0-2*q_effective[D_effective-3]+q_effective[D_effective-6])/eps_t_sub_2;
+//             q_effective[1] = (q_effective[3]-q_effective[0])/eps_t_sub; 
+//             q_effective[2] = (q_effective[6]-2*q_effective[3]+q_effective[0])/eps_t_sub_2;
+//             q_effective[D_effective-2] = (q_effective[D_effective-3]-q_effective[D_effective-6])/eps_t_sub; 
+//             q_effective[D_effective-1] = (q_effective[D_effective-3]-2*q_effective[D_effective-6]+q_effective[D_effective-9])/eps_t_sub_2;
+            q_effective[1] = (q_effective[3]-0)/(2*eps_t_sub); 
+            q_effective[2] = (q_effective[3]-2*q_effective[0]+0)/eps_t_sub_2;
+            q_effective[D_effective-2] = (0-q_effective[D_effective-6])/(2*eps_t_sub); 
+            q_effective[D_effective-1] = (0-2*q_effective[D_effective-3]+q_effective[D_effective-6])/eps_t_sub_2;
             
 
             for (isub=3; isub<D_effective-3; isub=isub+3) {

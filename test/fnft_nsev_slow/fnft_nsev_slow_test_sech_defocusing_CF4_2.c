@@ -51,7 +51,7 @@ INT main()
     ret_code = nsev_slow_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    // Check for 4th order error decay
+    // Check for 4th-order error decay
     D *= 2;
     for (i=0; i<6; i++)
         error_bounds[i] /= 16.0;
@@ -71,10 +71,10 @@ INT main()
     
     ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);    
-    // Check for 6th order error decay
+    // Check for at least 5th-order error decay
     D *= 2;
     for (i=0; i<6; i++)
-        error_bounds_RE[i] /= 64.0;
+        error_bounds_RE[i] /= 32.0;
     ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);    
 

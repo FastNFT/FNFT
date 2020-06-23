@@ -151,7 +151,7 @@ INT nsev_slow_testcases(nsev_slow_testcases_t tc, const UINT D,
              * lam0 = sym(3);
              * syms lam;
              * a(lam) = gamma(-im*(lam-lam0) + hlf).^2 ./ ( gamma(-im*(lam-lam0) + A + hlf) ...
-             * gamma(-im*(lam-lam0) - A + hlf) );
+             * *gamma(-im*(lam-lam0) - A + hlf) );
              * da = diff(a, lam);
              * b(lam) = -sin(sym(pi)*A) ./ cosh(sym(pi) * (lam-lam0));
              *

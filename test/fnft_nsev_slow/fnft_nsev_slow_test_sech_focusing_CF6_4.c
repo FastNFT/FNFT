@@ -51,13 +51,14 @@ INT main()
     ret_code = nsev_slow_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
-    // Check for quadratic error decay (error_bounds[4] stays as it is
-    // already close to machine precision)
+    // Check for 6th-order error decay (error_bounds[4] corresponding
+    // to the norming constants stays as it is already close to machine precision,
+    // error_bounds[5] corresponding to the residues only decays with 3rd-order)
     D *= 2;
     for (i=0; i<6; i++)
         error_bounds[i] /= 64.0;
     error_bounds[4] *= 64.0;
-    error_bounds[5] *= 6.0;// Residue has lower order.
+    error_bounds[5] *= 8.0;// Residue has lower order.
     ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
@@ -65,21 +66,22 @@ INT main()
     REAL error_bounds_RE[6] = {
         7e-7,     // reflection coefficient
         4e-7,     // a
-        1.05e-7,     // b
+        9.9e-8,     // b
         4.6e-7,     // bound states
         5e-14,      // norming constants
-        2.8e-5      // residues
+        2.7e-5      // residues
     };
     opts.richardson_extrapolation_flag = 1;
     ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    // Check for 6th-order error decay (error_bounds[4] stays as it is
-    // already close to machine precision)
+    // Check for at least 7th-order error decay (error_bounds_RE[4] corresponding
+    // to the norming constants stays as it is already close to machine precision, 
+    // error_bounds_RE[5] corresponding to the residues only decays with 4th-order)
     D *= 2;
     for (i=0; i<6; i++)
-        error_bounds_RE[i] /= 256.0;
-    error_bounds_RE[4] *= 256.0;
-    error_bounds_RE[5] *= 16.0;// Residue has lower order.
+        error_bounds_RE[i] /= 128.0;
+    error_bounds_RE[4] *= 128.0;
+    error_bounds_RE[5] *= 8.0;// Residue has lower order.
     ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun)
     

@@ -29,12 +29,12 @@ INT main()
     UINT D = 512;
     const nsev_slow_testcases_t tc = nsev_slow_testcases_SECH_FOCUSING;
     REAL error_bounds[6] = {
-        7.1e-3,     // reflection coefficient
-        3.5e-3,     // a
-        1.2e-3,     // b
-        1.2e-3,     // bound states
+        9.7e-2,     // reflection coefficient
+        4.8e-2,     // a
+        1.7e-2,     // b
+        2.5e-2,     // bound states
         3.2e-11,      // norming constants
-        1.6e-3      // residues
+        4.7e-2      // residues
     };
     opts = fnft_nsev_slow_default_opts();
     opts.bound_state_localization = nsev_bsloc_NEWTON;
@@ -50,8 +50,8 @@ INT main()
     ret_code = nsev_slow_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
-    // Check for quadratic error decay (error_bounds[4] stays as it is
-    // already close to machine precision)
+    // Check for 4th-order error decay (error_bounds[4] corresponding
+    // to the norming constants stays as it is already close to machine precision)
     D *= 2;
     for (i=0; i<6; i++)
         error_bounds[i] /= 16.0;
@@ -61,24 +61,24 @@ INT main()
     
     
     
-    D = 512;
+    D = 1024;
     REAL error_bounds_RE[6] = {
-        9e-4,     // reflection coefficient
-        1.3e-4,     // a
-        5.7e-5,     // b
-        9.5e-5,     // bound states
+        4.6e-4,     // reflection coefficient
+        2.3e-4,     // a
+        1.4e-4,     // b
+        6.1e-5,     // bound states
         5e-14,      // norming constants
-        1.2e-4      // residues
+        1.5e-4      // residues
     };
     opts.richardson_extrapolation_flag = 1;
     ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    // Check for 6th-order error decay (error_bounds[4] stays as it is
-    // already close to machine precision)
+    // Check for at least 5th-order error decay (error_bounds_RE[4] corresponding
+    // to the norming constants stays as it is already close to machine precision)
     D *= 2;
     for (i=0; i<6; i++)
-        error_bounds_RE[i] /= 64.0;
-    error_bounds_RE[4] *= 64.0;
+        error_bounds_RE[i] /= 32.0;
+    error_bounds_RE[4] *= 32.0;
     ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
