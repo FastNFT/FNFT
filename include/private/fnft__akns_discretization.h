@@ -37,7 +37,7 @@
  * scattering matrix or zero if the discretization is unknown.
  *
  * It defines the step size of the frequency grid
- * \f$z = \text{e}^{2*j*\xi*\epsilon_t/d}\f$ based on the discretization type.
+ * \f$z = \text{e}^{2j\xi\epsilon_t d}\f$ based on the discretization type.
  * @param[in] discretization The type of discretization to be used. Should be
  * of type \link fnft_kdv_discretization_t \endlink.
  * @returns polynomial degree, or 0 for discretizations not supported by
@@ -73,8 +73,7 @@ FNFT_REAL fnft__akns_discretization_boundary_coeff(fnft__akns_discretization_t d
  * D_effective = D_scale * D.
  * @param[in] discretization The type of discretization to be used. Should be
  * of type \link fnft__akns_discretization_t \endlink.
- * @returns the D_scale value, or 0 for discretizations not supported
- * by \link fnft__akns_fscatter \endlink.
+ * @returns the D_scale value, or 0 for unknown discretizations.
  *
  * @ingroup akns
  */
@@ -86,28 +85,28 @@ FNFT_UINT fnft__akns_discretization_D_scale(fnft__akns_discretization_t discreti
  *
  * Different numerical methods have different orders of accuray. This routine returns
  * the order of the order based on the discretization of type \link fnft__akns_discretization_t \endlink.
- * When the step-size of the signal samples is reduced by a factor s, the error in the
- * computed values is expected to decrease by a factor s^order.
+ * When the step-size of the signal samples is reduced by a factor \f$s\f$, the error in the
+ * computed values is expected to decrease by a factor \f$s^{order}\f$.
  * @param[in] discretization The type of discretization to be used. Should be
  * of type \link fnft__akns_discretization_t \endlink.
- * @returns the method_order value, or 0.
+ * @returns the method_order value, or 0 for unknown discretization.
  *
  * @ingroup akns
  */
 FNFT_UINT fnft__akns_discretization_method_order(fnft__akns_discretization_t discretization);
 
 /**
- * @brief This routine maps lambda from continuous-time domain to
- * z in the discrete-time domain based on the discretization. 
+ * @brief This routine maps \f$\lambda\f$ from continuous-time domain to
+ * \f$z\f$ in the discrete-time domain based on the discretization. 
  * 
- * This routine maps continuous-time domain value lambda to discrete-time domain value
- * z = exp(2i*lambda*eps_t/degree1step), where degree1step is based on the discretization 
+ * This routine maps continuous-time domain value \f$\lambda\f$ to discrete-time domain value
+ * \f$z = e^{2j \lambda \epsilon_t degree1step}\f$, where degree1step is based on the discretization 
  * of type \link fnft__akns_discretization_t \endlink.
  * @param[in] n Number of values to be mapped.
  * @param[in] eps_t Real-valued discretization step-size.
  * @param[in,out] vals Pointer to location of first element of array containing
- * complex-valued continuous-time domain spectral parameter lambda. The values are replaced with
- * discrete-time domain values z.
+ * complex-valued continuous-time domain spectral parameter \f$\lambda\f$. The values are replaced with
+ * discrete-time domain values \f$z\f$.
  * @param[in] discretization Discretization of type \link fnft__akns_discretization_t \endlink.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
@@ -118,17 +117,17 @@ FNFT_INT fnft__akns_lambda_to_z(const FNFT_UINT n, const FNFT_REAL eps_t,
         FNFT_COMPLEX * const vals, fnft__akns_discretization_t discretization);
 
 /**
- * @brief This routine maps z from the discrete-time domain to
- * lambda in the continuous-time domain based on the discretization. 
+ * @brief This routine maps \f$z\f$ from the discrete-time domain to
+ * \f$\lambda\f$ in the continuous-time domain based on the discretization. 
  * 
- * This routine maps discrete-time domain value z to continuous-time domain value
- * lambda = degree1step*log(z)/(2i*eps_t), where degree1step is based on the discretization 
+ * This routine maps discrete-time domain value \f$z\f$ to continuous-time domain value
+ * \f$\lambda = degree1step\log(z)/(2j\epsilon_t)\f$, where degree1step is based on the discretization 
  * of type \link fnft__akns_discretization_t \endlink.
  * @param[in] n Number of values to be mapped.
  * @param[in] eps_t Real-valued discretization step-size.
  * @param[in,out] vals Pointer to location of first element of array containing
- * complex-valued discrete-time domain spectral parameter z. The values are replaced with
- * continuous-time domain values lambda.
+ * complex-valued discrete-time domain spectral parameter \f$z\f$. The values are replaced with
+ * continuous-time domain values \f$\lambda\f$.
  * @param[in] discretization Discretization of type \link fnft__akns_discretization_t \endlink.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.

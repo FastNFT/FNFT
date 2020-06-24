@@ -60,9 +60,7 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
     ret_code = kdv_discretization_to_akns_discretization(discretization,
             &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
-    
-    UINT D_scale = akns_discretization_D_scale(akns_discretization);
-    
+        
     r = malloc(D*sizeof(COMPLEX));
     if (r == NULL) {
         ret_code = E_NOMEM;

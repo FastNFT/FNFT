@@ -294,6 +294,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                         sh = CSINH(k*eps_t)/k;
                     else
                         sh = eps_t;
+                    
                     u1 = l[n]*sh*I;
                     ud1 = eps_t*l[n]*l[n]*chi*I;
                     ud2 = l[n]*(eps_t*ch-sh)/ks;

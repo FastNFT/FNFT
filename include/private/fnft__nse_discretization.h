@@ -36,7 +36,7 @@
 
 
 /**
- * @brief This routine returns the max degree d of the polynomials in a single
+ * @brief This routine returns the max degree \f$d\f$ of the polynomials in a single
  * scattering matrix or zero if the discretization is unknown.
  *
  * @param[in] nse_discretization The type of discretization to be used. Should be
@@ -86,8 +86,8 @@ FNFT_UINT fnft__nse_discretization_D_scale(fnft_nse_discretization_t discretizat
  *
  * Different numerical methods have different orders of accuray. This routine returns
  * the order of the order based on the discretization of type \link fnft_nse_discretization_t \endlink.
- * When the step-size of the signal samples is reduced by a factor s, the error in the
- * computed values is expected to decrease by a factor s^order.
+ * When the step-size of the signal samples is reduced by a factor \f$s\f$, the error in the
+ * computed values is expected to decrease by a factor \f$s^{order}\f$.
  * @param[in] discretization The type of discretization to be used. Should be
  * of type \link fnft_nse_discretization_t \endlink.
  * @returns the method_order value, or 0.
@@ -117,18 +117,18 @@ FNFT_INT fnft__nse_discretization_to_akns_discretization(fnft_nse_discretization
         
         
 /**
- * @brief This routine maps lambda from continuous-time domain to
- * z in the discrete-time domain based on the discretization. 
+ * @brief This routine maps \f$\lambda\f$ from continuous-time domain to
+ * \f$z\f$ in the discrete-time domain based on the discretization. 
  * 
  * This routine maps continuous-time domain value lambda to discrete-time domain value
- * z = exp(2i*lambda*eps_t/degree1step), where degree1step is based on the discretization 
+ * \f$z = e^{2j\lambda\epsilon_t degree1step), where degree1step is based on the discretization 
  * of type \link fnft_nse_discretization_t \endlink. Changes discretization to 
  * \link fnft__akns_discretization_t \endlink type and calls \link fnft__akns_lambda_to_z \endlink.
  * @param[in] n Number of values to be mapped.
  * @param[in] eps_t Real-valued discretization step-size.
  * @param[in,out] vals Pointer to location of first element of array containing
- * complex-valued continuous-time domain spectral parameter lambda. The values are replaced with
- * discrete-time domain values z.
+ * complex-valued continuous-time domain spectral parameter \f$\lambda\f$. The values are replaced with
+ * discrete-time domain values \f$z\f$.
  * @param[in] discretization Discretization of type \link fnft_nse_discretization_t \endlink.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
@@ -139,18 +139,18 @@ FNFT_INT fnft__nse_lambda_to_z(const FNFT_UINT n, const FNFT_REAL eps_t,
         FNFT_COMPLEX * const vals, fnft_nse_discretization_t discretization);
 
 /**
- * @brief This routine maps z from the discrete-time domain to
- * lambda in the continuous-time domain based on the discretization. 
+ * @brief This routine maps \f$z\f$ from the discrete-time domain to
+ * \f$\lambda\f$ in the continuous-time domain based on the discretization. 
  * 
- * This routine maps discrete-time domain value z to continuous-time domain value
- * lambda = degree1step*log(z)/(2i*eps_t), where degree1step is based on the discretization 
+ * This routine maps discrete-time domain value \f$z\f$ to continuous-time domain value
+ * \f$\lambda = degree1step\log(z)/(2j\epsilon_t)\f$, where degree1step is based on the discretization 
  * of type \link fnft_nse_discretization_t \endlink. Changes discretization to 
  * \link fnft__akns_discretization_t \endlink type and calls \link fnft__akns_z_to_lambda \endlink.
  * @param[in] n Number of values to be mapped.
  * @param[in] eps_t Real-valued discretization step-size.
  * @param[in,out] vals Pointer to location of first element of array containing
- * complex-valued discrete-time domain spectral parameter z. The values are replaced with
- * continuous-time domain values lambda.
+ * complex-valued discrete-time domain spectral parameter \f$z\f$. The values are replaced with
+ * continuous-time domain values \f$\lambda\f$.
  * @param[in] discretization Discretization of type \link fnft_nse_discretization_t \endlink.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
@@ -161,7 +161,7 @@ FNFT_INT fnft__nse_z_to_lambda(const FNFT_UINT n, const FNFT_REAL eps_t,
         FNFT_COMPLEX * const vals, fnft_nse_discretization_t discretization);
 
 /**
- * @brief  This routine returns the phase factor for reflection coefficient (rho).
+ * @brief  This routine returns the phase factor for reflection coefficient (\f$\rho\f$).
  * It is required for applying boundary conditions to the transfer_matrix based on the discretization. 
  * 
  * This routine computes the phase correction factor for the computation of the 

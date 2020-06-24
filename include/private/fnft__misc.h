@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
+* Shrinivas Chimmalgi (TU Delft) 2019-2020.
 */
 
 /**
@@ -201,7 +202,7 @@ FNFT_INT fnft__misc_downsample(const FNFT_UINT D, FNFT_COMPLEX const * const q,
  * @brief Sinc function for complex arguments.
  *
  * @ingroup misc
- * Functions computes the Sinc function sin(x)/x for \link FNFT_COMPLEX \endlink argument.
+ * Function computes the Sinc function sin(x)/x for \link FNFT_COMPLEX \endlink argument.
  * @param[in] x \link FNFT_COMPLEX \endlink argument.
  * @return Sinc(x).
  */
@@ -216,7 +217,21 @@ FNFT_COMPLEX fnft__misc_CSINC(FNFT_COMPLEX x);
  */
 FNFT_UINT fnft__misc_nextpowerof2(const FNFT_UINT number);
 
-
+/**
+ * @brief Resamples an array.
+ *
+ * @ingroup misc
+ * Computes a resampled version of q. The length of q is D>=2. Performs
+ * bandlimited interpolation to obtain signal samples at new locations
+ * \f$q(t_{n}+\delta)\f$ from samples given at \f$q(t_{n})\f$ for \f$n=0,1,...,D-1\f$.
+ * A warning is given if the number of samples are insufficient to ensure proper interpolation.
+ * @param[in] D Number of samples in array q.
+ * @param[in] eps_t Step-size of t.
+ * @param[in] q Complex valued array to be resampled.
+ * @param[in] delta Real valued shift to be applied during resampling.
+ * @param[out] q_new Complex valued array of resampled signal.
+ * @return Returns SUCCESS or an error code.
+ */
 FNFT_INT fnft__misc_resample(const FNFT_UINT D, const FNFT_REAL eps_t, FNFT_COMPLEX const * const q,
     const FNFT_REAL delta, FNFT_COMPLEX *const q_new);
 
