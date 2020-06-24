@@ -60,7 +60,7 @@ INT main()
     
     D = 365;
     REAL error_bounds_RE[6] = { 
-        2.4e-6,     // reflection coefficient
+        2.5e-6,     // reflection coefficient
         INFINITY,   // a
         INFINITY,   // b
         0.0,        // bound states

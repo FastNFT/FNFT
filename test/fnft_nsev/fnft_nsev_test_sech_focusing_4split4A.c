@@ -15,7 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
-* Shrinivas Chimmalgi (TU Delft) 2017-2019.
+* Shrinivas Chimmalgi (TU Delft) 2017-2020.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -29,12 +29,12 @@ INT main()
     UINT D = 512;
     const nsev_testcases_t tc = nsev_testcases_SECH_FOCUSING;
     REAL error_bounds[6] = { 
-        1.6e-6,//10.0e-8,     // reflection coefficient
-        4.3e-6,//2.7e-7,     // a
-        1.5e-6,//8.3e-8,     // b
-        2.2e-7,//1.4e-8,     // bound states
-        5e-15,      // norming constants
-        1.1e-6//6.4e-8      // residues 
+        1.6e-6, // reflection coefficient
+        4.3e-6, // a
+        1.5e-6, // b
+        2.2e-7, // bound states
+        5e-15,  // norming constants
+        1.1e-6  // residues 
     };
 
     opts = fnft_nsev_default_opts();
@@ -60,25 +60,27 @@ INT main()
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
-        // Check for Richardson
-    D /= 2;
+    // Check for at least 5th-order error decay on resulting from application
+    // of Richardson extrapolation to 4th-order method.(error_bounds[4] stays 
+    // as it is because it is already close to machine precision)
+    D = 512;
     REAL error_bounds_RE[6] = {
-        4.4e-8,//8.9e-10,     // reflection coefficient
-        5.6e-7,//1.9e-8,     // a
-        9.3e-8,//3.6e-9,     // b
-        3.1e-9,//4.8e-11,     // bound states
-        5e-14,      // norming constants
-        3.4e-9//5.3e-11      // residues
+        4.4e-8, // reflection coefficient
+        5.6e-7, // a
+        1.1e-7, // b,
+        3.1e-9, // bound states
+        5e-14,  // norming constants
+        3.4e-9 // residues
     };
     opts.richardson_extrapolation_flag = 1;
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
-    D *= 2;
+    UINT DN = 800;
     for (i=0; i<6; i++)
-        error_bounds_RE[i] /= 16.0;
-    error_bounds_RE[4] *= 16.0;
-    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
+        error_bounds_RE[i] /= POW((REAL)DN/(REAL)D,5);
+    error_bounds_RE[4] *= POW((REAL)DN/(REAL)D,5);
+    ret_code = nsev_testcases_test_fnft(tc, DN, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
 leave_fun:

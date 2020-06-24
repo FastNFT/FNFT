@@ -53,8 +53,6 @@ INT main()
     ret_code = nsev_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
-
-
     // Check for fourth-order error decay (error_bounds[4] stays as it is because it is
     // already close to machine precision)
     D *= 2;

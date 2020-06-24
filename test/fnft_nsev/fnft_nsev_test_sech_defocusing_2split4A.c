@@ -58,7 +58,8 @@ INT main()
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
-    // Check for Richardson
+    // Check for at least 3rd-order error decay on resulting from application
+    // of Richardson extrapolation to 2nd-order method.
     D /= 2;
     REAL error_bounds_RE[6] = {
         6.7e-8,     // reflection coefficient
@@ -74,7 +75,7 @@ INT main()
     
     D *= 2;
     for (i=0; i<6; i++)
-        error_bounds_RE[i] /= 16.0;
+        error_bounds_RE[i] /= 8.0;
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     

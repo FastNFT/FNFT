@@ -268,7 +268,7 @@ INT fnft_nsev_slow(
         opts->bound_state_localization = bs_loc_opt;
         opts->discspec_type = ds_type_opt;
         // Richardson step
-        REAL const scl_num = POW(((REAL)D / (REAL)Dsub),method_order);
+        REAL const scl_num = POW(eps_t_sub/eps_t,method_order);
         REAL const scl_den = scl_num - 1.0;
         REAL const dxi = (XI[1]-XI[0])/(M-1);
         if (contspec != NULL && M > 0){
@@ -750,11 +750,7 @@ static inline INT signal_effective_from_signal(
         ret_code = E_NOMEM;
         goto release_mem;
     }
-//
-//     printf("%d\n",nskip_per_step);
-//      printf("%d\n",D);
-//       printf("%d\n",Dsub);
-//         printf("%d\n",D_effective);
+
     switch (discretization) {
         
         case nse_discretization_BO: // Bofetta-Osborne scheme
@@ -897,10 +893,6 @@ static inline INT signal_effective_from_signal(
             
             REAL eps_t_sub = eps_t*nskip_per_step;
             REAL eps_t_sub_2 = POW(eps_t_sub,2);        
-//             q_effective[1] = (q_effective[3]-q_effective[0])/eps_t_sub; 
-//             q_effective[2] = (q_effective[6]-2*q_effective[3]+q_effective[0])/eps_t_sub_2;
-//             q_effective[D_effective-2] = (q_effective[D_effective-3]-q_effective[D_effective-6])/eps_t_sub; 
-//             q_effective[D_effective-1] = (q_effective[D_effective-3]-2*q_effective[D_effective-6]+q_effective[D_effective-9])/eps_t_sub_2;
             q_effective[1] = (q_effective[3]-0)/(2*eps_t_sub); 
             q_effective[2] = (q_effective[3]-2*q_effective[0]+0)/eps_t_sub_2;
             q_effective[D_effective-2] = (0-q_effective[D_effective-6])/(2*eps_t_sub); 

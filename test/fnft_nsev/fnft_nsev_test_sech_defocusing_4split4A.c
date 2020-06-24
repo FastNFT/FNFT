@@ -15,7 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
-* Shrnivas Chimmalgi (TU Delft) 2019.
+* Shrnivas Chimmalgi (TU Delft) 2019-2020.
 */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -58,7 +58,8 @@ INT main()
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
-        // Check for Richardson
+    // Check for at least 5th-order error decay on resulting from application
+    // of Richardson extrapolation to 4th-order method.
     D /= 2;
     REAL error_bounds_RE[6] = {
         9.1e-9,     // reflection coefficient
@@ -74,7 +75,7 @@ INT main()
     
     D *= 2;
     for (i=0; i<6; i++)
-        error_bounds_RE[i] /= 64.0;
+        error_bounds_RE[i] /= 32.0;
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
