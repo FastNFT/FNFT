@@ -19,9 +19,7 @@
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
-#include "fnft__errwarn.h"
 #include "fnft__nse_scatter.h"
-#include "fnft__nse_discretization.h"
 #include <stdio.h>
 
 /**

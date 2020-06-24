@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Shrinivas Chimmalgi (TU Delft) 2019.
+* Shrinivas Chimmalgi (TU Delft) 2019-2020.
 */
 
 /**
@@ -27,51 +27,58 @@
 #ifndef FNFT_NSEV_SLOW_H
 #define FNFT_NSEV_SLOW_H
 
-#include "fnft_nse_discretization_t.h"
 #include "fnft_nsev.h"
 
 /**
- * @struct fnft_nsev_opts_t
- * @brief Stores additional options for the routine \link fnft_nsev \endlink.
+ * @struct fnft_nsev_slow_opts_t
+ * @brief Stores additional options for the routine \link fnft_nsev_slow \endlink.
  * @ingroup fnft
  * @ingroup data_types
  *
- * Use the \link fnft_nsev_default_opts \endlink routine in order to generate
+ * Use the \link fnft_nsev_slow_default_opts \endlink routine in order to generate
  * a new variable of this type with default options and modify as needed.
  *
- * @var fnft_nsev_opts_t::bound_state_filtering
- *  Controls how \link fnft_nsev \endlink decide whether a numerically found
+ * @var fnft_nsev_slow_opts_t::bound_state_filtering
+ *  Controls how \link fnft_nsev_slow \endlink decide whether a numerically found
  *  root of \f$ a(\lambda) \f$ is an actual bound state or not. \n
  *  Should be of type \link fnft_nsev_bsfilt_t \endlink.
  *
- * @var fnft_nsev_opts_t::bound_state_localization
- *  Controls how \link fnft_nsev \endlink localizes bound states. \n
- * Should be of type \link fnft_nsev_bsloc_t \endlink.
+ * @var fnft_nsev_slow_opts_t::bound_state_localization
+ *  Controls how \link fnft_nsev_slow \endlink localizes bound states. \n
+ *  Currently only fnft_nsev_bsloc_NEWTON of type \link fnft_nsev_bsloc_t \endlink
+ *  is supported.
  *
- * @var fnft_nsev_opts_t::niter
- *  Number of Newton iterations to be carried out when either the
- *  fnft_nsev_bsloc_NEWTON or the fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE method
- *  is used.
+ * @var fnft_nsev_slow_opts_t::niter
+ *  Number of Newton iterations to be carried out when the
+ *  fnft_nsev_bsloc_NEWTON method is used.
  *
- * @var fnft_nsev_opts_t::discspec_type
+ * @var fnft_nsev_slow_opts_t::discspec_type
  *  Controls how \link fnft_nsev \endlink fills the array
  *  normconsts_or_residues. \n
- * Should be of type \link fnft_nsev_dstype_t \endlink.
+ *  Should be of type \link fnft_nsev_dstype_t \endlink.
  *
- * @var fnft_nsev_opts_t::contspec_type
+ * @var fnft_nsev_slow_opts_t::contspec_type
  *  Controls how \link fnft_nsev \endlink fills the array
  *  contspec. \n
- * Should be of type \link fnft_nsev_cstype_t \endlink.
+ *  Should be of type \link fnft_nsev_cstype_t \endlink.
  *
- * @var fnft_nsev_opts_t::normalization_flag
- *  Controls whether intermediate results during the fast forward scattering
- *  step are normalized. This takes a bit longer but sometimes increases the
- *  accuracy of the results. By default, normalization is enabled (i.e., the
- *  flag is one). To disable, set the flag to zero.\n\n
- *
- * @var fnft_nsev_opts_t::discretization
+ * @var fnft_nsev_slow_opts_t::discretization
  *  Controls which discretization is applied to the continuous-time Zakharov-
  *  Shabat scattering problem. See \link fnft_nse_discretization_t \endlink.
+ *
+ * @var fnft_nsev_slow_opts_t::richardson_extrapolation_flag
+ *  Controls whether Richardson extrapolation is applied to try and improve
+ *  the accuracy of the computed spectrum. First approximation is computed
+ *  as usual using all the supplied samples. A second approximation is computed
+ *  using only half the samples and it is combined with the first approximation
+ *  which should ideally result in a better approximation. See Chimmalgi, 
+ *  Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2945480">&quot;
+ *  Fast Nonlinear Fourier Transform Algorithms Using Higher Order Exponential 
+ *  Integrators,&quot;</a> IEEE Access 7, 2019. Note that in certain situations
+ *  such as discontinuous signals, applying Richardson extrapolation may result in
+ *  worse accuracy compared to the first approximation. 
+ *  By default, Richardson extrapolation is disabled (i.e., the
+ *  flag is zero). To enable, set the flag to one.
  */
 typedef struct {
     fnft_nsev_bsfilt_t bound_state_filtering;
@@ -79,30 +86,29 @@ typedef struct {
     FNFT_UINT niter;
     fnft_nsev_dstype_t discspec_type;
     fnft_nsev_cstype_t contspec_type;
-    FNFT_INT normalization_flag;
     fnft_nse_discretization_t discretization;
     FNFT_UINT richardson_extrapolation_flag;
 } fnft_nsev_slow_opts_t;
 
 /**
- * @brief Creates a new options variable for \link fnft_nsev \endlink with
+ * @brief Creates a new options variable for \link fnft_nsev_slow \endlink with
  * default settings.
  *
- * @returns A \link fnft_nsev_opts_t \endlink object with the following options.\n
+ * @returns A \link fnft_nsev_slow_opts_t \endlink object with the following options.\n
  *  bound_state_filtering = fnft_nsev_bsfilt_FULL\n
- *  bound_state_localization = fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE\n
+ *  bound_state_localization = fnft_nsev_bsloc_NEWTON\n
  *  niter = 10\n
  *  discspec_type = fnft_nsev_dstype_NORMING_CONSTANTS\n
  *  contspec_type = fnft_nsev_cstype_REFLECTION_COEFFICIENT\n
- *  normalization_flag = 1\n
- *  discretization = fnft_nse_discretization_2SPLIT4B\n
+ *  discretization = nse_discretization_BO\n
+ *  richardson_extrapolation_flag = 0
  *
   * @ingroup fnft
  */
 fnft_nsev_slow_opts_t fnft_nsev_slow_default_opts();
 
 /**
- * @brief Fast nonlinear Fourier transform for the nonlinear Schroedinger
+ * @brief Slow nonlinear Fourier transform for the nonlinear Schroedinger
  *  equation with vanishing boundary conditions.
  *
  * This routine computes the nonlinear Fourier transform for the nonlinear
@@ -112,15 +118,10 @@ fnft_nsev_slow_opts_t fnft_nsev_slow_default_opts();
  * \f[ \lim_{t\to \pm \infty }q(x_0,t) = 0 \text{ sufficiently rapidly.} \f]
  * \n
  * The main references are:
- *      - Wahls and Poor,<a href="http://dx.doi.org/10.1109/ICASSP.2013.6638772">&quot;Introducing the fast nonlinear Fourier transform,&quot;</a> Proc. ICASSP 2013.
- *      - Wahls and Poor, <a href="http://dx.doi.org/10.1109/TIT.2015.2485944">&quot;Fast numerical nonlinear Fourier transforms,&quot;</a> IEEE Trans. Inform. Theor. 61(12), 2015.
- *      - Prins and Wahls, &quot;Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot; to appear in Proc. ICASSP 2018.
- *
- * The routine also utilizes ideas from the following papers:
- *      - Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot;Computation of the direct scattering transform for the nonlinear Schroedinger equation,&quot;</a> J. Comput. Phys. 102(2), 1992.
- *      - Aref, <a href="https://arxiv.org/abs/1605.06328">&quot;Control and Detection of Discrete Spectral Amplitudes in Nonlinear Fourier Spectrum,&quot;</a> Preprint, arXiv:1605.06328 [math.NA], May 2016.
- *      - Hari and Kschischang, <a href="https://doi.org/10.1109/JLT.2016.2577702">&quot;Bi-Directional Algorithm for Computing Discrete Spectral Amplitudes in the NFT,&quot; </a>J. Lightwave Technol. 34(15), 2016.
- *      - Aurentz et al., <a href="https://arxiv.org/abs/1611.02435">&quot;Roots of Polynomials: on twisted QR methods for companion matrices and pencils,&quot;</a> Preprint, arXiv:1611.02435 [math.NA]</a>, Dec. 2016.
+ *      - Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot; Computation of the direct scattering transform for the nonlinear Schroedinger  equation,&quot;</a> J. Comput. Phys. 102(2), 1992.
+ *      - Chimmalgi, Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2945480">&quot; Fast Nonlinear Fourier Transform Algorithms Using Higher Order Exponential Integrators,&quot;</a> IEEE Access 7, 2019.
+ *      - Medvedev, Vaseva, Chekhovskoy and  Fedoruk, <a href="https://doi.org/10.1364/OE.377140">&quot; Exponential fourth order schemes for direct Zakharov-Shabat problem,&quot;</a> Optics Express, vol. 28, pp. 20--39, 2020.
+ *      - Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2932256">&quot; Soliton Phase Shift Calculation for the Korteweg–De Vries Equation,&quot;</a> IEEE Access, vol. 7, pp. 122914--122930, July 2019.
  *
  * @param[in] D Number of samples
  * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
@@ -128,7 +129,7 @@ fnft_nsev_slow_opts_t fnft_nsev_slow_default_opts();
  *  the to-be-transformed signal in ascending order
  *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$)
  * @param[in] T Array of length 2, contains the position in time of the first and
- *  of the last sample. It should be T[0]<T[1].
+ *  of the last sample. It should be \f$T[0]<T[1]\f$).
  * @param[in] M Number of points at which the continuous spectrum (aka
  *  reflection coefficient) should be computed.
  * @param[out] contspec Array of length M in which the routine will store the
@@ -140,20 +141,19 @@ fnft_nsev_slow_opts_t fnft_nsev_slow_default_opts();
  *  also possible to compute the values of \f$ a(\xi) \f$ and \f$ b(\xi) \f$
  *  instead. In that case, twice the amount of memory has to be allocated.
  * @param[in] XI Array of length 2, contains the position of the first and the last
- *  sample of the continuous spectrum. It should be XI[0]<XI[1]. Can also be
+ *  sample of the continuous spectrum. It should be \f$XI[0]<XI[1]\f$. Can also be
  *  NULL if contspec==NULL.
  * @param[in,out] K_ptr Upon entry, *K_ptr should contain the length of the array
  *  bound_states. Upon return, *K_ptr contains the number of actually detected
- *  bound states. If the length of the array bound_states was not sufficient
- *  to store all of the detected bound states, a warning is printed and as many
- *  bound states as possible are returned instead. Note that in order to skip
+ *  bound states. Note that in order to skip
  *  the computation of the bound states completely, it is not sufficient to pass
  *  *K_ptr==0. Instead, one needs to pass bound_states==NULL.
  * @param[out] bound_states Array. Upon return, the routine has stored the detected
  *  bound states (aka eigenvalues) in the first *K_ptr entries of this array.
  *  If NULL is passed instead, the discrete spectrum will not be computed.
  *  Has to be preallocated by the user. The user can choose an arbitrary
- *  length. Typically, D is a good choice.
+ *  length. Currently only NEWTON method is supported hence bound_states
+ *  should contain initial guesses of the bound states.
  * @param[out] normconsts_or_residues Array of the same length as bound_states. Upon
  *  return, the routine has stored the residues (aka spectral amplitudes)
  *  \f$\rho_k = b_k\big/ \frac{da(\lambda_k)}{d\lambda}\f$ in the
@@ -163,9 +163,9 @@ fnft_nsev_slow_opts_t fnft_nsev_slow_default_opts();
  *  will not be computed.
  * @param[in] kappa =+1 for the focusing nonlinear Schroedinger equation,
  *  =-1 for the defocusing one
- * @param[in] opts Pointer to a \link fnft_nsev_opts_t \endlink object. The object
+ * @param[in] opts Pointer to a \link fnft_nsev_slow_opts_t \endlink object. The object
  *  can be used to modify the behavior of the routine. Use
- *  the routine \link fnft_nsev_default_opts \endlink
+ *  the routine \link fnft_nsev_slow_default_opts \endlink
  *  to generate such an object and modify as desired. It is also possible to
  *  pass NULL, in which case the routine will use the default options. The
  *  user is reponsible to freeing the object after the routine has returned.

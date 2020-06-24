@@ -22,12 +22,9 @@
 
 #define FNFT_ENABLE_SHORT_NAMES
 
-#include "fnft__errwarn.h"
-#include "fnft__poly_fmult.h"
+
 #include "fnft__akns_fscatter.h"
-#include "fnft__akns_discretization.h"
-#include "fnft__akns_discretization_t.h"
-#include "fnft__misc.h"
+
 
 /**
  * Returns the length of array to be allocated based on the number

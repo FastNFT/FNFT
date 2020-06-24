@@ -29,6 +29,10 @@
 
 #include "fnft__nse_discretization.h"
 #include "fnft__akns_scatter.h"
+#include <stdio.h>
+#include "fnft__misc.h"
+#include <string.h> // for memcpy
+#include "fnft__errwarn.h"
 
 /**
  * @brief Computes \f$a(\lambda)\f$, \f$ a'(\lambda) = \frac{\partial a(\lambda)}{\partial \lambda}\f$
@@ -106,7 +110,7 @@ FNFT_INT fnft__nse_scatter_matrix(const FNFT_UINT D, FNFT_COMPLEX const * const 
     const FNFT_REAL eps_t, const FNFT_INT kappa, const FNFT_UINT K, 
     FNFT_COMPLEX const * const lambda,
     FNFT_COMPLEX * const result, fnft_nse_discretization_t discretization,
-    const UINT derivative_flag);
+    const FNFT_UINT derivative_flag);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define nse_scatter_bound_states(...) fnft__nse_scatter_bound_states(__VA_ARGS__)

@@ -88,10 +88,10 @@ FNFT_INT fnft__kdv_discretization_to_akns_discretization(fnft_kdv_discretization
  * discretization.
  *
  * Higher order methods use more than one sample per integration step. This routine returns
- * the value D_scale based on the discretization of type \link fnft__kdv_discretization_t \endlink.
+ * the value D_scale based on the discretization of type \link fnft_kdv_discretization_t \endlink.
  * D_effective = D_scale * D.
  * @param[in] discretization The type of discretization to be used. Should be
- * of type \link fnft__nse_discretization_t \endlink.
+ * of type \link fnft_nse_discretization_t \endlink.
  * @returns the D_scale value, or 0 for discretizations not supported
  * by \link fnft__kdv_fscatter \endlink.
  *

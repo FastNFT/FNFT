@@ -19,10 +19,8 @@
  */
 #define FNFT_ENABLE_SHORT_NAMES
 
-#include <string.h> // for memcpy
-#include "fnft__errwarn.h"
+
 #include "fnft__akns_scatter.h"
-#include <stdio.h>
 
 /**
  * Declare auxiliary routines used by the main routine fnft__akns_scatter_matrix.

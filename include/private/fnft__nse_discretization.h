@@ -69,10 +69,10 @@ FNFT_REAL fnft__nse_discretization_boundary_coeff(fnft_nse_discretization_t nse_
  * discretization.
  *
  * Higher order methods use more than one sample per integration step. This routine returns
- * the value D_scale based on the discretization of type \link fnft__nse_discretization_t \endlink.
+ * the value D_scale based on the discretization of type \link fnft_nse_discretization_t \endlink.
  * D_effective = D_scale * D.
  * @param[in] discretization The type of discretization to be used. Should be
- * of type \link fnft__nse_discretization_t \endlink.
+ * of type \link fnft_nse_discretization_t \endlink.
  * @returns the D_scale value, or 0 for discretizations not supported
  * by \link fnft__nse_fscatter \endlink.
  *
@@ -85,11 +85,11 @@ FNFT_UINT fnft__nse_discretization_D_scale(fnft_nse_discretization_t discretizat
  * discretization.
  *
  * Different numerical methods have different orders of accuray. This routine returns
- * the order of the order based on the discretization of type \link fnft__nse_discretization_t \endlink.
+ * the order of the order based on the discretization of type \link fnft_nse_discretization_t \endlink.
  * When the step-size of the signal samples is reduced by a factor s, the error in the
  * computed values is expected to decrease by a factor s^order.
  * @param[in] discretization The type of discretization to be used. Should be
- * of type \link fnft__nse_discretization_t \endlink.
+ * of type \link fnft_nse_discretization_t \endlink.
  * @returns the method_order value, or 0.
  *
  * @ingroup nse

@@ -40,9 +40,11 @@ A = 5.2;
 C = 4;
 q_fun = @(t) A*(sech(t)).^(1+1i*C);
 
+fprintf('Computing exact spectrum symbolically - please wait ...');                
 D = sqrt(kappa*A^2-C^2/4);
 b = double((1/(A*2^(1i*C)))*gamma(sym(0.5-1i*(xi+C/2))).*gamma(sym(0.5+1i*(xi-C/2)))./(gamma(sym(-1i*C/2-D)).*gamma(sym(-1i*C/2+D))));
 a = double(gamma(sym(0.5-1i*(xi+C/2))).*gamma(sym(0.5-1i*(xi-C/2)))./(gamma(sym(0.5-1i*xi-D)).*gamma(sym(0.5-1i*xi+D))));
+fprintf('done\n'); 
 
 
 errorBO_a = [];
@@ -75,7 +77,7 @@ po = 7:11;
 NT = 2.^po;
 
 for N = NT
-    N
+    fprintf('Running codes with N=%d...',N);
     t=linspace(T(1),T(2),2*N+1);
     
     q = q_fun(t);
@@ -120,6 +122,8 @@ for N = NT
     timeTES4= [timeTES4;toc];
     errorTES4_a= [errorTES4_a;sum((abs(ab(1:M)-a).^2)./(max(1,abs(a)).^2))/1025];
     errorTES4_b= [errorTES4_b;sum((abs(ab(M+1:end)-b).^2)./(max(1,abs(b)).^2))/1025];    
+    
+    fprintf('Done.\n');
 
 end
 %% Plotting results
@@ -142,7 +146,7 @@ ylim([1e-26,1e2])
 set(gca, 'Units','normalized','FontUnits','points',...
     'FontWeight','normal','FontSize',fs,'FontName','Arial','LineWidth',alw)
 ylabel({'NMSE[$a(\xi)$]'},'Interpreter','latex','FontUnits','points','Fontsize',fs,'FontName','Arial')
-xlabel({'$\log_2(D)$'},'Interpreter','latex','FontUnits','points','Fontsize',fs,'FontName','Arial');
+xlabel({'$\log_2(N)$'},'Interpreter','latex','FontUnits','points','Fontsize',fs,'FontName','Arial');
 grid on
 grid minor
 le = legend("BO","CF$^{[4]}_2$","CF$^{[4]}_3$","CF$^{[5]}_3$","CF$^{[6]}_4$","ES4","TES4");
@@ -164,7 +168,7 @@ grid minor
 set(gca, 'Units','normalized','FontUnits','points',...
     'FontWeight','normal','FontSize',fs,'FontName','Arial','LineWidth',alw)
 ylabel({'NMSE[$b(\xi)$]'},'Interpreter','latex','FontUnits','points','Fontsize',fs,'FontName','Arial')
-xlabel({'$\log_2(D)$'},'Interpreter','latex','FontUnits','points','Fontsize',fs,'FontName','Arial');
+xlabel({'$\log_2(N)$'},'Interpreter','latex','FontUnits','points','Fontsize',fs,'FontName','Arial');
 le = legend("BO","CF$^{[4]}_2$","CF$^{[4]}_3$","CF$^{[5]}_3$","CF$^{[6]}_4$","ES4","TES4");
 set(le,'interpreter','latex','FontUnits','points','Fontsize',fs-2,'FontName','Arial','Location','SouthWest','NumColumns',3);
 
@@ -184,8 +188,8 @@ grid on
 grid minor
 set(gca, 'Units','normalized','FontUnits','points',...
     'FontWeight','normal','FontSize',fs,'FontName','Arial','LineWidth',alw)
-ylabel({'Execution time'},'Interpreter','latex','FontUnits','points','Fontsize',fs,'FontName','Arial')
-xlabel({'$\log_2(D)$'},'Interpreter','latex','FontUnits','points','Fontsize',fs,'FontName','Arial');
+ylabel({'Execution time (s)'},'Interpreter','latex','FontUnits','points','Fontsize',fs,'FontName','Arial')
+xlabel({'$\log_2(N)$'},'Interpreter','latex','FontUnits','points','Fontsize',fs,'FontName','Arial');
 le = legend("BO","CF$^{[4]}_2$","CF$^{[4]}_3$","CF$^{[5]}_3$","CF$^{[6]}_4$","ES4","TES4");
 set(le,'interpreter','latex','FontUnits','points','Fontsize',fs-2,'FontName','Arial','Location','NorthWest','NumColumns',3);
 

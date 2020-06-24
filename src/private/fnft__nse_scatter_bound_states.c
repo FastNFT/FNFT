@@ -20,11 +20,8 @@
  */
 #define FNFT_ENABLE_SHORT_NAMES
 
-#include "fnft__errwarn.h"
 #include "fnft__nse_scatter.h"
-#include <stdio.h>
-#include "fnft__misc.h"
-#include <string.h> // for memcpy
+
 
 /**
  * Declare auxiliary routines used by the main routine fnft__nse_scatter_bound_states

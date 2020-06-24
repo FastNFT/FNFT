@@ -21,17 +21,9 @@
 
 #define FNFT_ENABLE_SHORT_NAMES
 
-#include <string.h> // for memcpy
-#include <stdio.h>
-#include "fnft__errwarn.h"
-#include "fnft__poly_roots_fasteigen.h"
-#include "fnft__poly_chirpz.h"
+
 #include "fnft_nsev.h"
-#include "fnft__nse_fscatter.h"
-#include "fnft__nse_scatter.h"
-#include "fnft__nse_discretization.h"
-#include "fnft__akns_discretization.h"
-#include "fnft__misc.h" // for l2norm
+
 
 static fnft_nsev_opts_t default_opts = {
     .bound_state_filtering = nsev_bsfilt_FULL,

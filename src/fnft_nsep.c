@@ -21,16 +21,8 @@
 
 #define FNFT_ENABLE_SHORT_NAMES
 
-#include "fnft__errwarn.h"
-#include "fnft__misc.h" // for misc_filter
-#include "fnft_nsep.h"
-#include "fnft__nse_discretization.h"
-#include "fnft__poly_roots_fasteigen.h"
-#include "fnft__poly_roots_fftgridsearch.h"
-#include "fnft__nse_scatter.h"
-#include "fnft__nse_fscatter.h"
-#include <string.h> // for memcpy
 
+#include "fnft_nsep.h"
 
 static fnft_nsep_opts_t default_opts = {
     .localization = fnft_nsep_loc_MIXED,

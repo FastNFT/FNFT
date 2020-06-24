@@ -27,7 +27,14 @@
 #ifndef FNFT_NSEV_INVERSE_H
 #define FNFT_NSEV_INVERSE_H
 
-#include "fnft_nse_discretization_t.h"
+#include "fnft__errwarn.h"
+#include "fnft__nse_fscatter.h"
+#include "fnft__poly_chirpz.h"
+#include "fnft__nse_finvscatter.h"
+#include "fnft__fft_wrapper.h"
+#include "fnft__poly_specfact.h"
+#include "fnft__misc.h"
+#include "fnft__nse_scatter.h"
 
 /**
  * Enum that specifies in which form the continuous spectrum is provided.
@@ -76,7 +83,7 @@ typedef enum {
  * spectrum. Used in \link fnft_nsev_inverse_opts_t \endlink.\n \n
  * @ingroup data_types
  *  fnft_nsev_inverse_csmethod_DEFAULT: \link fnft_nsev_inverse \endlink
- *  chooses a default method based on the type of spectrum and wether
+ *  chooses a default method based on the type of spectrum and whether
  *  we are in the defocusing case or not.\n\n
  *  fnft_nsev_inverse_csmethod_TFMATRIX_CONTAINS_REFL_COEFF: This is
  *  essentially the algorithm in Section II of
@@ -165,10 +172,12 @@ typedef struct {
  *  contspec_type = fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT\n\n
  *  contspec_inverse_method = fnft_nsev_inverse_csmethod_DEFAULT\n\n
  *  discspec_type = fnft_nsev_inverse_dstype_NORMING_CONSTANTS\n\n
- *  discspec_inverse_method = fnft_nsev_inverse_dsmethod_CDT
+ *  max_iter = 100\n\n
+ *  oversampling_factor = 8
  *
  * @ingroup fnft_inverse
- */
+ */        
+        
 fnft_nsev_inverse_opts_t fnft_nsev_inverse_default_opts();
 
 /**
@@ -251,7 +260,7 @@ FNFT_INT fnft_nsev_inverse_XI(
  * @param[in] T Array of length 2, contains the position in time of the first and
  *  of the last sample of q. It should be T[0]<T[1].
  * @param[in] kappa =+1 for the focusing nonlinear Schroedinger equation,
- *  =-1 for the defocusing one
+ *  =-1 for the defocusing one.
  * @param[in] opts_ptr Pointer to a \link fnft_nsev_inverse_opts_t \endlink
  *  object. The object  can be used to modify the behavior of the routine. Use
  *  the routine \link fnft_nsev_inverse_default_opts \endlink

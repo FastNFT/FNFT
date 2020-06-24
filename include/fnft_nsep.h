@@ -28,7 +28,13 @@
 #ifndef FNFT_NSEP_H
 #define FNFT_NSEP_H
 
-#include "fnft_nse_discretization_t.h"
+#include "fnft__errwarn.h"
+#include "fnft__misc.h" // for misc_filter
+#include "fnft__poly_roots_fasteigen.h"
+#include "fnft__poly_roots_fftgridsearch.h"
+#include "fnft__nse_scatter.h"
+#include "fnft__nse_fscatter.h"
+#include <string.h> // for memcpy
 
 /**
  * Enum that controls how spectrum is localized. Used in
@@ -185,11 +191,11 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  *
  * @param[in] D Number of samples. Has to be odd.
  * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
- *  where \f$ t_n = T[0] + n*L/(D-1) \f$, where L=T[2]-T[1] is the period and
+ *  where \f$ t_n = T[0] + n*L/(D-1) \f$, where \f$L=T[1]-T[0]\f$ is the period and
  *  \f$n=0,1,\dots,D-1\f$, of the to-be-transformed signal in ascending order
  *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$)
  * @param[in] T Array of length 2. T[0] is the position in time of the first
- *  sample. T[2] is the beginning of the next period. It should be T[0]<T[1].
+ *  sample. T[1] is the beginning of the next period. It should be T[0]<T[1].
  * @param[in,out] K_ptr Upon entry, *K_ptr should contain the length of the array
  *  main_spec. Upon return, *K_ptr contains the number of actually detected
  *  points in the main spectrum. If the length of the array main_spec was not
@@ -219,7 +225,7 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  *  arbitrary length. Typically, D is a good choice.
  * @param[in] sheet_indices Not yet implemented. Pass NULL.
  * @param[in] kappa =+1 for the focusing nonlinear Schroedinger equation,
- *  =-1 for the defocusing one
+ *  =-1 for the defocusing one.
  * @param[in] opts Pointer to a \link fnft_nsep_opts_t \endlink object. The object
  *  can be used to modify the behavior of the routine. Use
  *  the routine \link fnft_nsep_default_opts \endlink

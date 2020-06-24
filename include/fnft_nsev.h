@@ -27,7 +27,14 @@
 #ifndef FNFT_NSEV_H
 #define FNFT_NSEV_H
 
-#include "fnft_nse_discretization_t.h"
+#include "fnft__nse_fscatter.h"
+#include "fnft__nse_scatter.h"
+#include "fnft__misc.h" // for l2norm
+#include <string.h> // for memcpy
+#include <stdio.h>
+#include "fnft__errwarn.h"
+#include "fnft__poly_roots_fasteigen.h"
+#include "fnft__poly_chirpz.h"
 
 /**
  * Enum that specifies how the bound states are filtered. Used in
@@ -36,7 +43,8 @@
  *  fnft_nsev_bsfilt_NONE: All detected roots of \f$ a(\lambda) \f$ are returned. \n \n
  *  fnft_nsev_bsfilt_BASIC: Only roots in the upper halfplane are returned and roots very close
  *  to each other are merged. \n \n
- *  fnft_nsev_bsfilt_FULL: Bound states in physically implausible regions are furthermore
+ *  fnft_nsev_bsfilt_FULL: Bound states in physically implausible regions and
+ *  outside the region based on the step-size of the supplied samples are
  *  rejected.
  */
 typedef enum {
@@ -56,7 +64,7 @@ typedef enum {
  *  routine as no release was available yet.) This method is relatively slow,
  *  but very reliable. \n \n
  *  fnft_nsev_bsloc_NEWTON: Newton's method is used to refine a given set of initial guesses.
- *  The discretization used for the the refinement is the one due to Boffetta and Osborne.
+ *  The discretization used for the the refinement is one of the base methods \link fnft_nse_discretization_t.h \endlink.
  *  The number of iterations is specified through the field \link fnft_nsev_opts_t::niter
  *  \endlink.
  *  The array bound_states passed to \link fnft_nsev \endlink
@@ -71,7 +79,7 @@ typedef enum {
  *  subsampled version of the signal. Second these initial guesses are refined
  *  using the NEWTON method. The number of samples of the subsampled signal can
  *  be controlled using the parameter Dsub in \link fnft_nsev_opts_t \endlink.
- *  If Dsub=0, the routine automatically choosen this number such that the
+ *  If Dsub=0, the routine automatically chooses this number such that the
  *  complexity is \f$ O(D \log^2 D + niter K D) \f$, where \f$ K \f$ is the
  *  number of bound states that survived the filtering operation of the initial
  *  call to the fnft_nsev_bsloc_FAST_EIGENVALUE method w.r.t. the subsampled
@@ -170,7 +178,21 @@ typedef enum {
  *
  * @var fnft_nsev_opts_t::discretization
  *  Controls which discretization is applied to the continuous-time Zakharov-
- *  Shabat scattering problem. See \link fnft_nse_discretization_t \endlink.
+ *  Shabat scattering problem. See \link fnft_nse_discretization_t \endlink.\n\n
+ *
+ *  @var fnft_nsev_opts_t::richardson_extrapolation_flag
+ *  Controls whether Richardson extrapolation is applied to try and improve
+ *  the accuracy of the computed spectrum. First approximation is computed
+ *  as usual using all the supplied samples. A second approximation is computed
+ *  using only half the samples and it is combined with the first approximation
+ *  which should ideally result in a better approximation. See Chimmalgi, 
+ *  Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2945480">&quot;
+ *  Fast Nonlinear Fourier Transform Algorithms Using Higher Order Exponential 
+ *  Integrators,&quot;</a> IEEE Access 7, 2019. Note that in certain situations
+ *  such as discontinuous signals, applying Richardson extrapolation may result in
+ *  worse accuracy compared to the first approximation. 
+ *  By default, Richardson extrapolation is disabled (i.e., the
+ *  flag is zero). To enable, set the flag to one.
  */
 typedef struct {
     fnft_nsev_bsfilt_t bound_state_filtering;
@@ -196,6 +218,7 @@ typedef struct {
  *  contspec_type = fnft_nsev_cstype_REFLECTION_COEFFICIENT\n
  *  normalization_flag = 1\n
  *  discretization = fnft_nse_discretization_2SPLIT4B\n
+ *  richardson_extrapolation_flag = 0\n
  *
   * @ingroup fnft
  */
@@ -230,13 +253,14 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  * The main references are:
  *      - Wahls and Poor,<a href="http://dx.doi.org/10.1109/ICASSP.2013.6638772">&quot;Introducing the fast nonlinear Fourier transform,&quot;</a> Proc. ICASSP 2013.
  *      - Wahls and Poor, <a href="http://dx.doi.org/10.1109/TIT.2015.2485944">&quot;Fast numerical nonlinear Fourier transforms,&quot;</a> IEEE Trans. Inform. Theor. 61(12), 2015.
- *      - Prins and Wahls, &quot;Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot; to appear in Proc. ICASSP 2018.
+ *      - Prins and Wahls, <a href="https://doi.org/10.1109/ICASSP.2018.8461708">&quot; Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot; </a>Proc. ICASSP 2018, pp. 4524-4528
  *
  * The routine also utilizes ideas from the following papers:
  *      - Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot;Computation of the direct scattering transform for the nonlinear Schroedinger equation,&quot;</a> J. Comput. Phys. 102(2), 1992.
  *      - Aref, <a href="https://arxiv.org/abs/1605.06328">&quot;Control and Detection of Discrete Spectral Amplitudes in Nonlinear Fourier Spectrum,&quot;</a> Preprint, arXiv:1605.06328 [math.NA], May 2016.
  *      - Hari and Kschischang, <a href="https://doi.org/10.1109/JLT.2016.2577702">&quot;Bi-Directional Algorithm for Computing Discrete Spectral Amplitudes in the NFT,&quot; </a>J. Lightwave Technol. 34(15), 2016.
  *      - Aurentz et al., <a href="https://arxiv.org/abs/1611.02435">&quot;Roots of Polynomials: on twisted QR methods for companion matrices and pencils,&quot;</a> Preprint, arXiv:1611.02435 [math.NA]</a>, Dec. 2016.
+ *      - Chimmalgi, Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2945480">&quot;Fast Nonlinear Fourier Transform Algorithms Using Higher Order Exponential Integrators,&quot;</a> IEEE Access 7, 2019.
  *
  * @param[in] D Number of samples
  * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
@@ -244,7 +268,7 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *  the to-be-transformed signal in ascending order
  *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$)
  * @param[in] T Array of length 2, contains the position in time of the first and
- *  of the last sample. It should be T[0]<T[1].
+ *  of the last sample. It should be \f$T[0]<T[1]\f$.
  * @param[in] M Number of points at which the continuous spectrum (aka
  *  reflection coefficient) should be computed.
  * @param[out] contspec Array of length M in which the routine will store the
@@ -256,7 +280,7 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *  also possible to compute the values of \f$ a(\xi) \f$ and \f$ b(\xi) \f$
  *  instead. In that case, twice the amount of memory has to be allocated.
  * @param[in] XI Array of length 2, contains the position of the first and the last
- *  sample of the continuous spectrum. It should be XI[0]<XI[1]. Can also be
+ *  sample of the continuous spectrum. It should be \f$XI[0]<XI[1]\f$. Can also be
  *  NULL if contspec==NULL.
  * @param[in,out] K_ptr Upon entry, *K_ptr should contain the length of the array
  *  bound_states. Upon return, *K_ptr contains the number of actually detected
@@ -278,7 +302,7 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *  be pre-allocated by the user. If NULL is passed instead, the residues
  *  will not be computed.
  * @param[in] kappa =+1 for the focusing nonlinear Schroedinger equation,
- *  =-1 for the defocusing one
+ *  =-1 for the defocusing one.
  * @param[in] opts Pointer to a \link fnft_nsev_opts_t \endlink object. The object
  *  can be used to modify the behavior of the routine. Use
  *  the routine \link fnft_nsev_default_opts \endlink

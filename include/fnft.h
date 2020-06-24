@@ -22,6 +22,8 @@
 
 #include "fnft_config.h"
 #include "fnft_errwarn.h"
+#include "fnft_numtypes.h"
+
 
 /* Doxygen main page */
 

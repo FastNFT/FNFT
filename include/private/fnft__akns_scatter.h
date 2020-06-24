@@ -28,6 +28,9 @@
 #define FNFT__AKNS_SCATTER_H
 
 #include "fnft__akns_discretization.h"
+#include <stdio.h>
+#include <string.h> // for memcpy
+#include "fnft__errwarn.h"
 
 
 /**
@@ -57,7 +60,7 @@
  * result where S11' is the derivative of S11 w.r.t to lambda.
  * Should be preallocated with size 4*K or 8*K accordingly.
  * @param[in] discretization The type of discretization to be used. Should be of type 
- * \link fnft_akns_discretization_t \endlink. Not all akns_discretization_t 
+ * \link fnft__akns_discretization_t \endlink. Not all akns_discretization_t 
  * discretizations are supported. Check \link fnft_nse_discretization_t \endlink 
  * for list of supported types.
  * @param[in] derivative_flag Should be set to either 0 or 1. If set to 1
@@ -67,11 +70,11 @@
  *  defined in \link fnft_errwarn.h \endlink.
  * @ingroup akns
  */
-FNFT_INT fnft__akns_scatter_matrix(const UINT D, COMPLEX const * const q, 
-    COMPLEX const * const r, const REAL eps_t,
-    const UINT K, COMPLEX const * const lambda,
-    COMPLEX * const result, akns_discretization_t discretization,
-    const UINT derivative_flag);
+FNFT_INT fnft__akns_scatter_matrix(const FNFT_UINT D, FNFT_COMPLEX const * const q, 
+    FNFT_COMPLEX const * const r, const FNFT_REAL eps_t,
+    const FNFT_UINT K, FNFT_COMPLEX const * const lambda,
+    FNFT_COMPLEX * const result, fnft__akns_discretization_t discretization,
+    const FNFT_UINT derivative_flag);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define akns_scatter_matrix(...) fnft__akns_scatter_matrix(__VA_ARGS__)

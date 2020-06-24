@@ -21,15 +21,6 @@
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft_nsev_inverse.h"
-#include "fnft__errwarn.h"
-#include "fnft__nse_discretization.h"
-#include "fnft__nse_fscatter.h"
-#include "fnft__poly_chirpz.h"
-#include "fnft__nse_finvscatter.h"
-#include "fnft__fft_wrapper.h"
-#include "fnft__poly_specfact.h"
-#include "fnft__misc.h"
-#include "fnft__nse_scatter.h"
 
 
 static fnft_nsev_inverse_opts_t default_opts = {

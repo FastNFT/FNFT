@@ -15,8 +15,9 @@
 # Contributors:
 # Sander Wahls (TU Delft) 2017-2018.
 # Marius Brehler (TU Dortmund) 2018.
+# Shrinivas Chimmalgi (TU Delft) 2020.
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.17.3)
 project(fnft C)
 
 set(FNFT_VERSION_MAJOR 0)

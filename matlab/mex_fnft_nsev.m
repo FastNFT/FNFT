@@ -30,13 +30,13 @@
 %   'bsloc_subsamp_refine' Use a mixed method to locate bound states. First
 %                   get initial guesses for the bound states by applying
 %                   the 'fasteigen' method to a subsampled version of the
-%                   signal. Then refine using 'newton' based on the full
+%                   signal. Then refine using 'Newton' based on the full
 %                   signal. This method is reliable if D is not too low.
 %                   It requires O(niter D log^2 D) flops if Dsub (see
 %                   below) is set by the algorithm. Not followed by a
 %                   value.
 %   'bsloc_niter'   Number of iterations to be carried by Newton's method.
-%                   Followed by a scalar double.
+%                   Followed by a positive integer.
 %   'bsloc_Dsub'    The desired number of samples for the subsampled signal
 %                   in the 'subsamp_refine' method. Less samples in the
 %                   subsampled stage result in faster execution time, but
@@ -54,7 +54,15 @@
 %   'discr_2split4B' Use fifth order splitting with 2nd degree polynomial.
 %   'discr_4split4B' Fourth-order method. Uses fifth order splitting with 
 %                    2nd degree polynomial.
-%   'RE'            Use Richardson extrpolation to improve accuracy.
+%   'RE'            Use Richardson extrpolation to improve accuracy. The
+%                   approximations of the nonlinear Fourier spectrum are 
+%                   calcuated using all given samples and again with half of 
+%                   the samples. The two approximations are combined
+%                   through the idea of Richardson extrpolation to
+%                   hopefully obtain a more accurate approximation. Note
+%                   that in certain situations such as discontinuous signals,
+%                   enabling this option may result in worse accuracy than 
+%                   without it.
 %   'dstype_residues'   Return residues instead of norming constants
 %   'cstype_ab'     Returns values of a(xi) and b(xi) individually instead
 %                   of the values of reflection coefficient b(xi)/a(xi)

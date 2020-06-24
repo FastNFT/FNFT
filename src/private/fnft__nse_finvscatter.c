@@ -22,9 +22,7 @@
 #include "fnft__errwarn.h"
 #include "fnft__poly_fmult.h"
 #include "fnft__nse_finvscatter.h"
-#include "fnft__nse_discretization.h"
 #include "fnft__misc.h"
-#include "fnft__poly_fmult.h"
 #include "fnft__fft_wrapper.h"
 #include <stdio.h>
 

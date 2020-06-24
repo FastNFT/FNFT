@@ -21,15 +21,8 @@
 
 #define FNFT_ENABLE_SHORT_NAMES
 
-#include <string.h> // for memcpy
-#include <stdio.h>
-#include "fnft__errwarn.h"
-#include "fnft_nsev.h"
+
 #include "fnft_nsev_slow.h"
-#include "fnft__nse_scatter.h"
-#include "fnft__nse_discretization.h"
-#include "fnft__akns_discretization.h"
-#include "fnft__misc.h" // for l2norm
 
 static fnft_nsev_slow_opts_t default_opts = {
     .bound_state_filtering = nsev_bsfilt_FULL,
@@ -37,7 +30,6 @@ static fnft_nsev_slow_opts_t default_opts = {
     .niter = 10,
     .discspec_type = nsev_dstype_NORMING_CONSTANTS,
     .contspec_type = nsev_cstype_REFLECTION_COEFFICIENT,
-    .normalization_flag = 1,
     .discretization = nse_discretization_BO,
     .richardson_extrapolation_flag = 0
 };

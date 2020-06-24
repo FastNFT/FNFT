@@ -81,6 +81,9 @@ int main()
     // CF4_2 discretization
     opts.bound_state_localization = fnft_nsev_bsloc_NEWTON;
     opts.discretization = fnft_nse_discretization_CF4_2;
+    
+    // Supplying the initial guesses for the bound state.
+    bound_states[0] = 1*I;
 
     // Uncomment the next line to compute residues instead of norming constants
     //opts.discspec_type = fnft_nsev_dstype_RESIDUES;

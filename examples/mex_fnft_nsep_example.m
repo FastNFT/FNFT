@@ -27,14 +27,16 @@ close all;
 %%% Setup parameters %%%
 
 T = [0, 2*pi];  % T(1) is the beginning of the period, T(2) is the end
-D = 2^8+1;        % number of samples
+D = 301;        % number of samples(NOTE: This has to be a odd positive integer)
 kappa = +1;     % focusing nonlinear Schroedinger equation  
 
 %%% Setup the signal %%%
 
 t = linspace(T(1),T(2),D);
-% Note: in the previous version of FNFT The location of the 1st sample is T(1), but the location of the
-% sample if T(2) - (T(2)-T(1)/D, i.e. t = T(1) + (0:D-1)*(T(2) - T(1))/D.
+% Note: in the previous version of FNFT The location of the 1st sample was
+% T(1), but the location of the last sample was T(2) - (T(2)-T(1)/D, 
+% i.e. t = T(1) + (0:D-1)*(T(2) - T(1))/D. This change was necessary to
+% enable support for quasi-periodic signals.
 q = 3*exp(3j*t);
 
 %%% Compute the nonlinear Fourier transform %%%

@@ -50,6 +50,7 @@ time_FCF_RE2_1 = [];
 time_FCF_RE4_2 = [];
 
 for D = 2.^(10:1:14)
+    fprintf('Running codes with D=%d...',D);
     t = linspace(T(1),T(2),D);
     q = q_fun(t); %signal samples
     R_exact = R_fun(linspace(XI(1),XI(2),D));
@@ -73,6 +74,8 @@ for D = 2.^(10:1:14)
     R_comp = mex_fnft_nsev(q, T, XI, kappa, 'discr_4split4B', 'RE', 'skip_bs');
     time_FCF_RE4_2 = [time_FCF_RE4_2,toc];
     error_FCF_RE4_2 = [error_FCF_RE4_2, norm(R_exact-R_comp)/norm(R_exact)];
+     
+    fprintf('Done.\n');
 end
 
 %% Plotting results
