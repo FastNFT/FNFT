@@ -22,18 +22,24 @@
 
 #include "fnft_config.h"
 #include "fnft_errwarn.h"
-#include "fnft_numtypes.h"
-
 
 /* Doxygen main page */
 
 /**
  * \mainpage FNFT: Fast nonlinear Fourier transforms
  *
- * The library is separated into a public ("fnft_" prefix) and a private part
- * ("fnft__" prefix). \n\n
- * To get started, read the modules \ref fnft and \ref fnft_inverse, and try
- * the examples in the examples directory.
+ * This is the documention for the C interface of the library FNFT.
+ *
+ * You can download FNFT at https://github.com/FastNFT/FNFT/
+ *
+ * Please read the file README.md first if you are new to FNFT.
+ *
+ * The C interface is separated into a public part ("fnft_" prefix) and a private
+ * part ("fnft__" prefix).
+ *
+ * To get start with the public part of the C interface, study the modules
+ * \ref fnft and \ref fnft_inverse, and try the examples in the examples
+ * directory.
  */
 
 /* Define groups for Doxygen documentation */

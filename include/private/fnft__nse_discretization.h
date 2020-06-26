@@ -121,7 +121,7 @@ FNFT_INT fnft__nse_discretization_to_akns_discretization(fnft_nse_discretization
  * \f$z\f$ in the discrete-time domain based on the discretization. 
  * 
  * This routine maps continuous-time domain value lambda to discrete-time domain value
- * \f$z = e^{2j\lambda\epsilon_t degree1step), where degree1step is based on the discretization 
+ * \f$z = e^{2j\lambda\epsilon_t degree1step)\f$, where degree1step is based on the discretization 
  * of type \link fnft_nse_discretization_t \endlink. Changes discretization to 
  * \link fnft__akns_discretization_t \endlink type and calls \link fnft__akns_lambda_to_z \endlink.
  * @param[in] n Number of values to be mapped.

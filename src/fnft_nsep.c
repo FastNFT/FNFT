@@ -51,12 +51,12 @@ fnft_nsep_opts_t fnft_nsep_default_opts()
 
 // Auxiliary routines.
 static inline INT refine_mainspec(
-        const UINT D, COMPLEX const * const q,
+        const UINT D, COMPLEX const * const q, COMPLEX * r,
         const REAL eps_t, const UINT K,
         COMPLEX * const mainspec, const UINT max_evals,
         REAL rhs, const REAL tol, INT kappa, nse_discretization_t discretization);
 static inline INT refine_auxspec(
-        const UINT D, COMPLEX const * const q,
+        const UINT D, COMPLEX const * const q, COMPLEX * r,
         const REAL eps_t, const UINT K,
         COMPLEX * const auxspec, const UINT max_evals, const REAL tol,
         const INT kappa, nse_discretization_t discretization);
@@ -76,6 +76,16 @@ static inline INT gridsearch(const UINT D,
         INT warn_flags[2]);
 static inline void update_bounding_box_if_auto(const REAL eps_t,
         const REAL map_coeff, fnft_nsep_opts_t * const opts_ptr);
+static inline INT signal_effective_from_signal(
+        const UINT D,
+        COMPLEX const * const q,
+        REAL const eps_t,
+        const INT kappa,
+        UINT * const Dsub_ptr,
+        COMPLEX **q_effective_ptr,
+        COMPLEX **r_effective_ptr,
+        UINT * const first_last_index,
+        nse_discretization_t discretization);
 
 // Main routine.
 INT fnft_nsep(const UINT D, COMPLEX const * const q,
@@ -129,6 +139,7 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
         for (i=0; i < D_effective; i++)
             q_effective[i] = q[i]*CEXP(2*I*Lam_shift*(T[0]+eps_t*i));
         // Last sample is dropped as it is the beginning of next period
+        
     
     // Bounding box needs to be shifted to ensure it works properly for
     // quasi-periodic signals    
@@ -235,11 +246,12 @@ static inline INT gridsearch(const UINT D,
     INT W = 0, *W_ptr = NULL;
     UINT K, K_filtered;
     UINT M;
-    UINT i, j, D_scale, D_effective;// D_scale*D gives the effective number of samples
+    UINT i, D_scale, D_effective;// D_scale*D gives the effective number of samples
     INT ret_code = SUCCESS;
     COMPLEX *q_effective = NULL;
-    COMPLEX *q_1 = NULL;
-    COMPLEX *q_2 = NULL;
+    COMPLEX *r_effective = NULL;
+    UINT Dsub = 0;
+    UINT first_last_index[2] = {0};
     // Check inputs
     if (sheet_indices != NULL)
         return E_NOT_YET_IMPLEMENTED(sheet_indices, "Pass NULL");
@@ -249,47 +261,13 @@ static inline INT gridsearch(const UINT D,
     
     // Determine step size
     const REAL eps_t = (T[1] - T[0])/D;
-    const REAL scl_factor = SQRT(3.0)/6.0;
+
+    Dsub = D;
+    ret_code = signal_effective_from_signal(D, q, eps_t, kappa, &Dsub, &q_effective, &r_effective,
+            first_last_index, opts_ptr->discretization);
+    CHECK_RETCODE(ret_code, release_mem);
     
-    
-    if (D_scale == 2) {
-        q_1 = malloc(D * sizeof(COMPLEX));
-        q_2 = malloc(D * sizeof(COMPLEX));
-        q_effective = malloc(D_effective * sizeof(COMPLEX));
-        if (q_1 == NULL || q_2 == NULL || q_effective == NULL) {
-            ret_code = E_NOMEM;
-            goto release_mem;
-        }
-    }
-    
-    q_effective = malloc(D_effective * sizeof(COMPLEX));
-    if (q_effective == NULL) {
-        ret_code = E_NOMEM;
-        goto release_mem;
-    }
-    
-    // Create a resampled version of q if higher-order method is requested
-    if (D_scale == 2) {
-        ret_code = misc_resample(D, eps_t, q, -eps_t*scl_factor, q_1);
-        CHECK_RETCODE(ret_code, release_mem);
-        ret_code = misc_resample(D, eps_t, q, eps_t*scl_factor, q_2);
-        CHECK_RETCODE(ret_code, release_mem);
-        
-        j = 0;
-        for (i=0; i < D; i++) {
-            q_effective[j] = (q_1[i]+q_2[i])/4.0 - (q_2[i]-q_1[i])*scl_factor;
-            j = j+2;
-        }
-        j = 1;
-        for (i=0; i < D; i++) {
-            q_effective[j] = (q_1[i]+q_2[i])/4.0 + (q_2[i]-q_1[i])*scl_factor;
-            j = j+2;
-        }
-        
-    } else if (D_scale == 1) {
-        memcpy(q_effective, q, D * sizeof(COMPLEX));
-    }
-    
+
     // Allocate memory for the transfer matrix
     i = nse_fscatter_numel(D_effective, opts_ptr->discretization);
     if (i == 0) { // since Dsub>=2, this means unknown discretization
@@ -457,9 +435,8 @@ static inline INT gridsearch(const UINT D,
         free(transfer_matrix);
         free(p);
         free(roots);
-        free(q_1);
-        free(q_2);
         free(q_effective);
+        free(r_effective);
         
         return ret_code;
 }
@@ -475,7 +452,6 @@ static inline INT subsample_and_refine(const UINT D,
     COMPLEX * transfer_matrix = NULL;
     COMPLEX * p = NULL;
     COMPLEX * roots = NULL;
-    COMPLEX * qsub = NULL;
     REAL degree1step, map_coeff;
     REAL tol_im;
     REAL refine_tol;
@@ -484,14 +460,12 @@ static inline INT subsample_and_refine(const UINT D,
     INT W = 0, *W_ptr = NULL;
     UINT K = 0, K_new = 0;
     UINT M = 0;
-    UINT i, j, D_scale, D_effective;// D_scale*D gives the effective number of samples
+    UINT i, D_scale, D_effective;// D_scale*D gives the effective number of samples
     INT ret_code = SUCCESS;
-    COMPLEX *qsub_1 = NULL;
-    COMPLEX *qsub_2 = NULL;
     COMPLEX *qsub_effective = NULL;
+    COMPLEX *rsub_effective = NULL;
     COMPLEX *q_effective = NULL;
-    COMPLEX *q_1 = NULL;
-    COMPLEX *q_2 = NULL;
+    COMPLEX *r_effective = NULL;
     UINT first_last_index[2];
     UINT nskip_per_step;
     nse_discretization_t nse_discretization = 0;
@@ -504,73 +478,29 @@ static inline INT subsample_and_refine(const UINT D,
     
     // Determine step size
     const REAL eps_t = (T[1] - T[0])/D;
-    const REAL scl_factor = SQRT(3.0)/6.0;
     
-    if (D_scale == 2) {
-        q_1 = malloc(D * sizeof(COMPLEX));
-        q_2 = malloc(D * sizeof(COMPLEX));
-        if (q_1 == NULL || q_2 == NULL) {
-            ret_code = E_NOMEM;
-            goto release_mem;
-        }
-    }
+    // Create the signal required for refinement of the initial guesses.
+    Dsub = D;
+    ret_code = signal_effective_from_signal(D, q, eps_t, kappa, &Dsub, &q_effective, &r_effective,
+            first_last_index, opts_ptr->discretization);
+    CHECK_RETCODE(ret_code, release_mem);
     
-    // Create a subsampled/resampled version of q for computing initial guesses. (The
-    // refinement will be carried out based on the original signal.)
+    
+    // Create a subsampled/resampled version of q for computing initial guesses.
     Dsub = opts_ptr->Dsub;
     if (Dsub == 0) // users wants Dsub to be chosen automatically
         Dsub = ROUND(SQRT(D * LOG2(D) * LOG2(D)));
     nskip_per_step = ROUND((REAL)D / Dsub);
     Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
-
-    qsub_effective = malloc(Dsub * D_scale * sizeof(COMPLEX));
-    q_effective = malloc(D_effective * sizeof(COMPLEX));
-    if (qsub_effective == NULL || q_effective == NULL) {
-        ret_code = E_NOMEM;
-        goto release_mem;
-    }
     
-    if (D_scale == 2) {
-        ret_code = misc_resample(D, eps_t, q, -eps_t*scl_factor*nskip_per_step, q_1);
-        CHECK_RETCODE(ret_code, release_mem);
-        ret_code = misc_resample(D, eps_t, q, eps_t*scl_factor*nskip_per_step, q_2);
-        CHECK_RETCODE(ret_code, release_mem);
-        ret_code = misc_downsample(D, q_1, &Dsub, &qsub_1, first_last_index);
-        CHECK_RETCODE(ret_code, release_mem);
-        ret_code = misc_downsample(D, q_2, &Dsub, &qsub_2, first_last_index);
-        CHECK_RETCODE(ret_code, release_mem);
-        j = 0;
-        for (i=0; i < Dsub; i++) {
-            qsub_effective[j] = (qsub_1[i]+qsub_2[i])/4.0 - (qsub_2[i]-qsub_1[i])*scl_factor;
-            j = j+2;
-        }
-        j = 1;
-        for (i=0; i < Dsub; i++) {
-            qsub_effective[j] = (qsub_1[i]+qsub_2[i])/4.0 + (qsub_2[i]-qsub_1[i])*scl_factor;
-            j = j+2;
-        }
-        
-        ret_code = misc_resample(D, eps_t, q, -eps_t*scl_factor, q_1);
-        CHECK_RETCODE(ret_code, release_mem);
-        ret_code = misc_resample(D, eps_t, q, eps_t*scl_factor, q_2);
-        CHECK_RETCODE(ret_code, release_mem);
-        
-        j = 0;
-        for (i=0; i < D; i++) {
-            q_effective[j] = (q_1[i]+q_2[i])/4.0 - (q_2[i]-q_1[i])*scl_factor;
-            j = j+2;
-        }
-        j = 1;
-        for (i=0; i < D; i++) {
-            q_effective[j] = (q_1[i]+q_2[i])/4.0 + (q_2[i]-q_1[i])*scl_factor;
-            j = j+2;
-        }
-        
+    ret_code = signal_effective_from_signal(D, q, eps_t, kappa, &Dsub, &qsub_effective, &rsub_effective,
+            first_last_index, opts_ptr->discretization);
+    CHECK_RETCODE(ret_code, release_mem);
+    
+      
+    if (D_scale == 2) {        
         nse_discretization = nse_discretization_CF4_2;
     } else if (D_scale == 1) {
-        ret_code = misc_downsample(D, q, &Dsub, &qsub_effective, first_last_index);
-        CHECK_RETCODE(ret_code, release_mem);
-        memcpy(q_effective, q, D * sizeof(COMPLEX));
         nse_discretization = nse_discretization_BO;
     }
     
@@ -673,7 +603,7 @@ static inline INT subsample_and_refine(const UINT D,
             }
 
             // Refine the remaining roots
-            ret_code = refine_mainspec(D_effective, q_effective, eps_t, K_new, roots,
+            ret_code = refine_mainspec(D_effective, q_effective, r_effective, eps_t, K_new, roots,
                     opts_ptr->max_evals, -rhs, refine_tol, kappa, nse_discretization);
             CHECK_RETCODE(ret_code, release_mem);
             
@@ -725,7 +655,7 @@ static inline INT subsample_and_refine(const UINT D,
         }
         
         // Refine the roots
-        ret_code = refine_auxspec(D_effective, q_effective, eps_t, M, roots,
+        ret_code = refine_auxspec(D_effective, q_effective, r_effective, eps_t, M, roots,
                 opts_ptr->max_evals, refine_tol, kappa, nse_discretization);
         CHECK_RETCODE(ret_code, release_mem);
         
@@ -758,16 +688,16 @@ static inline INT subsample_and_refine(const UINT D,
     release_mem:
         free(transfer_matrix);
         free(p);
-        free(qsub);
+        free(q_effective);
+        free(r_effective);
         free(qsub_effective);
-        free(q_1);
-        free(q_2);
+        free(rsub_effective);
         return ret_code;
 }
 
 // Uses Newton's method for roots of higher order to refine the main spectrum.
 static inline INT refine_mainspec(
-        const UINT D, COMPLEX const * const q,
+        const UINT D, COMPLEX const * const q, COMPLEX * r,
         const REAL eps_t, const UINT K,
         COMPLEX * const mainspec,
         const UINT max_evals, const REAL rhs, const REAL tol,
@@ -781,7 +711,6 @@ static inline INT refine_mainspec(
     INT ret_code;
     UINT m, best_m;
     const UINT max_m = 2; // roots might be single or double
-    COMPLEX * r = NULL;
     
     if (max_evals == 0)
         return SUCCESS;
@@ -851,13 +780,12 @@ static inline INT refine_mainspec(
         };
         //printf("==> used %zu evaluations\n", nevals);
     }
-    free(r);
     return SUCCESS;
 }
 
 // Uses Newton's method to refine the aux spectrum.
 static inline INT refine_auxspec(
-        const UINT D, COMPLEX const * const q,
+        const UINT D, COMPLEX const * const q, COMPLEX * r,
         const REAL eps_t, const UINT K,
         COMPLEX * const auxspec, const UINT max_evals, const REAL tol,
         const INT kappa, nse_discretization_t discretization)
@@ -866,7 +794,6 @@ static inline INT refine_auxspec(
     COMPLEX M[8];
     COMPLEX f, f_prime;
     INT ret_code;
-    COMPLEX * r = NULL;
     
     if (max_evals == 0)
         return SUCCESS;
@@ -895,7 +822,6 @@ static inline INT refine_auxspec(
                 break;
         }
     }
-    free(r);
     return SUCCESS;
 }
 
@@ -926,5 +852,140 @@ static inline void update_bounding_box_if_auto(const REAL eps_t,
         opts_ptr->bounding_box[3] = -LOG(0.1) / (FABS(map_coeff) * eps_t);
         opts_ptr->bounding_box[2] = -opts_ptr->bounding_box[3];
     }
+}
+
+static inline INT signal_effective_from_signal(
+        const UINT D, COMPLEX const * const q, REAL const eps_t, const INT kappa,
+        UINT * const Dsub_ptr, COMPLEX **q_effective_ptr, COMPLEX **r_effective_ptr,
+        UINT * const first_last_index,  nse_discretization_t discretization)
+{
+    
+    UINT i, D_effective, isub;
+    INT ret_code = SUCCESS;
+    COMPLEX *q_1 = NULL;
+    COMPLEX *q_2 = NULL;
+    COMPLEX *q_3 = NULL;
+    
+    COMPLEX *r_1 = NULL;
+    COMPLEX *r_2 = NULL;
+    COMPLEX *r_3 = NULL;
+    
+    // Check inputs
+    if (D < 2)
+        return E_INVALID_ARGUMENT(D);
+    if (q == NULL)
+        return E_INVALID_ARGUMENT(q);
+    if (Dsub_ptr == NULL)
+        return E_INVALID_ARGUMENT(Dsub_ptr);
+    if (q_effective_ptr == NULL)
+        return E_INVALID_ARGUMENT(q_effective_ptr);
+    if (r_effective_ptr == NULL)
+        return E_INVALID_ARGUMENT(r_effective_ptr);
+    if (eps_t <= 0.0)
+        return E_INVALID_ARGUMENT(esp_t);
+    if (abs(kappa) != 1)
+        return E_INVALID_ARGUMENT(kappa);
+    if (first_last_index == NULL)
+        return E_INVALID_ARGUMENT(first_last_index);
+    
+    
+    
+    // Determine number of samples after downsampling, Dsub
+    UINT Dsub = *Dsub_ptr; // desired Dsub
+    if (Dsub < 2)
+        Dsub = 2;
+    if (Dsub > D)
+        Dsub = D;
+    const UINT nskip_per_step = ROUND((REAL)D / Dsub);
+    Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
+    
+    UINT D_scale = nse_discretization_D_scale(discretization);
+    if (D_scale == 0){
+        ret_code =  E_INVALID_ARGUMENT(discretization);
+        goto release_mem;
+    }
+    D_effective = Dsub * D_scale;
+    COMPLEX * const q_effective = malloc(D_effective * sizeof(COMPLEX));
+    COMPLEX * const r_effective = malloc(D_effective * sizeof(COMPLEX));
+    if (q_effective == NULL || r_effective == NULL) {
+        ret_code = E_NOMEM;
+        goto release_mem;
+    }
+
+    switch (discretization) {
+        
+        case nse_discretization_2SPLIT1A:
+        case nse_discretization_2SPLIT1B:
+        case nse_discretization_2SPLIT2A:
+        case nse_discretization_2SPLIT2B:
+        case nse_discretization_2SPLIT2S:
+        case nse_discretization_2SPLIT3A:
+        case nse_discretization_2SPLIT3B:
+        case nse_discretization_2SPLIT3S:
+        case nse_discretization_2SPLIT4A:
+        case nse_discretization_2SPLIT4B:
+        case nse_discretization_2SPLIT5A:
+        case nse_discretization_2SPLIT5B:
+        case nse_discretization_2SPLIT6A:
+        case nse_discretization_2SPLIT6B:
+        case nse_discretization_2SPLIT7A:
+        case nse_discretization_2SPLIT7B:
+        case nse_discretization_2SPLIT8A:
+        case nse_discretization_2SPLIT8B:
+        case nse_discretization_2SPLIT2_MODAL:
+            i = 0;
+            for (isub=0; isub<D_effective; isub++) {
+                q_effective[isub] = q[i];
+                r_effective[isub] = -kappa*CONJ(q[i]);
+                i += nskip_per_step;
+            }
+            break;
+        case nse_discretization_4SPLIT4A:
+        case nse_discretization_4SPLIT4B:
+            q_1 = malloc(D * sizeof(COMPLEX));
+            q_2 = malloc(D * sizeof(COMPLEX));
+            if (q_1 == NULL || q_2 == NULL) {
+                ret_code = E_NOMEM;
+                goto release_mem;
+            }
+            REAL scl_factor = SQRT(3.0)/6.0;
+            ret_code = misc_resample(D, eps_t, q, -eps_t*scl_factor*nskip_per_step, q_1);
+            CHECK_RETCODE(ret_code, release_mem);
+            ret_code = misc_resample(D, eps_t, q, eps_t*scl_factor*nskip_per_step, q_2);
+            CHECK_RETCODE(ret_code, release_mem);
+            
+            
+            i = 0;
+            for (isub=0; isub<D_effective; isub=isub+2) {
+                q_effective[isub] = (q_1[i]+q_2[i])/4.0 - (q_2[i]-q_1[i])*scl_factor;
+                q_effective[isub+1] = (q_1[i]+q_2[i])/4.0 + (q_2[i]-q_1[i])*scl_factor;
+                r_effective[isub] = -kappa*CONJ(q_effective[isub]);
+                r_effective[isub+1] = -kappa*CONJ(q_effective[isub+1]);
+                i += nskip_per_step;
+            }
+            
+            
+            break;
+        default: // Unknown discretization
+            
+            ret_code = E_INVALID_ARGUMENT(discretization);
+            goto  release_mem;
+    }
+    
+    // Original index of the first and last sample in qsub
+    first_last_index[0] = 0;
+    first_last_index[1] = (Dsub-1)*nskip_per_step;
+    *q_effective_ptr = q_effective;
+    *r_effective_ptr = r_effective;
+    *Dsub_ptr = Dsub;
+    
+    release_mem:
+        free(q_1);
+        free(q_2);
+        free(q_3);
+        free(r_1);
+        free(r_2);
+        free(r_3);
+        return ret_code;
 }
 

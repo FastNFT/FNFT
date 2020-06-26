@@ -32,7 +32,7 @@
 %                   the 'fasteigen' method to a subsampled version of the
 %                   signal. Then refine using 'Newton' based on the full
 %                   signal. This method is reliable if D is not too low.
-%                   It requires O(niter D log^2 D) flops if Dsub (see
+%                   It requires O(D log^2 D + niter K D) flops if Dsub (see
 %                   below) is set by the algorithm. Not followed by a
 %                   value.
 %   'bsloc_niter'   Number of iterations to be carried by Newton's method.
