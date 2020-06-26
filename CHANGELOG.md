@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.4.0] -- 2020-06-26
+
+### Added
+
+- The routine fnft_nsev for the NFT of the vanishing nonlinear Schroedinger equation now has two fourth-order discretizations (see 4SPLIT4A and 4SPLIT4B in nse_discretizations_t).
+- The Matlab routine mex_fnft_nsev has been updated accordingly.
+- The routine fnft_nsep for the NFT of the periodic nonlinear Schroedinger equation can now find spectra of quasi-periodic signals. It also has support for 4SPLIT4A and 4SPLIT4B discretizations.
+- The Matlab routine mex_fnft_nsep has been updated accordingly.
+- New public function fnft_nsev_slow implementing slow(classical) NFTs for the vanishing nonlinear Schroedinger equation (bound states are found only using Newton's method).
+- The Matlab routine mex_fnft_nsev_slow has been added.
+
+### Changed
+
+- The routine fnft_nsep for the NFT of the periodic nonlinear Schroedinger equation now requires odd number of samples and that the first sample be the start of the first period and the last sample to be the first sample of the next period (see the doc of fnft_nsep).
+
+# Changelog
+
+## [0.3.0] -- 2020-03-06
+
+### Added
+
+- The routine fnft_nsep for the NFT of the periodic nonlinear Schroedinger equation can now visualize spines (see the new points_per_spine option)
+- The subsampling and refinement processes in fnft_nsep can now be better controlled using the new Dsub and max_evals options
+- The Matlab routine mex_fnft_nsep has been updated accordingly
+
+### Fixed
+
+- The Matlab interface now builds also with the most recent versions of Matlab
+- The refinement of the auxiliary spectrum in fnft_nsep was refining the complex conjugate of mu_k instead of mu_k
+
+### Changed
+
+- The refinement of the main spectrum in fnft_nsep has been improved
+- The polynomial rootfinder in fnft__poly_roots_fasteigen now always uses the QR algorithm
+
 ## [0.2.2] -- 2018-12-13
 
 ### Added
