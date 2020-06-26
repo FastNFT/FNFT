@@ -10,6 +10,7 @@ matrix:
           packages:
             - gcc-5
             - gfortran-5
+            - cmake
     - os: linux
       addons:
         apt:
@@ -19,11 +20,10 @@ matrix:
             - gcc-5
             - gfortran-5
             - libfftw3-dev
+            - cmake
             
 install:
-   - CMAKE_URL="https://cmake.org/files/v3.17/cmake-3.17.3-Linux-x86_64.tar.gz"
-   - mkdir cmake && travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
-   - export PATH=${DEPS_DIR}/cmake/bin:${PATH}
+   - sudo apt upgrade cmake
    - cmake --version
 before_script:
     - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 100
