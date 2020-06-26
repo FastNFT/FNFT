@@ -355,7 +355,7 @@ INT fnft_nsep_test_numerical_focusing_1()
         const COMPLEX lam = spines[k];
 
         // Spines are imaginary in this example
-        if (FABS(CREAL(lam)) > 100*EPSILON)
+        if (FABS(CREAL(lam)) > 150*EPSILON)
             return E_TEST_FAILED;
 
         const REAL lam_i = CIMAG(lam);
