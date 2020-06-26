@@ -60,6 +60,7 @@ struct fnft__nse_finvscatter_stack_elem {
     INT ret_code;
     // Other
     UINT start_pos;
+    UINT mode_offset;
 };
 
 // This is an iterative implementation of a recursive algorithm. We use our own
@@ -124,11 +125,12 @@ start_pos_1:
 
             // Step 2: Determine T1(z) = T2i(z)*T(z).
 
-            ret_code = poly_fmult_two_polys2x2(s[i].deg,
-                s[i].T2i, s[i].deg+1,
-                s[i].T, s[i].T_stride,
-                s[i].T1, 2*s[i].deg+1,
-                s[i].plan_fwd, s[i].plan_inv, buf0, buf1, buf2);
+            ret_code = poly_fmult_two_polys2x2(s[i].deg, s[i].T2i, s[i].deg+1,
+                                               s[i].T, s[i].T_stride,
+                                               s[i].T1, 2*s[i].deg+1,
+                                               s[i].plan_fwd, s[i].plan_inv,
+                                               buf0, buf1, buf2,
+                                               s[i].mode_offset);
             CHECK_RETCODE(ret_code, leave_fun);
 
             // Step 3: Determine T1i(z) and q[0],...,q[D/2-1] from T1(z) with
@@ -151,10 +153,14 @@ start_pos_2:
 
             if (s[i].Ti != NULL) {
                 ret_code = poly_fmult_two_polys2x2(s[i].deg/2,
-                    s[i].T1i, s[i].deg/2+1,
-                    s[i].T2i+s[i].deg/2, s[i].deg+1,
-                    s[i].Ti, s[i].Ti_stride,
-                    s[i+1].plan_fwd, s[i+1].plan_inv, buf0, buf1, buf2);
+                                                   s[i].T1i, s[i].deg/2+1,
+                                                   s[i].T2i+s[i].deg/2,
+                                                   s[i].deg+1, s[i].Ti,
+                                                   s[i].Ti_stride,
+                                                   s[i+1].plan_fwd,
+                                                   s[i+1].plan_inv,
+                                                   buf0, buf1, buf2,
+                                                   s[i+1].mode_offset);
                 CHECK_RETCODE(ret_code, leave_fun);
             }
 
@@ -173,7 +179,7 @@ start_pos_2:
             COMPLEX * const Ti_22 = Ti_21 + s[i].Ti_stride;
 
             if (discretization == fnft_nse_discretization_2SPLIT2_MODAL) {
-                            
+
                 const REAL absQ = CABS(Q);
                 const REAL scl_den = 1.0 + kappa*absQ*absQ;
                 if (scl_den <= 0.0) { // only possible if kappa == -1
@@ -181,8 +187,8 @@ start_pos_2:
                     goto leave_fun;
                 }
                 const REAL scl = 1.0 / SQRT(scl_den);
-                *s[i].q = Q/eps_t; 
-                
+                *s[i].q = Q/eps_t;
+
                 s[i].Ti[0] = scl;
                 s[i].Ti[1] = 0.0;
                 Ti_12[0] = -scl*Q;
@@ -200,10 +206,10 @@ start_pos_2:
                     ret_code = E_OTHER("A reconstruced sample violates the condition |q[n]|<1.");
                     goto leave_fun;
                 }
-                
+
                 *s[i].q = ATAN(absQ)*CEXP(I*CARG(Q))/eps_t;
-                
-                const REAL scl = 1.0 / SQRT(scl_den);                
+
+                const REAL scl = 1.0 / SQRT(scl_den);
                 s[i].Ti[0] = scl;
                 s[i].Ti[1] = 0.0;
                 Ti_12[0] = -scl*Q;
@@ -323,6 +329,12 @@ INT nse_finvscatter(
         ret_code = create_fft_plans(deg_on_level_i, &s[i].plan_fwd,
                                     &s[i].plan_inv, buf0, buf1);
         CHECK_RETCODE(ret_code, leave_fun_2);
+
+        // The mode_offset below tells poly_fmult2x2 whether the result
+        // buffers are large enough to store some intermediate results
+        const UINT len = poly_fmult_two_polys_len(deg_on_level_i);
+        s[i].mode_offset = len > deg_on_level_i+1 ? 0 : 2;
+
         deg_on_level_i /= 2;
     }
 

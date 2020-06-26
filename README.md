@@ -49,7 +49,7 @@ If you use FNFT for your academic work, please cite the accompanying [software p
     pages   = {597},
     doi     = {10.21105/joss.00597},
     url     = {https://doi.org/10.21105/joss.00597},
-    issn	= {2475-9066}
+    issn    = {2475-9066}
 }
 ```
 
@@ -92,7 +92,7 @@ The algorithms in FNFT utilize ideas from the following references. More informa
 
 - S. Wahls and H. V. Poor, ["Introducing the fast nonlinear Fourier transform"](http://dx.doi.org/10.1109/ICASSP.2013.6638772), Proc. IEEE International Conference on Acoustics, Speech, and Signal Processing (ICASSP), Vancouver, Canada, May 2013.
 - S. Wahls and H. V. Poor, ["Fast Numerical Nonlinear Fourier Transforms"](http://dx.doi.org/10.1109/TIT.2015.2485944), IEEE Transactions on Information Theory, vol. 61, no. 12, pp. 6957-6974, Dec. 2015.
-- P. J. Prins and S. Wahls, ["Higher order exponential splittings for the fast non-linear Fourier transform of the Korteweg-de Vries equation"](https://doi.org/10.1109/ICASSP.2018.8461708), Proc. IEEE International Conference on Acoustics, Speech, and Signal Processing (ICASSP), Calgary, Canada, April 2018.
+- P. J. Prins and S. Wahls, ["Higher order exponential splittings for the fast non-linear Fourier transform of the Korteweg-de Vries equation"](https://doi.org/10.1109/ICASSP.2018.8461708), Proc.  2018 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP). Piscataway, NJ, USA: IEEE. 2018. pp. 4524-4528.
 - G. Boffetta and A. R. Osborne, ["Computation of the direct scattering transform for the nonlinear Schroedinger equation"](https://doi.org/10.1016/0021-9991(92)90370-E), Journal of Computational Physics, vol. 102, no. 2, pp. 252-264, Oct. 1992.
 - V. Aref, ["Control and Detection of Discrete Spectral Amplitudes in Nonlinear Fourier Spectrum"](https://arxiv.org/abs/1605.06328), Preprint, arXiv:1605.06328v1, May 2016.
 - S. Hari and F. R. Kschischang, ["Bi-Directional Algorithm for Computing Discrete Spectral Amplitudes in the NFT"](https://doi.org/10.1109/JLT.2016.2577702), Journal of Lightwave Technology, vol. 34, no. 15, pp. 3529-3537, Aug. 2016.

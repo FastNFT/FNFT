@@ -1,6 +1,6 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
+* This file is part of FNFT.
+*
 * FNFT is free software; you can redistribute it and/or
 * modify it under the terms of the version 2 of the GNU General
 * Public License as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-*                                                                      
+*
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
@@ -95,7 +95,8 @@
  * `fnft__akns_discretization_4SPLIT4A`: Order of base method = 4, Degree = 4, Order of accuracy of splitting-scheme = 4\n
  * `fnft__akns_discretization_4SPLIT4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4
  *
- * Used in \link fnft__akns_fscatter \endlink and \link fnft__akns_scatter.h \endlink .
+ * Used in \link fnft__akns_fscatter.h \endlink and
+ * \link fnft__akns_scatter.h \endlink.
  *
  * @ingroup data_types
  */

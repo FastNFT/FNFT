@@ -341,6 +341,7 @@ static inline INT gridsearch(const UINT D,
         // Coordinate transform (from discrete-time to continuous-time domain)
         ret_code = nse_z_to_lambda(K, eps_t, roots, opts_ptr->discretization);
         CHECK_RETCODE(ret_code, release_mem);
+
         // Filter the roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
             ret_code = misc_filter(&K, roots, NULL, opts_ptr->bounding_box);
@@ -375,7 +376,7 @@ static inline INT gridsearch(const UINT D,
         // Coordinate transform of the new roots
         ret_code = nse_z_to_lambda(K_filtered, eps_t, roots, opts_ptr->discretization);
         CHECK_RETCODE(ret_code, release_mem);
-        
+
         // Filter the new roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
             ret_code = misc_filter(&K_filtered, roots, NULL,
@@ -410,7 +411,7 @@ static inline INT gridsearch(const UINT D,
         // Coordinate transform (from discrete-time to continuous-time domain)
         ret_code = nse_z_to_lambda(M, eps_t, roots, opts_ptr->discretization);
         CHECK_RETCODE(ret_code, release_mem);
-        
+
         // Filter the roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
             ret_code = misc_filter(&M, roots, NULL, opts_ptr->bounding_box);
@@ -457,6 +458,7 @@ static inline INT subsample_and_refine(const UINT D,
     REAL refine_tol;
     UINT deg;
     UINT Dsub = 0;
+
     INT W = 0, *W_ptr = NULL;
     UINT K = 0, K_new = 0;
     UINT M = 0;
@@ -595,6 +597,7 @@ static inline INT subsample_and_refine(const UINT D,
             if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
                 ret_code = misc_filter(&K_new, roots, NULL,
                         opts_ptr->bounding_box);
+
                 CHECK_RETCODE(ret_code, release_mem);
             }
             if (skip_real_flag != 0) {
@@ -627,19 +630,20 @@ static inline INT subsample_and_refine(const UINT D,
                 }
                 K_new = *K_ptr-K;
             }
+
             memcpy(main_spec+K, roots, K_new * sizeof(COMPLEX));
             K += K_new;
             if (warn_flags[0] == 1)
                 break; // user-provided array for main spectrum is full
         }
-        
+
     }
 
     // Compute aux spectrum if desired
     if (aux_spec != NULL) {
         ret_code = poly_roots_fasteigen(deg, transfer_matrix + (deg + 1),
                 roots);
-        CHECK_RETCODE(ret_code, release_mem);
+
         
         // Set number of points in the aux spectrum
         M = deg;
@@ -647,7 +651,7 @@ static inline INT subsample_and_refine(const UINT D,
         // Coordinate transform (from discrete-time to continuous-time domain)
         ret_code = nse_z_to_lambda(M, eps_t_sub, roots, opts_ptr->discretization);
         CHECK_RETCODE(ret_code, release_mem);
-        
+
         // Filter the roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
             ret_code = misc_filter(&M, roots, NULL, opts_ptr->bounding_box);
@@ -659,6 +663,7 @@ static inline INT subsample_and_refine(const UINT D,
                 opts_ptr->max_evals, refine_tol, kappa, nse_discretization);
         CHECK_RETCODE(ret_code, release_mem);
         
+
         // Filter the refined roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
             ret_code = misc_filter(&M, roots, NULL, opts_ptr->bounding_box);
@@ -714,7 +719,7 @@ static inline INT refine_mainspec(
     
     if (max_evals == 0)
         return SUCCESS;
-    
+
     for (k=0; k<K; k++) { // Iterate over the provided main spectrum estimates.
         
         // Initilization. Computes the monodromy matrix at the current main
@@ -730,19 +735,18 @@ static inline INT refine_mainspec(
         next_f_prime = M[4] + M[7] ; // f' = a'(lam) + atil'(lam)
         
         // Iteratively refine the current main spectrum point by applying
+
         // Newton's method for higher order roots: next_x=x-m*f/f', where
         // m is the order of the root. Since we do not know m, several values
         // are tested in a line search-like procedure. Per iterion, max_m
         // values of m are tested, leading to max_m monodromoy mat evaluations.
         for (nevals=1; nevals<=max_evals;) {
-            
             // The current values of f and f' at lam = mainspec[k]
             f = next_f;
             f_prime = next_f_prime;
             if (f_prime == 0.0)
                 return E_DIV_BY_ZERO;
             incr = f / f_prime;
-            
             // Test different increments to deal with the many higher order
             // roots (Newton's method for a root of order m is x<-x-m*f/f').
             min_abs = INFINITY;
@@ -750,6 +754,7 @@ static inline INT refine_mainspec(
             for (m=1; m<=max_m; m++) {
                 lam = mainspec[k] - m*incr;
                 ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, 1, &lam, M, discretization, 1);
+
                 if (ret_code != SUCCESS)
                     return E_SUBROUTINE(ret_code);
                 nevals++;
@@ -765,10 +770,10 @@ static inline INT refine_mainspec(
                     if ( cur_abs < tol )
                         break;
                 }
-            }
-            
+            }            
             mainspec[k] -= best_m*incr; // Newton step
             //printf("MAIN k=%zu, nevals=%zu: lam=%e+%ej, |f|=%e, |f_prime|=%e, |incr|=%e, best_m=%d\n", k, nevals, CREAL(mainspec[k]), CIMAG(mainspec[k]), CABS(f), CABS(f_prime),CABS(incr),best_m);
+
             if ( min_abs < tol ) {
                 // We already know f and f_prime at the new mainspec[k], so
                 // let's use that for a final first-order Newton step.
@@ -807,7 +812,6 @@ static inline INT refine_auxspec(
             if (ret_code != SUCCESS)
                 return E_SUBROUTINE(ret_code);
             nevals++;
-            
             f = M[1]; // f = b(lam)
             f_prime = M[5]; // f' = b'(lam)
             if (f_prime == 0.0)
@@ -815,6 +819,7 @@ static inline INT refine_auxspec(
             
             //printf("AUX k=%zu, iter=%zu: lam=%g+%gj, |f|=%g, |f_prime|=%g\n", k, iter, CREAL(auxspec[k]), CIMAG(auxspec[k]), CABS(f), CABS(f_prime));
             
+
             auxspec[k] -= f / f_prime;
             if ( CABS(f) < tol ) // Intentionally put after the previous line
                 // => we use the already known values for f and f_prime for a
@@ -988,4 +993,5 @@ static inline INT signal_effective_from_signal(
         free(r_3);
         return ret_code;
 }
+
 

@@ -32,8 +32,11 @@ If the MATLAB interface has been built, try the following in MATLAB
 
 ## Documentation
 
-The C interface is separated in a public ('fnft_' prefix) and a private part ('fnft__' prefix). To get started with the public part, read the documentation in the public header files in the 'include' folder. It is also possible to build a html version of the documentation. To build it, run doxygen in the main folder of the library. It can then be found in the
-doc folder. Simply open the file '~/FNFT/doc/html/index.html' in your web browser.
+The documentation of the C interface is available online at
+
+    [https://fastnft.github.io/FNFT/](https://fastnft.github.io/FNFT/)
+
+The C interface is separated into a public part ('fnft_' prefix) and a private part ('fnft__' prefix). The public part corresponds to the header files directly inside the 'include' folder. The header files in the subdirectories of the 'include' folder are considered private. To build the documentation yourself, run doxygen in the main folder of the library. It can then be found in the doc folder. Simply open the file '~/FNFT/doc/html/index.html' in your web browser.
 
 The MATLAB interface is documented in the usual way. Run the commands
 

@@ -73,7 +73,7 @@ static INT poly_specfact_test()
 #ifdef DEBUG
     printf("err = %g\n", err);
 #endif
-    if (err > 0.0055) { // difficult case due to a zero on the unit circle
+    if (!(err <= 0.0055)) { // difficult case due to a zero on the unit circle
         ret_code = E_TEST_FAILED;
         goto leave_fun;
     }

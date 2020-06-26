@@ -15,7 +15,6 @@
 
 - The routine fnft_nsep for the NFT of the periodic nonlinear Schroedinger equation now requires odd number of samples and that the first sample be the start of the first period and the last sample to be the first sample of the next period (see the doc of fnft_nsep).
 
-# Changelog
 
 ## [0.3.0] -- 2020-03-06
 

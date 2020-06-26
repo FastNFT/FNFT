@@ -67,6 +67,7 @@ Fm = 0.5*integral(f,c^2,Inf);
 K0 = 1i*c*exp(Dm*del-Fm);
 %%
 T = [0, Ap];  % T(1) is the beginning of the period, T(2) is the end
+
 D = 2^8+1;        % number of samples
 kappa = +1;     % focusing nonlinear Schroedinger equation
 
@@ -124,6 +125,7 @@ end
 INT fnft_nsep_test_numerical_focusing_2()
 {
     INT ret_code = SUCCESS;
+
     COMPLEX q[257] = {
       4.342615484209547e+00 + 9.303042232295938e-01*I,
       4.376264025488326e+00 + 9.299262942389809e-01*I,

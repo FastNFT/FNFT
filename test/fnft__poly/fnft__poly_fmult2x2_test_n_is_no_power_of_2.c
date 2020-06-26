@@ -1,21 +1,21 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
-* FNFT is free software; you can redistribute it and/or
-* modify it under the terms of the version 2 of the GNU General
-* Public License as published by the Free Software Foundation.
-*
-* FNFT is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*                                                                      
-* You should have received a copy of the GNU General Public License
-* along with this program. If not, see <http://www.gnu.org/licenses/>.
-*
-* Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
-*/
+ * This file is part of FNFT.
+ *
+ * FNFT is free software; you can redistribute it and/or
+ * modify it under the terms of the version 2 of the GNU General
+ * Public License as published by the Free Software Foundation.
+ *
+ * FNFT is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ * Sander Wahls (TU Delft) 2017-2018.
+ */
 
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -66,7 +66,7 @@ static INT poly_fmult2x2_test_n_is_no_power_of_2(INT normalize_flag)
     COMPLEX p[memsize];
     COMPLEX result[memsize];
     COMPLEX result_exact[24] = {
-          -163.292988790261 -      31.2370829948429*I, 
+          -163.292988790261 -      31.2370829948429*I,
           -984.955455390257 +      114.750671387418*I,
           -1258.50583714315 +      1286.47060781892*I,
           -171.431868738405 +      1460.18133348016*I,
@@ -98,7 +98,7 @@ static INT poly_fmult2x2_test_n_is_no_power_of_2(INT normalize_flag)
         p[i+2*n*(deg+1)] = SQRT(i+1.0)*(COS(i+0.2) + I*SIN(-2.0*i+0.2));
         p[i+3*n*(deg+1)] = SQRT(i+1.0)*(COS(i+0.3) + I*SIN(-2.0*i+0.3));
     }
-   
+
     if (normalize_flag)
         W_ptr = &W;
     ret_code = poly_fmult2x2(&deg, n, p, result, W_ptr);
@@ -113,7 +113,7 @@ static INT poly_fmult2x2_test_n_is_no_power_of_2(INT normalize_flag)
         for (i=0; i<4*(deg+1); i++)
             result[i] *= scl;
     }
-    if (misc_rel_err(4*(deg+1), result, result_exact) > 100*EPSILON)
+    if (!(misc_rel_err(4*(deg+1), result, result_exact) <= 100*EPSILON))
         return E_TEST_FAILED;
 
     return SUCCESS;
@@ -122,7 +122,7 @@ static INT poly_fmult2x2_test_n_is_no_power_of_2(INT normalize_flag)
 INT main(void)
 {
     INT ret_code;
- 
+
     ret_code = poly_fmult2x2_test_n_is_no_power_of_2(0); // 2x2 w/o normaliz.
     if (ret_code != SUCCESS) {
         E_SUBROUTINE(ret_code);

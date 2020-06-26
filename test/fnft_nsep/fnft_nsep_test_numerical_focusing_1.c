@@ -345,7 +345,7 @@ INT fnft_nsep_test_numerical_focusing_1()
     opts.points_per_spine = points_per_spine;
     ret_code = fnft_nsep(D, q, T, &K_spine, spines, &M, NULL, NULL, +1, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    
+
     // Check that all found points are on one of the three spines. The ok_flags
     // are turned on when we find a point "close" to the center of a spines.
     const REAL tol = 0.0002;

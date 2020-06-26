@@ -487,7 +487,7 @@ static INT nsev_compare_nfs(const UINT M, const UINT K1, const UINT K2,
             nrm = 0.0;
             for (i=0; !(i>=K1); i++) {
                 min_dist = INFINITY;
-                for (j=0; !(j>=K1); j++) {
+                for (j=0; !(j>=K2); j++) {
                     dist = CABS(bound_states_1[i] - bound_states_2[j]);
                     if (dist < min_dist) {
                         min_dist = dist;
@@ -509,7 +509,7 @@ static INT nsev_compare_nfs(const UINT M, const UINT K1, const UINT K2,
             nrm = 0.0;
             for (i=0; !(i>=K1); i++) {
                 min_dist = INFINITY;
-                for (j=0; !(j>=K1); j++) {
+                for (j=0; !(j>=K2); j++) {
                     dist = CABS(bound_states_1[i] - bound_states_2[j]);
                     if (dist < min_dist) {
                         min_dist = dist;
@@ -539,7 +539,7 @@ const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
     COMPLEX * bound_states_exact = NULL;
     COMPLEX * normconsts_exact = NULL;
     COMPLEX * residues_exact = NULL;
-    UINT K, K_exact, M;
+    UINT K, K_exact=0, M;
     INT kappa = 0;
     REAL errs[6] = {
         FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN };
