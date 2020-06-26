@@ -23,6 +23,7 @@ matrix:
 before_script:
     - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 100
     - sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-5 100
+    - sudo apt-get install cmake
     - mkdir build
     - cd build
  
