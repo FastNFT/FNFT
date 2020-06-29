@@ -15,7 +15,7 @@
  *
  * Contributors:
  * Sander Wahls (TU Delft) 2017.
- * Shrinivas Chimmalgi (TU Delft) 2017-2019.
+ * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  */
 
 /**
@@ -31,6 +31,7 @@
 
 #include "fnft_nse_discretization_t.h"
 #include "fnft__akns_discretization.h"
+#include "fnft__misc.h"
 
 
 
@@ -228,7 +229,46 @@ FNFT_INT fnft__nse_phase_factor_a(const FNFT_REAL eps_t, const FNFT_UINT D, FNFT
 FNFT_INT fnft__nse_phase_factor_b(const FNFT_REAL eps_t, const FNFT_UINT D, FNFT_REAL const * const T,
         FNFT_REAL * const phase_factor_b, fnft_nse_discretization_t nse_discretization);
         
-        
+
+/**
+ * @brief  This routine preprocesses the signal by resampling and subsampling based on the discretization.
+ * The preprocessing is necessary for higher-order methods.
+ * 
+ * This routine preprocess q to generate q_preprocessed and r_preprocessed
+ * based on the discretization. The preprocessing may involve resampling 
+ * and sub-sampling. 
+ * The routine is based on the following papers:
+ *      - Chimmalgi, Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2945480">&quot; Fast Nonlinear Fourier Transform Algorithms Using Higher Order Exponential Integrators,&quot;</a> IEEE Access 7, 2019.
+ *      - Medvedev, Vaseva, Chekhovskoy and  Fedoruk, <a href="https://doi.org/10.1364/OE.377140">&quot; Exponential fourth order schemes for direct Zakharov-Shabat problem,&quot;</a> Optics Express, vol. 28, pp. 20--39, 2020.
+ *
+ * @param[in] D Number of samples
+ * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
+ *  where \f$ t_n = T[0] + n(T[1]-T[0])/(D-1) \f$ and \f$n=0,1,\dots,D-1\f$, of
+ *  the to-be-transformed signal in ascending order
+ *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$)
+ * @param[in] eps_t Real-valued discretization step-size.
+ * @param[in] kappa =+1 for the focusing nonlinear Schroedinger equation,
+ *  =-1 for the defocusing one 
+ * @param[out] q_preprocessed_ptr Pointer to the starting location of preprocessed signal q_preprocessed.
+ * @param[out] r_preprocessed_ptr Pointer to the starting location of preprocessed signal r_preprocessed.
+ * @param[in,out] Dsub_ptr Pointer to number of processed samples. Upon entry, *Dsub_ptr
+ *             should contain a desired number of samples. Upon exit, *Dsub_ptr
+ *             has been overwritten with the actual number of samples that the
+ *             routine has chosen. It is usually close to the desired one.
+ * @param[out] first_last_index Vector of length two. Upon exit, it contains
+ *             the original index of the first and the last sample used to build
+ *             q_preprocessed.
+ * @param[in] nse_discretization Discretization of type \link fnft_nse_discretization_t \endlink.
+ * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
+ *  defined in \link fnft_errwarn.h \endlink.
+ *
+ * @ingroup nse
+ */
+FNFT_INT fnft__nse_preprocess_signal(const FNFT_UINT D, FNFT_COMPLEX const * const q,
+        FNFT_REAL const eps_t, const FNFT_INT kappa,
+        FNFT_UINT * const Dsub_ptr, FNFT_COMPLEX **q_preprocessed_ptr, FNFT_COMPLEX **r_preprocessed_ptr,
+        FNFT_UINT * const first_last_index,  fnft_nse_discretization_t discretization);
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define nse_discretization_degree(...) fnft__nse_discretization_degree(__VA_ARGS__)
 #define nse_discretization_boundary_coeff(...) fnft__nse_discretization_boundary_coeff(__VA_ARGS__)
@@ -240,6 +280,8 @@ FNFT_INT fnft__nse_phase_factor_b(const FNFT_REAL eps_t, const FNFT_UINT D, FNFT
 #define nse_phase_factor_rho(...) fnft__nse_phase_factor_rho(__VA_ARGS__)
 #define nse_phase_factor_a(...) fnft__nse_phase_factor_a(__VA_ARGS__)
 #define nse_phase_factor_b(...) fnft__nse_phase_factor_b(__VA_ARGS__)
+#define nse_preprocess_signal(...) fnft__nse_preprocess_signal(__VA_ARGS__)
+
 #endif
 
 #endif
