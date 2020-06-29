@@ -214,11 +214,6 @@ INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
                 U[0][1] = qn*sh;
                 U[1][0] = rn*sh;
                 U[1][1] = ch + u1;
-//                 a0=0;
-//                 a1 = (eps_t*(q[n] + r[n]))*0.5;
-//                 a2 = (eps_t*(q[n]*I - r[n]*I))*0.5;
-//                 a3 = -eps_t*l[n]*I;
-                
                 square_matrix_mult(2, &U[0][0], &T[0][0]);
             }
             
@@ -525,9 +520,10 @@ INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
         return ret_code;
 }
 
+// Auxiliary function:  Multiples two square matrices of size N.
+// The result is stored in T (T=U*T).
 static inline void square_matrix_mult(const UINT N, COMPLEX * const U,
         COMPLEX *const T){
-    // Multiples two square matrices of size N. The result is stored in T (T=U*T).
     UINT  c1, c2, c3;
     COMPLEX TM[32] = { 0 }, sum = 0;
     for (c1 = 0; c1 < N; c1++) {

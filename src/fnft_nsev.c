@@ -379,6 +379,10 @@ INT fnft_nsev(
         free(normconsts_or_residues_sub);
         return ret_code;
 }
+
+// Auxiliary function: Base routine for fnft_nsev. fnft_nsev preprocesses the signals 
+// and calls this function with different options as needed. This prevents 
+// code doubling while being efficient.
 static inline INT fnft_nsev_base(
         const UINT D,
         COMPLEX * const q,

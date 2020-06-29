@@ -265,8 +265,10 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 
         }
         
-        COMPLEX U[4][4] = {{0}};
-        
+        // Scattering PHI and PHI_D from T[0] to T[1]
+        // PHI is stored at intermediate values as they are needed for the
+        // accurate computation of b-coefficient.
+        COMPLEX U[4][4] = {{0}};        
         PHI1[0] = 1.0*CEXP(-I*l_curr*(T[0]-eps_t*boundary_coeff));
         PHI2[0] = 0.0;
         PHI1_D = PHI1[0]*(-I*(T[0]-eps_t*boundary_coeff));
@@ -463,7 +465,10 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
         }
         
         
-        
+        // If b-coefficient is requested skip_b_flag will not be set.
+        // Scattering PSI from T[1] to T[0].
+        // PSI is stored at intermediate values as they are needed for the
+        // accurate computation of b-coefficient.
         if (skip_b_flag == 0){
             
             PSI1[D_given] = 0.0;
@@ -651,9 +656,10 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
         return ret_code;
 }
 
+// Auxiliary function:  Multiples two square matrices of size N.
+// The result is stored in T (T=U*T).
 static inline void square_matrix_mult(const UINT N, COMPLEX * const U,
         COMPLEX *const T){
-    // Multiples two square matrices of size N. The result is stored in T (T=U*T).
     UINT  c1, c2, c3;
     COMPLEX TM[32] = { 0 }, sum = 0;
     for (c1 = 0; c1 < N; c1++) {

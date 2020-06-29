@@ -225,6 +225,8 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
             
 }
 
+// Auxiliary function: Uses grid-search to find main and auxiliary spectrum
+// on the real-line.
 static inline INT gridsearch(const UINT D,
         COMPLEX const * const q,
         REAL const * const T, UINT * const K_ptr,
@@ -437,6 +439,9 @@ static inline INT gridsearch(const UINT D,
         return ret_code;
 }
 
+// Auxiliary function: Finds initial guesses for the main and auxiliary spectrum
+// using an eigenmethod on a subsampled version of the signal and then uses
+// Newton's method to refine them.
 static inline INT subsample_and_refine(const UINT D,
         COMPLEX const * const q,
         REAL const * const T, UINT * const K_ptr,
@@ -695,7 +700,7 @@ static inline INT subsample_and_refine(const UINT D,
         return ret_code;
 }
 
-// Uses Newton's method for roots of higher order to refine the main spectrum.
+// Auxiliary function: Uses Newton's method for roots of higher order to refine the main spectrum.
 static inline INT refine_mainspec(
         const UINT D, COMPLEX const * const q, COMPLEX * r,
         const REAL eps_t, const UINT K,
@@ -783,7 +788,7 @@ static inline INT refine_mainspec(
     return SUCCESS;
 }
 
-// Uses Newton's method to refine the aux spectrum.
+// Auxiliary function: Uses Newton's method to refine the aux spectrum.
 static inline INT refine_auxspec(
         const UINT D, COMPLEX const * const q, COMPLEX * r,
         const REAL eps_t, const UINT K,
