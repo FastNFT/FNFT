@@ -631,7 +631,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
             // computation point
             REAL error_metric = INFINITY, tmp = INFINITY;
             for (n = 0; n <= D_given; n++){
-                tmp = CABS((0.5*LOG(CABS((PHI2[n]/PSI2[n])/(PHI1[n]/PSI1[n])))));
+                tmp = FABS((0.5*LOG(CABS((PHI2[n]/PSI2[n])/(PHI1[n]/PSI1[n])))));
                 if (tmp < error_metric){
                     b[neig] = PHI1[n]/PSI1[n];
                     error_metric = tmp;

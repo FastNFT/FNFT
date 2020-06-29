@@ -90,7 +90,7 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
     INT warn_flags[2] = { 0, 0 }; // 0 = no warning about too many points so
     // far, 1st val is for main spec, 2nd for aux
     COMPLEX *q_effective = NULL;
-    
+    COMPLEX m_q = 1.0;
     
     // Check inputs
     if (D < 2 || D%2 == 0)
@@ -111,10 +111,14 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
         opts_ptr = &default_opts;
     if (opts_ptr->filtering != fnft_nsep_filt_NONE && main_spec == NULL && aux_spec != NULL)
         return E_INVALID_ARGUMENT(main_spec. Filtering of the auxiliary spectrum is not possible if the main spectrum is not computed.);
+      
         
-        COMPLEX m_q = q[D-1]/q[0];
+        if (CABS(q[0]) == 0){
+            WARN("First sample of signal q is 0. Not possible to determine if signal is quasi-periodic. Continuing assuming signal is periodic. Computed spectrum maybe incorrect.");
+        }else
+            m_q = q[D-1]/q[0];
         
-        if (CABS(1-CABS(m_q)) > 1e-2)
+        if (FABS(1-CABS(m_q)) > 1e-2)
             WARN("Signal q may not be (quasi-)periodic. abs(1-abs(q[D-1]/q[0]))>1e-2.");
         
         REAL Lam_shift = CARG(m_q)/(-2*(T[1] - T[0]));
