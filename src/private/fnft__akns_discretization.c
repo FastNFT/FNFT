@@ -111,7 +111,7 @@ REAL fnft__akns_discretization_boundary_coeff(akns_discretization_t discretizati
 /**
  * This routine returns the scaling for effective number of samples based on the discretization.
  */
-UINT fnft__akns_discretization_D_scale(akns_discretization_t discretization)
+UINT fnft__akns_discretization_upsampling_factor(akns_discretization_t discretization)
 {
 
     switch (discretization) {
@@ -205,14 +205,14 @@ INT fnft__akns_lambda_to_z(const UINT n, const REAL eps_t,
         COMPLEX * const vals, akns_discretization_t discretization)
 {
     REAL degree1step;
-    UINT i, D_scale;
-    D_scale = akns_discretization_D_scale(discretization);
-    if (D_scale == 0)
+    UINT i, upsampling_factor;
+    upsampling_factor = akns_discretization_upsampling_factor(discretization);
+    if (upsampling_factor == 0)
          return E_INVALID_ARGUMENT(discretization);
     degree1step = akns_discretization_degree(discretization);
     if (degree1step == 0)
          return E_INVALID_ARGUMENT(discretization);
-    degree1step = degree1step * D_scale;
+    degree1step = degree1step * upsampling_factor;
     for (i = 0; i < n; i++)
         vals[i] = CEXP(2*I*vals[i]*eps_t/degree1step);
     return SUCCESS;
@@ -226,14 +226,14 @@ INT fnft__akns_z_to_lambda(const UINT n, const REAL eps_t,
         COMPLEX * const vals, akns_discretization_t discretization)
 {
     REAL degree1step;
-    UINT i, D_scale;
-    D_scale = akns_discretization_D_scale(discretization);
-    if (D_scale == 0)
+    UINT i, upsampling_factor;
+    upsampling_factor = akns_discretization_upsampling_factor(discretization);
+    if (upsampling_factor == 0)
          return E_INVALID_ARGUMENT(discretization);
     degree1step = akns_discretization_degree(discretization);
     if (degree1step == 0)
          return E_INVALID_ARGUMENT(discretization);
-    degree1step = degree1step * D_scale;
+    degree1step = degree1step * upsampling_factor;
     for (i = 0; i < n; i++)
         vals[i] = CLOG(vals[i])/(2*I*eps_t/degree1step);
     return SUCCESS;    

@@ -89,7 +89,7 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
     UINT i, K1, K2, M1, M2, D_effective;
     INT warn_flags[2] = { 0, 0 }; // 0 = no warning about too many points so
     // far, 1st val is for main spec, 2nd for aux
-    COMPLEX *q_effective = NULL;
+    COMPLEX *q_preprocessed = NULL;
     COMPLEX m_q = 1.0;
     
     // Check inputs
@@ -124,15 +124,15 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
         REAL Lam_shift = CARG(m_q)/(-2*(T[1] - T[0]));
         const REAL eps_t = (T[1] - T[0])/(D - 1);
         D_effective = D-1;
-        q_effective = malloc(D_effective * sizeof(COMPLEX));
-        if (q_effective == NULL) {
+        q_preprocessed = malloc(D_effective * sizeof(COMPLEX));
+        if (q_preprocessed == NULL) {
             ret_code = E_NOMEM;
             goto leave_fun;
         }
         
         // Removing phase rotation along q
         for (i=0; i < D_effective; i++)
-            q_effective[i] = q[i]*CEXP(2*I*Lam_shift*(T[0]+eps_t*i));
+            q_preprocessed[i] = q[i]*CEXP(2*I*Lam_shift*(T[0]+eps_t*i));
         // Last sample is dropped as it is the beginning of next period
         
     
@@ -154,13 +154,13 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
                 // Compute non-real points in the spectra via subsample & refine
                 
                 if (kappa == +1) {
-                    ret_code = subsample_and_refine(D_effective, q_effective, T, &K1, main_spec,
+                    ret_code = subsample_and_refine(D_effective, q_preprocessed, T, &K1, main_spec,
                             &M1, aux_spec, sheet_indices, kappa, opts_ptr,
                             1 /*skip_real_flag*/, warn_flags);
                     CHECK_RETCODE(ret_code, leave_fun);
                 } else { // no non-real main spec in the defocusing case, pass NULL
                     K1 = 0;
-                    ret_code = subsample_and_refine(D_effective, q_effective, T, &K1, NULL,
+                    ret_code = subsample_and_refine(D_effective, q_preprocessed, T, &K1, NULL,
                             &M1, aux_spec, sheet_indices, kappa, opts_ptr,
                             1 /*skip_real_flag*/, warn_flags);
                     CHECK_RETCODE(ret_code, leave_fun);
@@ -175,7 +175,7 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
                 
                 // Compute real points in the spectra via gridsearch
                 
-                ret_code = gridsearch(D_effective, q_effective, T, &K2, main_spec+K1,
+                ret_code = gridsearch(D_effective, q_preprocessed, T, &K2, main_spec+K1,
                         &M2, aux_spec+M1, sheet_indices, kappa, opts_ptr, warn_flags);
                 CHECK_RETCODE(ret_code, leave_fun);
                 
@@ -188,7 +188,7 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
                 
             case fnft_nsep_loc_SUBSAMPLE_AND_REFINE:
                 
-                ret_code = subsample_and_refine(D_effective, q_effective, T, K_ptr, main_spec,
+                ret_code = subsample_and_refine(D_effective, q_preprocessed, T, K_ptr, main_spec,
                         M_ptr, aux_spec, sheet_indices, kappa, opts_ptr,
                         0/*skip_real_flag*/, warn_flags);
                 CHECK_RETCODE(ret_code, leave_fun);
@@ -196,7 +196,7 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
                 
             case fnft_nsep_loc_GRIDSEARCH:
                 
-                ret_code = gridsearch(D_effective, q_effective, T, K_ptr, main_spec,
+                ret_code = gridsearch(D_effective, q_preprocessed, T, K_ptr, main_spec,
                         M_ptr, aux_spec, sheet_indices, kappa, opts_ptr, warn_flags);
                 CHECK_RETCODE(ret_code, leave_fun);
                 break;
@@ -220,7 +220,7 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
         opts_ptr->bounding_box[1] += Lam_shift;
     }
         leave_fun:
-            free(q_effective);
+            free(q_preprocessed);
             return ret_code;
             
 }
@@ -243,24 +243,24 @@ static inline INT gridsearch(const UINT D,
     INT W = 0, *W_ptr = NULL;
     UINT K, K_filtered;
     UINT M;
-    UINT i, D_scale, D_effective;// D_scale*D gives the effective number of samples
+    UINT i, upsampling_factor, D_effective;// upsampling_factor*D gives the effective number of samples
     INT ret_code = SUCCESS;
-    COMPLEX *q_effective = NULL;
-    COMPLEX *r_effective = NULL;
+    COMPLEX *q_preprocessed = NULL;
+    COMPLEX *r_preprocessed = NULL;
     UINT Dsub = 0;
     UINT first_last_index[2] = {0};
     // Check inputs
     if (sheet_indices != NULL)
         return E_NOT_YET_IMPLEMENTED(sheet_indices, "Pass NULL");
     
-    D_scale = nse_discretization_D_scale(opts_ptr->discretization);
-    D_effective = D * D_scale;
+    upsampling_factor = nse_discretization_upsampling_factor(opts_ptr->discretization);
+    D_effective = D * upsampling_factor;
     
     // Determine step size
     const REAL eps_t = (T[1] - T[0])/D;
 
     Dsub = D;
-    ret_code = nse_preprocess_signal(D, q, eps_t, kappa, &Dsub, &q_effective, &r_effective,
+    ret_code = nse_preprocess_signal(D, q, eps_t, kappa, &Dsub, &q_preprocessed, &r_preprocessed,
             first_last_index, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
     
@@ -280,7 +280,7 @@ static inline INT gridsearch(const UINT D,
     // Compute the transfer matrix
     if (opts_ptr->normalization_flag)
         W_ptr = &W;
-    ret_code = nse_fscatter(D_effective, q_effective, eps_t, kappa, transfer_matrix, &deg,
+    ret_code = nse_fscatter(D_effective, q_preprocessed, eps_t, kappa, transfer_matrix, &deg,
             W_ptr, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
     
@@ -433,8 +433,8 @@ static inline INT gridsearch(const UINT D,
         free(transfer_matrix);
         free(p);
         free(roots);
-        free(q_effective);
-        free(r_effective);
+        free(q_preprocessed);
+        free(r_preprocessed);
         
         return ret_code;
 }
@@ -462,12 +462,12 @@ static inline INT subsample_and_refine(const UINT D,
     INT W = 0, *W_ptr = NULL;
     UINT K = 0, K_new = 0;
     UINT M = 0;
-    UINT i, D_scale, D_effective;// D_scale*D gives the effective number of samples
+    UINT i, upsampling_factor, D_effective;// upsampling_factor*D gives the effective number of samples
     INT ret_code = SUCCESS;
-    COMPLEX *qsub_effective = NULL;
-    COMPLEX *rsub_effective = NULL;
-    COMPLEX *q_effective = NULL;
-    COMPLEX *r_effective = NULL;
+    COMPLEX *qsub_preprocessed = NULL;
+    COMPLEX *rsub_preprocessed = NULL;
+    COMPLEX *q_preprocessed = NULL;
+    COMPLEX *r_preprocessed = NULL;
     UINT first_last_index[2];
     UINT nskip_per_step;
     nse_discretization_t nse_discretization = 0;
@@ -475,15 +475,15 @@ static inline INT subsample_and_refine(const UINT D,
     if (sheet_indices != NULL)
         return E_NOT_YET_IMPLEMENTED(sheet_indices, "Pass NULL");
     
-    D_scale = nse_discretization_D_scale(opts_ptr->discretization);
-    D_effective = D * D_scale;
+    upsampling_factor = nse_discretization_upsampling_factor(opts_ptr->discretization);
+    D_effective = D * upsampling_factor;
     
     // Determine step size
     const REAL eps_t = (T[1] - T[0])/D;
     
     // Create the signal required for refinement of the initial guesses.
     Dsub = D;
-    ret_code = nse_preprocess_signal(D, q, eps_t, kappa, &Dsub, &q_effective, &r_effective,
+    ret_code = nse_preprocess_signal(D, q, eps_t, kappa, &Dsub, &q_preprocessed, &r_preprocessed,
             first_last_index, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
     
@@ -495,14 +495,14 @@ static inline INT subsample_and_refine(const UINT D,
     nskip_per_step = ROUND((REAL)D / Dsub);
     Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
     
-    ret_code = nse_preprocess_signal(D, q, eps_t, kappa, &Dsub, &qsub_effective, &rsub_effective,
+    ret_code = nse_preprocess_signal(D, q, eps_t, kappa, &Dsub, &qsub_preprocessed, &rsub_preprocessed,
             first_last_index, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
     
       
-    if (D_scale == 2) {        
+    if (upsampling_factor == 2) {        
         nse_discretization = nse_discretization_CF4_2;
-    } else if (D_scale == 1) {
+    } else if (upsampling_factor == 1) {
         nse_discretization = nse_discretization_BO;
     }
     
@@ -513,7 +513,7 @@ static inline INT subsample_and_refine(const UINT D,
         refine_tol = opts_ptr->tol;
     
     // Allocate memory for the transfer matrix
-    i = nse_fscatter_numel(Dsub*D_scale, opts_ptr->discretization);
+    i = nse_fscatter_numel(Dsub*upsampling_factor, opts_ptr->discretization);
     if (i == 0) { // since Dsub>=2, this means unknown discretization
         ret_code = E_INVALID_ARGUMENT(opts_ptr->discretization);
         goto release_mem;
@@ -530,7 +530,7 @@ static inline INT subsample_and_refine(const UINT D,
     // Compute the transfer matrix
     if (opts_ptr->normalization_flag)
         W_ptr = &W;
-    ret_code = nse_fscatter(Dsub*D_scale, qsub_effective, eps_t_sub, kappa, transfer_matrix, &deg,
+    ret_code = nse_fscatter(Dsub*upsampling_factor, qsub_preprocessed, eps_t_sub, kappa, transfer_matrix, &deg,
             W_ptr, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
 
@@ -606,7 +606,7 @@ static inline INT subsample_and_refine(const UINT D,
             }
 
             // Refine the remaining roots
-            ret_code = refine_mainspec(D_effective, q_effective, r_effective, eps_t, K_new, roots,
+            ret_code = refine_mainspec(D_effective, q_preprocessed, r_preprocessed, eps_t, K_new, roots,
                     opts_ptr->max_evals, -rhs, refine_tol, kappa, nse_discretization);
             CHECK_RETCODE(ret_code, release_mem);
             
@@ -659,7 +659,7 @@ static inline INT subsample_and_refine(const UINT D,
         }
         
         // Refine the roots
-        ret_code = refine_auxspec(D_effective, q_effective, r_effective, eps_t, M, roots,
+        ret_code = refine_auxspec(D_effective, q_preprocessed, r_preprocessed, eps_t, M, roots,
                 opts_ptr->max_evals, refine_tol, kappa, nse_discretization);
         CHECK_RETCODE(ret_code, release_mem);
         
@@ -693,10 +693,10 @@ static inline INT subsample_and_refine(const UINT D,
     release_mem:
         free(transfer_matrix);
         free(p);
-        free(q_effective);
-        free(r_effective);
-        free(qsub_effective);
-        free(rsub_effective);
+        free(q_preprocessed);
+        free(r_preprocessed);
+        free(qsub_preprocessed);
+        free(rsub_preprocessed);
         return ret_code;
 }
 

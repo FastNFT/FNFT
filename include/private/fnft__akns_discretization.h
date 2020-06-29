@@ -69,15 +69,15 @@ FNFT_REAL fnft__akns_discretization_boundary_coeff(fnft__akns_discretization_t d
  * discretization.
  *
  * Higher order methods use more than one sample per integration step. This routine returns
- * the value D_scale based on the discretization of type \link fnft__akns_discretization_t \endlink.
- * D_effective = D_scale * D.
+ * the value upsampling_factor based on the discretization of type \link fnft__akns_discretization_t \endlink.
+ * D_effective = upsampling_factor * D.
  * @param[in] discretization The type of discretization to be used. Should be
  * of type \link fnft__akns_discretization_t \endlink.
- * @returns the D_scale value, or 0 for unknown discretizations.
+ * @returns the upsampling_factor value, or 0 for unknown discretizations.
  *
  * @ingroup akns
  */
-FNFT_UINT fnft__akns_discretization_D_scale(fnft__akns_discretization_t discretization);
+FNFT_UINT fnft__akns_discretization_upsampling_factor(fnft__akns_discretization_t discretization);
 
 /**
  * @brief This routine returns the order of the method based on the
@@ -141,7 +141,7 @@ FNFT_INT fnft__akns_z_to_lambda(const FNFT_UINT n, const FNFT_REAL eps_t,
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define akns_discretization_degree(...) fnft__akns_discretization_degree(__VA_ARGS__)
 #define akns_discretization_boundary_coeff(...) fnft__akns_discretization_boundary_coeff(__VA_ARGS__)
-#define akns_discretization_D_scale(...) fnft__akns_discretization_D_scale(__VA_ARGS__)
+#define akns_discretization_upsampling_factor(...) fnft__akns_discretization_upsampling_factor(__VA_ARGS__)
 #define akns_discretization_method_order(...) fnft__akns_discretization_method_order(__VA_ARGS__)
 #define akns_lambda_to_z(...) fnft__akns_lambda_to_z(__VA_ARGS__)
 #define akns_z_to_lambda(...) fnft__akns_z_to_lambda(__VA_ARGS__)

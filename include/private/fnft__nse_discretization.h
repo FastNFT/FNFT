@@ -70,16 +70,16 @@ FNFT_REAL fnft__nse_discretization_boundary_coeff(fnft_nse_discretization_t nse_
  * discretization.
  *
  * Higher order methods use more than one sample per integration step. This routine returns
- * the value D_scale based on the discretization of type \link fnft_nse_discretization_t \endlink.
- * D_effective = D_scale * D.
+ * the value upsampling_factor based on the discretization of type \link fnft_nse_discretization_t \endlink.
+ * D_effective = upsampling_factor * D.
  * @param[in] discretization The type of discretization to be used. Should be
  * of type \link fnft_nse_discretization_t \endlink.
- * @returns the D_scale value, or 0 for discretizations not supported
+ * @returns the upsampling_factor value, or 0 for discretizations not supported
  * by \link fnft__nse_fscatter \endlink.
  *
  * @ingroup nse
  */
-FNFT_UINT fnft__nse_discretization_D_scale(fnft_nse_discretization_t discretization);
+FNFT_UINT fnft__nse_discretization_upsampling_factor(fnft_nse_discretization_t discretization);
 
 /**
  * @brief This routine returns the order of the method based on the
@@ -258,7 +258,7 @@ FNFT_INT fnft__nse_phase_factor_b(const FNFT_REAL eps_t, const FNFT_UINT D, FNFT
  * @param[out] first_last_index Vector of length two. Upon exit, it contains
  *             the original index of the first and the last sample used to build
  *             q_preprocessed.
- * @param[in] nse_discretization Discretization of type \link fnft_nse_discretization_t \endlink.
+ * @param[in] discretization Discretization of type \link fnft_nse_discretization_t \endlink.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  *
@@ -273,7 +273,7 @@ FNFT_INT fnft__nse_preprocess_signal(const FNFT_UINT D, FNFT_COMPLEX const * con
 #define nse_discretization_degree(...) fnft__nse_discretization_degree(__VA_ARGS__)
 #define nse_discretization_boundary_coeff(...) fnft__nse_discretization_boundary_coeff(__VA_ARGS__)
 #define nse_discretization_to_akns_discretization(...) fnft__nse_discretization_to_akns_discretization(__VA_ARGS__)
-#define nse_discretization_D_scale(...) fnft__nse_discretization_D_scale(__VA_ARGS__)
+#define nse_discretization_upsampling_factor(...) fnft__nse_discretization_upsampling_factor(__VA_ARGS__)
 #define nse_discretization_method_order(...) fnft__nse_discretization_method_order(__VA_ARGS__)
 #define nse_lambda_to_z(...) fnft__nse_lambda_to_z(__VA_ARGS__)
 #define nse_z_to_lambda(...) fnft__nse_z_to_lambda(__VA_ARGS__)

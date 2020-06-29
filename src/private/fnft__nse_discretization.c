@@ -58,16 +58,16 @@ REAL fnft__nse_discretization_boundary_coeff(nse_discretization_t nse_discretiza
 /**
  * This routine returns the scaling for effective number of samples based on the discretization.
  */
-UINT fnft__nse_discretization_D_scale(nse_discretization_t nse_discretization)
+UINT fnft__nse_discretization_upsampling_factor(nse_discretization_t nse_discretization)
 {
     akns_discretization_t akns_discretization = 0;
-    UINT D_scale = 0;
+    UINT upsampling_factor = 0;
     INT ret_code;
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);    
-    D_scale = akns_discretization_D_scale(akns_discretization);
+    upsampling_factor = akns_discretization_upsampling_factor(akns_discretization);
     leave_fun:    
-        return D_scale;
+        return upsampling_factor;
 }
 
 /**
@@ -76,13 +76,13 @@ UINT fnft__nse_discretization_D_scale(nse_discretization_t nse_discretization)
 UINT fnft__nse_discretization_method_order(nse_discretization_t nse_discretization)
 {
     akns_discretization_t akns_discretization = 0;
-    UINT D_scale = 0;
+    UINT upsampling_factor = 0;
     INT ret_code;
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);    
-    D_scale = akns_discretization_method_order(akns_discretization);
+    upsampling_factor = akns_discretization_method_order(akns_discretization);
     leave_fun:    
-        return D_scale;
+        return upsampling_factor;
 }
 
 /**
@@ -323,12 +323,12 @@ INT fnft__nse_preprocess_signal(const UINT D, COMPLEX const * const q,
     const UINT nskip_per_step = ROUND((REAL)D / Dsub);
     Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
     
-    UINT D_scale = nse_discretization_D_scale(discretization);
-    if (D_scale == 0){
+    UINT upsampling_factor = nse_discretization_upsampling_factor(discretization);
+    if (upsampling_factor == 0){
         ret_code =  E_INVALID_ARGUMENT(discretization);
         goto release_mem;
     }
-    D_effective = Dsub * D_scale;
+    D_effective = Dsub * upsampling_factor;
     COMPLEX * const q_preprocessed = malloc(D_effective * sizeof(COMPLEX));
     COMPLEX * const r_preprocessed = malloc(D_effective * sizeof(COMPLEX));
     if (q_preprocessed == NULL || r_preprocessed == NULL) {

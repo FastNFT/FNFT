@@ -59,16 +59,16 @@ REAL fnft__kdv_discretization_boundary_coeff(kdv_discretization_t kdv_discretiza
 /**
  * This routine returns the scaling for effective number of samples based on the discretization.
  */
-UINT fnft__kdv_discretization_D_scale(kdv_discretization_t kdv_discretization)
+UINT fnft__kdv_discretization_upsampling_factor(kdv_discretization_t kdv_discretization)
 {
     akns_discretization_t akns_discretization = 0;
-    UINT D_scale = 0;
+    UINT upsampling_factor = 0;
     INT ret_code;
     ret_code = kdv_discretization_to_akns_discretization(kdv_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);    
-    D_scale = akns_discretization_D_scale(akns_discretization);
+    upsampling_factor = akns_discretization_upsampling_factor(akns_discretization);
     leave_fun:    
-        return D_scale;
+        return upsampling_factor;
 }
 
 /**

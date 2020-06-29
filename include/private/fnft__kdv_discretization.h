@@ -88,16 +88,16 @@ FNFT_INT fnft__kdv_discretization_to_akns_discretization(fnft_kdv_discretization
  * discretization.
  *
  * Higher order methods use more than one sample per integration step. This routine returns
- * the value D_scale based on the discretization of type \link fnft_kdv_discretization_t \endlink.
- * D_effective = D_scale * D.
+ * the value upsampling_factor based on the discretization of type \link fnft_kdv_discretization_t \endlink.
+ * D_effective = upsampling_factor * D.
  * @param[in] discretization The type of discretization to be used. Should be
  * of type \link fnft_nse_discretization_t \endlink.
- * @returns the D_scale value, or 0 for discretizations not supported
+ * @returns the upsampling_factor value, or 0 for discretizations not supported
  * by \link fnft__kdv_fscatter \endlink.
  *
  * @ingroup kdv
  */
-FNFT_UINT fnft__kdv_discretization_D_scale(fnft_kdv_discretization_t discretization);
+FNFT_UINT fnft__kdv_discretization_upsampling_factor(fnft_kdv_discretization_t discretization);
         
         
 /**
@@ -149,7 +149,7 @@ FNFT_INT fnft__kdv_z_to_lambda(const FNFT_UINT n, const FNFT_REAL eps_t,
 #define kdv_discretization_degree(...) fnft__kdv_discretization_degree(__VA_ARGS__)
 #define kdv_discretization_boundary_coeff(...) fnft__kdv_discretization_boundary_coeff(__VA_ARGS__)
 #define kdv_discretization_to_akns_discretization(...) fnft__kdv_discretization_to_akns_discretization(__VA_ARGS__)
-#define kdv_discretization_D_scale(...) fnft__kdv_discretization_D_scale(__VA_ARGS__)
+#define kdv_discretization_upsampling_factor(...) fnft__kdv_discretization_upsampling_factor(__VA_ARGS__)
 #define kdv_lambda_to_z(...) fnft__kdv_lambda_to_z(__VA_ARGS__)
 #define kdv_z_to_lambda(...) fnft__kdv_z_to_lambda(__VA_ARGS__)
 #endif

@@ -42,7 +42,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
     
     INT ret_code = SUCCESS;
     UINT neig;
-    UINT n, D_scale, D_given, n_given, count;
+    UINT n, upsampling_factor, D_given, n_given, count;
     COMPLEX * l = NULL, qn, rn, ks, k,ch,chi,sh,u1,ud1,ud2, l_curr;
     REAL eps_t_n = 0, eps_t = 0, scl_factor = 0;
     COMPLEX * PHI1 = NULL, * PHI2 = NULL;
@@ -91,12 +91,12 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
         goto leave_fun;
     }
     
-    D_scale = nse_discretization_D_scale(discretization);
-    if (D_scale == 0){
+    upsampling_factor = nse_discretization_upsampling_factor(discretization);
+    if (upsampling_factor == 0){
         ret_code =  E_INVALID_ARGUMENT(discretization);
         goto leave_fun;
     }
-    D_given = D/D_scale;
+    D_given = D/upsampling_factor;
     
     // Allocating memory for storing PHI and PSI at all D_given points as
     // there are required to find the right value of b.
@@ -282,7 +282,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
             case nse_discretization_CF4_3:
             case nse_discretization_CF5_3:
             case nse_discretization_CF6_4:
-                count = D_scale - 1;
+                count = upsampling_factor - 1;
                 phi1 = PHI1[0];
                 phi2 = PHI2[0];
                 for (n = 0; n < D; n++){
@@ -317,7 +317,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     phi2 = c;
                     
                     if (count == 0){
-                        count = D_scale - 1;                        
+                        count = upsampling_factor - 1;                        
                         PHI1[n_given+1] = phi1;
                         PHI2[n_given+1] = phi2;
                         n_given++;
@@ -486,7 +486,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 case nse_discretization_CF6_4:
                     n = D;
                     n_given = D_given; 
-                    count = D_scale-1;
+                    count = upsampling_factor-1;
                     do{
                         n--;
                         qn = q[n];
@@ -510,7 +510,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                         psi2 = c;
                         
                         if (count == 0){
-                            count = D_scale - 1;
+                            count = upsampling_factor - 1;
                             PSI1[n_given-1] = psi1;
                             PSI2[n_given-1] = psi2;
                             n_given--;
