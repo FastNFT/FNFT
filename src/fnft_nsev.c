@@ -23,6 +23,8 @@
 
 
 #include "fnft_nsev.h"
+#include "fnft__nsev_slow.h"
+
 
 
 static fnft_nsev_opts_t default_opts = {
@@ -97,15 +99,6 @@ static inline INT tf2normconsts_or_residues(
         COMPLEX * const normconsts_or_residues,
         fnft_nsev_opts_t * const opts);
 
-static inline INT refine_roots_newton(
-        const UINT D,
-        COMPLEX const * const q,
-        COMPLEX * r,
-        REAL const * const T,
-        const UINT K,
-        COMPLEX * bound_states,
-        nse_discretization_t discretization,
-        const UINT niter);
 
 static inline INT fnft_nsev_base(
         const UINT D,
@@ -677,11 +670,11 @@ static inline INT tf2boundstates(
             // Perform Newton iterations. Initial guesses of bound-states
             // should be in the continuous-time domain.
             if (upsampling_factor == 1){
-                ret_code = refine_roots_newton(D, q, r, T, K, buffer,
+                ret_code = nse_refine_roots_newton(D, q, r, T, K, buffer,
                         nse_discretization_BO, opts->niter);
                 CHECK_RETCODE(ret_code, leave_fun);
             }else if(upsampling_factor == 2){
-                ret_code = refine_roots_newton(D, q, r, T, K, buffer,
+                ret_code = nse_refine_roots_newton(D, q, r, T, K, buffer,
                         nse_discretization_CF4_2, opts->niter);
                 CHECK_RETCODE(ret_code, leave_fun);
             }else
@@ -839,79 +832,6 @@ static inline INT tf2normconsts_or_residues(
                 return E_DIV_BY_ZERO;
             normconsts_or_residues[offset + i] /= aprime_vals[i];
         }
-    }
-    
-    leave_fun:
-        return ret_code;
-}
-
-// Auxiliary function: Refines the bound-states using Newtons method
-static inline INT refine_roots_newton(
-        const UINT D,
-        COMPLEX const * const q,
-        COMPLEX * r,
-        REAL const * const T,
-        const UINT K,
-        COMPLEX * bound_states,
-        nse_discretization_t discretization,
-        const UINT niter)
-{
-    INT ret_code = SUCCESS;
-    UINT i, iter, upsampling_factor, D_given;
-    COMPLEX a_val, b_val, aprime_val, error;
-    REAL eprecision = EPSILON * 100;
-    REAL re_bound_val, im_bound_val = NAN;
-    // Check inputs
-    if (K == 0) // no bound states to refine
-        return SUCCESS;
-    if (niter == 0) // no refinement requested
-        return SUCCESS;
-    if (bound_states == NULL)
-        return E_INVALID_ARGUMENT(bound_states);
-    if (q == NULL)
-        return E_INVALID_ARGUMENT(q);
-    if (T == NULL)
-        return E_INVALID_ARGUMENT(T);
-    
-    upsampling_factor = nse_discretization_upsampling_factor(discretization);
-    if (upsampling_factor == 0)
-        return E_INVALID_ARGUMENT(discretization);
-    D_given = D/upsampling_factor;
-    const REAL eps_t = (T[1] - T[0])/(D_given - 1);
-    
-
-    im_bound_val = upsampling_factor*upsampling_factor*im_bound(D, q, T);
-    if (im_bound_val == NAN){
-        ret_code = E_OTHER("Upper bound on imaginary part of bound states is NaN");
-        CHECK_RETCODE(ret_code, leave_fun);
-    }
-    
-    re_bound_val = re_bound(eps_t, 2.0);
-    
-    // Perform iterations of Newton's method
-    for (i = 0; i < K; i++) {
-        iter = 0;
-        do {
-            // Compute a(lam) and a'(lam) at the current root
-            ret_code = nse_scatter_bound_states(D, q, r, T, 1,
-                    bound_states + i, &a_val, &aprime_val, &b_val, discretization, 1);
-            if (ret_code != SUCCESS){
-                ret_code = E_SUBROUTINE(ret_code);
-                CHECK_RETCODE(ret_code, leave_fun);
-            }
-            // Perform Newton updates: lam[i] <- lam[i] - a(lam[i])/a'(lam[i])
-            if (aprime_val == 0.0)
-                return E_DIV_BY_ZERO;
-            error = a_val / aprime_val;
-            bound_states[i] -= error;
-            iter++;
-            if (CIMAG(bound_states[i]) > im_bound_val
-                    || CREAL(bound_states[i]) > re_bound_val
-                    || CREAL(bound_states[i]) < -re_bound_val
-                    || CIMAG(bound_states[i]) < 0.0)
-                break;
-            
-        } while (CABS(error) > eprecision && iter < niter);
     }
     
     leave_fun:

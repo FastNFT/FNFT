@@ -23,6 +23,7 @@
 
 
 #include "fnft_nsev_slow.h"
+#include "fnft__nsev_slow.h"
 
 static fnft_nsev_slow_opts_t default_opts = {
     .bound_state_filtering = nsev_bsfilt_FULL,
@@ -51,15 +52,15 @@ fnft_nsev_slow_opts_t fnft_nsev_slow_default_opts()
  */
 
 
-static inline INT refine_roots_newton(
-        const UINT D,
-        COMPLEX const * const q,
-        COMPLEX * r,
-        REAL const * const T,
-        const UINT K,
-        COMPLEX * bound_states,
-        nse_discretization_t discretization,
-        const UINT niter);
+// static inline INT refine_roots_newton(
+//         const UINT D,
+//         COMPLEX const * const q,
+//         COMPLEX * r,
+//         REAL const * const T,
+//         const UINT K,
+//         COMPLEX * bound_states,
+//         nse_discretization_t discretization,
+//         const UINT niter);
 
 static inline INT compute_normconsts_or_residues(
         const UINT D,
@@ -447,7 +448,7 @@ static inline INT fnft_nsev_slow_base(
                 
                 // Perform Newton iterations. Initial guesses of bound-states
                 // should be in the continuous-time domain.
-                ret_code = refine_roots_newton(D, q, r, T, K, buffer,
+                ret_code = nse_refine_roots_newton(D, q, r, T, K, buffer,
                         opts->discretization, opts->niter);
                 CHECK_RETCODE(ret_code, release_mem);
                 break;
@@ -603,7 +604,7 @@ static inline REAL im_bound(const UINT D, COMPLEX const * const q,
 }
 
 // Auxiliary function: Refines the bound-states using Newtons method
-static inline INT refine_roots_newton(
+INT nse_refine_roots_newton(
         const UINT D,
         COMPLEX const * const q,
         COMPLEX * r,
