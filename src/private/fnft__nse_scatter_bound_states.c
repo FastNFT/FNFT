@@ -24,13 +24,6 @@
 
 
 /**
- * Declare auxiliary routines used by the main routine fnft__nse_scatter_bound_states
- * Their bodies follow below.
- */
-
-static inline void square_matrix_mult(const UINT N, COMPLEX *const U,
-        COMPLEX *const T);
-/**
  * Returns the a, a_prime and b computed using the chosen scheme.
  */
 INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
@@ -411,8 +404,8 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     UD[1][0] = w_d*r[n];
                     UD[1][1] = c_d+I*s_d;
                     
-                    square_matrix_mult(2, &UN[0][0], &TM[0][0]);
-                    square_matrix_mult(2, &UD[0][0], &TMD[0][0]);
+                    misc_square_matrix_mult(2, &UN[0][0], &TM[0][0]);
+                    misc_square_matrix_mult(2, &UD[0][0], &TMD[0][0]);
                     
                     a1 = tmp2[n];
                     a2 = tmp2[n+1];
@@ -432,8 +425,8 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     UD[1][0] = UN[1][0];
                     UD[1][1] = UN[1][1];
                     
-                    square_matrix_mult(2, &UN[0][0], &TM[0][0]);
-                    square_matrix_mult(2, &UD[0][0], &TMD[0][0]);
+                    misc_square_matrix_mult(2, &UN[0][0], &TM[0][0]);
+                    misc_square_matrix_mult(2, &UD[0][0], &TMD[0][0]);
                     
                     U[0][0] = TM[0][0];
                     U[0][1] = TM[0][1];
@@ -589,7 +582,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                         UN[1][0] = s*(a1+I*a2);
                         UN[1][1] = (c-s*a3);
                         
-                        square_matrix_mult(2, &UN[0][0], &TM[0][0]);
+                        misc_square_matrix_mult(2, &UN[0][0], &TM[0][0]);
                         
                         a1 = tmp4[n];
                         a2 = tmp4[n+1];
@@ -605,7 +598,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                         UN[1][0] = s*(a1+I*a2);
                         UN[1][1] = c;
                         
-                        square_matrix_mult(2, &UN[0][0], &TM[0][0]);
+                        misc_square_matrix_mult(2, &UN[0][0], &TM[0][0]);
                         
                         U[0][0] = TM[0][0];
                         U[0][1] = TM[0][1];
@@ -656,22 +649,3 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
         return ret_code;
 }
 
-// Auxiliary function:  Multiples two square matrices of size N.
-// The result is stored in T (T=U*T).
-static inline void square_matrix_mult(const UINT N, COMPLEX * const U,
-        COMPLEX *const T){
-    UINT  c1, c2, c3;
-    COMPLEX TM[32] = { 0 }, sum = 0;
-    for (c1 = 0; c1 < N; c1++) {
-        for (c2 = 0; c2 < N; c2++) {
-            for (c3 = 0; c3 < N; c3++) {
-                sum = sum + U[c1*N+c3]*T[c3*N+c2];
-            }
-            TM[c1*N+c2] = sum;
-            sum = 0;
-        }
-    }
-    memcpy(T,TM,N*N*sizeof(COMPLEX));
-    
-    return;
-}

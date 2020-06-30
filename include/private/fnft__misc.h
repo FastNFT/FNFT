@@ -28,6 +28,7 @@
 #define FNFT__MISC_H
 
 #include "fnft.h"
+#include <string.h>
 
 /**
  * @brief Helper function for debugging. Prints an array in MATLAB style.
@@ -235,6 +236,37 @@ FNFT_UINT fnft__misc_nextpowerof2(const FNFT_UINT number);
 FNFT_INT fnft__misc_resample(const FNFT_UINT D, const FNFT_REAL eps_t, FNFT_COMPLEX const * const q,
     const FNFT_REAL delta, FNFT_COMPLEX *const q_new);
 
+/**
+ * @brief Multiples two square matrices of size N.
+ * @ingroup  misc
+ *
+ * Multiples two square matrices U and T of size N. T is replaced by the
+ * result U*T.
+ * @param[in] N Positive integer that is the size of the two matrices.
+ * @param[in] U Pointer to the first element of complex values NxN matrix U.
+ * @param[in,out] T Pointer to the first element of complex values NxN matrix T.
+ * Contains the result U*T on return.
+ */
+static inline void fnft__misc_square_matrix_mult(const FNFT_UINT N, FNFT_COMPLEX * const U,
+        FNFT_COMPLEX *const T){
+    FNFT_UINT  c1, c2, c3;
+    FNFT_COMPLEX TM[32] = { 0 }, sum = 0;
+    for (c1 = 0; c1 < N; c1++) {
+        for (c2 = 0; c2 < N; c2++) {
+            for (c3 = 0; c3 < N; c3++) {
+                sum = sum + U[c1*N+c3]*T[c3*N+c2];
+            }
+            TM[c1*N+c2] = sum;
+            sum = 0;
+        }
+    }
+    memcpy(T,TM,N*N*sizeof(FNFT_COMPLEX));
+    
+    return;
+}
+
+
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define misc_print_buf(...) fnft__misc_print_buf(__VA_ARGS__)
 #define misc_rel_err(...) fnft__misc_rel_err(__VA_ARGS__)
@@ -249,6 +281,8 @@ FNFT_INT fnft__misc_resample(const FNFT_UINT D, const FNFT_REAL eps_t, FNFT_COMP
 #define misc_CSINC(...) fnft__misc_CSINC(__VA_ARGS__)
 #define misc_nextpowerof2(...) fnft__misc_nextpowerof2(__VA_ARGS__)
 #define misc_resample(...) fnft__misc_resample(__VA_ARGS__)
+#define misc_square_matrix_mult(...) fnft__misc_square_matrix_mult(__VA_ARGS__)
+
 #endif
 
 #endif

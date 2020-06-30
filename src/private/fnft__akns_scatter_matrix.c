@@ -23,14 +23,6 @@
 #include "fnft__akns_scatter.h"
 
 /**
- * Declare auxiliary routines used by the main routine fnft__akns_scatter_matrix.
- * Their bodies follow below.
- */
-
-static inline void square_matrix_mult(const UINT N, COMPLEX *const U,
-        COMPLEX *const T);
-
-/**
  * If derivative_flag=0 returns [S11 S12 S21 S22] in result where
  * S = [S11, S12; S21, S22] is the scattering matrix computed using the
  * chosen scheme.
@@ -181,7 +173,7 @@ INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
                 U[3][2] = rn*sh;
                 U[3][3] = ch+u1;
                 
-                square_matrix_mult(4, &U[0][0], &T[0][0]);
+                misc_square_matrix_mult(4, &U[0][0], &T[0][0]);
             }
             
             result[i*8] = T[0][0];
@@ -214,7 +206,7 @@ INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
                 U[0][1] = qn*sh;
                 U[1][0] = rn*sh;
                 U[1][1] = ch + u1;
-                square_matrix_mult(2, &U[0][0], &T[0][0]);
+                misc_square_matrix_mult(2, &U[0][0], &T[0][0]);
             }
             
             result[i*4] = T[0][0];
@@ -332,7 +324,7 @@ INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
                             U[2][3] = U[0][1];
                             U[3][2] = U[1][0];
                             U[3][3] = U[1][1];
-                            square_matrix_mult(4, &U[0][0], &T[0][0]);
+                            misc_square_matrix_mult(4, &U[0][0], &T[0][0]);
                         }
                         break;
                         // Fourth-order exponential method which requires
@@ -380,8 +372,8 @@ INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
                             UD[1][0] = w_d*r[n];
                             UD[1][1] = c_d+I*s_d;
                             
-                            square_matrix_mult(2, &UN[0][0], &TM[0][0]);
-                            square_matrix_mult(2, &UD[0][0], &TMD[0][0]);
+                            misc_square_matrix_mult(2, &UN[0][0], &TM[0][0]);
+                            misc_square_matrix_mult(2, &UD[0][0], &TMD[0][0]);
                             
                             a1 = tmp2[n];
                             a2 = tmp2[n+1];
@@ -401,8 +393,8 @@ INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
                             UD[1][0] = UN[1][0];
                             UD[1][1] = UN[1][1];
                             
-                            square_matrix_mult(2, &UN[0][0], &TM[0][0]);
-                            square_matrix_mult(2, &UD[0][0], &TMD[0][0]);
+                            misc_square_matrix_mult(2, &UN[0][0], &TM[0][0]);
+                            misc_square_matrix_mult(2, &UD[0][0], &TMD[0][0]);
                             
                             U[0][0] = TM[0][0];
                             U[0][1] = TM[0][1];
@@ -417,7 +409,7 @@ INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
                             U[3][2] = U[1][0];
                             U[3][3] = U[1][1];
                             
-                            square_matrix_mult(4, &U[0][0], &T[0][0]);
+                            misc_square_matrix_mult(4, &U[0][0], &T[0][0]);
                         }
                         break;
                         
@@ -460,7 +452,7 @@ INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
                             U[0][1] = s*(a1-I*a2);
                             U[1][0] = s*(a1+I*a2);
                             U[1][1] = (c-s*a3);
-                            square_matrix_mult(2, &U[0][0], &T[0][0]);
+                            misc_square_matrix_mult(2, &U[0][0], &T[0][0]);
                         }
                         break;
                         // Fourth-order exponential method which requires
@@ -494,7 +486,7 @@ INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
                             U[0][1] = s*(a1-I*a2);
                             U[1][0] = s*(a1+I*a2);
                             U[1][1] = (c-s*a3);
-                            square_matrix_mult(2, &U[0][0], &T[0][0]);
+                            misc_square_matrix_mult(2, &U[0][0], &T[0][0]);
                         }
                         break;
                         
@@ -518,24 +510,4 @@ INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
         free(tmp1);
         free(tmp2);
         return ret_code;
-}
-
-// Auxiliary function:  Multiples two square matrices of size N.
-// The result is stored in T (T=U*T).
-static inline void square_matrix_mult(const UINT N, COMPLEX * const U,
-        COMPLEX *const T){
-    UINT  c1, c2, c3;
-    COMPLEX TM[32] = { 0 }, sum = 0;
-    for (c1 = 0; c1 < N; c1++) {
-        for (c2 = 0; c2 < N; c2++) {
-            for (c3 = 0; c3 < N; c3++) {
-                sum = sum + U[c1*N+c3]*T[c3*N+c2];
-            }
-            TM[c1*N+c2] = sum;
-            sum = 0;
-        }
-    }
-    memcpy(T,TM,N*N*sizeof(COMPLEX));
-    
-    return;
 }

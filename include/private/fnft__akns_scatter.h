@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <string.h> // for memcpy
 #include "fnft__errwarn.h"
+#include "fnft__misc.h"// for square_matrix_mult
 
 
 /**
