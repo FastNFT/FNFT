@@ -27,7 +27,7 @@
 #endif
 
 INT nsep_testcases(nsep_testcases_t tc, const UINT D,
-    COMPLEX ** const q_ptr, REAL * const T,
+    COMPLEX ** const q_ptr, REAL * const T, REAL * const phase_shift, 
     UINT * const K_ptr, COMPLEX ** const mainspec_ptr,
     UINT * const M_ptr, COMPLEX ** const auxspec_ptr,
     REAL ** const sheet_indices_ptr, INT * const kappa_ptr,
@@ -113,7 +113,8 @@ INT nsep_testcases(nsep_testcases_t tc, const UINT D,
 
         T[0] = 0.0; // location of first sample and begin of period
         T[1] = 2.0*PI; // end of period
-        eps_t = 2.0*PI/(D-1); // location of last sample is T[1]. In previous version it was T[1]-eps_t
+        phase_shift[0] = 0.0;
+        eps_t = 2.0*PI/D; // location of last sample is T[1]-eps_t
         for (i=0; i<D; i++)
             (*q_ptr)[i] = 2.0*CEXP( 3.0*I*(T[0] + i*eps_t) );
 
@@ -184,7 +185,8 @@ INT nsep_testcases(nsep_testcases_t tc, const UINT D,
 
         T[0] = 0; // location of 1st sample
         T[1] = 1.0; // end of period
-        eps_t = (T[1] - T[0])/(D - 1); // location of last sample is T[1]. In previous version it was T[1]-eps_t
+        phase_shift[0] = 0.0;
+        eps_t = (T[1] - T[0])/D; // location of last sample is T[1]-eps_t
 
         for (i=0; i<D; i++)
             (*q_ptr)[i] = (1.0 + 2.0*I)/5.0;
@@ -299,6 +301,7 @@ fnft_nsep_opts_t * opts_ptr) {
     COMPLEX * auxspec = NULL;
     REAL * sheet_indices = NULL;
     REAL T[2];
+    REAL phase_shift;
     COMPLEX * mainspec_exact = NULL;
     COMPLEX * auxspec_exact = NULL;
     REAL * sheet_indices_exact = NULL;
@@ -310,7 +313,7 @@ fnft_nsep_opts_t * opts_ptr) {
     INT ret_code;
 
     // Load test case
-    ret_code = nsep_testcases(tc, D, &q, T, &K_exact, &mainspec_exact,
+    ret_code = nsep_testcases(tc, D, &q, T, &phase_shift, &K_exact, &mainspec_exact,
         &M_exact, &auxspec_exact, &sheet_indices_exact, &kappa, remove_box);
     if (ret_code != SUCCESS)
         return E_SUBROUTINE(ret_code);
@@ -331,7 +334,7 @@ fnft_nsep_opts_t * opts_ptr) {
 
     // Compute the NFT (sheet_indices stay NULL because they are not yet
     // implemented)
-    ret_code = fnft_nsep(D, q, T, &K, mainspec, &M, auxspec, sheet_indices,
+    ret_code = fnft_nsep(D, q, T, phase_shift, &K, mainspec, &M, auxspec, sheet_indices,
         kappa, opts_ptr);
     CHECK_RETCODE(ret_code, release_mem);
 

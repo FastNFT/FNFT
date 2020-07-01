@@ -28,13 +28,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     size_t D;
     double complex * q;
     double * T;
+    double phase_shift;
     size_t M;
     double complex * main_spec;
     size_t K;
     double complex * aux_spec = NULL;
     int * sheet_indices = NULL;
     int kappa;
-    int Dscale = 1;
+    int upsampling_factor = 1;
     size_t i;
     ptrdiff_t k;
     double *re, *im;
@@ -54,21 +55,24 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if ( !mxIsDouble(prhs[1]) || mxGetM(prhs[1]) != 1 || mxGetN(prhs[1]) != 2 )
         mexErrMsgTxt("Second input T should be a double 1x2 vector.");
     if ( !mxIsDouble(prhs[2]) || mxGetNumberOfElements(prhs[2]) != 1 )
-        mexErrMsgTxt("Third input kappa should be a scalar.");
+        mexErrMsgTxt("Third input phase_shift should be a scalar.");
+    if ( !mxIsDouble(prhs[3]) || mxGetNumberOfElements(prhs[3]) != 1 )
+        mexErrMsgTxt("Fourth input kappa should be a scalar.");
 
     D = mxGetNumberOfElements(prhs[0]);
     K = D;
     M = D;
     T = mxGetPr(prhs[1]);
-    kappa = (int)mxGetScalar(prhs[2]);
+    phase_shift = mxGetScalar(prhs[2]);
+    kappa = (int)mxGetScalar(prhs[3]);
 
     /* Check values of first three inputs */
-    if ( D<2 || D%2 != 1 )
+    if ( D<2 || D%2 != 0 )
         mexErrMsgTxt("Length of the first input q should be odd.");
     if ( T[0] >= T[1] )
         mexErrMsgTxt("T(1) >= T(2).");
     if ( kappa != +1 && kappa != -1 )
-        mexErrMsgTxt("Third input kappa should be +1.0 or -1.0.");
+        mexErrMsgTxt("Fourth input kappa should be +1.0 or -1.0.");
 
     // Default options for fnft_nsep
     opts = fnft_nsep_default_opts();
@@ -77,7 +81,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     fnft_errwarn_setprintf(mexPrintf);
 
     /* Check remaining inputs, if any */
-    for (k=3; k<nrhs; k++) {
+    for (k=4; k<nrhs; k++) {
 
         /* Check if current input is a string as desired and convert it */
         if ( !mxIsChar(prhs[k]) ) {
@@ -174,15 +178,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             
         } else if ( strcmp(str, "discr_2split4A") == 0 ) {
             
-            opts.discretization = fnft_nse_discretization_2SPLIT4A; Dscale = 4;
+            opts.discretization = fnft_nse_discretization_2SPLIT4A; upsampling_factor = 4;
             
         } else if ( strcmp(str, "discr_2split4B") == 0 ) {
             
-            opts.discretization = fnft_nse_discretization_2SPLIT4B; Dscale = 2;
+            opts.discretization = fnft_nse_discretization_2SPLIT4B; upsampling_factor = 2;
             
         } else if ( strcmp(str, "discr_4split4B") == 0 ) {
             
-            opts.discretization = fnft_nse_discretization_4SPLIT4B; Dscale = 4;            
+            opts.discretization = fnft_nse_discretization_4SPLIT4B; upsampling_factor = 4;            
 
         } else {
             snprintf(msg, sizeof msg, "%uth input has invalid value.",
@@ -193,8 +197,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     /* Allocate memory */
     q = mxMalloc(D * sizeof(double complex));
-    K = (opts.points_per_spine)*Dscale*D + 1;
-    M = Dscale*D;
+    K = (opts.points_per_spine)*upsampling_factor*D + 1;
+    M = upsampling_factor*D;
     main_spec = mxMalloc(K * sizeof(double complex));
     aux_spec = mxMalloc(M * sizeof(double complex));
     sheet_indices = mxMalloc(M * sizeof(int));
@@ -211,7 +215,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         q[i] = re[i] + I*im[i];
 
     /* Call the C routine */
-    ret_code = fnft_nsep(D, q, T, &K, main_spec, &M, aux_spec, NULL, kappa,
+    ret_code = fnft_nsep(D, q, T, phase_shift, &K, main_spec, &M, aux_spec, NULL, kappa,
         &opts);
     if (ret_code != FNFT_SUCCESS) {
         snprintf(msg, sizeof msg, "fnft_nsep failed (error code %i).",

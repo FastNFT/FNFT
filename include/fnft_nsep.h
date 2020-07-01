@@ -189,13 +189,16 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  *      - Prins and Wahls, <a href="https://doi.org/10.1109/ICASSP.2018.8461708">&quot;Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot;</a>in Proc.ICASSP 2018, Calgary, AB, 2018, pp. 4524-4528.
  *      - Mertsching, <a href="https://doi.org/10.1002/prop.2190350704">&quot; Quasiperiodie Solutions of the Nonlinear Schrödinger Equation,&quot;</a> Fortschr. Phys. 35:519-536, 1987.
  *
- * @param[in] D Number of samples. Has to be odd.
+ * @param[in] D Number of samples. Has to be even.
  * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
- *  where \f$ t_n = T[0] + n*L/(D-1) \f$, where \f$L=T[1]-T[0]\f$ is the period and
+ *  where \f$ t_n = T[0] + n*L/D \f$, where \f$L=T[1]-T[0]\f$ is the period and
  *  \f$n=0,1,\dots,D-1\f$, of the to-be-transformed signal in ascending order
  *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$)
  * @param[in] T Array of length 2. T[0] is the position in time of the first
- *  sample. T[1] is the beginning of the next period. It should be T[0]<T[1].
+ *  sample. T[2] is the beginning of the next period. (The location of the last
+ *  sample is thus t_{D-1}=T[2]-L/D.) It should be T[0]<T[1].
+ * @param[in] phase_shift Real scalar constant. It is the change in the phase
+ * over one quasi-period, arg(q(t+L)/q(t)). For periodic signals it will be 0.
  * @param[in,out] K_ptr Upon entry, *K_ptr should contain the length of the array
  *  main_spec. Upon return, *K_ptr contains the number of actually detected
  *  points in the main spectrum. If the length of the array main_spec was not
@@ -236,7 +239,7 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  *  defined in \link fnft_errwarn.h \endlink.
  */
 FNFT_INT fnft_nsep(const FNFT_UINT D, FNFT_COMPLEX const * const q,
-    FNFT_REAL const * const T, FNFT_UINT * const K_ptr,
+    FNFT_REAL const * const T, FNFT_REAL const phase_shift, FNFT_UINT * const K_ptr,
     FNFT_COMPLEX * const main_spec, FNFT_UINT * const M_ptr,
     FNFT_COMPLEX * const aux_spec, FNFT_REAL * const sheet_indices,
     const FNFT_INT kappa, fnft_nsep_opts_t * opts);

@@ -44,7 +44,7 @@ INT main()
     opts.bounding_box[2] = -10;
     opts.bounding_box[3] = 10;
 
-    ret_code = nsep_testcases_test_fnft(tc, D+1, error_bounds, &opts);
+    ret_code = nsep_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     // Check for error decay. The poly_roots_fftgridsearch routine used to
     // find the spectrum on real line guarantees only linear error decay
@@ -53,7 +53,7 @@ INT main()
     error_bounds[1] /= 4.0;
     error_bounds[2] /= 16.0;
 
-    ret_code = nsep_testcases_test_fnft(tc, D+1, error_bounds, &opts);
+    ret_code = nsep_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Repeat tests without real spectrum
@@ -62,14 +62,14 @@ INT main()
     error_bounds[0] = 1.3e-5;
     error_bounds[1] = 1.3e-5;
     error_bounds[2] = 0.0;
-    ret_code = nsep_testcases_test_fnft(tc, D+1, error_bounds, &opts);
+    ret_code = nsep_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Error decay should now be fourth-order.
     D *= 2;
     for (i=0; i<3; i++)
         error_bounds[i] /= 16.0;
-    ret_code = nsep_testcases_test_fnft(tc, D+1, error_bounds, &opts);
+    ret_code = nsep_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
 leave_fun:

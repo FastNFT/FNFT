@@ -42,7 +42,7 @@ INT main()
     opts.bounding_box[2] = -10;
     opts.bounding_box[3] = 10;
 
-    ret_code = nsep_testcases_test_fnft(tc, D+1, error_bounds, &opts);
+    ret_code = nsep_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Check for error decay. The poly_roots_fftgridsearch routine used to
@@ -51,7 +51,7 @@ INT main()
     error_bounds[0] /= 2.0;
     error_bounds[1] /= 4.0;
     error_bounds[2] /= 4.0;
-    ret_code = nsep_testcases_test_fnft(tc, D+1, error_bounds, &opts);
+    ret_code = nsep_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
 leave_fun:

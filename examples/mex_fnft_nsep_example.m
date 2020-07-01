@@ -28,21 +28,24 @@ close all;
 %%% Setup parameters %%%
 
 T = [0, 2*pi];  % T(1) is the beginning of the period, T(2) is the end
-D = 301;        % number of samples(NOTE: This has to be a odd positive integer)
+D = 300;        % number of samples(NOTE: This has to be a even positive integer)
 kappa = +1;     % focusing nonlinear Schroedinger equation  
 
 %%% Setup the signal %%%
 
-t = linspace(T(1),T(2),D);
-% Note: in the previous version of FNFT The location of the 1st sample was
-% T(1), but the location of the last sample was T(2) - (T(2)-T(1)/D, 
-% i.e. t = T(1) + (0:D-1)*(T(2) - T(1))/D. This change was necessary to
-% enable support for quasi-periodic signals.
+t = T(1) + (0:D-1)*(T(2) - T(1))/D;
+% Note: The location of the 1st sample is
+% T(1), but the location of the last sample is T(2) - (T(2)-T(1)/D, 
 q = 3*exp(3j*t);
+
+q_T1 = 3*exp(3j*T(1));
+q_T2 = 3*exp(3j*T(2));
+phase_shift = angle(q_T2/q_T1); % This is the phase shift in q over 
+% on period. It will be 0 for exactly periodic signals.
 
 %%% Compute the nonlinear Fourier transform %%%
 
-[main_spec, aux_spec] = mex_fnft_nsep(q, T, kappa);
+[main_spec, aux_spec] = mex_fnft_nsep(q, T, phase_shift, kappa);
 
 %%% Compute the spines %%%
 
@@ -50,7 +53,7 @@ q = 3*exp(3j*t);
 % interval [-3j, 3j]. Furthermore, there are degenerate spines
 % of length zero at the degenerate points of the main spectrum.
 
-spines = mex_fnft_nsep(q, T, kappa, 'points_per_spine', 100);
+spines = mex_fnft_nsep(q, T, phase_shift, kappa, 'points_per_spine', 100);
 
 % Increase the number of points per spine above to improve the
 % resolution of the spine (at the cost of increased run times).

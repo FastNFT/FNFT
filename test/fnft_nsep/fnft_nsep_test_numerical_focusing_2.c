@@ -412,7 +412,9 @@ INT fnft_nsep_test_numerical_focusing_2()
     opts.bounding_box[1] = 1;
     opts.bounding_box[2] = -10;
     opts.bounding_box[3] = 10;
-    ret_code = fnft_nsep(D, q, T, &K, mainspec, &M, NULL, NULL, +1, &opts);
+    
+    REAL phase_shift = CARG(q[D-1]/q[0]);
+    ret_code = fnft_nsep(D-1, q, T, phase_shift, &K, mainspec, &M, NULL, NULL, +1, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Check that the main and auxiliary spectrum are correct
@@ -427,7 +429,7 @@ INT fnft_nsep_test_numerical_focusing_2()
 
     // Compute spines
     opts.points_per_spine = points_per_spine;
-    ret_code = fnft_nsep(D, q, T, &K_spine, spines, &M, NULL, NULL, +1, &opts);
+    ret_code = fnft_nsep(D-1, q, T, phase_shift, &K_spine, spines, &M, NULL, NULL, +1, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Check that all found points are on one of the three spines. The ok_flags
