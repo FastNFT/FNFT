@@ -33,7 +33,7 @@ INT main()
         7.9e-5,     // a
         2.4e-5,     // b
         4.3e-5,     // bound states
-        4.0e-14,      // norming constants
+        5.0e-14,      // norming constants
         7.7e-5      // residues
     };
     

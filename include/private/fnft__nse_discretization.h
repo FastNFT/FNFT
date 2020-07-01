@@ -269,6 +269,31 @@ FNFT_INT fnft__nse_preprocess_signal(const FNFT_UINT D, FNFT_COMPLEX const * con
         FNFT_UINT * const Dsub_ptr, FNFT_COMPLEX **q_preprocessed_ptr, FNFT_COMPLEX **r_preprocessed_ptr,
         FNFT_UINT * const first_last_index,  fnft_nse_discretization_t discretization);
 
+
+/**
+ * @brief This routine computes various weights required by some methods
+ * based on the discretization. 
+ * 
+ * This routing computes the special weights required for the 
+ * higher-order methods CF\f$^{[4]}_2\f$, CF\f$^{[4]}_3\f$, CF\f$^{[5]}_3\f$ 
+ * and CF\f$^{[6]}_4\f$. The weights are used in \link fnft__nse_preprocess_signal \endlink,
+ * \link fnft__akns_scatter_matrix \endlink and \link fnft__nse_scatter_bound_states\endlink.
+ * The weights for CF\f$^{[4]}_3\f$ are taken from Alvermann and Fehske (<a href="https://doi.org/10.1016/j.jcp.2011.04.006">Journal of Computational Phys. 230, 2011</a>)
+ * and the weights for the others are from Blanes, Casas and Thalhammer(<a href="https://doi.org/10.1016/j.cpc.2017.07.016">Computer Phys. Comm. 220, 2017</a>).
+ * The weights are mentioned as matrices in the references. This routine returns 
+ * them in row-major order.
+ * @param[in,out] weights_ptr Pointer to the starting location of weights.
+ * @param[in] nse_discretization Discretization of type \link fnft_nse_discretization_t \endlink.
+ * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
+ *  defined in \link fnft_errwarn.h \endlink.
+ *
+ * @ingroup nse
+ */
+FNFT_INT fnft__nse_discretization_method_weights(FNFT_COMPLEX **weights_ptr,
+        fnft_nse_discretization_t nse_discretization);
+        
+        
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define nse_discretization_degree(...) fnft__nse_discretization_degree(__VA_ARGS__)
 #define nse_discretization_boundary_coeff(...) fnft__nse_discretization_boundary_coeff(__VA_ARGS__)
@@ -281,6 +306,7 @@ FNFT_INT fnft__nse_preprocess_signal(const FNFT_UINT D, FNFT_COMPLEX const * con
 #define nse_phase_factor_a(...) fnft__nse_phase_factor_a(__VA_ARGS__)
 #define nse_phase_factor_b(...) fnft__nse_phase_factor_b(__VA_ARGS__)
 #define nse_preprocess_signal(...) fnft__nse_preprocess_signal(__VA_ARGS__)
+#define nse_discretization_method_weights(...) fnft__nse_discretization_method_weights(__VA_ARGS__)
 
 #endif
 

@@ -30,6 +30,7 @@
 
 #include "fnft__akns_discretization_t.h"
 #include "fnft__errwarn.h"
+#include "fnft__misc.h"
 
 
 /**
@@ -137,7 +138,29 @@ FNFT_INT fnft__akns_lambda_to_z(const FNFT_UINT n, const FNFT_REAL eps_t,
 FNFT_INT fnft__akns_z_to_lambda(const FNFT_UINT n, const FNFT_REAL eps_t, 
         FNFT_COMPLEX * const vals, fnft__akns_discretization_t discretization);
 
-
+/**
+ * @brief This routine computes various weights required by some methods
+ * based on the discretization. 
+ * 
+ * This routing computes the special weights required for the 
+ * higher-order methods CF\f$^{[4]}_2\f$, CF\f$^{[4]}_3\f$, CF\f$^{[5]}_3\f$ 
+ * and CF\f$^{[6]}_4\f$. The weights are used in \link fnft__nse_preprocess_signal \endlink,
+ * \link fnft__akns_scatter_matrix \endlink and \link fnft__nse_scatter_bound_states\endlink.
+ * The weights for CF\f$^{[4]}_3\f$ are taken from Alvermann and Fehske (<a href="https://doi.org/10.1016/j.jcp.2011.04.006">Journal of Computational Phys. 230, 2011</a>)
+ * and the weights for the others are from Blanes, Casas and Thalhammer(<a href="https://doi.org/10.1016/j.cpc.2017.07.016">Computer Phys. Comm. 220, 2017</a>).
+ * The weights are mentioned as matrices in the references. This routine returns 
+ * them in row-major order.
+ * @param[in,out] weights_ptr Pointer to the starting location of weights.
+ * @param[in] akns_discretization Discretization of type \link fnft__akns_discretization_t \endlink.
+ * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
+ *  defined in \link fnft_errwarn.h \endlink.
+ *
+ * @ingroup akns
+ */
+FNFT_INT fnft__akns_discretization_method_weights(FNFT_COMPLEX **weights_ptr,
+        fnft__akns_discretization_t akns_discretization);
+        
+        
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define akns_discretization_degree(...) fnft__akns_discretization_degree(__VA_ARGS__)
 #define akns_discretization_boundary_coeff(...) fnft__akns_discretization_boundary_coeff(__VA_ARGS__)
@@ -145,6 +168,8 @@ FNFT_INT fnft__akns_z_to_lambda(const FNFT_UINT n, const FNFT_REAL eps_t,
 #define akns_discretization_method_order(...) fnft__akns_discretization_method_order(__VA_ARGS__)
 #define akns_lambda_to_z(...) fnft__akns_lambda_to_z(__VA_ARGS__)
 #define akns_z_to_lambda(...) fnft__akns_z_to_lambda(__VA_ARGS__)
+#define akns_discretization_method_weights(...) fnft__akns_discretization_method_weights(__VA_ARGS__)
+
 #endif
 
 #endif

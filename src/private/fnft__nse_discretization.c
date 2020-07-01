@@ -76,13 +76,31 @@ UINT fnft__nse_discretization_upsampling_factor(nse_discretization_t nse_discret
 UINT fnft__nse_discretization_method_order(nse_discretization_t nse_discretization)
 {
     akns_discretization_t akns_discretization = 0;
-    UINT upsampling_factor = 0;
+    UINT order = 0;
     INT ret_code;
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);    
-    upsampling_factor = akns_discretization_method_order(akns_discretization);
+    order = akns_discretization_method_order(akns_discretization);
     leave_fun:    
-        return upsampling_factor;
+        return order;
+}
+
+/**
+ * This routine returns weights required by some methods based on the discretization.
+ */
+INT fnft__nse_discretization_method_weights(COMPLEX **weights_ptr,
+        nse_discretization_t nse_discretization)
+{
+    akns_discretization_t akns_discretization = 0;
+    COMPLEX *weights = NULL;
+    INT ret_code;
+    ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = akns_discretization_method_weights(&weights, akns_discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
+    *weights_ptr = weights;
+    leave_fun:
+        return ret_code;
 }
 
 /**
@@ -293,6 +311,7 @@ INT fnft__nse_preprocess_signal(const UINT D, COMPLEX const * const q,
     COMPLEX *r_1 = NULL;
     COMPLEX *r_2 = NULL;
     COMPLEX *r_3 = NULL;
+    COMPLEX *weights = NULL;
     
     // Check inputs
     if (D < 2)
@@ -381,16 +400,19 @@ INT fnft__nse_preprocess_signal(const UINT D, COMPLEX const * const q,
             CHECK_RETCODE(ret_code, release_mem);
             
             
-            i = 0;
+            ret_code = nse_discretization_method_weights(&weights,discretization);
+            CHECK_RETCODE(ret_code, release_mem);
+            
+             i = 0;
             for (isub=0; isub<D_effective; isub=isub+2) {
-                q_preprocessed[isub] = (q_1[i]+q_2[i])/4.0 - (q_2[i]-q_1[i])*scl_factor;
-                q_preprocessed[isub+1] = (q_1[i]+q_2[i])/4.0 + (q_2[i]-q_1[i])*scl_factor;
+                q_preprocessed[isub] = weights[0]*q_1[i] + weights[1]*q_2[i];
+                q_preprocessed[isub+1] = weights[2]*q_1[i] + weights[3]*q_2[i];
                 r_preprocessed[isub] = -kappa*CONJ(q_preprocessed[isub]);
                 r_preprocessed[isub+1] = -kappa*CONJ(q_preprocessed[isub+1]);
                 i += nskip_per_step;
             }
-            
-            
+             
+             
             break;
         case nse_discretization_CF4_3:
             q_1 = malloc(D * sizeof(COMPLEX));
@@ -404,19 +426,20 @@ INT fnft__nse_preprocess_signal(const UINT D, COMPLEX const * const q,
             CHECK_RETCODE(ret_code, release_mem);
             ret_code = misc_resample(D, eps_t, q, eps_t*SQRT(3.0/20.0)*nskip_per_step, q_3);
             CHECK_RETCODE(ret_code, release_mem);
-            
-            
+
+            ret_code = nse_discretization_method_weights(&weights,discretization);
+            CHECK_RETCODE(ret_code, release_mem);
+
             i = 0;
             for (isub=0; isub<D_effective; isub=isub+3) {
-                q_preprocessed[isub] = 0.302556833188024*q_1[i]  -0.033333333333333*q[i] + 0.005776500145310*q_3[i];
-                q_preprocessed[isub+1] = -0.030555555555556*q_1[i]+ 0.511111111111111*q[i] -0.030555555555556*q_3[i];
-                q_preprocessed[isub+2] = 0.005776500145310*q_1[i] -0.033333333333333*q[i]+  0.302556833188024*q_3[i];
+                q_preprocessed[isub] = weights[0]*q_1[i] + weights[1]*q[i] + weights[2]*q_3[i];
+                q_preprocessed[isub+1] = weights[3]*q_1[i] + weights[4]*q[i] + weights[5]*q_3[i];
+                q_preprocessed[isub+2] = weights[6]*q_1[i] + weights[7]*q[i] + weights[8]*q_3[i];
                 r_preprocessed[isub] = -kappa*CONJ(q_preprocessed[isub]);
                 r_preprocessed[isub+1] = -kappa*CONJ(q_preprocessed[isub+1]);
                 r_preprocessed[isub+2] = -kappa*CONJ(q_preprocessed[isub+2]);
                 i += nskip_per_step;
             }
-            
             break;
         case nse_discretization_CF5_3:
             q_1 = malloc(D * sizeof(COMPLEX));
@@ -441,16 +464,21 @@ INT fnft__nse_preprocess_signal(const UINT D, COMPLEX const * const q,
             }
             
             
+            ret_code = nse_discretization_method_weights(&weights,discretization);
+            CHECK_RETCODE(ret_code, release_mem);
+          
+            
             i = 0;
             for (isub=0; isub<D_effective; isub=isub+3) {
-                q_preprocessed[isub] = (0.320333759788527 + 0.055396500128741*I)*q_1[i]  + (-0.022222222222222 + 0.066666666666667*I)*q[i] + (0.001888462433695 - 0.022063166795408*I)*q_3[i];
-                r_preprocessed[isub] = (0.320333759788527 + 0.055396500128741*I)*r_1[i]  + (-0.022222222222222 + 0.066666666666667*I)*r_2[i] + (0.001888462433695 - 0.022063166795408*I)*r_3[i];
-                q_preprocessed[isub+1] = (-0.044444444444444 - 0.077459666924148*I)*q_1[i]+ (0.488888888888889)*q[i] + (-0.044444444444444 + 0.077459666924148*I)*q_3[i];
-                r_preprocessed[isub+1] = (-0.044444444444444 - 0.077459666924148*I)*r_1[i]+ (0.488888888888889)*r_2[i] + (-0.044444444444444 + 0.077459666924148*I)*r_3[i];
-                q_preprocessed[isub+2] = ( 0.001888462433695 + 0.022063166795408*I)*q_1[i] + (-0.022222222222222 - 0.066666666666667*I)*q[i] +  (0.320333759788527 - 0.055396500128741*I)*q_3[i];
-                r_preprocessed[isub+2] = ( 0.001888462433695 + 0.022063166795408*I)*r_1[i] + (-0.022222222222222 - 0.066666666666667*I)*r_2[i] +  (0.320333759788527 - 0.055396500128741*I)*r_3[i];
+                q_preprocessed[isub] = weights[0]*q_1[i]  + weights[1]*q[i] + weights[2]*q_3[i];
+                r_preprocessed[isub] = weights[0]*r_1[i]  + weights[1]*r_2[i] + weights[2]*r_3[i];
+                q_preprocessed[isub+1] = weights[3]*q_1[i]+ weights[4]*q[i] + weights[5]*q_3[i];
+                r_preprocessed[isub+1] = weights[3]*r_1[i]+ weights[4]*r_2[i] + weights[5]*r_3[i];
+                q_preprocessed[isub+2] = weights[6]*q_1[i] + weights[7]*q[i] +  weights[8]*q_3[i];
+                r_preprocessed[isub+2] = weights[6]*r_1[i] + weights[7]*r_2[i] +  weights[8]*r_3[i];
                 i += nskip_per_step;
             }
+            
             
             break;
         case nse_discretization_CF6_4:
@@ -475,17 +503,19 @@ INT fnft__nse_preprocess_signal(const UINT D, COMPLEX const * const q,
                 r_3[i] = -kappa*CONJ(q_3[i]);
             }
             
+            ret_code = nse_discretization_method_weights(&weights,discretization);
+            CHECK_RETCODE(ret_code, release_mem);
             
             i = 0;
             for (isub=0; isub<D_effective; isub=isub+4) {
-                q_preprocessed[isub] = (0.245985577298764 + 0.038734389227165*I)*q_1[i]  + (-0.046806149832549 + 0.012442141491185*I)*q[i] + (0.010894359342569 - 0.004575808769067*I)*q_3[i];
-                r_preprocessed[isub] = (0.245985577298764 + 0.038734389227165*I)*r_1[i]  + (-0.046806149832549 + 0.012442141491185*I)*r_2[i] + (0.010894359342569 - 0.004575808769067*I)*r_3[i];
-                q_preprocessed[isub+1] = (0.062868370946917 - 0.048761268117765*I)*q_1[i]+ (0.269028372054771 - 0.012442141491185*I)*q[i] + (-0.041970529810473 + 0.014602687659668*I)*q_3[i];
-                r_preprocessed[isub+1] = (0.062868370946917 - 0.048761268117765*I)*r_1[i]+ (0.269028372054771 - 0.012442141491185*I)*r_2[i] + (-0.041970529810473 + 0.014602687659668*I)*r_3[i];
-                q_preprocessed[isub+2] = (-0.041970529810473 + 0.014602687659668*I)*q_1[i] + (0.269028372054771 - 0.012442141491185*I)*q[i] +  (0.062868370946917 - 0.048761268117765*I)*q_3[i];
-                r_preprocessed[isub+2] = (-0.041970529810473 + 0.014602687659668*I)*r_1[i] + (0.269028372054771 - 0.012442141491185*I)*r_2[i] +  (0.062868370946917 - 0.048761268117765*I)*r_3[i];
-                q_preprocessed[isub+3] = (0.010894359342569 - 0.004575808769067*I)*q_1[i] + (-0.046806149832549 + 0.012442141491185*I)*q[i] +  (0.245985577298764 + 0.038734389227165*I)*q_3[i];
-                r_preprocessed[isub+3] = (0.010894359342569 - 0.004575808769067*I)*r_1[i] + (-0.046806149832549 + 0.012442141491185*I)*r_2[i] +  (0.245985577298764 + 0.038734389227165*I)*r_3[i];
+                q_preprocessed[isub] = weights[0]*q_1[i]  + weights[1]*q[i] + weights[2]*q_3[i];
+                r_preprocessed[isub] = weights[0]*r_1[i]  + weights[1]*r_2[i] + weights[2]*r_3[i];
+                q_preprocessed[isub+1] = weights[3]*q_1[i]+ weights[4]*q[i] + weights[5]*q_3[i];
+                r_preprocessed[isub+1] = weights[3]*r_1[i]+ weights[4]*r_2[i] + weights[5]*r_3[i];
+                q_preprocessed[isub+2] = weights[6]*q_1[i] + weights[7]*q[i] + weights[8]*q_3[i];
+                r_preprocessed[isub+2] = weights[6]*r_1[i] + weights[7]*r_2[i] +  weights[8]*r_3[i];
+                q_preprocessed[isub+3] = weights[9]*q_1[i] + weights[10]*q[i] +  weights[11]*q_3[i];
+                r_preprocessed[isub+3] = weights[9]*r_1[i] + weights[10]*r_2[i] +  weights[11]*r_3[i];
                 i += nskip_per_step;
             }
             break;
@@ -534,5 +564,6 @@ INT fnft__nse_preprocess_signal(const UINT D, COMPLEX const * const q,
         free(r_1);
         free(r_2);
         free(r_3);
+        free(weights);
         return ret_code;
 }

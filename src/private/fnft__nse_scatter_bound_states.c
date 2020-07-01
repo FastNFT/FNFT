@@ -115,9 +115,14 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
         goto leave_fun;
     }
     
+    COMPLEX *weights = NULL;
+    COMPLEX l_weights[4] = {0};
+    UINT M = 0, N = 0, j = 0, i = 0;
+
+    // Pre-computing weights required for higher-order CF methods that are
+    // independent of q, r and l. 
     // In the case of ES4 and TES4 computing values that are functions of
     // q and r but not l.
-    // They are stored so that they can be reused for all l.
     
     switch (discretization) {
         //  Fourth-order exponential method which requires
@@ -133,12 +138,12 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 goto leave_fun;
             }
             for (n = 0; n < D; n=n+3){
-                tmp1[n] = eps_t_3*(q[n+2]+r[n+2])*0.020833333333333 + (eps_t*(q[n]+r[n]))*0.5;
-                tmp1[n+1] = (eps_t*(q[n]-r[n])*I)*0.5 + (eps_t_3*(q[n+2]-r[n+2])*I)*0.020833333333333;
-                tmp1[n+2] = -eps_t_3*(q[n]*r[n+1]- q[n+1]*r[n])*0.083333333333333;
+                tmp1[n] = eps_t_3*(q[n+2]+r[n+2])/48.0 + (eps_t*(q[n]+r[n]))*0.5;
+                tmp1[n+1] = (eps_t*(q[n]-r[n])*I)*0.5 + (eps_t_3*(q[n+2]-r[n+2])*I)/48.0;
+                tmp1[n+2] = -eps_t_3*(q[n]*r[n+1]- q[n+1]*r[n])/12.0;
                 
-                tmp2[n] = I*eps_t_3*(q[n+1]-r[n+1])*0.083333333333333;
-                tmp2[n+1] = -eps_t_3*(q[n+1]+r[n+1])*0.083333333333333;
+                tmp2[n] = I*eps_t_3*(q[n+1]-r[n+1])/12.0;
+                tmp2[n+1] = -eps_t_3*(q[n+1]+r[n+1])/12.0;
                 tmp2[n+2] = -I*eps_t;
             }
             
@@ -158,10 +163,10 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 goto leave_fun;
             }
             for (n = 0; n < D; n=n+3){
-                tmp1[n] = (eps_t_3*(q[n+2]+r[n+2]))*0.010416666666667 - (eps_t_2*(q[n+1]+r[n+1]))*0.041666666666667;
-                tmp1[n+1] = (eps_t_3*(q[n+2]-r[n+2])*I)*0.010416666666667 + (eps_t_2*(r[n+1]-q[n+1])*I)*0.041666666666667;
-                tmp2[n] = (eps_t_3*(q[n+2]+r[n+2]))*0.010416666666667 + (eps_t_2*(q[n+1]+r[n+1]))*0.041666666666667;
-                tmp2[n+1] = (eps_t_3*(q[n+2]-r[n+2])*I)*0.010416666666667 + (eps_t_2*(q[n+1]-r[n+1])*I)*0.041666666666667;
+                tmp1[n] = (eps_t_3*(q[n+2]+r[n+2]))/96.0 - (eps_t_2*(q[n+1]+r[n+1]))/24.0;
+                tmp1[n+1] = (eps_t_3*(q[n+2]-r[n+2])*I)/96.0 + (eps_t_2*(r[n+1]-q[n+1])*I)/24.0;
+                tmp2[n] = (eps_t_3*(q[n+2]+r[n+2]))/96.0 + (eps_t_2*(q[n+1]+r[n+1]))/24.0;
+                tmp2[n+1] = (eps_t_3*(q[n+2]-r[n+2])*I)/96.0 + (eps_t_2*(q[n+1]-r[n+1])*I)/24.0;
             }
             if (skip_b_flag == 0){
                 tmp3 = malloc(D*sizeof(COMPLEX));
@@ -171,17 +176,43 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     goto leave_fun;
                 }
                 for (n = 0; n < D; n=n+3){
-                    tmp3[n] = (-eps_t_3*(q[n+2]+r[n+2]))*0.010416666666667 - (eps_t_2*(q[n+1]+r[n+1]))*0.041666666666667;
-                    tmp3[n+1] = (-eps_t_3*(q[n+2]-r[n+2])*I)*0.010416666666667 + (eps_t_2*(r[n+1]-q[n+1])*I)*0.041666666666667;
-                    tmp4[n] = (-eps_t_3*(q[n+2]+r[n+2]))*0.010416666666667 + (eps_t_2*(q[n+1]+r[n+1]))*0.041666666666667;
-                    tmp4[n+1] = (-eps_t_3*(q[n+2]-r[n+2])*I)*0.010416666666667 + (eps_t_2*(q[n+1]-r[n+1])*I)*0.041666666666667;
+                    tmp3[n] = (-eps_t_3*(q[n+2]+r[n+2]))/96.0 - (eps_t_2*(q[n+1]+r[n+1]))/24.0;
+                    tmp3[n+1] = (-eps_t_3*(q[n+2]-r[n+2])*I)/96.0 + (eps_t_2*(r[n+1]-q[n+1])*I)/24.0;
+                    tmp4[n] = (-eps_t_3*(q[n+2]+r[n+2]))/96.0  + (eps_t_2*(q[n+1]+r[n+1]))/24.0;
+                    tmp4[n+1] = (-eps_t_3*(q[n+2]-r[n+2])*I)/96.0  + (eps_t_2*(q[n+1]-r[n+1])*I)/24.0;
                 }
             }
             disc_flag = 1;
             break;
+            
+        case akns_discretization_BO: //  bofetta-osborne scheme
+            M = 1; N = 1;
+            break;
+        case akns_discretization_CF4_2: // commutator-free fourth-order
+            M = 2; N = 2;
+            break;
+        case akns_discretization_CF4_3: // commutator-free fourth-order
+            M = 3; N = 3;
+            break;
+        case akns_discretization_CF5_3: // commutator-free fifth-order
+            M = 3; N = 3;
+            break;
+        case akns_discretization_CF6_4: // commutator-free sixth-order
+            M = 4; N = 3;
+            break;
+            
         default: // Unknown discretization
             
             break;
+    }
+    if (disc_flag == 0){
+        ret_code = akns_discretization_method_weights(&weights,discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
+        
+        for  (i = 0; i < M; i++){
+            for  (j = 0; j < N; j++)
+                l_weights[i] = l_weights[i] + weights[i*N+j];
+        }
     }
     
     
@@ -203,51 +234,36 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 }
                 scl_factor = 0.5;
                 for (n = 0; n < D; n++)
-                    l[n] = l_curr/2.0;
+                    l[n] = l_curr*l_weights[0];
                 break;
                 
             case nse_discretization_CF4_3: // commutator-free fourth-order
-                if (D%3 != 0){
-                    ret_code = E_ASSERTION_FAILED;
-                    goto leave_fun;
-                }
-                scl_factor = 1.0/3.0;
-                for (n = 0; n < D; n = n+3)
-                    l[n] = l_curr*0.275;
-                for (n = 1; n < D; n = n+3)
-                    l[n] = l_curr*0.45;
-                for (n = 2; n < D; n = n+3)
-                    l[n] = l_curr*0.275;
-                break;
-                
             case nse_discretization_CF5_3: // commutator-free fifth-order
+
                 if (D%3 != 0){
                     ret_code = E_ASSERTION_FAILED;
                     goto leave_fun;
                 }
                 scl_factor = 1.0/3.0;
-                for (n = 0; n < D; n = n+3)
-                    l[n] = (0.3+0.1*I)*l_curr;
-                for (n = 1; n < D; n = n+3)
-                    l[n] = l_curr*0.4;
-                for (n = 2; n < D; n = n+3)
-                    l[n] = (0.3-0.1*I)*l_curr;
+                for (n = 0; n < D; n = n+3){
+                    l[n] = l_curr*l_weights[0];
+                    l[n+1] = l_curr*l_weights[1];
+                    l[n+2] = l_curr*l_weights[2];
+                }
                 break;
-                
+  
             case nse_discretization_CF6_4: // commutator-free sixth-order
                 if (D%4 != 0){
                     ret_code = E_ASSERTION_FAILED;
                     goto leave_fun;
                 }
                 scl_factor = 0.25;
-                for (n = 0; n < D; n = n+4)
-                    l[n] = (0.210073786808785 + 0.046600721949282*I)*l_curr;
-                for (n = 1; n < D; n = n+4)
-                    l[n] = (0.289926213191215 - 0.046600721949282*I)*l_curr;
-                for (n = 2; n < D; n = n+4)
-                    l[n] = (0.289926213191215 - 0.046600721949282*I)*l_curr;
-                for (n = 3; n < D; n = n+4)
-                    l[n] = (0.210073786808785 + 0.046600721949282*I)*l_curr;
+                for (n = 0; n < D; n = n+4){
+                    l[n] = l_curr*l_weights[0];
+                    l[n+1] = l_curr*l_weights[1];
+                    l[n+2] = l_curr*l_weights[2];
+                    l[n+3] = l_curr*l_weights[3];
+                }
                 break;
                 
             default:
@@ -326,8 +342,8 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 // in terms of Pauli matrices.
             case akns_discretization_ES4:
                 for (n = 0; n < D; n=n+3){
-                    a1 = tmp1[n]+ eps_t_3*(l_curr*I*(q[n+1]-r[n+1]))*0.083333333333333;
-                    a2 = tmp1[n+1] - eps_t_3*l_curr*(q[n+1]+r[n+1])*0.083333333333333;
+                    a1 = tmp1[n]+ eps_t_3*(l_curr*I*(q[n+1]-r[n+1]))/12.0;
+                    a2 = tmp1[n+1] - eps_t_3*l_curr*(q[n+1]+r[n+1])/12.0;
                     a3 = - eps_t*I*l_curr +tmp1[n+2];
                     w = CSQRT(-(a1*a1)-(a2*a2)-(a3*a3));
                     if (w != 0)
@@ -359,7 +375,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 }
                 break;
                 // Fourth-order exponential method which requires
-                // three matrix exponentials. The transfer metrix cannot
+                // three matrix exponentials. The transfer metrix
                 // needs to be built differently compared to the CF schemes.
             case akns_discretization_TES4:
                 for (n = 0; n < D; n=n+3){
@@ -521,8 +537,8 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     n_given = D_given;
                     do{
                         n = n-3;
-                        a1 = -tmp1[n]- eps_t_3*(l_curr*I*(q[n+1]-r[n+1]))*0.083333333333333;
-                        a2 = -tmp1[n+1] + eps_t_3*l_curr*(q[n+1]+r[n+1])*0.083333333333333;
+                        a1 = -tmp1[n]- eps_t_3*(l_curr*I*(q[n+1]-r[n+1]))/12.0;
+                        a2 = -tmp1[n+1] + eps_t_3*l_curr*(q[n+1]+r[n+1])/12.0;
                         a3 =  eps_t*I*l_curr -tmp1[n+2];
                         w = CSQRT(-(a1*a1)-(a2*a2)-(a3*a3));
                         if (w != 0)

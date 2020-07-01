@@ -21,7 +21,6 @@
 
 #include "fnft__errwarn.h"
 #include "fnft__kdv_scatter.h"
-#include <stdio.h>
 
 /**
  * If derivative_flag=0 returns [S11 S12 S21 S22] in result where

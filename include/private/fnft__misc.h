@@ -238,6 +238,7 @@ FNFT_INT fnft__misc_resample(const FNFT_UINT D, const FNFT_REAL eps_t, FNFT_COMP
 
 /**
  * @brief Multiples two square matrices of size N.
+ *
  * @ingroup  misc
  *
  * Multiples two square matrices U and T of size N. T is replaced by the
@@ -265,7 +266,35 @@ static inline void fnft__misc_square_matrix_mult(const FNFT_UINT N, FNFT_COMPLEX
     return;
 }
 
-
+/**
+ * @brief This routine returns the nth degree Legendre polynomial at x.
+ *
+ * @ingroup  misc
+ *
+ * Calculates the the nth degree Legendre polynomial at x using a recursive 
+ * relation (<a href="https://en.wikipedia.org/wiki/Legendre_polynomials#Definition_via_generating_function">Online, Accessed July 2020</a>)
+ * @param[in] n Positive integer that is the order of the Legendre polynomial.
+ * @param[in] x Real scalar value at which the value of the polynomial is to be calculated.
+ * @return Returns the value of nth degree Legendre polynomial at x.
+ */
+static inline FNFT_REAL fnft__misc_legendreP(const FNFT_UINT n, const FNFT_REAL x){
+    FNFT_UINT  i;
+    FNFT_REAL P, P_1, P_2;
+    if (n == 0)
+        P = 1;
+    else if (n == 1)
+        P = x;
+    else{
+        P_1 = x;
+        P_2 = 1;
+        for (i = 2; i <= n; i++) {
+            P = (2.0*i-1)*x*P_1/i -(i-1.0)*P_2/i;
+            P_2 = P_1;
+            P_1 = P;
+        }
+    }
+    return P;
+}
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define misc_print_buf(...) fnft__misc_print_buf(__VA_ARGS__)
@@ -282,6 +311,7 @@ static inline void fnft__misc_square_matrix_mult(const FNFT_UINT N, FNFT_COMPLEX
 #define misc_nextpowerof2(...) fnft__misc_nextpowerof2(__VA_ARGS__)
 #define misc_resample(...) fnft__misc_resample(__VA_ARGS__)
 #define misc_square_matrix_mult(...) fnft__misc_square_matrix_mult(__VA_ARGS__)
+#define misc_legendreP(...) fnft__misc_legendreP(__VA_ARGS__)
 
 #endif
 
