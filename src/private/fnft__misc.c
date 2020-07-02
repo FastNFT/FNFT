@@ -367,13 +367,20 @@ INT misc_resample(const UINT D, const REAL eps_t, COMPLEX const * const q,
     CHECK_RETCODE(ret_code, release_mem);
 
     // Check that the signal spectrum decays sufficiently to ensure accurate interpolation
-    REAL tmp = CABS(buf1[0]);
-    for (i = 1; i<D; i++)
-        if (CABS(buf1[i]) > tmp)
-           tmp = CABS(buf1[i]);
-    if (CABS(buf1[D/2-1])/tmp > SQRT(EPSILON) || CABS(buf1[D/2+1])/tmp > SQRT(EPSILON))
-       WARN("Interplolation result maybe inaccurate. Signal may have discontinuity or insufficient samples provided.");
+    
+    // D samples of buf1 correspond to 100% bandwidth. Find the total l2-norm
+    // of buf1 and compare it to l2-norm of 90% bandwidth. To prevent repeated 
+    // computation, the two norms of the 5% bandwidths on both ends of the
+    // spectrum are computed instead.
+    UINT Dlp = D/20;
+    REAL h = 0.001; //Arbitrary step-size required to ensure all the
+                    // calculated norms are comparable.
 
+    REAL tmp = (SQRT(misc_l2norm2(Dlp, buf1+D/2-1-Dlp, 0, Dlp*h)) + 
+            SQRT(misc_l2norm2(Dlp, buf1+D/2+1, 0, Dlp*h)))/SQRT(misc_l2norm2(D, buf1, 0, D*h));
+    if (tmp > SQRT(EPSILON))
+        WARN("Signal does not appear to be bandlimited. Interpolation step may be inaccurate. Try to reduce the step size, or switch to a discretization that does not require interpolation");
+    
     const REAL scl_factor = (REAL)D*eps_t;
     // Applying phase shift
     for (i = 0; i <D/2; i++)

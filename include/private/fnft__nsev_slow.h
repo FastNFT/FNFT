@@ -37,11 +37,11 @@
  * for the nonlinear Schroedinger equation.
  * @param[in] D Number of samples
  * @param[in] q Array of length D, contains samples \f$ q_n\f$ for \f$n=0,1,\dots,D-1\f$
- * in ascending order (i.e., \f$ q_0, q_1, \dots, q_{D-1} \f$). The values
- * should be specifically precalculated based on the chosen discretization.
+ * in ascending order (i.e., \f$ q_0, q_1, \dots, q_{D-1} \f$). For certain 
+ * discretizations, the samples have to be preprocessed. See \link fnft__nse_preprocess_signal \endlink for details.
  * @param[in,out] r Array of length D, contains samples \f$ r_n\f$ for \f$n=0,1,\dots,D-1\f$
- * in ascending order (i.e., \f$ r_0, r_1, \dots, r_{D-1} \f$). The values
- * should be specifically precalculated based on the chosen discretization. 
+ * in ascending order (i.e., \f$ r_0, r_1, \dots, r_{D-1} \f$). For certain 
+ * discretizations, the samples have to be preprocessed. See \link fnft__nse_preprocess_signal \endlink for details.
  * @param[in] T Array of length 2, contains the position in time of the first and
  *  of the last sample. It should be T[0]<T[1].
  * @param[in] K Number of bound-states.
@@ -49,7 +49,8 @@
  * the initial guesses for the bound-states \f$\lambda\f$. On return it 
  * contains the refined bound states.
  * @param[in] discretization The type of discretization to be used. Should be of type 
- * \link fnft_nse_discretization_t \endlink. Not all nse_discretization_t discretizations are supported.
+ * \link fnft_nse_discretization_t \endlink. The discretizations supported by this 
+ * routine are: BO, CF4_2, CF4_3, CF5_3, CF6_4, ES4, TES4.
  * Check \link fnft_nse_discretization_t \endlink for list of supported types.
  * @param[in] niter Positive integer. It is used as the upper limit
  * on the number of Newton interations that will be performed per bound state.
@@ -57,7 +58,7 @@
  *  defined in \link fnft_errwarn.h \endlink.
  * @ingroup nse
  */
-FNFT_INT fnft__nse_refine_roots_newton(const FNFT_UINT D,
+FNFT_INT fnft__nsev_refine_bound_states_newton(const FNFT_UINT D,
         FNFT_COMPLEX const * const q,
         FNFT_COMPLEX * r,
         FNFT_REAL const * const T,
@@ -67,7 +68,7 @@ FNFT_INT fnft__nse_refine_roots_newton(const FNFT_UINT D,
         const FNFT_UINT niter);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
-#define nse_refine_roots_newton(...) fnft__nse_refine_roots_newton(__VA_ARGS__)
+#define nsev_refine_bound_states_newton(...) fnft__nsev_refine_bound_states_newton(__VA_ARGS__)
 #endif
 
 #endif

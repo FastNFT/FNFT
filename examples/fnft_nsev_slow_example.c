@@ -51,7 +51,7 @@ int main()
     // The types FNFT_UINT, FNFT_INT, FNFT_REAL and FNFT_COMPLEX are defined
     // in the header fnft_numtypes.h
 
-    /** Step 2: Prepare calling fnft_nsev **/ 
+    /** Step 2: Prepare calling fnft_nsev_slow **/ 
 
     // Location of the 1st and last sample of the continuous spectrum
     FNFT_REAL XI[2] = {-2.0, 2.0 };

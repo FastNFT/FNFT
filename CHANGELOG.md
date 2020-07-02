@@ -14,7 +14,7 @@
 ### Changed
 
 - The routine fnft_nsep for the NFT of the periodic nonlinear Schroedinger equation now requires even number of samples and has an extra input phase shift over one quasi-period (see doc of fnft_nsep).
-
+- Improved computation of norming constants in fnft__nse_scatter_bound_states (see doc of fnft__nse_scatter_bound_states). 
 
 ## [0.3.0] -- 2020-03-06
 

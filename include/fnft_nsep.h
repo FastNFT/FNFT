@@ -196,7 +196,7 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$)
  * @param[in] T Array of length 2. T[0] is the position in time of the first
  *  sample. T[2] is the beginning of the next period. (The location of the last
- *  sample is thus t_{D-1}=T[2]-L/D.) It should be T[0]<T[1].
+ *  sample is thus t_{D-1}=T[1]-L/D.) It should be T[0]<T[1].
  * @param[in] phase_shift Real scalar constant. It is the change in the phase
  * over one quasi-period, arg(q(t+L)/q(t)). For periodic signals it will be 0.
  * @param[in,out] K_ptr Upon entry, *K_ptr should contain the length of the array

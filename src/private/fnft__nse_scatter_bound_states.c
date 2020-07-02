@@ -420,8 +420,8 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     UD[1][0] = w_d*r[n];
                     UD[1][1] = c_d+I*s_d;
                     
-                    misc_square_matrix_mult(2, &UN[0][0], &TM[0][0]);
-                    misc_square_matrix_mult(2, &UD[0][0], &TMD[0][0]);
+                    misc_mat_mult_2x2(&UN[0][0], &TM[0][0]);
+                    misc_mat_mult_2x2(&UD[0][0], &TMD[0][0]);
                     
                     a1 = tmp2[n];
                     a2 = tmp2[n+1];
@@ -441,8 +441,8 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     UD[1][0] = UN[1][0];
                     UD[1][1] = UN[1][1];
                     
-                    misc_square_matrix_mult(2, &UN[0][0], &TM[0][0]);
-                    misc_square_matrix_mult(2, &UD[0][0], &TMD[0][0]);
+                    misc_mat_mult_2x2(&UN[0][0], &TM[0][0]);
+                    misc_mat_mult_2x2(&UD[0][0], &TMD[0][0]);
                     
                     U[0][0] = TM[0][0];
                     U[0][1] = TM[0][1];
@@ -598,7 +598,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                         UN[1][0] = s*(a1+I*a2);
                         UN[1][1] = (c-s*a3);
                         
-                        misc_square_matrix_mult(2, &UN[0][0], &TM[0][0]);
+                        misc_mat_mult_2x2(&UN[0][0], &TM[0][0]);
                         
                         a1 = tmp4[n];
                         a2 = tmp4[n+1];
@@ -614,7 +614,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                         UN[1][0] = s*(a1+I*a2);
                         UN[1][1] = c;
                         
-                        misc_square_matrix_mult(2, &UN[0][0], &TM[0][0]);
+                        misc_mat_mult_2x2(&UN[0][0], &TM[0][0]);
                         
                         U[0][0] = TM[0][0];
                         U[0][1] = TM[0][1];

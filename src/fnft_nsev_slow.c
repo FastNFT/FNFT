@@ -448,7 +448,7 @@ static inline INT fnft_nsev_slow_base(
                 
                 // Perform Newton iterations. Initial guesses of bound-states
                 // should be in the continuous-time domain.
-                ret_code = nse_refine_roots_newton(D, q, r, T, K, buffer,
+                ret_code = nsev_refine_bound_states_newton(D, q, r, T, K, buffer,
                         opts->discretization, opts->niter);
                 CHECK_RETCODE(ret_code, release_mem);
                 break;
@@ -604,7 +604,7 @@ static inline REAL im_bound(const UINT D, COMPLEX const * const q,
 }
 
 // Auxiliary function: Refines the bound-states using Newtons method
-INT nse_refine_roots_newton(
+INT nsev_refine_bound_states_newton(
         const UINT D,
         COMPLEX const * const q,
         COMPLEX * r,

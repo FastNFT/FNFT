@@ -314,13 +314,13 @@ INT fnft__akns_discretization_method_weights(COMPLEX **weights_ptr,
             f[2][2] = 7.0/50.0;
             
             REAL wm[3] = {5.0/18.0,4.0/9.0,5.0/18.0};
-            REAL xm[3] = {2.0*SQRT(3.0/20.0),0.0,-2.0*SQRT(3.0/20.0)};//misc_legendreP is defined on [-1,1]
+            REAL xm[3] = {2.0*SQRT(3.0/20.0),0.0,-2.0*SQRT(3.0/20.0)};//misc_legendre_poly is defined on [-1,1]
             UINT m, n, i;
             for (m = 0; m < 3; m++){
                 for (i = 0; i < 3; i++){
                     weights[i*3+m] = 0.0;
                     for (n = 0; n < 3; n++){
-                        weights[i*3+m] = weights[i*3+m] + (2*n+1)*misc_legendreP(n,xm[m])*f[i][n];
+                        weights[i*3+m] = weights[i*3+m] + (2*n+1)*misc_legendre_poly(n,xm[m])*f[i][n];
                     }
                     weights[i*3+m] = weights[i*3+m]*wm[m];
                 }

@@ -61,7 +61,10 @@
  * @param[out] a_vals Array of length K, contains the values of \f$a(\lambda)\f$.
  * @param[out] aprime_vals Array of length K, contains the values of
  * \f$ a'(\lambda) = \frac{\partial a(\lambda)}{\partial \lambda}\f$.
- * @param[out] b Array of length K, contains the values of \f$b(\lambda)\f$.
+ * @param[out] b Array of length K, contains the values of \f$b(\lambda)\f$. 
+ * The \f$b(\lambda)\f$ are calculated using the criterion from 
+ * Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2932256">&quot; 
+ * Soliton Phase Shift Calculation for the Korteweg–De Vries Equation,&quot;</a>.
  * @param[in] discretization The type of discretization to be used. Should be of type 
  * \link fnft_nse_discretization_t \endlink. Not all nse_discretization_t discretizations are supported.
  * Check \link fnft_nse_discretization_t \endlink for list of supported types.

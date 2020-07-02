@@ -111,7 +111,7 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
     if (opts_ptr->filtering != fnft_nsep_filt_NONE && main_spec == NULL && aux_spec != NULL)
         return E_INVALID_ARGUMENT(main_spec. Filtering of the auxiliary spectrum is not possible if the main spectrum is not computed.);
       
-        REAL Lam_shift = CARG(CEXP(I*phase_shift))/(-2*(T[1] - T[0]));
+        REAL Lam_shift = phase_shift/(-2*(T[1] - T[0]));
         const REAL eps_t = (T[1] - T[0])/D;
         q_preprocessed = malloc(D * sizeof(COMPLEX));
         if (q_preprocessed == NULL) {

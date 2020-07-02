@@ -670,11 +670,11 @@ static inline INT tf2boundstates(
             // Perform Newton iterations. Initial guesses of bound-states
             // should be in the continuous-time domain.
             if (upsampling_factor == 1){
-                ret_code = nse_refine_roots_newton(D, q, r, T, K, buffer,
+                ret_code = nsev_refine_bound_states_newton(D, q, r, T, K, buffer,
                         nse_discretization_BO, opts->niter);
                 CHECK_RETCODE(ret_code, leave_fun);
             }else if(upsampling_factor == 2){
-                ret_code = nse_refine_roots_newton(D, q, r, T, K, buffer,
+                ret_code = nsev_refine_bound_states_newton(D, q, r, T, K, buffer,
                         nse_discretization_CF4_2, opts->niter);
                 CHECK_RETCODE(ret_code, leave_fun);
             }else
