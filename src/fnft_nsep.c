@@ -242,6 +242,10 @@ static inline INT gridsearch(const UINT D,
         return E_NOT_YET_IMPLEMENTED(sheet_indices, "Pass NULL");
     
     upsampling_factor = nse_discretization_upsampling_factor(opts_ptr->discretization);
+    if (upsampling_factor == 0) {
+        ret_code = E_INVALID_ARGUMENT(opts->discretization);
+        goto release_mem;
+    }
     D_effective = D * upsampling_factor;
     
     // Determine step size
@@ -464,6 +468,10 @@ static inline INT subsample_and_refine(const UINT D,
         return E_NOT_YET_IMPLEMENTED(sheet_indices, "Pass NULL");
     
     upsampling_factor = nse_discretization_upsampling_factor(opts_ptr->discretization);
+    if (upsampling_factor == 0) {
+        ret_code = E_INVALID_ARGUMENT(opts->discretization);
+        goto release_mem;
+    }
     D_effective = D * upsampling_factor;
     
     // Determine step size

@@ -170,6 +170,10 @@ INT fnft_nsev(
         opts = &default_opts;
     
     upsampling_factor = nse_discretization_upsampling_factor(opts->discretization);
+    if (upsampling_factor == 0) {
+        ret_code = E_INVALID_ARGUMENT(opts->discretization);
+        goto release_mem;
+    }
     D_effective = D * upsampling_factor; // upsampling_factor*D gives the effective number of samples
 
     // Determine step size
@@ -654,8 +658,10 @@ static inline INT tf2boundstates(
     if (degree1step == 0)
         return E_INVALID_ARGUMENT(opts->discretization);
     upsampling_factor = nse_discretization_upsampling_factor(opts->discretization);
-    if (upsampling_factor == 0)
-        return E_INVALID_ARGUMENT(opts->discretization);
+    if (upsampling_factor == 0) {
+        ret_code = E_INVALID_ARGUMENT(opts->discretization);
+        goto leave_fun;
+    }
     map_coeff = 2/(degree1step);
     D_given = D/upsampling_factor;
     // Localize bound states ...

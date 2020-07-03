@@ -160,7 +160,7 @@ INT fnft_nsev_slow(
     }
     upsampling_factor = nse_discretization_upsampling_factor(opts->discretization);
     if (upsampling_factor == 0){
-        ret_code =  E_INVALID_ARGUMENT(discretization);
+        ret_code =  E_INVALID_ARGUMENT(opts->discretization);
         goto release_mem;
     }
     UINT Dsub = D;
@@ -632,9 +632,10 @@ INT nsev_refine_bound_states_newton(
         return E_INVALID_ARGUMENT(T);
     
     upsampling_factor = nse_discretization_upsampling_factor(discretization);
-    if (upsampling_factor == 0)
-        return E_INVALID_ARGUMENT(discretization);
-    
+    if (upsampling_factor == 0) {
+        ret_code = E_INVALID_ARGUMENT(discretization);
+        goto leave_fun;
+    }
     D_given = D/upsampling_factor;
     const REAL eps_t = (T[1] - T[0])/(D_given - 1);
     
