@@ -159,16 +159,16 @@ fnft_nsev_slow_opts_t fnft_nsev_slow_default_opts();
  *  sample of the continuous spectrum. It should be \f$XI[0]<XI[1]\f$. Can also be
  *  NULL if contspec==NULL.
  * @param[in,out] K_ptr Upon entry, *K_ptr should contain the length of the array
- *  bound_states. Upon return, *K_ptr contains the number of actually detected
- *  bound states. Note that in order to skip
- *  the computation of the bound states completely, it is not sufficient to pass
- *  *K_ptr==0. Instead, one needs to pass bound_states==NULL.
+ *  bound_states. Upon return, *K_ptr contains the number of remaining bound states 
+ *  after refinement (see fnft_nsev_bsloc_NEWTON of type \link fnft_nsev_bsloc_t \endlink). 
+ *  Note that in order to skip the computation of the bound states completely,
+ *  it is not sufficient to pass *K_ptr==0. Instead, one needs to pass bound_states==NULL.
  * @param[out] bound_states Array. Upon return, the routine has stored the detected
  *  bound states (aka eigenvalues) in the first *K_ptr entries of this array.
  *  If NULL is passed instead, the discrete spectrum will not be computed.
  *  Has to be preallocated by the user. The user can choose an arbitrary
- *  length. Currently only NEWTON method is supported hence bound_states
- *  should contain initial guesses of the bound states.
+ *  length. Currently no initial guess method is supported hence bound_states 
+ *  should contain initial guesses of every bound state.
  * @param[out] normconsts_or_residues Array of the same length as bound_states. Upon
  *  return, the routine has stored the residues (aka spectral amplitudes)
  *  \f$\rho_k = b_k\big/ \frac{da(\lambda_k)}{d\lambda}\f$ in the

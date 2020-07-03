@@ -206,7 +206,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
             break;
     }
     if (disc_flag == 0){
-        ret_code = akns_discretization_method_weights(&weights,discretization);
+        ret_code = nse_discretization_method_weights(&weights,discretization);
         CHECK_RETCODE(ret_code, leave_fun);
         
         for  (i = 0; i < M; i++){

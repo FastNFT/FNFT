@@ -373,11 +373,8 @@ INT misc_resample(const UINT D, const REAL eps_t, COMPLEX const * const q,
     // computation, the two norms of the 5% bandwidths on both ends of the
     // spectrum are computed instead.
     UINT Dlp = D/20;
-    REAL h = 0.001; //Arbitrary step-size required to ensure all the
-                    // calculated norms are comparable.
-
-    REAL tmp = (SQRT(misc_l2norm2(Dlp, buf1+D/2-1-Dlp, 0, Dlp*h)) + 
-            SQRT(misc_l2norm2(Dlp, buf1+D/2+1, 0, Dlp*h)))/SQRT(misc_l2norm2(D, buf1, 0, D*h));
+    REAL tmp = SQRT(misc_l2norm2(Dlp, buf1+D/2-1-Dlp, 0, Dlp*eps_t) + 
+            misc_l2norm2(Dlp, buf1+D/2+1, 0, Dlp*eps_t))/SQRT(misc_l2norm2(D, buf1, 0, D*eps_t));
     if (tmp > SQRT(EPSILON))
         WARN("Signal does not appear to be bandlimited. Interpolation step may be inaccurate. Try to reduce the step size, or switch to a discretization that does not require interpolation");
     
