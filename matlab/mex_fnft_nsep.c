@@ -28,7 +28,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     size_t D;
     double complex * q;
     double * T;
-    double phase_shift;
+    double phase_shift = 0.0;
     size_t M;
     double complex * main_spec;
     size_t K;
@@ -55,16 +55,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if ( !mxIsDouble(prhs[1]) || mxGetM(prhs[1]) != 1 || mxGetN(prhs[1]) != 2 )
         mexErrMsgTxt("Second input T should be a double 1x2 vector.");
     if ( !mxIsDouble(prhs[2]) || mxGetNumberOfElements(prhs[2]) != 1 )
-        mexErrMsgTxt("Third input phase_shift should be a scalar.");
-    if ( !mxIsDouble(prhs[3]) || mxGetNumberOfElements(prhs[3]) != 1 )
-        mexErrMsgTxt("Fourth input kappa should be a scalar.");
+        mexErrMsgTxt("Third input kappa should be a scalar.");
 
     D = mxGetNumberOfElements(prhs[0]);
     K = D;
     M = D;
     T = mxGetPr(prhs[1]);
-    phase_shift = mxGetScalar(prhs[2]);
-    kappa = (int)mxGetScalar(prhs[3]);
+    kappa = (int)mxGetScalar(prhs[2]);
 
     /* Check values of first three inputs */
     if ( D<2 || D%2 != 0 )
@@ -72,7 +69,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if ( T[0] >= T[1] )
         mexErrMsgTxt("T(1) >= T(2).");
     if ( kappa != +1 && kappa != -1 )
-        mexErrMsgTxt("Fourth input kappa should be +1.0 or -1.0.");
+        mexErrMsgTxt("Third input kappa should be +1.0 or -1.0.");
 
     // Default options for fnft_nsep
     opts = fnft_nsep_default_opts();
@@ -81,7 +78,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     fnft_errwarn_setprintf(mexPrintf);
 
     /* Check remaining inputs, if any */
-    for (k=4; k<nrhs; k++) {
+    for (k=3; k<nrhs; k++) {
 
         /* Check if current input is a string as desired and convert it */
         if ( !mxIsChar(prhs[k]) ) {
@@ -130,7 +127,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             opts.points_per_spine = (FNFT_UINT)mxGetScalar(prhs[k+1]);
             k++;
 
-        } else if ( strcmp(str, "loc_mixed") == 0 ) {
+        } else if ( strcmp(str, "phase_shift") == 0 ) {
+
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+                 || mxGetNumberOfElements(prhs[k+1]) != 1) {
+                snprintf(msg, sizeof msg, "'phase_shift' should be followed by a real number. See the help.");
+                goto on_error;
+            }
+            phase_shift = (FNFT_REAL)mxGetScalar(prhs[k+1]);
+            k++;
+
+        }else if ( strcmp(str, "loc_mixed") == 0 ) {
 
             opts.localization = fnft_nsep_loc_MIXED;
 

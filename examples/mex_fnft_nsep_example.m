@@ -45,7 +45,7 @@ phase_shift = angle(q_T2/q_T1); % This is the phase shift in q over
 
 %%% Compute the nonlinear Fourier transform %%%
 
-[main_spec, aux_spec] = mex_fnft_nsep(q, T, phase_shift, kappa);
+[main_spec, aux_spec] = mex_fnft_nsep(q, T, kappa, 'phase_shift', phase_shift);
 
 %%% Compute the spines %%%
 
@@ -53,7 +53,7 @@ phase_shift = angle(q_T2/q_T1); % This is the phase shift in q over
 % interval [-3j, 3j]. Furthermore, there are degenerate spines
 % of length zero at the degenerate points of the main spectrum.
 
-spines = mex_fnft_nsep(q, T, phase_shift, kappa, 'points_per_spine', 100);
+spines = mex_fnft_nsep(q, T, kappa, 'phase_shift', phase_shift, 'points_per_spine', 100);
 
 % Increase the number of points per spine above to improve the
 % resolution of the spine (at the cost of increased run times).

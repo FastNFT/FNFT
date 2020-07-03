@@ -8,8 +8,10 @@
 %   Provides an interface to the C routine fnft_nsep.
 %
 % INPUTS
-%   q               Complex row vector of length D=2n+1>2
-%   T               Real 1x2 vector
+%   q               Complex row vector of length D=2n>2. The first sample
+%                   q(1) should correspond to T(1) and the last sample
+%                   q(D) should correspond to T(2)-(T(2)-T(1))/D.
+%   T               Real 1x2 vector with T(2)>T(1).
 %   kappa           +1.0 or -1.0
 %
 % OPTIONAL INPUTS
@@ -40,9 +42,13 @@
 %                   is iterated over an equidistant grid of points_per_spine
 %                   real numbers with the first one being -1 and the last one
 %                   being +1. This argument must be followed by a real
-%                   non-negative scalar. The default value is two, which
+%                   non-negative integer. The default value is two, which
 %                   results in the usual main spectrum (= endpoints of spines).
 %                   Use higher values to visualize splines.
+%    'phase_shift'  For quasi-periodic signals the phase changes over one 
+%                   quasi-period. This argument must be followed by a real
+%                   scalar i.e. angle(q(T(2))/q(T(1))). The default value 
+%                   is 0.0, which assumes that q is periodic.
 %   'discr_modal'   Use modified Ablowitz-Ladik discretization.
 %   'discr_2split2A' Use split Boffetta-Osborne discretization (default).
 %   'discr_2split4A' Use fifth order splitting with 4th degree polynomial.
