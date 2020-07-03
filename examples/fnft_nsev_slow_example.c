@@ -25,8 +25,7 @@
 // https://doi.org/10.1109/TIT.2014.2321151
 
 #include <stdio.h> // for printf
-#include "fnft_nsev.h"
-#include "fnft__nsev_slow_testcases.h"
+#include "fnft_nsev_slow.h"
 
 int main()
 {

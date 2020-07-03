@@ -19,7 +19,7 @@
  */
 #define FNFT_ENABLE_SHORT_NAMES
 
-#include "fnft__nsev_slow_testcases.h"
+#include "fnft__nsev_testcases.h"
 #include "fnft__errwarn.h"
 
 INT main()
@@ -27,7 +27,7 @@ INT main()
     INT ret_code, i;
     fnft_nsev_slow_opts_t opts;
     UINT D = 400;
-    const nsev_slow_testcases_t tc = nsev_slow_testcases_SECH_FOCUSING;
+    const nsev_testcases_t tc = nsev_testcases_SECH_FOCUSING2;
     REAL error_bounds[6] = {
         7.5e-5,     // reflection coefficient
         4.2e-5,     // a
@@ -41,21 +41,21 @@ INT main()
     opts.bound_state_localization = nsev_bsloc_NEWTON;
     opts.discretization = nse_discretization_CF5_3;
     
-    ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds, &opts);
+    ret_code = nsev_testcases_test_fnft_slow(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
     // Check the case where D is not a power of two. The error bounds have to
     // be tight but not too tight for this to make sense!
-    ret_code = nsev_slow_testcases_test_fnft(tc, D+1, error_bounds, &opts);
+    ret_code = nsev_testcases_test_fnft_slow(tc, D+1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = nsev_slow_testcases_test_fnft(tc, D-1, error_bounds, &opts);
+    ret_code = nsev_testcases_test_fnft_slow(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
     // Check for 5th-order error decay
     D *= 2;
     for (i=0; i<6; i++)
         error_bounds[i] /= 32.0;
-    ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds, &opts);
+    ret_code = nsev_testcases_test_fnft_slow(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
     D = 701;
@@ -68,7 +68,7 @@ INT main()
         1.7e-5      // residues
     };
     opts.richardson_extrapolation_flag = 1;
-    ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
+    ret_code = nsev_testcases_test_fnft_slow(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     // Check for at least 6th-order error decay (error_bounds_RE[4] corresponding
     // to the norming constants decays with only 5th-order)
@@ -76,7 +76,7 @@ INT main()
     for (i=0; i<6; i++)
         error_bounds_RE[i] /= 64.0;
     error_bounds_RE[4] *= 2.0;
-    ret_code = nsev_slow_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
+    ret_code = nsev_testcases_test_fnft_slow(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun)
     
     leave_fun:
