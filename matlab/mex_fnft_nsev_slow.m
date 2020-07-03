@@ -33,19 +33,19 @@
 %                   bound states in the lower half plane. 
 %   'bsfilt_full'   Full bound state filtering. Additionally removes
 %		            physically implausible bound states. (default)
-%   'BO'            Use the second-order method by Boffetta-Osborne.
+%   'discr_BO'            Use the second-order method by Boffetta-Osborne.
 %                   Requires one matrix exponential per sample.
-%   'CF4_2'         Use fourth-order commutator-free exponential integrator
+%   'discr_CF4_2'         Use fourth-order commutator-free exponential integrator
 %                   which requires two matrix exponentials per sample.
-%   'CF4_3'         Use fourth-order commutator-free exponential integrator
+%   'discr_CF4_3'         Use fourth-order commutator-free exponential integrator
 %                   which requires three matrix exponentials per sample.
-%   'CF5_3'         Use fifth-order commutator-free exponential integrator
+%   'discr_CF5_3'         Use fifth-order commutator-free exponential integrator
 %                   which requires three matrix exponentials per sample.
-%   'CF6_4'         Use sixth-order commutator-free exponential integrator
+%   'discr_CF6_4'         Use sixth-order commutator-free exponential integrator
 %                   which requires four matrix exponentials per sample.
-%   'ES4'           Use fourth-order exponential integrator
+%   'discr_ES4'           Use fourth-order exponential integrator
 %                   which requires one matrix exponential per sample.
-%   'TES4'          Use fourth-order exponential integrator
+%   'discr_TES4'          Use fourth-order exponential integrator
 %                   which requires three matrix exponentials per sample.
 %   'RE'            Use Richardson extrpolation to improve accuracy. The
 %                   approximations of the nonlinear Fourier spectrum are 

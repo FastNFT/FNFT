@@ -173,31 +173,31 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             
             opts.bound_state_filtering = fnft_nsev_bsfilt_FULL;
             
-        } else if ( strcmp(str, "BO") == 0 ) {
+        } else if ( strcmp(str, "discr_BO") == 0 ) {
             
             opts.discretization = fnft_nse_discretization_BO;
             
-        } else if ( strcmp(str, "CF4_2") == 0 ) {
+        } else if ( strcmp(str, "discr_CF4_2") == 0 ) {
             
             opts.discretization = fnft_nse_discretization_CF4_2;
             
-        } else if ( strcmp(str, "CF4_3") == 0 ) {
+        } else if ( strcmp(str, "discr_CF4_3") == 0 ) {
             
             opts.discretization = fnft_nse_discretization_CF4_3;
             
-        } else if ( strcmp(str, "CF5_3") == 0 ) {
+        } else if ( strcmp(str, "discr_CF5_3") == 0 ) {
             
             opts.discretization = fnft_nse_discretization_CF5_3;
             
-        } else if ( strcmp(str, "CF6_4") == 0 ) {
+        } else if ( strcmp(str, "discr_CF6_4") == 0 ) {
             
             opts.discretization = fnft_nse_discretization_CF6_4; 
 
-        } else if ( strcmp(str, "ES4") == 0 ) {
+        } else if ( strcmp(str, "discr_ES4") == 0 ) {
             
             opts.discretization = fnft_nse_discretization_ES4; 
             
-        } else if ( strcmp(str, "TES4") == 0 ) {
+        } else if ( strcmp(str, "discr_TES4") == 0 ) {
             
             opts.discretization = fnft_nse_discretization_TES4;   
             
