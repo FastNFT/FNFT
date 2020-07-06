@@ -63,17 +63,6 @@ UINT fnft_nsev_max_K(const UINT D, fnft_nsev_opts_t const * const opts)
  * Declare auxiliary routines used by the main routine fnft_nsev.
  * Their bodies follow below.
  */
-static inline INT tf2contspec(
-        const UINT deg,
-        const INT W,
-        COMPLEX * const transfer_matrix,
-        REAL const * const T,
-        const UINT D,
-        REAL const * const XI,
-        const UINT M,
-        COMPLEX *result,
-        fnft_nsev_opts_t * const opts);
-
 
 static inline INT nsev_compute_boundstates(
         UINT D,
@@ -101,6 +90,19 @@ static inline INT fnft_nsev_base(
         const INT kappa,
         fnft_nsev_opts_t *opts);
 
+static inline INT nsev_compute_contspec(
+        const UINT deg,
+        const INT W,
+        COMPLEX * const transfer_matrix,
+        COMPLEX const * const q,
+        COMPLEX * r,
+        REAL const * const T,
+        const UINT D,
+        REAL const * const XI,
+        const UINT M,
+        COMPLEX * const result,
+        const INT kappa,
+        fnft_nsev_opts_t * const opts);
 
 static inline INT fnft_nsev_base_slow(
         const UINT D,
@@ -493,21 +495,12 @@ static inline INT fnft_nsev_base(
     if (opts == NULL)
         opts = &default_opts;
     
-    // Allocate memory for the transfer matrix. Note that after computation
-    // of the transfer matrix, the second and fourth quarter of the
-    // array carry redundant information that is not used. These quarters
-    // are therefore used as buffers and may be overwritten at some point.
+    // Allocate memory for the transfer matrix. 
     // D should be the effective number of samples in q
     i = nse_fscatter_numel(D, opts->discretization);
-    if (i == 0) { // size D>=2, this means unknown discretization
-        ret_code = E_INVALID_ARGUMENT(opts->discretization);
-        goto leave_fun;
-    }
-    transfer_matrix = malloc(i*sizeof(COMPLEX));
-    if (transfer_matrix == NULL) {
-        ret_code = E_NOMEM;
-        goto leave_fun;
-    }
+    // NOTE: At this stage if i == 0 it means the discretization corresponds
+    // to a slow method. Incorrect discretizations will have been checked for
+    // in fnft_nsev main
     
     // Determine step size
     // D is interpolated number of samples but eps_t is the step-size
@@ -520,6 +513,13 @@ static inline INT fnft_nsev_base(
     D_given = D/upsampling_factor;
     const REAL eps_t = (T[1] - T[0])/(D_given - 1);
     
+    
+    transfer_matrix = malloc(i*sizeof(COMPLEX));
+    if (transfer_matrix == NULL) {
+        ret_code = E_NOMEM;
+        goto leave_fun;
+    }
+    
     // Compute the transfer matrix
     if (opts->normalization_flag)
         W_ptr = &W;
@@ -529,8 +529,8 @@ static inline INT fnft_nsev_base(
     
     // Compute the continuous spectrum
     if (contspec != NULL && M > 0) {
-        ret_code = tf2contspec(deg, W, transfer_matrix, T, D_given, XI, M,
-                contspec, opts);
+         ret_code = nsev_compute_contspec(deg, W, transfer_matrix, q, r, T, D, XI, M,
+                contspec, kappa, opts);
         CHECK_RETCODE(ret_code, leave_fun);
     }
     
@@ -560,124 +560,90 @@ static inline INT fnft_nsev_base(
         return ret_code;
 }
 
-// Auxiliary function: Computes continuous spectrum on a frequency grid
-// from a given transfer matrix.
-static inline INT tf2contspec(
-        const UINT deg,
-        const INT W,
-        COMPLEX * const transfer_matrix,
-        REAL const * const T,
+// Auxiliary function: Base routine for slow discretizations.
+static inline INT fnft_nsev_base_slow(
         const UINT D,
-        REAL const * const XI,
+        COMPLEX * const q,
+        COMPLEX * const r,
+        REAL const * const T,
         const UINT M,
-        COMPLEX * const result,
-        fnft_nsev_opts_t * const opts)
+        COMPLEX * const contspec,
+        REAL const * const XI,
+        UINT * const K_ptr,
+        COMPLEX * const bound_states,
+        COMPLEX * const normconsts_or_residues,
+        const INT kappa,
+        fnft_nsev_opts_t *opts)
 {
-    COMPLEX *H11_vals, *H21_vals;
-    COMPLEX A, V;
-    REAL xi, boundary_coeff, scale;
-    REAL phase_factor_rho, phase_factor_a, phase_factor_b;
-    INT ret_code;
-    UINT i, offset = 0;
+    INT ret_code = SUCCESS;
+    UINT upsampling_factor, D_given;
     
-    H11_vals = malloc(2*M * sizeof(COMPLEX));
-    if (H11_vals == NULL){
-        return E_NOMEM;
-        goto leave_fun;}
-    H21_vals = H11_vals + M;
+    // Check inputs
+    if (D < 2)
+        return E_INVALID_ARGUMENT(D);
+    if (q == NULL)
+        return E_INVALID_ARGUMENT(q);
+    if (T == NULL || T[0] >= T[1])
+        return E_INVALID_ARGUMENT(T);
+    if (contspec != NULL) {
+        if (XI == NULL || XI[0] >= XI[1])
+            return E_INVALID_ARGUMENT(XI);
+    }
+    if (abs(kappa) != 1)
+        return E_INVALID_ARGUMENT(kappa);
+    if (bound_states != NULL) {
+        if (K_ptr == NULL)
+            return E_INVALID_ARGUMENT(K_ptr);
+    }
+    if (opts == NULL)
+        opts = &default_opts;
     
     
-    // Set step sizes
-    const REAL eps_t = (T[1] - T[0])/(D - 1);
-    const REAL eps_xi = (XI[1] - XI[0])/(M - 1);
-    
-    
-    // Determine discretization-specific coefficients
-    boundary_coeff = nse_discretization_boundary_coeff(opts->discretization);
-    if (boundary_coeff == NAN){
-        return E_INVALID_ARGUMENT(opts->discretization);
+    // Determine step size
+    // D is interpolated number of samples but eps_t is the step-size
+    // corresponding to original number of samples.
+    upsampling_factor = nse_discretization_upsampling_factor(opts->discretization);
+    if (upsampling_factor == 0) {
+        ret_code = E_INVALID_ARGUMENT(opts->discretization);
         goto leave_fun;
     }
-    
-    
-    // Prepare the use of the chirp transform. The entries of the transfer
-    // matrix that correspond to a and b will be evaluated on the frequency
-    // grid xi(i) = XI1 + i*eps_xi, where i=0,...,M-1. Since
-    // z=exp(2.0*I*XI*eps_t/degree1step), we find that the z at which z the transfer
-    // matrix has to be evaluated are given by z(i) = 1/(A * V^-i), where:
-    V = eps_xi;
-    ret_code = nse_lambda_to_z(1, eps_t, &V, opts->discretization);
-    CHECK_RETCODE(ret_code, leave_fun);
-    A = -XI[0];
-    ret_code = nse_lambda_to_z(1, eps_t, &A, opts->discretization);
-    CHECK_RETCODE(ret_code, leave_fun);
-    
-    ret_code = poly_chirpz(deg, transfer_matrix, A, V, M, H11_vals);
-    CHECK_RETCODE(ret_code, leave_fun);
-    
-    ret_code = poly_chirpz(deg, transfer_matrix+2*(deg+1), A, V, M,
-            H21_vals);
-    CHECK_RETCODE(ret_code, leave_fun);
+    D_given = D/upsampling_factor;
+    const REAL eps_t = (T[1] - T[0])/(D_given - 1);
     
     // Compute the continuous spectrum
-    switch (opts->contspec_type) {
+    if (contspec != NULL && M > 0) {
         
-        case nsev_cstype_BOTH:
-            
-            offset = M;
-            // fall through
-            
-        case nsev_cstype_REFLECTION_COEFFICIENT:
-            
-            
-            ret_code = nse_phase_factor_rho(eps_t, T[1], &phase_factor_rho,opts->discretization);
-            CHECK_RETCODE(ret_code, leave_fun);
-            
-            
-            for (i = 0; i < M; i++) {
-                xi = XI[0] + i*eps_xi;
-                if (H11_vals[i] == 0.0){
-                    return E_DIV_BY_ZERO;
-                    goto leave_fun;
-                }
-                result[i] = H21_vals[i] * CEXP(I*xi*phase_factor_rho) / H11_vals[i];
-            }
-            
-            if (opts->contspec_type == nsev_cstype_REFLECTION_COEFFICIENT)
-                break;
-            // fall through
-            
-        case nsev_cstype_AB:
-            
-            scale = POW(2.0, W); // needed since the transfer matrix might
-            // have been scaled by nse_fscatter
-            
-            ret_code = nse_phase_factor_a(eps_t, D, T, &phase_factor_a,opts->discretization);
-            CHECK_RETCODE(ret_code, leave_fun);
-            
-            ret_code = nse_phase_factor_b(eps_t, D, T, &phase_factor_b,opts->discretization);
-            CHECK_RETCODE(ret_code, leave_fun);
-            
-            
-            for (i = 0; i < M; i++) {
-                xi = XI[0] + i*eps_xi;
-                result[offset + i] = H11_vals[i] * scale * CEXP(I*xi*phase_factor_a);
-                result[offset + M + i] = H21_vals[i] * scale * CEXP(I*xi*phase_factor_b);
-            }
-            
-            break;
-            
-        default:
-            
-            ret_code = E_INVALID_ARGUMENT(opts->contspec_type);
-            goto leave_fun;
+        ret_code = nsev_compute_contspec(0, 0, NULL, q, r, T, D, XI, M,
+                contspec, kappa, opts);
+        CHECK_RETCODE(ret_code, leave_fun);
+        
     }
     
-    leave_fun:
-        free(H11_vals);
+    // Compute the discrete spectrum
+    if (kappa == +1 && bound_states != NULL) {
         
+      
+       // Compute the bound states        
+        ret_code = nsev_compute_boundstates(D, q, r, 0, NULL, T,
+                eps_t, K_ptr, bound_states, opts);
+        
+        // Norming constants and/or residues)
+        if (normconsts_or_residues != NULL && *K_ptr != 0) {
+            
+            ret_code = nsev_compute_normconsts_or_residues(D, q, r, T, *K_ptr,
+                    bound_states, normconsts_or_residues, opts);
+            CHECK_RETCODE(ret_code, leave_fun);
+            
+        }
+    } else if (K_ptr != NULL) {
+        *K_ptr = 0;
+    }
+   
+    
+    leave_fun:
         return ret_code;
 }
+
 
 // Auxiliary function for filtering: We assume that bound states must have
 // real part in the interval [-re_bound, re_bound].
@@ -847,50 +813,30 @@ static inline INT nsev_compute_boundstates(
         return ret_code;
 }
 
-// Auxiliary function: Base routine for slow discretizations.
-static inline INT fnft_nsev_base_slow(
-        const UINT D,
-        COMPLEX * const q,
-        COMPLEX * const r,
+// Auxiliary function: Computes continuous spectrum on a frequency grid
+static inline INT nsev_compute_contspec(
+        const UINT deg,
+        const INT W,
+        COMPLEX * const transfer_matrix,
+        COMPLEX const * const q,
+        COMPLEX * r,
         REAL const * const T,
-        const UINT M,
-        COMPLEX * const contspec,
+        const UINT D,
         REAL const * const XI,
-        UINT * const K_ptr,
-        COMPLEX * const bound_states,
-        COMPLEX * const normconsts_or_residues,
+        const UINT M,
+        COMPLEX * const result,
         const INT kappa,
-        fnft_nsev_opts_t *opts)
+        fnft_nsev_opts_t * const opts)
 {
+    COMPLEX *H11_vals = NULL, *H21_vals = NULL;
+    COMPLEX A, V;
+    REAL boundary_coeff, scale;
+    REAL phase_factor_rho, phase_factor_a, phase_factor_b;
     INT ret_code = SUCCESS;
-    UINT i, upsampling_factor, D_given;
-    COMPLEX * scatter_coeffs = NULL;
-    COMPLEX * xi = NULL;
-    UINT offset = 0;
-    REAL phase_factor_rho = NAN, phase_factor_a = NAN, phase_factor_b = NAN;
-    
-    // Check inputs
-    if (D < 2)
-        return E_INVALID_ARGUMENT(D);
-    if (q == NULL)
-        return E_INVALID_ARGUMENT(q);
-    if (T == NULL || T[0] >= T[1])
-        return E_INVALID_ARGUMENT(T);
-    if (contspec != NULL) {
-        if (XI == NULL || XI[0] >= XI[1])
-            return E_INVALID_ARGUMENT(XI);
-    }
-    if (abs(kappa) != 1)
-        return E_INVALID_ARGUMENT(kappa);
-    if (bound_states != NULL) {
-        if (K_ptr == NULL)
-            return E_INVALID_ARGUMENT(K_ptr);
-    }
-    if (opts == NULL)
-        opts = &default_opts;
-    
-    
-    // Determine step size
+    UINT i, offset = 0, upsampling_factor, D_given;
+    COMPLEX * scatter_coeffs = NULL, * xi = NULL;
+
+   // Determine step size
     // D is interpolated number of samples but eps_t is the step-size
     // corresponding to original number of samples.
     upsampling_factor = nse_discretization_upsampling_factor(opts->discretization);
@@ -900,102 +846,131 @@ static inline INT fnft_nsev_base_slow(
     }
     D_given = D/upsampling_factor;
     const REAL eps_t = (T[1] - T[0])/(D_given - 1);
+    const REAL eps_xi = (XI[1] - XI[0])/(M - 1);
     
-    // Compute the continuous spectrum
-    if (contspec != NULL && M > 0) {
-        xi = malloc(M * sizeof(COMPLEX));
+    
+    // Determine discretization-specific coefficients
+    boundary_coeff = nse_discretization_boundary_coeff(opts->discretization);
+    if (boundary_coeff == NAN){
+        return E_INVALID_ARGUMENT(opts->discretization);
+        goto leave_fun;
+    }
+    
+    // Build xi-grid which is required for applying boundary conditions
+    xi = malloc(M * sizeof(COMPLEX));
+    if (xi == NULL) {
+        ret_code = E_NOMEM;
+        goto leave_fun;
+    }
+    for (i = 0; i < M; i++)
+        xi[i] = XI[0] + eps_xi*i;
+
+
+    H11_vals = malloc(2*M * sizeof(COMPLEX));
+    if (H11_vals == NULL){
+        return E_NOMEM;
+        goto leave_fun;}
+    H21_vals = H11_vals + M;
+    
+    // If the discretization is a slow method then there should be no transfer_matrix
+    if (deg == 0 && transfer_matrix == NULL && W == 0){
         scatter_coeffs = malloc(4 * M * sizeof(COMPLEX));
-        if (xi == NULL || scatter_coeffs == NULL) {
+        if (scatter_coeffs == NULL) {
             ret_code = E_NOMEM;
             goto leave_fun;
         }
-        
-        REAL eps_xi = (XI[1] - XI[0])/(M - 1);
-        for (i = 0; i < M; i++)
-            xi[i] = XI[0] + eps_xi*i;
-        
-        
+
         ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, M,
                 xi, scatter_coeffs, opts->discretization, 0);
         CHECK_RETCODE(ret_code, leave_fun);
         
-        REAL boundary_coeff;
-        boundary_coeff = nse_discretization_boundary_coeff(opts->discretization);
-        if (boundary_coeff == NAN){
-            ret_code = E_INVALID_ARGUMENT(opts->discretization);
-            goto leave_fun;
+        // This is necessary because nse_scatter_matrix to ensure
+        // boundary conditions can be applied using common code for slow
+        // methods and transfer matrix based methods.
+        for (i = 0; i < M; i++){
+            H11_vals[i] = scatter_coeffs[i*4];
+            H21_vals[i] = scatter_coeffs[i*4+2];
         }
+
+    }else{
+        // Prepare the use of the chirp transform. The entries of the transfer
+        // matrix that correspond to a and b will be evaluated on the frequency
+        // grid xi(i) = XI1 + i*eps_xi, where i=0,...,M-1. Since
+        // z=exp(2.0*I*XI*eps_t/degree1step), we find that the z at which z the transfer
+        // matrix has to be evaluated are given by z(i) = 1/(A * V^-i), where:
+        V = eps_xi;
+        ret_code = nse_lambda_to_z(1, eps_t, &V, opts->discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
+        A = -XI[0];
+        ret_code = nse_lambda_to_z(1, eps_t, &A, opts->discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
         
-        switch (opts->contspec_type) {
-            
-            case nsev_cstype_BOTH:
-                
-                offset = M;
-                // fall through
-                
-            case nsev_cstype_REFLECTION_COEFFICIENT:
-                
-                
-                phase_factor_rho =  -2.0*(T[1] + eps_t*boundary_coeff);
-                
-                for (i = 0; i < M; i++) {
-                    if (scatter_coeffs[i*4] == 0.0){
-                        return E_DIV_BY_ZERO;
-                        goto leave_fun;
-                    }
-                    contspec[i] = scatter_coeffs[i*4 + 2] * CEXP(I*xi[i]*phase_factor_rho) / scatter_coeffs[i*4];
-                }
-                
-                if (opts->contspec_type == nsev_cstype_REFLECTION_COEFFICIENT)
-                    break;
-                // fall through
-                
-            case nsev_cstype_AB:
-                
-                phase_factor_a = (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
-                
-                phase_factor_b = - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
-                
-                for (i = 0; i < M; i++) {
-                    contspec[offset + i] = scatter_coeffs[i*4] * CEXP(I*xi[i]*phase_factor_a);
-                    contspec[offset + M + i] = scatter_coeffs[i*4 + 2] * CEXP(I*xi[i]*phase_factor_b);
-                }
-                
-                break;
-                
-            default:
-                
-                ret_code = E_INVALID_ARGUMENT(opts->contspec_type);
-                goto leave_fun;
-        }
+        ret_code = poly_chirpz(deg, transfer_matrix, A, V, M, H11_vals);
+        CHECK_RETCODE(ret_code, leave_fun);
+        
+        ret_code = poly_chirpz(deg, transfer_matrix+2*(deg+1), A, V, M,
+                H21_vals);
+        CHECK_RETCODE(ret_code, leave_fun);
     }
-    
-    // Compute the discrete spectrum
-    if (kappa == +1 && bound_states != NULL) {
+    // Compute the continuous spectrum
+    switch (opts->contspec_type) {
         
-//         
-//         // Compute the bound states        
-        ret_code = nsev_compute_boundstates(D, q, r, 0, NULL, T,
-                eps_t, K_ptr, bound_states, opts);
-        
-        // Norming constants and/or residues)
-        if (normconsts_or_residues != NULL && *K_ptr != 0) {
+        case nsev_cstype_BOTH:
             
-            ret_code = nsev_compute_normconsts_or_residues(D, q, r, T, *K_ptr,
-                    bound_states, normconsts_or_residues, opts);
+            offset = M;
+            // fall through
+            
+        case nsev_cstype_REFLECTION_COEFFICIENT:
+            
+            
+            ret_code = nse_phase_factor_rho(eps_t, T[1], &phase_factor_rho,opts->discretization);
             CHECK_RETCODE(ret_code, leave_fun);
             
-        }
-    } else if (K_ptr != NULL) {
-        *K_ptr = 0;
+            
+            for (i = 0; i < M; i++) {
+                if (H11_vals[i] == 0.0){
+                    return E_DIV_BY_ZERO;
+                    goto leave_fun;
+                }
+                result[i] = H21_vals[i] * CEXP(I*xi[i]*phase_factor_rho) / H11_vals[i];
+            }
+            
+            if (opts->contspec_type == nsev_cstype_REFLECTION_COEFFICIENT)
+                break;
+            // fall through
+            
+        case nsev_cstype_AB:
+            
+            scale = POW(2.0, W); // needed since the transfer matrix might
+            // have been scaled by nse_fscatter. W == 0 for slow methods.
+            
+            ret_code = nse_phase_factor_a(eps_t, D_given, T, &phase_factor_a,opts->discretization);
+            CHECK_RETCODE(ret_code, leave_fun);
+            
+            ret_code = nse_phase_factor_b(eps_t, D_given, T, &phase_factor_b,opts->discretization);
+            CHECK_RETCODE(ret_code, leave_fun);
+            
+            
+            for (i = 0; i < M; i++) {
+                result[offset + i] = H11_vals[i] * scale * CEXP(I*xi[i]*phase_factor_a);
+                result[offset + M + i] = H21_vals[i] * scale * CEXP(I*xi[i]*phase_factor_b);
+            }
+            
+            break;
+            
+        default:
+            
+            ret_code = E_INVALID_ARGUMENT(opts->contspec_type);
+            goto leave_fun;
     }
-   
     
     leave_fun:
+        free(H11_vals);
         free(scatter_coeffs);
-        free(xi);
         return ret_code;
 }
+
+
 
 // Auxiliary function: Computes the norming constants and/or residues
 // using slow scattering schemes

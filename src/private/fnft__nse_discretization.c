@@ -234,7 +234,8 @@ INT fnft__nse_z_to_lambda(const UINT n, const REAL eps_t,
 
 /**
  * This routine returns the phase factor for reflection coefficient (rho).
- * It is required for applying boundary conditions to the transfer_matrix based on the discretization. 
+ * It is required for applying boundary conditions to the transfer matrix values
+ * based on the discretization. 
  */
 INT fnft__nse_phase_factor_rho(const REAL eps_t, const REAL T1,
         REAL * const phase_factor_rho, nse_discretization_t nse_discretization)
@@ -256,7 +257,8 @@ INT fnft__nse_phase_factor_rho(const REAL eps_t, const REAL T1,
 
 /**
  * This routine returns the phase factor for a coefficient.
- * It is required for applying boundary conditions to the transfer_matrix based on the discretization. 
+ * It is required for applying boundary conditions to the transfer matrix values
+ * based on the discretization.
  */
 INT fnft__nse_phase_factor_a(const REAL eps_t, const UINT D, REAL const * const T,
         REAL * const phase_factor_a, nse_discretization_t nse_discretization)
@@ -265,13 +267,55 @@ INT fnft__nse_phase_factor_a(const REAL eps_t, const UINT D, REAL const * const 
     boundary_coeff = nse_discretization_boundary_coeff(nse_discretization);
     if (boundary_coeff == NAN)
         return E_INVALID_ARGUMENT(nse_discretization);
-    *phase_factor_a = -eps_t*D + (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
-    return SUCCESS;
+    
+    switch (nse_discretization) {
+        
+        case nse_discretization_2SPLIT1A:
+        case nse_discretization_2SPLIT1B:
+        case nse_discretization_2SPLIT2B:
+        case nse_discretization_2SPLIT2S:
+        case nse_discretization_2SPLIT3A:
+        case nse_discretization_2SPLIT3B:
+        case nse_discretization_2SPLIT3S:
+        case nse_discretization_2SPLIT4A:
+        case nse_discretization_2SPLIT4B:
+        case nse_discretization_2SPLIT5A:
+        case nse_discretization_2SPLIT5B:
+        case nse_discretization_2SPLIT6A:
+        case nse_discretization_2SPLIT6B:
+        case nse_discretization_2SPLIT7A:
+        case nse_discretization_2SPLIT7B:
+        case nse_discretization_2SPLIT8A:
+        case nse_discretization_2SPLIT8B:
+        case nse_discretization_4SPLIT4A:
+        case nse_discretization_4SPLIT4B:
+        case nse_discretization_2SPLIT2A:
+        case nse_discretization_2SPLIT2_MODAL:
+            *phase_factor_a = -eps_t*D + (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
+            return SUCCESS;
+            break;
+            
+        case nse_discretization_BO: // Bofetta-Osborne scheme
+        case nse_discretization_CF4_2:
+        case nse_discretization_CF4_3:
+        case nse_discretization_CF5_3:
+        case nse_discretization_CF6_4:
+        case nse_discretization_ES4:
+        case nse_discretization_TES4:
+            *phase_factor_a = (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
+            return SUCCESS;
+            break;
+            
+        default: // Unknown discretization
+            
+            return E_INVALID_ARGUMENT(nse_discretization);
+    }
 }
 
 /**
  * This routine returns the phase factor for b coefficient.
- * It is required for applying boundary conditions to the transfer_matrix based on the discretization. 
+ * It is required for applying boundary conditions to the transfer matrix values
+ * based on the discretization.
  */
 INT fnft__nse_phase_factor_b(const REAL eps_t, const UINT D, REAL const * const T,
         REAL * const phase_factor_b, nse_discretization_t nse_discretization)
@@ -280,15 +324,58 @@ INT fnft__nse_phase_factor_b(const REAL eps_t, const UINT D, REAL const * const 
     boundary_coeff = nse_discretization_boundary_coeff(nse_discretization);
     if (boundary_coeff == NAN)
         return E_INVALID_ARGUMENT(nse_discretization);
-    if (nse_discretization == nse_discretization_2SPLIT2A || nse_discretization == nse_discretization_2SPLIT2_MODAL){
-            UINT degree1step = nse_discretization_degree(nse_discretization);
-        if (degree1step == 0)
+
+    UINT degree1step = 0;
+    switch (nse_discretization) {
+        
+        case nse_discretization_2SPLIT1A:
+        case nse_discretization_2SPLIT1B:
+        case nse_discretization_2SPLIT2B:
+        case nse_discretization_2SPLIT2S:
+        case nse_discretization_2SPLIT3A:
+        case nse_discretization_2SPLIT3B:
+        case nse_discretization_2SPLIT3S:
+        case nse_discretization_2SPLIT4A:
+        case nse_discretization_2SPLIT4B:
+        case nse_discretization_2SPLIT5A:
+        case nse_discretization_2SPLIT5B:
+        case nse_discretization_2SPLIT6A:
+        case nse_discretization_2SPLIT6B:
+        case nse_discretization_2SPLIT7A:
+        case nse_discretization_2SPLIT7B:
+        case nse_discretization_2SPLIT8A:
+        case nse_discretization_2SPLIT8B:
+        case nse_discretization_4SPLIT4A:
+        case nse_discretization_4SPLIT4B:
+            *phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
+            return SUCCESS;
+            break;
+            
+        case nse_discretization_2SPLIT2A:
+        case nse_discretization_2SPLIT2_MODAL:
+            degree1step = nse_discretization_degree(nse_discretization);
+            if (degree1step == 0)
+                return E_INVALID_ARGUMENT(nse_discretization);
+            *phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff) + eps_t/degree1step;
+            return SUCCESS;
+            break;
+            
+        case nse_discretization_BO: // Bofetta-Osborne scheme
+        case nse_discretization_CF4_2:
+        case nse_discretization_CF4_3:
+        case nse_discretization_CF5_3:
+        case nse_discretization_CF6_4:
+        case nse_discretization_ES4:
+        case nse_discretization_TES4:
+            *phase_factor_b =  - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
+            return SUCCESS;
+            break;
+            
+        default: // Unknown discretization
+            
             return E_INVALID_ARGUMENT(nse_discretization);
-        *phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff) + eps_t/degree1step;
     }
-    else
-        *phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
-    return SUCCESS;
+    
 }
 
 
