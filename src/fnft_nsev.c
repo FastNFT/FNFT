@@ -104,20 +104,6 @@ static inline INT nsev_compute_contspec(
         const INT kappa,
         fnft_nsev_opts_t * const opts);
 
-static inline INT fnft_nsev_base_slow(
-        const UINT D,
-        COMPLEX * const q,
-        COMPLEX * const r,
-        REAL const * const T,
-        const UINT M,
-        COMPLEX * const contspec,
-        REAL const * const XI,
-        UINT * const K_ptr,
-        COMPLEX * const bound_states,
-        COMPLEX * const normconsts_or_residues,
-        const INT kappa,
-        fnft_nsev_opts_t *opts);
-
 static inline INT nsev_compute_normconsts_or_residues(
         const UINT D,
         COMPLEX const * const q,
@@ -191,7 +177,6 @@ INT fnft_nsev(
     if (opts == NULL)
         opts = &default_opts;
     
-    UINT tfmethod_flag = 0;
     switch (opts->discretization) {
         case nse_discretization_2SPLIT2_MODAL:
         case nse_discretization_2SPLIT1A:
@@ -214,7 +199,6 @@ INT fnft_nsev(
         case nse_discretization_2SPLIT7B:
         case nse_discretization_4SPLIT4A:
         case nse_discretization_4SPLIT4B:
-            tfmethod_flag = 1;
             break;
         case nse_discretization_BO:
         case nse_discretization_CF4_2:
@@ -297,14 +281,9 @@ INT fnft_nsev(
         
         // Restore original state of opts
         opts->bound_state_localization = nsev_bsloc_SUBSAMPLE_AND_REFINE;
-    } else {
-        if (tfmethod_flag == 1){
-            ret_code = fnft_nsev_base(D_effective, q_preprocessed, r_preprocessed, T, M, contspec, XI, K_ptr,
+    } else { 
+        ret_code = fnft_nsev_base(D_effective, q_preprocessed, r_preprocessed, T, M, contspec, XI, K_ptr,
                     bound_states, normconsts_or_residues, kappa, opts);
-        }else{
-            ret_code = fnft_nsev_base_slow(D_effective, q_preprocessed, r_preprocessed, T, M, contspec, XI, K_ptr,
-                    bound_states, normconsts_or_residues, kappa, opts);
-        }        
         CHECK_RETCODE(ret_code, leave_fun);
     }
     
@@ -379,14 +358,9 @@ INT fnft_nsev(
         // Calling fnft_nsev_base with subsampled signal
         bs_loc_opt = opts->bound_state_localization;
         opts->bound_state_localization = nsev_bsloc_NEWTON;
-        
-        if (tfmethod_flag == 1){
-            ret_code = fnft_nsev_base(Dsub * upsampling_factor, qsub_preprocessed, rsub_preprocessed, Tsub, M, contspec_sub, XI, &K_sub,
+
+        ret_code = fnft_nsev_base(Dsub * upsampling_factor, qsub_preprocessed, rsub_preprocessed, Tsub, M, contspec_sub, XI, &K_sub,
                 bound_states_sub, normconsts_or_residues_sub, kappa, opts);
-        }else{
-            ret_code = fnft_nsev_base_slow(Dsub * upsampling_factor, qsub_preprocessed, rsub_preprocessed, Tsub, M, contspec_sub, XI, &K_sub,
-                bound_states_sub, normconsts_or_residues_sub, kappa, opts);
-        }
         CHECK_RETCODE(ret_code, leave_fun);
         opts->bound_state_localization = bs_loc_opt;
         opts->discspec_type = ds_type_opt;
@@ -513,23 +487,29 @@ static inline INT fnft_nsev_base(
     D_given = D/upsampling_factor;
     const REAL eps_t = (T[1] - T[0])/(D_given - 1);
     
-    
-    transfer_matrix = malloc(i*sizeof(COMPLEX));
-    if (transfer_matrix == NULL) {
-        ret_code = E_NOMEM;
-        goto leave_fun;
+    if (i != 0){
+    //This corresponds to methods based on polynomial transfer matrix
+        transfer_matrix = malloc(i*sizeof(COMPLEX));
+        if (transfer_matrix == NULL) {
+            ret_code = E_NOMEM;
+            goto leave_fun;
+        }
+        
+        // Compute the transfer matrix
+        if (opts->normalization_flag)
+            W_ptr = &W;
+        ret_code = nse_fscatter(D, q, eps_t, kappa, transfer_matrix, &deg, W_ptr,
+                opts->discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
+    }else{
+        // These indicate to the function to follow that the discretization
+        // is a method not based on polynomial transfer matrix
+        deg = 0;
+        W = 0;
     }
-    
-    // Compute the transfer matrix
-    if (opts->normalization_flag)
-        W_ptr = &W;
-    ret_code = nse_fscatter(D, q, eps_t, kappa, transfer_matrix, &deg, W_ptr,
-            opts->discretization);
-    CHECK_RETCODE(ret_code, leave_fun);
-    
     // Compute the continuous spectrum
     if (contspec != NULL && M > 0) {
-         ret_code = nsev_compute_contspec(deg, W, transfer_matrix, q, r, T, D, XI, M,
+        ret_code = nsev_compute_contspec(deg, W, transfer_matrix, q, r, T, D, XI, M,
                 contspec, kappa, opts);
         CHECK_RETCODE(ret_code, leave_fun);
     }
@@ -559,91 +539,6 @@ static inline INT fnft_nsev_base(
         free(transfer_matrix);
         return ret_code;
 }
-
-// Auxiliary function: Base routine for slow discretizations.
-static inline INT fnft_nsev_base_slow(
-        const UINT D,
-        COMPLEX * const q,
-        COMPLEX * const r,
-        REAL const * const T,
-        const UINT M,
-        COMPLEX * const contspec,
-        REAL const * const XI,
-        UINT * const K_ptr,
-        COMPLEX * const bound_states,
-        COMPLEX * const normconsts_or_residues,
-        const INT kappa,
-        fnft_nsev_opts_t *opts)
-{
-    INT ret_code = SUCCESS;
-    UINT upsampling_factor, D_given;
-    
-    // Check inputs
-    if (D < 2)
-        return E_INVALID_ARGUMENT(D);
-    if (q == NULL)
-        return E_INVALID_ARGUMENT(q);
-    if (T == NULL || T[0] >= T[1])
-        return E_INVALID_ARGUMENT(T);
-    if (contspec != NULL) {
-        if (XI == NULL || XI[0] >= XI[1])
-            return E_INVALID_ARGUMENT(XI);
-    }
-    if (abs(kappa) != 1)
-        return E_INVALID_ARGUMENT(kappa);
-    if (bound_states != NULL) {
-        if (K_ptr == NULL)
-            return E_INVALID_ARGUMENT(K_ptr);
-    }
-    if (opts == NULL)
-        opts = &default_opts;
-    
-    
-    // Determine step size
-    // D is interpolated number of samples but eps_t is the step-size
-    // corresponding to original number of samples.
-    upsampling_factor = nse_discretization_upsampling_factor(opts->discretization);
-    if (upsampling_factor == 0) {
-        ret_code = E_INVALID_ARGUMENT(opts->discretization);
-        goto leave_fun;
-    }
-    D_given = D/upsampling_factor;
-    const REAL eps_t = (T[1] - T[0])/(D_given - 1);
-    
-    // Compute the continuous spectrum
-    if (contspec != NULL && M > 0) {
-        
-        ret_code = nsev_compute_contspec(0, 0, NULL, q, r, T, D, XI, M,
-                contspec, kappa, opts);
-        CHECK_RETCODE(ret_code, leave_fun);
-        
-    }
-    
-    // Compute the discrete spectrum
-    if (kappa == +1 && bound_states != NULL) {
-        
-      
-       // Compute the bound states        
-        ret_code = nsev_compute_boundstates(D, q, r, 0, NULL, T,
-                eps_t, K_ptr, bound_states, opts);
-        
-        // Norming constants and/or residues)
-        if (normconsts_or_residues != NULL && *K_ptr != 0) {
-            
-            ret_code = nsev_compute_normconsts_or_residues(D, q, r, T, *K_ptr,
-                    bound_states, normconsts_or_residues, opts);
-            CHECK_RETCODE(ret_code, leave_fun);
-            
-        }
-    } else if (K_ptr != NULL) {
-        *K_ptr = 0;
-    }
-   
-    
-    leave_fun:
-        return ret_code;
-}
-
 
 // Auxiliary function for filtering: We assume that bound states must have
 // real part in the interval [-re_bound, re_bound].
@@ -967,6 +862,7 @@ static inline INT nsev_compute_contspec(
     leave_fun:
         free(H11_vals);
         free(scatter_coeffs);
+        free(xi);
         return ret_code;
 }
 
