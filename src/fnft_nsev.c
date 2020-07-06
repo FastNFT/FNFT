@@ -87,19 +87,6 @@ static inline INT nsev_compute_boundstates(
         COMPLEX * const bound_states,
         fnft_nsev_opts_t * const opts);
 
-static inline INT tf2normconsts_or_residues(
-        const UINT D,
-        COMPLEX const * const q,
-        COMPLEX * r,
-        REAL const * const T,
-        const UINT K,
-        COMPLEX * const transfer_matrix,
-        const UINT deg,
-        COMPLEX * const bound_states,
-        COMPLEX * const normconsts_or_residues,
-        fnft_nsev_opts_t * const opts);
-
-
 static inline INT fnft_nsev_base(
         const UINT D,
         COMPLEX * const q,
@@ -129,7 +116,7 @@ static inline INT fnft_nsev_base_slow(
         const INT kappa,
         fnft_nsev_opts_t *opts);
 
-static inline INT compute_normconsts_or_residues(
+static inline INT nsev_compute_normconsts_or_residues(
         const UINT D,
         COMPLEX const * const q,
         COMPLEX * r,
@@ -558,10 +545,9 @@ static inline INT fnft_nsev_base(
         
         // Norming constants and/or residues)
         if (normconsts_or_residues != NULL && *K_ptr != 0) {
-            
-            ret_code = tf2normconsts_or_residues(D, q, r, T, *K_ptr,
-                    transfer_matrix, deg, bound_states, normconsts_or_residues,
-                    opts);
+
+              ret_code = nsev_compute_normconsts_or_residues(D, q, r, T, *K_ptr,
+                    bound_states, normconsts_or_residues, opts);
             CHECK_RETCODE(ret_code, leave_fun);
             
         }
@@ -720,7 +706,7 @@ static inline REAL im_bound(const UINT D, COMPLEX const * const q,
     return 1.5 * 0.25 * misc_l2norm2(D, q, T[0], T[1]);
 }
 
-// Auxiliary function: Computes the bound states from a given transfer matrix.
+// Auxiliary function: Computes the bound states.
 static inline INT nsev_compute_boundstates(
         const UINT D,
         COMPLEX const * const q,
@@ -739,6 +725,8 @@ static inline INT nsev_compute_boundstates(
     COMPLEX * buffer = NULL;
     INT ret_code = SUCCESS;
     COMPLEX * q_tmp = NULL;
+    nse_discretization_t discretization;
+    
     degree1step = nse_discretization_degree(opts->discretization);
     // degree1step == 0 here indicates a valid slow method
     upsampling_factor = nse_discretization_upsampling_factor(opts->discretization);
@@ -760,17 +748,19 @@ static inline INT nsev_compute_boundstates(
             
             // Perform Newton iterations. Initial guesses of bound-states
             // should be in the continuous-time domain.
-            if (upsampling_factor == 1){
-                ret_code = nsev_refine_bound_states_newton(D, q, r, T, K, buffer,
-                        nse_discretization_BO, opts->niter);
-                CHECK_RETCODE(ret_code, leave_fun);
-            }else if(upsampling_factor == 2){
-                ret_code = nsev_refine_bound_states_newton(D, q, r, T, K, buffer,
-                        nse_discretization_CF4_2, opts->niter);
-                CHECK_RETCODE(ret_code, leave_fun);
-            }else
-                ret_code = E_INVALID_ARGUMENT(opts->discretization);
             
+            // Setting discretization as the base method for discretizations based on
+            // splitting schemes.
+            if (upsampling_factor == 1 && degree1step != 0){
+                discretization = nse_discretization_BO;
+            }else if(upsampling_factor == 2 && degree1step != 0){
+                discretization = nse_discretization_CF4_2;
+            }else
+                discretization = opts->discretization;
+            
+            ret_code = nsev_refine_bound_states_newton(D, q, r, T, K, buffer,
+                    discretization, opts->niter);
+            CHECK_RETCODE(ret_code, leave_fun);
             break;
             
             // ... using the fast eigenvaluebased root finding
@@ -854,76 +844,6 @@ static inline INT nsev_compute_boundstates(
     
     leave_fun:
         free(q_tmp);
-        return ret_code;
-}
-
-// Auxiliary function: Computes the norming constants and/or residues
-// using slow scattering schemes
-static inline INT tf2normconsts_or_residues(
-        const UINT D,
-        COMPLEX const * const q,
-        COMPLEX *r,
-        REAL const * const T,
-        const UINT K,
-        COMPLEX * const transfer_matrix,
-        const UINT deg,
-        COMPLEX * const bound_states,
-        COMPLEX * const normconsts_or_residues,
-        fnft_nsev_opts_t * const opts)
-{
-    
-    COMPLEX *a_vals = NULL, *aprime_vals = NULL;
-    UINT i, offset = 0;
-    INT ret_code = SUCCESS;
-    nse_discretization_t discretization = nse_discretization_BO;
-    // Check inputs
-    if (K == 0) // no bound states to refine
-        return SUCCESS;
-    if (D == 0)
-        return E_INVALID_ARGUMENT(D);
-    if (q == NULL)
-        return E_INVALID_ARGUMENT(q);
-    
-    // Reuse no longer used parts of the transfer matrix as buffers
-    a_vals = transfer_matrix + (deg+1);
-    aprime_vals = transfer_matrix + 3*(deg+1);
-    
-    const UINT upsampling_factor = nse_discretization_upsampling_factor(opts->discretization);
-    if (upsampling_factor == 0) {
-        ret_code = E_INVALID_ARGUMENT(opts->discretization);
-        goto leave_fun;
-    }
-    if (upsampling_factor == 1)
-        discretization  = nse_discretization_BO;
-    else if (upsampling_factor == 2)
-        discretization  = nse_discretization_CF4_2;
-    
-    ret_code = nse_scatter_bound_states(D, q, r, T, K,
-            bound_states, a_vals, aprime_vals, normconsts_or_residues, discretization, 0);
-    CHECK_RETCODE(ret_code, leave_fun);
-    
-    // Update to or add residues if requested
-    if (opts->discspec_type != nsev_dstype_NORMING_CONSTANTS) {
-        
-        if (opts->discspec_type == nsev_dstype_RESIDUES) {
-            offset = 0;
-        } else if (opts->discspec_type == nsev_dstype_BOTH) {
-            offset = K;
-            memcpy(normconsts_or_residues + offset,
-                    normconsts_or_residues,
-                    offset*sizeof(complex double));
-        } else
-            return E_INVALID_ARGUMENT(opts->discspec_type);
-        
-        // Divide norming constants by derivatives to get residues
-        for (i = 0; i < K; i++) {
-            if (aprime_vals[i] == 0.0)
-                return E_DIV_BY_ZERO;
-            normconsts_or_residues[offset + i] /= aprime_vals[i];
-        }
-    }
-    
-    leave_fun:
         return ret_code;
 }
 
@@ -1061,7 +981,7 @@ static inline INT fnft_nsev_base_slow(
         // Norming constants and/or residues)
         if (normconsts_or_residues != NULL && *K_ptr != 0) {
             
-            ret_code = compute_normconsts_or_residues(D, q, r, T, *K_ptr,
+            ret_code = nsev_compute_normconsts_or_residues(D, q, r, T, *K_ptr,
                     bound_states, normconsts_or_residues, opts);
             CHECK_RETCODE(ret_code, leave_fun);
             
@@ -1079,7 +999,7 @@ static inline INT fnft_nsev_base_slow(
 
 // Auxiliary function: Computes the norming constants and/or residues
 // using slow scattering schemes
-static inline INT compute_normconsts_or_residues(
+static inline INT nsev_compute_normconsts_or_residues(
         const UINT D,
         COMPLEX const * const q,
         COMPLEX * r,
@@ -1093,6 +1013,7 @@ static inline INT compute_normconsts_or_residues(
     COMPLEX *a_vals = NULL, *aprime_vals = NULL;
     UINT i, offset = 0;
     INT ret_code = SUCCESS;
+    nse_discretization_t discretization;
     // Check inputs
     if (K == 0) // no bound states to refine
         return SUCCESS;
@@ -1108,8 +1029,23 @@ static inline INT compute_normconsts_or_residues(
         goto leave_fun;
     }
     
+    const UINT upsampling_factor = nse_discretization_upsampling_factor(opts->discretization);
+    if (upsampling_factor == 0) {
+        ret_code = E_INVALID_ARGUMENT(opts->discretization);
+        goto leave_fun;
+    }
+    // Setting discretization as the base method for discretizations based on
+    // splitting schemes.
+    REAL degree1step = nse_discretization_degree(opts->discretization);
+    if (upsampling_factor == 1 && degree1step != 0)
+        discretization  = nse_discretization_BO;
+    else if (upsampling_factor == 2 && degree1step != 0)
+        discretization  = nse_discretization_CF4_2;
+    else
+        discretization = opts->discretization;
+    
     ret_code = nse_scatter_bound_states(D, q, r, T, K,
-            bound_states, a_vals, aprime_vals, normconsts_or_residues, opts->discretization, 0);
+            bound_states, a_vals, aprime_vals, normconsts_or_residues, discretization, 0);
     CHECK_RETCODE(ret_code, leave_fun);
     
     // Update to or add residues if requested
