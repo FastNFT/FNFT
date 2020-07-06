@@ -177,6 +177,7 @@ INT fnft_nsev(
     if (opts == NULL)
         opts = &default_opts;
     
+    // This switch checks for incompatible bound_state_localization options
     switch (opts->discretization) {
         case nse_discretization_2SPLIT2_MODAL:
         case nse_discretization_2SPLIT1A:
@@ -240,7 +241,7 @@ INT fnft_nsev(
         }
     }
     
-    // Resample signal
+    // Preprocess signal
     Dsub = D;
     ret_code = nse_preprocess_signal(D, q, eps_t, kappa, &Dsub, &q_preprocessed, &r_preprocessed,
             first_last_index, opts->discretization);
@@ -343,10 +344,7 @@ INT fnft_nsev(
             ret_code =  E_INVALID_ARGUMENT(discretization);
             goto leave_fun;
         }
-        Dsub = CEIL(D/2);
-        nskip_per_step = ROUND((REAL)D / Dsub);
-        Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
-        
+        Dsub = CEIL(D/2);        
         ret_code = nse_preprocess_signal(D, q, eps_t, kappa, &Dsub, &qsub_preprocessed, &rsub_preprocessed,
                 first_last_index, opts->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
@@ -467,14 +465,8 @@ static inline INT fnft_nsev_base(
             return E_INVALID_ARGUMENT(K_ptr);
     }
     if (opts == NULL)
-        opts = &default_opts;
+        return E_INVALID_ARGUMENT(opts);
     
-    // Allocate memory for the transfer matrix. 
-    // D should be the effective number of samples in q
-    i = nse_fscatter_numel(D, opts->discretization);
-    // NOTE: At this stage if i == 0 it means the discretization corresponds
-    // to a slow method. Incorrect discretizations will have been checked for
-    // in fnft_nsev main
     
     // Determine step size
     // D is interpolated number of samples but eps_t is the step-size
@@ -487,8 +479,15 @@ static inline INT fnft_nsev_base(
     D_given = D/upsampling_factor;
     const REAL eps_t = (T[1] - T[0])/(D_given - 1);
     
+    // D should be the effective number of samples in q
+    i = nse_fscatter_numel(D, opts->discretization);
+    // NOTE: At this stage if i == 0 it means the discretization corresponds
+    // to a slow method. Incorrect discretizations will have been checked for
+    // in fnft_nsev main
+    
     if (i != 0){
     //This corresponds to methods based on polynomial transfer matrix
+       // Allocate memory for the transfer matrix. 
         transfer_matrix = malloc(i*sizeof(COMPLEX));
         if (transfer_matrix == NULL) {
             ret_code = E_NOMEM;
@@ -502,7 +501,7 @@ static inline INT fnft_nsev_base(
                 opts->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
     }else{
-        // These indicate to the function to follow that the discretization
+        // These indicate to the functions to follow that the discretization
         // is a method not based on polynomial transfer matrix
         deg = 0;
         W = 0;
@@ -589,7 +588,8 @@ static inline INT nsev_compute_boundstates(
     nse_discretization_t discretization;
     
     degree1step = nse_discretization_degree(opts->discretization);
-    // degree1step == 0 here indicates a valid slow method
+    // degree1step == 0 here indicates a valid slow method. Incorrect 
+    // discretizations should have been caught earlier.
     upsampling_factor = nse_discretization_upsampling_factor(opts->discretization);
     if (upsampling_factor == 0) {
         ret_code = E_INVALID_ARGUMENT(opts->discretization);
@@ -610,7 +610,7 @@ static inline INT nsev_compute_boundstates(
             // Perform Newton iterations. Initial guesses of bound-states
             // should be in the continuous-time domain.
             
-            // Setting discretization as the base method for discretizations based on
+            // Setting 'discretization' as the base method for discretizations based on
             // splitting schemes.
             if (upsampling_factor == 1 && degree1step != 0){
                 discretization = nse_discretization_BO;
@@ -663,6 +663,9 @@ static inline INT nsev_compute_boundstates(
         ret_code = misc_filter(&K, buffer, NULL, bounding_box);
         CHECK_RETCODE(ret_code, leave_fun);
         
+        ret_code = misc_merge(&K, buffer, SQRT(EPSILON));
+        CHECK_RETCODE(ret_code, leave_fun);
+        
     }
     if (opts->bound_state_filtering == nsev_bsfilt_FULL) {
         bounding_box[1] = re_bound(eps_t, map_coeff);
@@ -687,9 +690,11 @@ static inline INT nsev_compute_boundstates(
             }
         ret_code = misc_filter(&K, buffer, NULL, bounding_box);
         CHECK_RETCODE(ret_code, leave_fun);
+        
+        ret_code = misc_merge(&K, buffer, SQRT(EPSILON));
+        CHECK_RETCODE(ret_code, leave_fun);
     }
-    ret_code = misc_merge(&K, buffer, SQRT(EPSILON));
-    CHECK_RETCODE(ret_code, leave_fun);
+
     
     // Copy result from buffer to user-supplied array (if not identical)
     if (buffer != bound_states) {
@@ -725,13 +730,13 @@ static inline INT nsev_compute_contspec(
 {
     COMPLEX *H11_vals = NULL, *H21_vals = NULL;
     COMPLEX A, V;
-    REAL boundary_coeff, scale;
+    REAL scale;
     REAL phase_factor_rho, phase_factor_a, phase_factor_b;
     INT ret_code = SUCCESS;
     UINT i, offset = 0, upsampling_factor, D_given;
     COMPLEX * scatter_coeffs = NULL, * xi = NULL;
 
-   // Determine step size
+    // Determine step size
     // D is interpolated number of samples but eps_t is the step-size
     // corresponding to original number of samples.
     upsampling_factor = nse_discretization_upsampling_factor(opts->discretization);
@@ -741,16 +746,8 @@ static inline INT nsev_compute_contspec(
     }
     D_given = D/upsampling_factor;
     const REAL eps_t = (T[1] - T[0])/(D_given - 1);
-    const REAL eps_xi = (XI[1] - XI[0])/(M - 1);
-    
-    
-    // Determine discretization-specific coefficients
-    boundary_coeff = nse_discretization_boundary_coeff(opts->discretization);
-    if (boundary_coeff == NAN){
-        return E_INVALID_ARGUMENT(opts->discretization);
-        goto leave_fun;
-    }
-    
+    const REAL eps_xi = (XI[1] - XI[0])/(M - 1);   
+     
     // Build xi-grid which is required for applying boundary conditions
     xi = malloc(M * sizeof(COMPLEX));
     if (xi == NULL) {
@@ -760,7 +757,7 @@ static inline INT nsev_compute_contspec(
     for (i = 0; i < M; i++)
         xi[i] = XI[0] + eps_xi*i;
 
-
+    // Allocate memory for transfer matrix values
     H11_vals = malloc(2*M * sizeof(COMPLEX));
     if (H11_vals == NULL){
         return E_NOMEM;
@@ -769,6 +766,8 @@ static inline INT nsev_compute_contspec(
     
     // If the discretization is a slow method then there should be no transfer_matrix
     if (deg == 0 && transfer_matrix == NULL && W == 0){
+        
+        // Allocate memory for call to nse_scatter_matrix
         scatter_coeffs = malloc(4 * M * sizeof(COMPLEX));
         if (scatter_coeffs == NULL) {
             ret_code = E_NOMEM;
@@ -781,7 +780,7 @@ static inline INT nsev_compute_contspec(
         
         // This is necessary because nse_scatter_matrix to ensure
         // boundary conditions can be applied using common code for slow
-        // methods and transfer matrix based methods.
+        // methods and polynomial transfer matrix based methods.
         for (i = 0; i < M; i++){
             H11_vals[i] = scatter_coeffs[i*4];
             H21_vals[i] = scatter_coeffs[i*4+2];
@@ -886,7 +885,7 @@ static inline INT nsev_compute_normconsts_or_residues(
     INT ret_code = SUCCESS;
     nse_discretization_t discretization;
     // Check inputs
-    if (K == 0) // no bound states to refine
+    if (K == 0) // no bound states 
         return SUCCESS;
     if (D == 0)
         return E_INVALID_ARGUMENT(D);
@@ -908,6 +907,8 @@ static inline INT nsev_compute_normconsts_or_residues(
     // Setting discretization as the base method for discretizations based on
     // splitting schemes.
     REAL degree1step = nse_discretization_degree(opts->discretization);
+    // degree1step == 0 here implies method not based on polynomial
+    // transfer matrix.
     if (upsampling_factor == 1 && degree1step != 0)
         discretization  = nse_discretization_BO;
     else if (upsampling_factor == 2 && degree1step != 0)
