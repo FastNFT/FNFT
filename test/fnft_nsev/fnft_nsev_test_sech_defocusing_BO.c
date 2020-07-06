@@ -26,11 +26,11 @@
 INT main()
 {
     INT ret_code, i;
-    fnft_nsev_slow_opts_t opts;
+    fnft_nsev_opts_t opts;
     const nsev_testcases_t tc = nsev_testcases_SECH_DEFOCUSING;
-    UINT D = 256;
+    UINT D = 1024;
     REAL error_bounds[6] = { 
-        8.8e-6,     // reflection coefficient
+        2.1e-3,     // reflection coefficient
         INFINITY,   // a
         INFINITY,   // b
         0.0,        // bound states
@@ -38,29 +38,30 @@ INT main()
         0.0         // residues 
     };
 
-    opts = fnft_nsev_slow_default_opts();
-    opts.discretization = nse_discretization_CF6_4;
+    opts = fnft_nsev_default_opts();
+    opts.discretization = nse_discretization_BO;
 
-    ret_code = nsev_testcases_test_fnft_slow(tc, D, error_bounds, &opts);
+    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Check the case where D is not a power of two. The error bounds have to
     // be tight but not too tight for this to make sense!
-    ret_code = nsev_testcases_test_fnft_slow(tc, D+1, error_bounds, &opts);
+    ret_code = nsev_testcases_test_fnft(tc, D+1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = nsev_testcases_test_fnft_slow(tc, D-1, error_bounds, &opts);
+    ret_code = nsev_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    // Check for 6th-order error decay
+    // Check for 2nd-order error decay
     D *= 2;
     for (i=0; i<6; i++)
-        error_bounds[i] /= 64.0;
-    ret_code = nsev_testcases_test_fnft_slow(tc, D, error_bounds, &opts);
+        error_bounds[i] /= 4.0;
+    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
-    D = 365;
+    
+    D = 512;
     REAL error_bounds_RE[6] = { 
-        2.5e-7,     // reflection coefficient
+        2.8e-4,     // reflection coefficient
         INFINITY,   // a
         INFINITY,   // b
         0.0,        // bound states
@@ -69,15 +70,15 @@ INT main()
     };
     opts.richardson_extrapolation_flag = 1;
     
-    ret_code = nsev_testcases_test_fnft_slow(tc, D, error_bounds_RE, &opts);
+    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);    
-    // Check for at least 7th-order error decay
+    // Check for at least 3rd-order error decay
     D *= 2;
     for (i=0; i<6; i++)
-        error_bounds_RE[i] /= 128.0;
-    ret_code = nsev_testcases_test_fnft_slow(tc, D, error_bounds_RE, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);   
-
+        error_bounds_RE[i] /= 8.0;
+    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+    
 leave_fun:
     if (ret_code != SUCCESS)
         return EXIT_FAILURE;

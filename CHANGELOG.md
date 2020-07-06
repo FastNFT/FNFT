@@ -1,15 +1,13 @@
 # Changelog
 
-## [0.4.0] -- 2020-06-26
+## [0.4.0] -- 2020-07-06
 
 ### Added
 
-- The routine fnft_nsev for the NFT of the vanishing nonlinear Schroedinger equation now has two fourth-order discretizations (see 4SPLIT4A and 4SPLIT4B in nse_discretizations_t).
+- The routine fnft_nsev for the NFT of the vanishing nonlinear Schroedinger equation has new higher-order discretizations which compute the spectrum using the classical method (see documentation of fnft_nsev). The new fourth-order discretizations 4SPLIT4A and 4SPLIT4B support fast computation of the spectrum (see nse_discretizations_t). 
 - The Matlab routine mex_fnft_nsev has been updated accordingly.
 - The routine fnft_nsep for the NFT of the periodic nonlinear Schroedinger equation can now find spectra of quasi-periodic signals. It also has support for 4SPLIT4A and 4SPLIT4B discretizations.
 - The Matlab routine mex_fnft_nsep has been updated accordingly.
-- New public function fnft_nsev_slow implementing slow(classical) NFTs for the vanishing nonlinear Schroedinger equation (bound states are found only using Newton's method).
-- The Matlab routine mex_fnft_nsev_slow has been added.
 
 ### Changed
 

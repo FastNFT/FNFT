@@ -26,7 +26,7 @@
 INT main()
 {
     INT ret_code, i;
-    fnft_nsev_slow_opts_t opts;
+    fnft_nsev_opts_t opts;
     const nsev_testcases_t tc = nsev_testcases_SECH_DEFOCUSING;
     UINT D = 256;
     REAL error_bounds[6] = { 
@@ -38,24 +38,24 @@ INT main()
         0.0         // residues 
     };
 
-    opts = fnft_nsev_slow_default_opts();
+    opts = fnft_nsev_default_opts();
     opts.discretization = nse_discretization_CF4_3;
 
-    ret_code = nsev_testcases_test_fnft_slow(tc, D, error_bounds, &opts);
+    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Check the case where D is not a power of two. The error bounds have to
     // be tight but not too tight for this to make sense!
-    ret_code = nsev_testcases_test_fnft_slow(tc, D+1, error_bounds, &opts);
+    ret_code = nsev_testcases_test_fnft(tc, D+1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = nsev_testcases_test_fnft_slow(tc, D-1, error_bounds, &opts);
+    ret_code = nsev_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Check for 4th-order error decay
     D *= 2;
     for (i=0; i<6; i++)
         error_bounds[i] /= 16.0;
-    ret_code = nsev_testcases_test_fnft_slow(tc, D, error_bounds, &opts);
+    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
     D = 512;
@@ -69,13 +69,13 @@ INT main()
     };
     opts.richardson_extrapolation_flag = 1;
     
-    ret_code = nsev_testcases_test_fnft_slow(tc, D, error_bounds_RE, &opts);
+    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);    
     // Check for at least 5th-order error decay
     D *= 2;
     for (i=0; i<6; i++)
         error_bounds_RE[i] /= 32.0;
-    ret_code = nsev_testcases_test_fnft_slow(tc, D, error_bounds_RE, &opts);
+    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);    
 
 leave_fun:

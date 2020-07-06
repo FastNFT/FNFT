@@ -24,7 +24,6 @@
 #include "fnft__nsev_testcases.h"
 #include "fnft__nse_discretization.h" // for nse_discretization_degree
 #include "fnft_nsev.h"
-#include "fnft_nsev_slow.h"
 #ifdef DEBUG
 #include <stdio.h>
 #include <string.h> // for memcpy
@@ -65,35 +64,35 @@ INT nsev_testcases(nsev_testcases_t tc, const UINT D,
         return E_INVALID_ARGUMENT(residues_ptr);
     if (kappa_ptr == NULL)
         return E_INVALID_ARGUMENT(kappa_ptr);
-
+    
     // Set the number of points in the continuous spectrum *M_ptr and the
     // number of bound states *K_ptr (needed for proper allocation)
     switch (tc) {
-
-    case nsev_testcases_SECH_FOCUSING:
-        *M_ptr = 16;
-        *K_ptr = 3;
-        break;
-   
-    case nsev_testcases_SECH_FOCUSING2:
+        
+        case nsev_testcases_SECH_FOCUSING:
             *M_ptr = 16;
-            *K_ptr = 5; 
-            break;    
-
-    case nsev_testcases_SECH_DEFOCUSING:
-        *M_ptr = 16;
-        *K_ptr = 0;
-        break;
-
-    case nsev_testcases_TRUNCATED_SOLITON:
-        *M_ptr = 16;
-        *K_ptr = 0;
-        break;
-
-    default:
-        return E_INVALID_ARGUMENT(tc);
+            *K_ptr = 3;
+            break;
+            
+        case nsev_testcases_SECH_FOCUSING2:
+            *M_ptr = 16;
+            *K_ptr = 5;
+            break;
+            
+        case nsev_testcases_SECH_DEFOCUSING:
+            *M_ptr = 16;
+            *K_ptr = 0;
+            break;
+            
+        case nsev_testcases_TRUNCATED_SOLITON:
+            *M_ptr = 16;
+            *K_ptr = 0;
+            break;
+            
+        default:
+            return E_INVALID_ARGUMENT(tc);
     }
-
+    
     // Allocate memory for results
     *q_ptr = malloc(D * sizeof(COMPLEX));
     if (*q_ptr == NULL) {
@@ -740,14 +739,20 @@ const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
     // Allocate memory
     contspec = malloc(3*M * sizeof(COMPLEX));
     K = nse_discretization_degree(opts->discretization) * D;
+    if (K == 0) //slow discretization
+        K = K_exact;
     bound_states = malloc(K * sizeof(COMPLEX));
     normconsts_and_residues = malloc(2*D * sizeof(COMPLEX));
     if ( q == NULL || contspec == NULL || bound_states == NULL
-    || normconsts_and_residues == NULL) {
+            || normconsts_and_residues == NULL) {
         ret_code = E_NOMEM;
         goto release_mem;
     }
-   
+    
+    if (opts->bound_state_localization == nsev_bsloc_NEWTON){
+        memcpy(bound_states,bound_states_exact,K * sizeof(COMPLEX));
+    }
+    
 // Compute the NFT
     opts->contspec_type = fnft_nsev_cstype_BOTH;
     opts->discspec_type = fnft_nsev_dstype_BOTH;
@@ -814,113 +819,4 @@ release_mem:
     free(residues_exact);
 
     return ret_code;
-}
-
-INT nsev_testcases_test_fnft_slow(nsev_testcases_t tc, UINT D,
-        const REAL error_bounds[6], fnft_nsev_slow_opts_t * const opts) {
-    COMPLEX * q = NULL;
-    COMPLEX * contspec = NULL;
-    COMPLEX * bound_states = NULL;
-    COMPLEX * normconsts_and_residues = NULL;
-    REAL T[2], XI[2];
-    COMPLEX * contspec_exact = NULL;
-    COMPLEX * ab_exact = NULL;
-    COMPLEX * bound_states_exact = NULL;
-    COMPLEX * normconsts_exact = NULL;
-    COMPLEX * residues_exact = NULL;
-    UINT K, K_exact, M;
-    INT kappa = 0;
-    REAL errs[6] = {
-        FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN };
-        INT ret_code;
-        
-        // Check inputs
-        if (opts == NULL)
-            return E_INVALID_ARGUMENT(opts);
-        
-        // Load test case
-        ret_code = nsev_testcases(tc, D, &q, T, &M, &contspec_exact, &ab_exact,
-                XI, &K_exact,&bound_states_exact, &normconsts_exact, &residues_exact,
-                &kappa);
-        CHECK_RETCODE(ret_code, release_mem);
-        
-        // Allocate memory
-        contspec = malloc(3*M * sizeof(COMPLEX));
-        K = K_exact;
-        bound_states = malloc(K * sizeof(COMPLEX));
-        normconsts_and_residues = malloc(2*D * sizeof(COMPLEX));
-        if ( q == NULL || contspec == NULL || bound_states == NULL
-                || normconsts_and_residues == NULL) {
-            ret_code = E_NOMEM;
-            goto release_mem;
-        }
-        memcpy(bound_states,bound_states_exact,K * sizeof(COMPLEX)); //TODO
-        
-// Compute the NFT
-        opts->contspec_type = fnft_nsev_cstype_BOTH;
-        opts->discspec_type = fnft_nsev_dstype_BOTH;
-        ret_code = fnft_nsev_slow(D, q, T, M, contspec, XI, &K, bound_states,
-                normconsts_and_residues, kappa, opts);
-        CHECK_RETCODE(ret_code, release_mem);
-        
-        // Compute the errors
-        ret_code = nsev_compare_nfs(M, K, K_exact, contspec, contspec_exact,
-                contspec+M, ab_exact, bound_states, bound_states_exact,
-                normconsts_and_residues, normconsts_exact, normconsts_and_residues+K,
-                residues_exact, errs);
-        CHECK_RETCODE(ret_code, release_mem);
-        
-#ifdef DEBUG
-        for (UINT i=0; i<6; i++)
-            printf("nsev_testcases_test_fnft_slow: error_bounds[%i] = %2.1e <= %2.1e\n",
-                    (int)i, errs[i], error_bounds[i]);
-        //misc_print_buf(M, contspec, "r_num");
-        //misc_print_buf(M, contspec_exact, "r_exact");
-        //misc_print_buf(2*M, contspec+M, "ab_num");
-        //misc_print_buf(2*M, ab_exact, "ab_exact");
-        //misc_print_buf(K, residues_exact, "residues_exact");
-#endif
-        
-        // Check if the errors are below the specified bounds. Organized such that
-        // the line number tells us which error was too high. The conditions are
-        // written in this way to ensure that they fail if an error is NAN.
-        if (!(errs[0] <= error_bounds[0])) {
-            ret_code = E_TEST_FAILED;
-            goto release_mem;
-        }
-        if (!(errs[1] <= error_bounds[1])) {
-            ret_code = E_TEST_FAILED;
-            goto release_mem;
-        }
-        if (!(errs[2] <= error_bounds[2])) {
-            ret_code = E_TEST_FAILED;
-            goto release_mem;
-        }
-        if (!(errs[3] <= error_bounds[3])) {
-            ret_code = E_TEST_FAILED;
-            goto release_mem;
-        }
-        if (!(errs[4] <= error_bounds[4])) {
-            ret_code = E_TEST_FAILED;
-            goto release_mem;
-        }
-        if (!(errs[5] <= error_bounds[5])) {
-            ret_code = E_TEST_FAILED;
-            goto release_mem;
-        }
-        
-        ///// Clean up /////
-        
-        release_mem:
-            free(q);
-            free(contspec);
-            free(ab_exact);
-            free(bound_states);
-            free(normconsts_and_residues);
-            free(bound_states_exact);
-            free(contspec_exact);
-            free(normconsts_exact);
-            free(residues_exact);
-            
-            return ret_code;
 }

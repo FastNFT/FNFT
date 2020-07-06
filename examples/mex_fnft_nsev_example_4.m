@@ -43,8 +43,8 @@ bound_states_guesses = bound_states_exact+0.035*exp(1i*pi*rand(1,5));%Adding som
 
 t = linspace(T(1),T(2),D);
 q = q_fun(t); %signal samples
-[~,bound_states_computed,normconsts_computed]=mex_fnft_nsev_slow(q, T, XI,... 
-                   kappa,'CF4_2','bsloc_newton',bound_states_guesses,'skip_cs', 'bsloc_niter',20);
+[~,bound_states_computed,normconsts_computed]=mex_fnft_nsev(q, T, XI,... 
+                   kappa,'discr_CF4_2','bsloc_newton',bound_states_guesses,'skip_cs', 'bsloc_niter',20);
 
 % plots
 plot(bound_states_exact,'o')

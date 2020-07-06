@@ -662,6 +662,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
         free(tmp1);
         free(tmp2);
         free(l);
+        free(weights);
         return ret_code;
 }
 

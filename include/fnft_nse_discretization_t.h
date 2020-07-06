@@ -44,7 +44,8 @@
  * methods from Medvedev, Vaseva, Chekhovskoy and  Fedoruk
  * <a href="https://doi.org/10.1364/OE.377140">&quot;
  * Exponential fourth order schemes for direct Zakharov-Shabat problem,&quot;</a> Optics Express, vol. 28, pp. 20--39, 2020.\n
- * All above discretizations are supported by \link fnft_nsev_slow.h \endlink.\n 
+ * All above discretizations only support Newton method based bound states
+ * localization (see fnft_nsev_bsloc_NEWTON of type \link fnft_nsev_bsloc_t \endlink) in \link fnft_nsev \endlink. \n 
  * The exponential spliting schemes, defined in
  * Prins and Wahls, <a href="https://doi.org/10.1109/ICASSP.2018.8461708">&quot;
  * Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot;
@@ -95,8 +96,8 @@
  * `fnft_nse_discretization_4SPLIT4A`: Order of base method = 4, Degree = 4, Order of accuracy of splitting-scheme = 4\n
  * `fnft_nse_discretization_4SPLIT4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4
  *
- * Used in \link fnft_nsev_opts_t \endlink, \link fnft_nsep_opts_t \endlink,
- *  \link fnft_nsev_slow_opts_t \endlink and \link fnft_nsev_inverse_opts_t \endlink.
+ * Used in \link fnft_nsev_opts_t \endlink, \link fnft_nsep_opts_t \endlink
+ *  and \link fnft_nsev_inverse_opts_t \endlink.
  *
  * @ingroup data_types
  */

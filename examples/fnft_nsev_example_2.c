@@ -18,14 +18,14 @@
  * Shrinivas Chimmalgi (TU Delft) 2020.
  */
 
-// This example demonstrates the use of the function fnft_nsev_slow, which 
+// This example demonstrates the use of the function fnft_nsev, which 
 // implements the nonlinear Fourier transform with respect to the nonlinear
 // Schroedinger equation with vanishing boundary conditions. The signal is the
 // same rectangular pulse as in Sec. VI.B of the paper
 // https://doi.org/10.1109/TIT.2014.2321151
 
 #include <stdio.h> // for printf
-#include "fnft_nsev_slow.h"
+#include "fnft_nsev.h"
 
 int main()
 {
@@ -74,7 +74,7 @@ int main()
     int kappa = +1;
 
     // Default options
-    fnft_nsev_slow_opts_t opts = fnft_nsev_slow_default_opts();
+    fnft_nsev_opts_t opts = fnft_nsev_default_opts();
     
     // Selecting options to use Newton search to find the eigenvalues with
     // CF4_2 discretization
@@ -91,7 +91,7 @@ int main()
 
     /** Step 3: Call fnft_nsev and check for errors **/
 
-    int ret_code = fnft_nsev_slow(D, q, T, M, contspec, XI, &K, bound_states,
+    int ret_code = fnft_nsev(D, q, T, M, contspec, XI, &K, bound_states,
         normconsts, kappa, &opts);
     if (ret_code != FNFT_SUCCESS) {
         printf("An error occured!\n");

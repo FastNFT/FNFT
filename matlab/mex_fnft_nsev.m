@@ -54,6 +54,20 @@
 %   'discr_2split4B' Use fifth order splitting with 2nd degree polynomial.
 %   'discr_4split4B' Fourth-order method. Uses fifth order splitting with 
 %                    2nd degree polynomial.
+%   'discr_BO'      Use the second-order method by Boffetta-Osborne.
+%                   Requires one matrix exponential per sample.
+%   'discr_CF4_2'   Use fourth-order commutator-free exponential integrator
+%                   which requires two matrix exponentials per sample.
+%   'discr_CF4_3'   Use fourth-order commutator-free exponential integrator
+%                   which requires three matrix exponentials per sample.
+%   'discr_CF5_3'   Use fifth-order commutator-free exponential integrator
+%                   which requires three matrix exponentials per sample.
+%   'discr_CF6_4'   Use sixth-order commutator-free exponential integrator
+%                   which requires four matrix exponentials per sample.
+%   'discr_ES4'     Use fourth-order exponential integrator
+%                   which requires one matrix exponential per sample.
+%   'discr_TES4'    Use fourth-order exponential integrator
+%                   which requires three matrix exponentials per sample.
 %   'RE'            Use Richardson extrpolation to improve accuracy. The
 %                   approximations of the nonlinear Fourier spectrum are 
 %                   calcuated using all given samples and again with half of 
