@@ -21,10 +21,7 @@
 
 #define FNFT_ENABLE_SHORT_NAMES
 
-
 #include "fnft_nsev.h"
-
-
 
 static fnft_nsev_opts_t default_opts = {
     .bound_state_filtering = nsev_bsfilt_FULL,
@@ -121,12 +118,17 @@ static inline INT nsev_refine_bound_states_newton(const UINT D,
         UINT K,
         COMPLEX * bound_states,
         nse_discretization_t discretization,
-        FNFT_UINT niter);
+        UINT niter,
+        REAL const * const bounding_box);
 
 /**
  * Fast nonlinear Fourier transform for the nonlinear Schroedinger
  * equation with vanishing boundary conditions.
- * See the header file for documentation.
+ * This function takes care of the necessary preprocessing (for example
+ * signal resampling or subsampling) based on the options before calling
+ * fnft_nsev_base. If the richardson_extrapolation_flag is set, this function
+ * calls fnft_nsev_base with half of the samples and then performs
+ * Richardson extrapolation on the spectrum.
  */
 INT fnft_nsev(
         const UINT D,
@@ -217,18 +219,35 @@ INT fnft_nsev(
             return E_INVALID_ARGUMENT(opts->discretization);
     }
     
-    
+    // Some higher-order discretizations require samples on a non-equidistant grid
+    // while others require derivatives which are computed in the form of
+    // finite-differences. The input array q has D samples corresponding to
+    // an equidistant grid. The upsampling_factor*D gives the effective
+    // number of samples for the chosen discretization. The effective number
+    // of samples is required for the auxiliary function calls.
     upsampling_factor = nse_discretization_upsampling_factor(opts->discretization);
     if (upsampling_factor == 0) {
         ret_code = E_INVALID_ARGUMENT(opts->discretization);
         goto leave_fun;
     }
-    D_effective = D * upsampling_factor; // upsampling_factor*D gives the effective number of samples
+    D_effective = D * upsampling_factor; 
     
     // Determine step size
     const REAL eps_t = (T[1] - T[0])/(D - 1);
     
+    // If Richardson extrapolation is not requested or if it is requested but
+    // opts->discspec_type is nsev_dstype_NORMCONSTS,then normconsts_or_residues_reserve
+    // acts as just a place holder for normconsts_or_residues. This is equivalent
+    // to calling the auxiliary functions with normconsts_or_residues instead of
+    // normconsts_or_residues_reserve.
     normconsts_or_residues_reserve = normconsts_or_residues;
+    // If Richardson extrapolation is requested and opts->discspec_type
+    // is nsev_dstype_RESIDUES, *K_ptr*2  memory is allocated
+    // for normconsts_or_residues_reserve. This overwrites the previous
+    // assignment of normconsts_or_residues to normconsts_or_residues_reserve.
+    // Richardson extrpolation is applied on normconsts(b) and aprimes separately
+    // before combining the results to get the residues=normconsts/aprimes.
+    // Hence double the memory is necessary even if the user requests only residues.
     if (opts->richardson_extrapolation_flag == 1){
         ds_type_opt = opts->discspec_type;
         if (ds_type_opt == nsev_dstype_RESIDUES){
@@ -241,13 +260,18 @@ INT fnft_nsev(
         }
     }
     
-    // Preprocess signal
+    // Some higher-order discretizations require samples on a non-equidistant grid
+    // while others require derivatives. The preprocessing function computes
+    // the required non-equidistant samples using bandlimited interpolation and
+    // the required derivatives using finite differences. The nse_preprocess_signal
+    // function also performs some further discretization specific processing. 
+    // Preprocessing takes care of computing things which are required by all
+    // the auxiliary functions thus helping efficiency.
     Dsub = D;
     ret_code = nse_preprocess_signal(D, q, eps_t, kappa, &Dsub, &q_preprocessed, &r_preprocessed,
             first_last_index, opts->discretization);
     CHECK_RETCODE(ret_code, leave_fun);
-    
-    
+        
     if (kappa == +1 && bound_states != NULL && opts->bound_state_localization == nsev_bsloc_SUBSAMPLE_AND_REFINE) {
         // the mixed method gets special treatment
         
@@ -337,13 +361,16 @@ INT fnft_nsev(
             for (i=0; i<K_sub; i++)
                 bound_states_sub[i] = bound_states[i];
         }
-        // Preparing q_preprocessed
         UINT method_order;
         method_order = nse_discretization_method_order(opts->discretization);
         if (method_order == 0){
             ret_code =  E_INVALID_ARGUMENT(discretization);
             goto leave_fun;
         }
+        // The signal q is now subsampled(approx. half the samples) and 
+        // preprocessed as required for the discretization. This is
+        // required for obtaining a second approximation of the spectrum
+        // which will be used for Richardson extrapolation.
         Dsub = CEIL(D/2);        
         ret_code = nse_preprocess_signal(D, q, eps_t, kappa, &Dsub, &qsub_preprocessed, &rsub_preprocessed,
                 first_last_index, opts->discretization);
@@ -363,7 +390,7 @@ INT fnft_nsev(
         opts->bound_state_localization = bs_loc_opt;
         opts->discspec_type = ds_type_opt;
         
-        // Richardson step
+        // Richardson extrapolation of the continuous spectrum
         REAL const scl_num = POW(eps_t_sub/eps_t,method_order);
         REAL const scl_den = scl_num - 1.0;
         REAL const dxi = (XI[1]-XI[0])/(M-1);
@@ -375,12 +402,12 @@ INT fnft_nsev(
                 }
             }
         }
+        // Richardson extrapolation of the discrete spectrum
         if (kappa == +1 && bound_states != NULL && *K_ptr != 0 && K_sub != 0) {
             UINT loc = K_sub;
             REAL bs_err_thres = eps_t;
             REAL bs_err = eps_t;
-            UINT K = *K_ptr;
-            
+            UINT K = *K_ptr;            
             
             for (i=0; i<K; i++){
                 loc = K_sub;
@@ -408,8 +435,7 @@ INT fnft_nsev(
             if (ds_type_opt == nsev_dstype_RESIDUES)
                 memcpy(normconsts_or_residues,normconsts_or_residues_reserve+K,K* sizeof(COMPLEX));
             else if(ds_type_opt == nsev_dstype_BOTH)
-                memcpy(normconsts_or_residues,normconsts_or_residues_reserve,2*K* sizeof(COMPLEX));
-            
+                memcpy(normconsts_or_residues,normconsts_or_residues_reserve,2*K* sizeof(COMPLEX));            
         }
     }
     
@@ -466,8 +492,7 @@ static inline INT fnft_nsev_base(
     }
     if (opts == NULL)
         return E_INVALID_ARGUMENT(opts);
-    
-    
+
     // Determine step size
     // D is interpolated number of samples but eps_t is the step-size
     // corresponding to original number of samples.
@@ -506,6 +531,7 @@ static inline INT fnft_nsev_base(
         deg = 0;
         W = 0;
     }
+    
     // Compute the continuous spectrum
     if (contspec != NULL && M > 0) {
         ret_code = nsev_compute_contspec(deg, W, transfer_matrix, q, r, T, D, XI, M,
@@ -521,19 +547,16 @@ static inline INT fnft_nsev_base(
                 eps_t, K_ptr, bound_states, opts);
         CHECK_RETCODE(ret_code, leave_fun);
         
-        
         // Norming constants and/or residues)
         if (normconsts_or_residues != NULL && *K_ptr != 0) {
-
-              ret_code = nsev_compute_normconsts_or_residues(D, q, r, T, *K_ptr,
+            ret_code = nsev_compute_normconsts_or_residues(D, q, r, T, *K_ptr,
                     bound_states, normconsts_or_residues, opts);
             CHECK_RETCODE(ret_code, leave_fun);
-            
         }
     } else if (K_ptr != NULL) {
         *K_ptr = 0;
     }
-    
+
     leave_fun:
         free(transfer_matrix);
         return ret_code;
@@ -598,6 +621,41 @@ static inline INT nsev_compute_boundstates(
     if (degree1step != 0)
         map_coeff = 2/(degree1step);
     D_given = D/upsampling_factor;
+    
+    // Set-up bounding_box based on choice of filtering
+    if (opts->bound_state_filtering == nsev_bsfilt_BASIC) {        
+        bounding_box[0] = -INFINITY;
+        bounding_box[1] = INFINITY;
+        bounding_box[2] = 0.0;
+        bounding_box[3] = INFINITY;        
+    }else if (opts->bound_state_filtering == nsev_bsfilt_FULL) {
+        bounding_box[1] = re_bound(eps_t, map_coeff);
+        bounding_box[0] = -bounding_box[1];
+        bounding_box[2] = 0;
+        // This step is required as q contains scaled values on a
+        // non-equispaced grid
+        if (upsampling_factor == 1){
+            bounding_box[3] = im_bound(D_given, q, T);
+        } else {
+            q_tmp = malloc(D_given * sizeof(COMPLEX));
+            if (q_tmp == NULL) {
+                ret_code = E_NOMEM;
+                goto leave_fun;
+            }
+            j = 1;
+            for (i = 0; i < D_given; i++) {
+                q_tmp[i] = upsampling_factor*q[j];
+                j = j+upsampling_factor;
+            }
+            bounding_box[3] = im_bound(D_given, q_tmp, T);
+        }
+    }else{
+        bounding_box[0] = -INFINITY;
+        bounding_box[1] = INFINITY;
+        bounding_box[2] = -INFINITY;
+        bounding_box[3] = INFINITY;
+    }
+
     // Localize bound states ...
     switch (opts->bound_state_localization) {
         
@@ -620,7 +678,7 @@ static inline INT nsev_compute_boundstates(
                 discretization = opts->discretization;
             
             ret_code = nsev_refine_bound_states_newton(D, q, r, T, K, buffer,
-                    discretization, opts->niter);
+                    discretization, opts->niter, bounding_box);
             CHECK_RETCODE(ret_code, leave_fun);
             break;
             
@@ -656,45 +714,12 @@ static inline INT nsev_compute_boundstates(
     // Filter bound states
     if (opts->bound_state_filtering != nsev_bsfilt_NONE) {
         
-        bounding_box[0] = -INFINITY;
-        bounding_box[1] = INFINITY;
-        bounding_box[2] = 0.0;
-        bounding_box[3] = INFINITY;
         ret_code = misc_filter(&K, buffer, NULL, bounding_box);
         CHECK_RETCODE(ret_code, leave_fun);
         
         ret_code = misc_merge(&K, buffer, SQRT(EPSILON));
-        CHECK_RETCODE(ret_code, leave_fun);
-        
+        CHECK_RETCODE(ret_code, leave_fun);        
     }
-    if (opts->bound_state_filtering == nsev_bsfilt_FULL) {
-        bounding_box[1] = re_bound(eps_t, map_coeff);
-        bounding_box[0] = -bounding_box[1];
-        bounding_box[2] = 0;
-        // This step is required as q contains scaled values on a
-            // non-equispaced grid
-            if (upsampling_factor == 1){
-                bounding_box[3] = im_bound(D_given, q, T);
-            } else {
-                q_tmp = malloc(D_given * sizeof(COMPLEX));
-                if (q_tmp == NULL) {
-                    ret_code = E_NOMEM;
-                    goto leave_fun;
-                }
-                j = 1;
-                for (i = 0; i < D_given; i++) {
-                    q_tmp[i] = upsampling_factor*q[j];
-                    j = j+upsampling_factor;
-                }
-                bounding_box[3] = im_bound(D_given, q_tmp, T);
-            }
-        ret_code = misc_filter(&K, buffer, NULL, bounding_box);
-        CHECK_RETCODE(ret_code, leave_fun);
-        
-        ret_code = misc_merge(&K, buffer, SQRT(EPSILON));
-        CHECK_RETCODE(ret_code, leave_fun);
-    }
-
     
     // Copy result from buffer to user-supplied array (if not identical)
     if (buffer != bound_states) {
@@ -814,13 +839,11 @@ static inline INT nsev_compute_contspec(
             offset = M;
             // fall through
             
-        case nsev_cstype_REFLECTION_COEFFICIENT:
-            
+        case nsev_cstype_REFLECTION_COEFFICIENT:            
             
             ret_code = nse_phase_factor_rho(eps_t, T[1], &phase_factor_rho,opts->discretization);
             CHECK_RETCODE(ret_code, leave_fun);
-            
-            
+                        
             for (i = 0; i < M; i++) {
                 if (H11_vals[i] == 0.0){
                     return E_DIV_BY_ZERO;
@@ -838,13 +861,13 @@ static inline INT nsev_compute_contspec(
             scale = POW(2.0, W); // needed since the transfer matrix might
             // have been scaled by nse_fscatter. W == 0 for slow methods.
             
+            // Calculating the discretization specific phase factors.
             ret_code = nse_phase_factor_a(eps_t, D_given, T, &phase_factor_a,opts->discretization);
             CHECK_RETCODE(ret_code, leave_fun);
             
             ret_code = nse_phase_factor_b(eps_t, D_given, T, &phase_factor_b,opts->discretization);
             CHECK_RETCODE(ret_code, leave_fun);
-            
-            
+                        
             for (i = 0; i < M; i++) {
                 result[offset + i] = H11_vals[i] * scale * CEXP(I*xi[i]*phase_factor_a);
                 result[offset + M + i] = H21_vals[i] * scale * CEXP(I*xi[i]*phase_factor_b);
@@ -865,8 +888,6 @@ static inline INT nsev_compute_contspec(
         return ret_code;
 }
 
-
-
 // Auxiliary function: Computes the norming constants and/or residues
 // using slow scattering schemes
 static inline INT nsev_compute_normconsts_or_residues(
@@ -878,8 +899,7 @@ static inline INT nsev_compute_normconsts_or_residues(
         COMPLEX * const bound_states,
         COMPLEX * const normconsts_or_residues,
         fnft_nsev_opts_t * const opts)
-{
-    
+{    
     COMPLEX *a_vals = NULL, *aprime_vals = NULL;
     UINT i, offset = 0;
     INT ret_code = SUCCESS;
@@ -947,7 +967,6 @@ static inline INT nsev_compute_normconsts_or_residues(
         return ret_code;
 }
 
-
 // Auxiliary function: Refines the bound-states using Newtons method
 static inline INT nsev_refine_bound_states_newton(
         const UINT D,
@@ -957,13 +976,13 @@ static inline INT nsev_refine_bound_states_newton(
         const UINT K,
         COMPLEX * bound_states,
         nse_discretization_t discretization,
-        const UINT niter)
+        const UINT niter,
+        REAL const * const bounding_box)
 {
     INT ret_code = SUCCESS;
-    UINT i, iter, upsampling_factor, D_given;
+    UINT i, iter;
     COMPLEX a_val, b_val, aprime_val, error;
     REAL eprecision = EPSILON * 100;
-    REAL re_bound_val, im_bound_val = NAN;
     // Check inputs
     if (K == 0) // no bound states to refine
         return SUCCESS;
@@ -975,21 +994,11 @@ static inline INT nsev_refine_bound_states_newton(
         return E_INVALID_ARGUMENT(q);
     if (T == NULL)
         return E_INVALID_ARGUMENT(T);
-    
-    upsampling_factor = nse_discretization_upsampling_factor(discretization);
-    if (upsampling_factor == 0) {
-        ret_code = E_INVALID_ARGUMENT(discretization);
-        goto leave_fun;
-    }
-    D_given = D/upsampling_factor;
-    const REAL eps_t = (T[1] - T[0])/(D_given - 1);
-    
-    im_bound_val = upsampling_factor*upsampling_factor*im_bound(D, q, T);
-    if (im_bound_val == NAN){
-        ret_code = E_OTHER("Upper bound on imaginary part of bound states is NaN");
-        CHECK_RETCODE(ret_code, leave_fun);
-    }
-    re_bound_val = re_bound(eps_t, 2.0);
+    if (bounding_box == NULL)
+        return E_INVALID_ARGUMENT(bounding_box);
+    if ( !(bounding_box[0] <= bounding_box[1]) //!(...) ensures error with NANs
+    || !(bounding_box[2] <= bounding_box[3]) )
+        return E_INVALID_ARGUMENT(bounding_box);
     
     // Perform iterations of Newton's method
     for (i = 0; i < K; i++) {
@@ -1003,19 +1012,15 @@ static inline INT nsev_refine_bound_states_newton(
                 CHECK_RETCODE(ret_code, leave_fun);
             }
             // Perform Newton updates: lam[i] <- lam[i] - a(lam[i])/a'(lam[i])
-            
-//             printf("l=%1.5e+%1.5e;\t",CREAL(bound_states[i]),CIMAG(bound_states[i]));
-//             printf("a=%1.5e+%1.5e;\t",CREAL(a_val),CIMAG(a_val));
-//             printf("aprime=%1.5e+%1.5e;\n",CREAL(aprime_val),CIMAG(aprime_val));
             if (aprime_val == 0.0)
                 return E_DIV_BY_ZERO;
             error = a_val / aprime_val;
             bound_states[i] -= error;
             iter++;
-            if (CIMAG(bound_states[i]) > im_bound_val
-                    || CREAL(bound_states[i]) > re_bound_val
-                    || CREAL(bound_states[i]) < -re_bound_val
-                    || CIMAG(bound_states[i]) < 0.0)
+            if (CIMAG(bound_states[i]) > bounding_box[3]
+                    || CREAL(bound_states[i]) > bounding_box[1]
+                    || CREAL(bound_states[i]) < bounding_box[0]
+                    || CIMAG(bound_states[i]) < bounding_box[2])
                 break;
             
         } while (CABS(error) > eprecision && iter < niter);

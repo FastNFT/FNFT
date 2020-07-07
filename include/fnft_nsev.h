@@ -242,8 +242,8 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
     fnft_nsev_opts_t const * const opts);
 
 /**
- * @brief Fast nonlinear Fourier transform for the nonlinear Schroedinger
- *  equation with vanishing boundary conditions.
+ * @brief Nonlinear Fourier transform for the nonlinear Schroedinger equation
+ * with vanishing boundary conditions. Fast algorithms are used if the discretization supports it.
  *
  * This routine computes the nonlinear Fourier transform for the nonlinear
  * Schroedinger equation \f[ iq_x + q_{tt} \pm 2q|q|^2=0, \quad  q=q(x,t), \f]
@@ -264,6 +264,40 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *      - Chimmalgi, Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2945480">&quot;Fast Nonlinear Fourier Transform Algorithms Using Higher Order Exponential Integrators,&quot;</a> IEEE Access 7, 2019.
  *      - Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2932256">&quot; Soliton Phase Shift Calculation for the Korteweg–De Vries Equation,&quot;</a> IEEE Access, vol. 7, pp. 122914--122930, July 2019.
  *      - Medvedev, Vaseva, Chekhovskoy and  Fedoruk, <a href="https://doi.org/10.1364/OE.377140">&quot; Exponential fourth order schemes for direct Zakharov-Shabat problem,&quot;</a> Optics Express, vol. 28, pp. 20--39, 2020.
+ *
+ * The routine supports all discretizations of type \link fnft_nse_discretization_t \endlink. The following discretizations use fast 
+ * algorithms which have a computational complexity of \f$ \mathcal{O}(D\log^2 D)\f$ for \f$ D\f$ point continuous spectrum given \f$ D\f$ samples:
+ *       - fnft_nse_discretization_2SPLIT1A
+ *       - fnft_nse_discretization_2SPLIT1B
+ *       - fnft_nse_discretization_2SPLIT2A
+ *       - fnft_nse_discretization_2SPLIT2B
+ *       - fnft_nse_discretization_2SPLIT2S
+ *       - fnft_nse_discretization_2SPLIT2_MODAL
+ *       - fnft_nse_discretization_2SPLIT3A
+ *       - fnft_nse_discretization_2SPLIT3B
+ *       - fnft_nse_discretization_2SPLIT3S
+ *       - fnft_nse_discretization_2SPLIT4A
+ *       - fnft_nse_discretization_2SPLIT4B
+ *       - fnft_nse_discretization_2SPLIT5A
+ *       - fnft_nse_discretization_2SPLIT5B
+ *       - fnft_nse_discretization_2SPLIT6A
+ *       - fnft_nse_discretization_2SPLIT6B
+ *       - fnft_nse_discretization_2SPLIT7A
+ *       - fnft_nse_discretization_2SPLIT7B
+ *       - fnft_nse_discretization_2SPLIT8A
+ *       - fnft_nse_discretization_2SPLIT8B
+ *       - fnft_nse_discretization_4SPLIT4A
+ *       - fnft_nse_discretization_4SPLIT4B
+ *
+ * The following discretizations use classical algorithms which have a computational 
+ * complexity of \f$ \mathcal{O}(D^2)\f$ for \f$ D\f$ point continuous spectrum given \f$ D\f$ samples:
+ *       - fnft_nse_discretization_BO
+ *       - fnft_nse_discretization_CF4_2
+ *       - fnft_nse_discretization_CF4_3
+ *       - fnft_nse_discretization_CF5_3
+ *       - fnft_nse_discretization_CF6_4
+ *       - fnft_nse_discretization_ES4
+ *       - fnft_nse_discretization_TES4
  *
  * The accuray of the computed quantities for a given signal depends primarily on the number of samples \f$ D\f$ and the numerical method. When the exact spectrum is 
  * is know, the accuracy can be quantified by defining a suitable error. The error usually decreases with increasing \f$ D\f$ assuming everthing else remains the same. 
