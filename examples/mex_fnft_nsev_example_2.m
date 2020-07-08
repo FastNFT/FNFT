@@ -13,8 +13,8 @@
 % along with this program. If not, see <http://www.gnu.org/licenses/>.
 %
 % Contributors:
-% Sander Wahls (TU Delft) 2017-2018.
-% Shinivas Chimmalgi(TU Delft) 2019.
+% Sander Wahls (TU Delft) 2017-2018, 2020.
+% Shinivas Chimmalgi (TU Delft) 2019.
 
 % This example compares the accuracy-execution tradeoff of the various algorithms for
 % the focusing nonlinear Schroedinger equation with vanishing boundaries.
@@ -28,17 +28,23 @@ clc;
 
 %%% Setup parameters %%%
 
-T = [-32,32];  % location of the 1st and last sample in the time domain
+T = [-32,32];   % location of the 1st and last sample in the time domain
 XI = [-10,10];  % location of the 1st and last sample in the xi-domain
 kappa = +1;     % focusing nonlinear Schroedinger equation
 
 %%% Setup the signal %%%
+
 qo =  5.4;
 lam0 = 3;
-q_fun = @(t) qo*sech(t).*exp(-2i*t*lam0); %signal function
+q_fun = @(t) qo*sech(t).*exp(-2i*t*lam0);
+
+%%% Analytic expressions for the nonlinear Fourier transform %%%
+
 R_fun = @(xi) double((-sin(pi*qo)./cosh(pi*(xi-lam0))).*gamma(sym(0.5-1i*(xi-lam0)+qo)).*gamma(sym(0.5-1i*(xi-lam0)-qo))./(gamma(sym(0.5-1i*(xi-lam0)))).^2);
 %b_fun = @(xi) double((-sin(pi*qo)./cosh(pi*(xi-lam0))));
 %a_fun = @(xi) double(((gamma(sym(0.5-1i*(xi-lam0)))).^2)./(gamma(sym(0.5-1i*(xi-lam0)+qo)).*gamma(sym(0.5-1i*(xi-lam0)-qo))));
+
+%%% Prepare variables to store errors and runtimes %%%
 
 error_FCF2_1 = [];
 error_FCF4_2 = [];
@@ -49,11 +55,18 @@ time_FCF4_2 = [];
 time_FCF_RE2_1 = [];
 time_FCF_RE4_2 = [];
 
+%%% Iterate of number of samples, gather errors and runtimes for each %%%
+
 for D = 2.^(10:1:14)
+    
     fprintf('Running codes with D=%d...',D);
     t = linspace(T(1),T(2),D);
-    q = q_fun(t); %signal samples
+    q = q_fun(t); % signal samples
     R_exact = R_fun(linspace(XI(1),XI(2),D));
+    
+    % Compute the continuous part of the nonlinear Fourier transform
+    % numerically with different configurations, save correspoding errors
+    % and runtimes.
     
     tic
     R_comp = mex_fnft_nsev(q, T, XI, kappa, 'discr_2split4B', 'skip_bs');
@@ -78,7 +91,8 @@ for D = 2.^(10:1:14)
     fprintf('Done.\n');
 end
 
-%% Plotting results
+%%% Plot results %%%
+
 lw = 3;
 fs = 15;
 ms = 6;
@@ -94,7 +108,6 @@ axis tight
 
 set(gca, 'Units','normalized','FontUnits','points',...
     'FontWeight','normal','FontSize',fs,'FontName','Times','LineWidth',alw)
-
 
 xlabel({'Execution Time (s)'},'Interpreter','latex','FontUnits','points','Fontsize',fs,'FontName','Times');
 ylabel({'Relative $L^2$-error in $\rho(\lambda)$'},'Interpreter','latex','FontUnits','points','Fontsize',fs,'FontName','Times')

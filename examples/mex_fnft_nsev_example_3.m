@@ -13,15 +13,14 @@
 % along with this program. If not, see <http://www.gnu.org/licenses/>.
 %
 % Contributors:
-% Shinivas Chimmalgi(TU Delft) 2020.
+% Shinivas Chimmalgi (TU Delft) 2020.
+% Sander Wahls (TU Delft) 2020.
 
 % This example compares the accuracy the various slow algorithms for
 % the defocusing nonlinear Schroedinger equation with vanishing boundaries.
 % The example is taken from Section 5.3 of
 % https://doi.org/10.1364/OE.377140. Plots similar to those in Figs. 2e and 2f
 % are shown.
-
-
 
 clear;
 close all;
@@ -36,9 +35,12 @@ M = 1025;
 xi = linspace(XI(1),XI(2),M);
 
 %%% Setup the signal %%%
+
 A = 5.2;
 C = 4;
 q_fun = @(t) A*(sech(t)).^(1+1i*C);
+
+%%% Compute the nonlinear Fourier transform analytically %%%
 
 fprintf('Computing exact spectrum symbolically - please wait ...');                
 D = sqrt(kappa*A^2-C^2/4);
@@ -46,6 +48,7 @@ b = double((1/(A*2^(1i*C)))*gamma(sym(0.5-1i*(xi+C/2))).*gamma(sym(0.5+1i*(xi-C/
 a = double(gamma(sym(0.5-1i*(xi+C/2))).*gamma(sym(0.5-1i*(xi-C/2)))./(gamma(sym(0.5-1i*xi-D)).*gamma(sym(0.5-1i*xi+D))));
 fprintf('done\n'); 
 
+%%% Prepare variables to store errors and runtimes %%%
 
 errorBO_a = [];
 errorCF4_2_a= [];
@@ -63,7 +66,6 @@ errorCF6_4_b= [];
 errorES4_b= [];
 errorTES4_b= [];
 
-
 timeBO = [];
 timeCF4_2= [];
 timeCF4_3 = [];
@@ -72,13 +74,17 @@ timeCF6_4= [];
 timeES4= [];
 timeTES4= [];
 
+%%% Iterate of number of samples, gather errors and runtimes for each %%%
 
 po = 7:11;
-NT = 2.^po;
-
-for N = NT
-    fprintf('Running codes with N=%d...',N);
-    t=linspace(T(1),T(2),2*N+1);
+DT = 2.^po;
+for D = DT
+    fprintf('Running codes with D=%d...',D);
+    t=linspace(T(1),T(2),2*D+1);
+    
+    % Compute the continuous part of the nonlinear Fourier transform
+    % numerically with different configurations, save correspoding errors
+    % and runtimes.
     
     q = q_fun(t);
     tic
@@ -126,7 +132,8 @@ for N = NT
     fprintf('Done.\n');
 
 end
-%% Plotting results
+
+%%% Plot results %%%
 
 lw = 2;
 fs = 14;
@@ -181,7 +188,6 @@ semilogy(po,timeCF5_3,'s-','linewidth',lw,'markersize',ms);
 semilogy(po,timeCF6_4,'>-','linewidth',lw,'markersize',ms);
 semilogy(po,timeES4,'*-','linewidth',lw,'markersize',ms);
 semilogy(po,timeTES4,'h-','linewidth',lw,'markersize',ms);
-
 
 ylim([0,2e1])
 grid on
