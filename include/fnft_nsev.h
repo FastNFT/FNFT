@@ -186,12 +186,12 @@ typedef enum {
  *  the accuracy of the computed spectrum. First approximation is computed
  *  as usual using all the supplied samples. A second approximation is computed
  *  using only half the samples and it is combined with the first approximation
- *  which should ideally result in a better approximation. See Chimmalgi, 
+ *  which should ideally result in a better approximation. See Chimmalgi,
  *  Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2945480">&quot;
- *  Fast Nonlinear Fourier Transform Algorithms Using Higher Order Exponential 
+ *  Fast Nonlinear Fourier Transform Algorithms Using Higher Order Exponential
  *  Integrators,&quot;</a> IEEE Access 7, 2019. Note that in certain situations
  *  such as discontinuous signals, applying Richardson extrapolation may result in
- *  worse accuracy compared to the first approximation. 
+ *  worse accuracy compared to the first approximation.
  *  By default, Richardson extrapolation is disabled (i.e., the
  *  flag is zero). To enable, set the flag to one.
  */
@@ -260,12 +260,13 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *      - Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot;Computation of the direct scattering transform for the nonlinear Schroedinger equation,&quot;</a> J. Comput. Phys. 102(2), 1992.
  *      - Aref, <a href="https://arxiv.org/abs/1605.06328">&quot;Control and Detection of Discrete Spectral Amplitudes in Nonlinear Fourier Spectrum,&quot;</a> Preprint, arXiv:1605.06328 [math.NA], May 2016.
  *      - Hari and Kschischang, <a href="https://doi.org/10.1109/JLT.2016.2577702">&quot;Bi-Directional Algorithm for Computing Discrete Spectral Amplitudes in the NFT,&quot; </a>J. Lightwave Technol. 34(15), 2016.
+ *      - Aref et al., <a href="https://doi.org/10.1109/JLT.2018.2794475">"Modulation Over Nonlinear Fourier Spectrum: Continuous and Discrete Spectrum"</a>, J. Lightwave Technol. 36(6), 2018.
  *      - Aurentz et al., <a href="https://arxiv.org/abs/1611.02435">&quot;Roots of Polynomials: on twisted QR methods for companion matrices and pencils,&quot;</a> Preprint, arXiv:1611.02435 [math.NA]</a>, Dec. 2016.
  *      - Chimmalgi, Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2945480">&quot;Fast Nonlinear Fourier Transform Algorithms Using Higher Order Exponential Integrators,&quot;</a> IEEE Access 7, 2019.
  *      - Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2932256">&quot; Soliton Phase Shift Calculation for the Korteweg–De Vries Equation,&quot;</a> IEEE Access, vol. 7, pp. 122914--122930, July 2019.
  *      - Medvedev, Vaseva, Chekhovskoy and  Fedoruk, <a href="https://doi.org/10.1364/OE.377140">&quot; Exponential fourth order schemes for direct Zakharov-Shabat problem,&quot;</a> Optics Express, vol. 28, pp. 20--39, 2020.
  *
- * The routine supports all discretizations of type \link fnft_nse_discretization_t \endlink. The following discretizations use fast 
+ * The routine supports all discretizations of type \link fnft_nse_discretization_t \endlink. The following discretizations use fast
  * algorithms which have a computational complexity of \f$ \mathcal{O}(D\log^2 D)\f$ for \f$ D\f$ point continuous spectrum given \f$ D\f$ samples:
  *       - fnft_nse_discretization_2SPLIT1A
  *       - fnft_nse_discretization_2SPLIT1B
@@ -289,7 +290,7 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *       - fnft_nse_discretization_4SPLIT4A
  *       - fnft_nse_discretization_4SPLIT4B
  *
- * The following discretizations use classical algorithms which have a computational 
+ * The following discretizations use classical algorithms which have a computational
  * complexity of \f$ \mathcal{O}(D^2)\f$ for \f$ D\f$ point continuous spectrum given \f$ D\f$ samples:
  *       - fnft_nse_discretization_BO
  *       - fnft_nse_discretization_CF4_2
@@ -299,8 +300,8 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *       - fnft_nse_discretization_ES4
  *       - fnft_nse_discretization_TES4
  *
- * The accuray of the computed quantities for a given signal depends primarily on the number of samples \f$ D\f$ and the numerical method. When the exact spectrum is 
- * is know, the accuracy can be quantified by defining a suitable error. The error usually decreases with increasing \f$ D\f$ assuming everthing else remains the same. 
+ * The accuray of the computed quantities for a given signal depends primarily on the number of samples \f$ D\f$ and the numerical method. When the exact spectrum is
+ * is know, the accuracy can be quantified by defining a suitable error. The error usually decreases with increasing \f$ D\f$ assuming everthing else remains the same.
  * The rate at which the error decreases with increase in \f$ D\f$ is known as the order of the method. The orders of the various discretizations can be found at \link fnft_nse_discretization_t \endlink.
  * The orders of the discretizations which use exponential splitting schemes should be the same as their base methods but can deviate when accuracy of the splitting scheme is low.
  * In the following cases the orders of the methods has been observed to be less than expected:
