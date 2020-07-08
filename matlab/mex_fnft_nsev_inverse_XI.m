@@ -4,7 +4,8 @@
 %   [XI xi] = MEX_FNFT_NSEV_XI(D, T, M);
 %
 % DESCRIPTION
-%   Provides an interface to the C routine fnft_nsev_inverse.
+%   Provides an interface to the function fnft_nsev_inverse_XI
+%   in the C routine fnft_nsev_inverse.
 %
 % INPUTS
 %   D               Real scalar, must be a positive power of two
