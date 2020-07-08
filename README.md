@@ -1,8 +1,8 @@
 # FNFT: Fast Nonlinear Fourier Transforms
 
-[![Build Status](https://travis-ci.org/FastNFT/FNFT.svg?branch=master)](https://travis-ci.org/FastNFT/FNFT) [![DOI](http://joss.theoj.org/papers/10.21105/joss.00597/status.svg)](https://doi.org/10.21105/joss.00597)
+![Version](https://img.shields.io/github/v/release/FastNFT/FNFT) [![Documentation](https://img.shields.io/badge/-documentation-informational)](https://fastnft.github.io/FNFT/) [![Build Status](https://travis-ci.org/FastNFT/FNFT.svg?branch=master)](https://travis-ci.org/FastNFT/FNFT) [![DOI](http://joss.theoj.org/papers/10.21105/joss.00597/status.svg)](https://doi.org/10.21105/joss.00597)
 
-FNFT is a software library for the fast numerical computation of (inverse) nonlinear Fourier transforms, which are also known as (inverse) scattering transforms. FNFT is written in C and comes with a MATLAB interface. A [Python interface](https://github.com/xmhk/FNFTpy) is available seperately.
+FNFT is a software library for the numerical computation of (inverse) nonlinear Fourier transforms, which are also known as (inverse) scattering transforms. The focus of the library is on fast algorithms, but it also contains non-fast methods. FNFT is written in C and comes with a MATLAB interface. A [Python interface](https://github.com/xmhk/FNFTpy) is available separately.
 
 ## Currently Implemented Cases
 
