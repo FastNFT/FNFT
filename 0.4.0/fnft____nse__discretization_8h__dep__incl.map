@@ -1,0 +1,11 @@
+<map id="include/private/fnft__nse_discretization.h" name="include/private/fnft__nse_discretization.h">
+<area shape="rect" id="node1" title="Properties of the discretizations for the nonlinear Schroedinger equation." alt="" coords="195,5,361,47"/>
+<area shape="rect" id="node2" href="$fnft____nse__finvscatter_8h.html" title="Recovers the signal from a scattering matrix." alt="" coords="32,95,180,136"/>
+<area shape="rect" id="node4" href="$fnft____nse__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="375,95,522,136"/>
+<area shape="rect" id="node9" href="$fnft____nse__scatter_8h.html" title="Slow forward scattering." alt="" coords="205,95,351,136"/>
+<area shape="rect" id="node3" href="$fnft__nsev__inverse_8h.html" title="Fast inverse nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="5,184,207,211"/>
+<area shape="rect" id="node5" href="$fnft__nsep_8h.html" title="Fast nonlinear Fourier transform for the periodic nonlinear Schroedinger equation." alt="" coords="401,184,547,211"/>
+<area shape="rect" id="node7" href="$fnft__nsev_8h.html" title="Fast nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="231,184,376,211"/>
+<area shape="rect" id="node6" href="$fnft____nsep__testcases_8h.html" title="Provides test cases for the tests of fnft_nsep." alt="" coords="400,259,548,300"/>
+<area shape="rect" id="node8" href="$fnft____nsev__testcases_8h.html" title="Provides test cases for the tests of fnft_nsev." alt="" coords="228,259,376,300"/>
+</map>

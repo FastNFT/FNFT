@@ -1,0 +1,18 @@
+<map id="include/private/fnft__akns_discretization_t.h" name="include/private/fnft__akns_discretization_t.h">
+<area shape="rect" id="node1" title="Lists discretizations of AKNS system." alt="" coords="262,5,449,47"/>
+<area shape="rect" id="node2" href="$fnft____akns__discretization_8h.html" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="268,95,443,136"/>
+<area shape="rect" id="node3" href="$fnft____akns__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="197,184,343,225"/>
+<area shape="rect" id="node11" href="$fnft____akns__scatter_8h.html" title="Slow forward scattering." alt="" coords="367,184,514,225"/>
+<area shape="rect" id="node14" href="$fnft____kdv__discretization_8h.html" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="5,184,172,225"/>
+<area shape="rect" id="node15" href="$fnft____nse__discretization_8h.html" title="Properties of the discretizations for the nonlinear Schroedinger equation." alt="" coords="539,184,705,225"/>
+<area shape="rect" id="node4" href="$fnft____kdv__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="15,273,162,315"/>
+<area shape="rect" id="node5" href="$fnft____nse__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="357,273,503,315"/>
+<area shape="rect" id="node6" href="$fnft__nsep_8h.html" title="Fast nonlinear Fourier transform for the periodic nonlinear Schroedinger equation." alt="" coords="501,363,647,389"/>
+<area shape="rect" id="node8" href="$fnft__nsev_8h.html" title="Fast nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="331,363,476,389"/>
+<area shape="rect" id="node10" href="$fnft__nsev__inverse_8h.html" title="Fast inverse nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="672,363,873,389"/>
+<area shape="rect" id="node7" href="$fnft____nsep__testcases_8h.html" title="Provides test cases for the tests of fnft_nsep." alt="" coords="501,437,649,479"/>
+<area shape="rect" id="node9" href="$fnft____nsev__testcases_8h.html" title="Provides test cases for the tests of fnft_nsev." alt="" coords="329,437,477,479"/>
+<area shape="rect" id="node12" href="$fnft____kdv__scatter_8h.html" title="Slow forward scattering." alt="" coords="186,273,333,315"/>
+<area shape="rect" id="node13" href="$fnft____nse__scatter_8h.html" title="Slow forward scattering." alt="" coords="527,273,674,315"/>
+<area shape="rect" id="node16" href="$fnft____nse__finvscatter_8h.html" title="Recovers the signal from a scattering matrix." alt="" coords="699,273,847,315"/>
+</map>

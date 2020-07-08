@@ -1,0 +1,19 @@
+<map id="include/private/fnft__errwarn.h" name="include/private/fnft__errwarn.h">
+<area shape="rect" id="node1" title=" " alt="" coords="566,5,712,47"/>
+<area shape="rect" id="node2" href="$fnft__nsep_8h.html" title="Fast nonlinear Fourier transform for the periodic nonlinear Schroedinger equation." alt="" coords="308,363,455,389"/>
+<area shape="rect" id="node4" href="$fnft__nsev_8h.html" title="Fast nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="138,363,284,389"/>
+<area shape="rect" id="node6" href="$fnft__nsev__inverse_8h.html" title="Fast inverse nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="710,363,912,389"/>
+<area shape="rect" id="node7" href="$fnft____akns__discretization_8h.html" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="461,95,636,136"/>
+<area shape="rect" id="node8" href="$fnft____akns__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="103,184,250,225"/>
+<area shape="rect" id="node11" href="$fnft____akns__scatter_8h.html" title="Slow forward scattering." alt="" coords="656,184,803,225"/>
+<area shape="rect" id="node13" href="$fnft____nse__scatter_8h.html" title="Slow forward scattering." alt="" coords="738,273,884,315"/>
+<area shape="rect" id="node17" href="$fnft____fft__wrapper_8h.html" title="Wraps underlying FFT library." alt="" coords="959,95,1106,136"/>
+<area shape="rect" id="node3" href="$fnft____nsep__testcases_8h.html" title="Provides test cases for the tests of fnft_nsep." alt="" coords="309,437,457,479"/>
+<area shape="rect" id="node5" href="$fnft____nsev__testcases_8h.html" title="Provides test cases for the tests of fnft_nsev." alt="" coords="137,437,285,479"/>
+<area shape="rect" id="node14" href="$fnft____kdv__discretization_8h.html" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="274,184,441,225"/>
+<area shape="rect" id="node15" href="$fnft____nse__discretization_8h.html" title="Properties of the discretizations for the nonlinear Schroedinger equation." alt="" coords="465,184,632,225"/>
+<area shape="rect" id="node9" href="$fnft____kdv__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="52,273,199,315"/>
+<area shape="rect" id="node10" href="$fnft____nse__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="223,273,370,315"/>
+<area shape="rect" id="node12" href="$fnft____kdv__scatter_8h.html" title="Slow forward scattering." alt="" coords="394,273,540,315"/>
+<area shape="rect" id="node16" href="$fnft____nse__finvscatter_8h.html" title="Recovers the signal from a scattering matrix." alt="" coords="565,273,713,315"/>
+</map>

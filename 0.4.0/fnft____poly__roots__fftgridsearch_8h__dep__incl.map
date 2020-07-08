@@ -1,0 +1,5 @@
+<map id="include/private/fnft__poly_roots_fftgridsearch.h" name="include/private/fnft__poly_roots_fftgridsearch.h">
+<area shape="rect" id="node1" title="Approximation of polynomial roots on the unit circle using gridding." alt="" coords="5,5,212,47"/>
+<area shape="rect" id="node2" href="$fnft__nsep_8h.html" title="Fast nonlinear Fourier transform for the periodic nonlinear Schroedinger equation." alt="" coords="35,95,182,121"/>
+<area shape="rect" id="node3" href="$fnft____nsep__testcases_8h.html" title="Provides test cases for the tests of fnft_nsep." alt="" coords="35,169,183,211"/>
+</map>

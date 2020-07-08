@@ -1,0 +1,23 @@
+<map id="include/private/fnft__nse_fscatter.h" name="include/private/fnft__nse_fscatter.h">
+<area shape="rect" id="node1" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="263,5,409,47"/>
+<area shape="rect" id="node2" href="$fnft____nse__discretization_8h.html" title="Properties of the discretizations for the nonlinear Schroedinger equation." alt="" coords="143,95,332,121"/>
+<area shape="rect" id="node18" href="$fnft____akns__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="357,95,515,121"/>
+<area shape="rect" id="node3" href="$fnft__nse__discretization__t_8h.html" title="Lists discretizations for the nonlinear Schroedinger equation." alt="" coords="5,169,200,196"/>
+<area shape="rect" id="node13" href="$fnft____akns__discretization_8h.html" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="325,169,523,196"/>
+<area shape="rect" id="node16" href="$fnft____misc_8h.html" title="Miscellaneous functions used in the FNFT library." alt="" coords="174,244,277,271"/>
+<area shape="rect" id="node4" href="$fnft_8h_source.html" title=" " alt="" coords="377,319,434,345"/>
+<area shape="rect" id="node5" title=" " alt="" coords="353,393,457,420"/>
+<area shape="rect" id="node6" href="$fnft__errwarn_8h.html" title="Controls error messages." alt="" coords="509,393,624,420"/>
+<area shape="rect" id="node7" href="$fnft__numtypes_8h.html" title=" " alt="" coords="502,468,631,495"/>
+<area shape="rect" id="node8" title=" " alt="" coords="341,543,409,569"/>
+<area shape="rect" id="node9" title=" " alt="" coords="433,543,497,569"/>
+<area shape="rect" id="node10" title=" " alt="" coords="521,543,612,569"/>
+<area shape="rect" id="node11" title=" " alt="" coords="637,543,707,569"/>
+<area shape="rect" id="node12" title=" " alt="" coords="731,543,802,569"/>
+<area shape="rect" id="node14" href="$fnft____akns__discretization__t_8h.html" title="Lists discretizations of AKNS system." alt="" coords="301,244,510,271"/>
+<area shape="rect" id="node15" href="$fnft____errwarn_8h.html" title=" " alt="" coords="534,244,655,271"/>
+<area shape="rect" id="node17" title=" " alt="" coords="190,319,261,345"/>
+<area shape="rect" id="node19" href="$fnft____poly__fmult_8h.html" title="Fast multiplication of n polynomials." alt="" coords="652,169,793,196"/>
+<area shape="rect" id="node20" href="$fnft____fft__wrapper__plan__t_8h.html" title=" " alt="" coords="679,244,873,271"/>
+<area shape="rect" id="node21" title=" " alt="" coords="735,319,817,345"/>
+</map>

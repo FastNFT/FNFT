@@ -1,0 +1,18 @@
+<map id="include/private/fnft__nse_discretization.h" name="include/private/fnft__nse_discretization.h">
+<area shape="rect" id="node1" title="Properties of the discretizations for the nonlinear Schroedinger equation." alt="" coords="249,5,415,47"/>
+<area shape="rect" id="node2" href="$fnft__nse__discretization__t_8h.html" title="Lists discretizations for the nonlinear Schroedinger equation." alt="" coords="5,95,200,121"/>
+<area shape="rect" id="node12" href="$fnft____akns__discretization_8h.html" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="233,95,431,121"/>
+<area shape="rect" id="node15" href="$fnft____misc_8h.html" title="Miscellaneous functions used in the FNFT library." alt="" coords="417,169,519,196"/>
+<area shape="rect" id="node3" href="$fnft_8h_source.html" title=" " alt="" coords="207,244,265,271"/>
+<area shape="rect" id="node4" title=" " alt="" coords="173,319,277,345"/>
+<area shape="rect" id="node5" href="$fnft__errwarn_8h.html" title="Controls error messages." alt="" coords="301,319,416,345"/>
+<area shape="rect" id="node6" href="$fnft__numtypes_8h.html" title=" " alt="" coords="294,393,423,420"/>
+<area shape="rect" id="node7" title=" " alt="" coords="133,468,201,495"/>
+<area shape="rect" id="node8" title=" " alt="" coords="225,468,289,495"/>
+<area shape="rect" id="node9" title=" " alt="" coords="313,468,404,495"/>
+<area shape="rect" id="node10" title=" " alt="" coords="429,468,499,495"/>
+<area shape="rect" id="node11" title=" " alt="" coords="523,468,594,495"/>
+<area shape="rect" id="node13" href="$fnft____akns__discretization__t_8h.html" title="Lists discretizations of AKNS system." alt="" coords="131,169,341,196"/>
+<area shape="rect" id="node14" href="$fnft____errwarn_8h.html" title=" " alt="" coords="298,244,419,271"/>
+<area shape="rect" id="node16" title=" " alt="" coords="443,244,514,271"/>
+</map>
