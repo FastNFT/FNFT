@@ -264,12 +264,12 @@ INT fnft_nsev(
     // Some higher-order discretizations require samples on a non-equidistant grid
     // while others require derivatives. The preprocessing function computes
     // the required non-equidistant samples using bandlimited interpolation and
-    // the required derivatives using finite differences. The nse_preprocess_signal
+    // the required derivatives using finite differences. The nse_discretization_preprocess_signal
     // function also performs some further discretization specific processing. 
     // Preprocessing takes care of computing things which are required by all
     // the auxiliary functions thus helping efficiency.
     Dsub = D;
-    ret_code = nse_preprocess_signal(D, q, eps_t, kappa, &Dsub, &q_preprocessed, &r_preprocessed,
+    ret_code = nse_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &q_preprocessed, &r_preprocessed,
             first_last_index, opts->discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 
@@ -285,7 +285,7 @@ INT fnft_nsev(
         nskip_per_step = ROUND((REAL)D / Dsub);
         Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
 
-        ret_code = nse_preprocess_signal(D, q, eps_t, kappa, &Dsub, &qsub_preprocessed, &rsub_preprocessed,
+        ret_code = nse_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &qsub_preprocessed, &rsub_preprocessed,
                 first_last_index, opts->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
 
@@ -374,7 +374,7 @@ INT fnft_nsev(
         // required for obtaining a second approximation of the spectrum
         // which will be used for Richardson extrapolation.
         Dsub = CEIL(D/2);        
-        ret_code = nse_preprocess_signal(D, q, eps_t, kappa, &Dsub, &qsub_preprocessed, &rsub_preprocessed,
+        ret_code = nse_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &qsub_preprocessed, &rsub_preprocessed,
                 first_last_index, opts->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
 
@@ -703,7 +703,7 @@ static inline INT nsev_compute_boundstates(
             CHECK_RETCODE(ret_code, leave_fun);
             // Roots are returned in discrete-time domain -> coordinate
             // transform (from discrete-time to continuous-time domain).
-            ret_code = nse_z_to_lambda(K, eps_t, buffer, opts->discretization);
+            ret_code = nse_discretization_z_to_lambda(K, eps_t, buffer, opts->discretization);
             CHECK_RETCODE(ret_code, leave_fun);
 
             break;
@@ -820,10 +820,10 @@ static inline INT nsev_compute_contspec(
         // z=exp(2.0*I*XI*eps_t/degree1step), we find that the z at which z the transfer
         // matrix has to be evaluated are given by z(i) = 1/(A * V^-i), where:
         V = eps_xi;
-        ret_code = nse_lambda_to_z(1, eps_t, &V, opts->discretization);
+        ret_code = nse_discretization_lambda_to_z(1, eps_t, &V, opts->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
         A = -XI[0];
-        ret_code = nse_lambda_to_z(1, eps_t, &A, opts->discretization);
+        ret_code = nse_discretization_lambda_to_z(1, eps_t, &A, opts->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
 
         ret_code = poly_chirpz(deg, transfer_matrix, A, V, M, H11_vals);
@@ -843,7 +843,7 @@ static inline INT nsev_compute_contspec(
         // fall through            
         case nsev_cstype_REFLECTION_COEFFICIENT:            
             
-            ret_code = nse_phase_factor_rho(eps_t, T[1], &phase_factor_rho,opts->discretization);
+            ret_code = nse_discretization_phase_factor_rho(eps_t, T[1], &phase_factor_rho,opts->discretization);
             CHECK_RETCODE(ret_code, leave_fun);
 
             for (i = 0; i < M; i++) {
@@ -864,10 +864,10 @@ static inline INT nsev_compute_contspec(
             // have been scaled by nse_fscatter. W == 0 for slow methods.
             
             // Calculating the discretization specific phase factors.
-            ret_code = nse_phase_factor_a(eps_t, D_given, T, &phase_factor_a,opts->discretization);
+            ret_code = nse_discretization_phase_factor_a(eps_t, D_given, T, &phase_factor_a,opts->discretization);
             CHECK_RETCODE(ret_code, leave_fun);
 
-            ret_code = nse_phase_factor_b(eps_t, D_given, T, &phase_factor_b,opts->discretization);
+            ret_code = nse_discretization_phase_factor_b(eps_t, D_given, T, &phase_factor_b,opts->discretization);
             CHECK_RETCODE(ret_code, leave_fun);
 
             for (i = 0; i < M; i++) {

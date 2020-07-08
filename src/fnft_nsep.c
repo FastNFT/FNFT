@@ -252,7 +252,7 @@ static inline INT gridsearch(const UINT D,
     const REAL eps_t = (T[1] - T[0])/D;
 
     Dsub = D;
-    ret_code = nse_preprocess_signal(D, q, eps_t, kappa, &Dsub, &q_preprocessed, &r_preprocessed,
+    ret_code = nse_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &q_preprocessed, &r_preprocessed,
             first_last_index, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
     
@@ -328,7 +328,7 @@ static inline INT gridsearch(const UINT D,
         }
         
         // Coordinate transform (from discrete-time to continuous-time domain)
-        ret_code = nse_z_to_lambda(K, eps_t, roots, opts_ptr->discretization);
+        ret_code = nse_discretization_z_to_lambda(K, eps_t, roots, opts_ptr->discretization);
         CHECK_RETCODE(ret_code, release_mem);
 
         // Filter the roots
@@ -363,7 +363,7 @@ static inline INT gridsearch(const UINT D,
         }
         
         // Coordinate transform of the new roots
-        ret_code = nse_z_to_lambda(K_filtered, eps_t, roots, opts_ptr->discretization);
+        ret_code = nse_discretization_z_to_lambda(K_filtered, eps_t, roots, opts_ptr->discretization);
         CHECK_RETCODE(ret_code, release_mem);
 
         // Filter the new roots
@@ -398,7 +398,7 @@ static inline INT gridsearch(const UINT D,
         CHECK_RETCODE(ret_code, release_mem);
 
         // Coordinate transform (from discrete-time to continuous-time domain)
-        ret_code = nse_z_to_lambda(M, eps_t, roots, opts_ptr->discretization);
+        ret_code = nse_discretization_z_to_lambda(M, eps_t, roots, opts_ptr->discretization);
         CHECK_RETCODE(ret_code, release_mem);
 
         // Filter the roots
@@ -479,7 +479,7 @@ static inline INT subsample_and_refine(const UINT D,
     
     // Create the signal required for refinement of the initial guesses.
     Dsub = D;
-    ret_code = nse_preprocess_signal(D, q, eps_t, kappa, &Dsub, &q_preprocessed, &r_preprocessed,
+    ret_code = nse_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &q_preprocessed, &r_preprocessed,
             first_last_index, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
     
@@ -491,7 +491,7 @@ static inline INT subsample_and_refine(const UINT D,
     nskip_per_step = ROUND((REAL)D / Dsub);
     Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
     
-    ret_code = nse_preprocess_signal(D, q, eps_t, kappa, &Dsub, &qsub_preprocessed, &rsub_preprocessed,
+    ret_code = nse_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &qsub_preprocessed, &rsub_preprocessed,
             first_last_index, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
     
@@ -584,7 +584,7 @@ static inline INT subsample_and_refine(const UINT D,
             CHECK_RETCODE(ret_code, release_mem);
             
             // Coordinate transform (from discrete-time to continuous-time domain)
-            ret_code = nse_z_to_lambda(deg, eps_t_sub, roots,
+            ret_code = nse_discretization_z_to_lambda(deg, eps_t_sub, roots,
                     opts_ptr->discretization);
             CHECK_RETCODE(ret_code, release_mem);
             
@@ -645,7 +645,7 @@ static inline INT subsample_and_refine(const UINT D,
         M = deg;
         
         // Coordinate transform (from discrete-time to continuous-time domain)
-        ret_code = nse_z_to_lambda(M, eps_t_sub, roots, opts_ptr->discretization);
+        ret_code = nse_discretization_z_to_lambda(M, eps_t_sub, roots, opts_ptr->discretization);
         CHECK_RETCODE(ret_code, release_mem);
 
         // Filter the roots

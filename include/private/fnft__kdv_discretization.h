@@ -107,7 +107,7 @@ FNFT_UINT fnft__kdv_discretization_upsampling_factor(fnft_kdv_discretization_t d
  * This routine maps continuous-time domain value \f$\lambda\f$ to discrete-time domain value
  * \f$z = e^{2j\lambda\epsilon_t degree1step}\f$, where degree1step is based on the discretization 
  * of type \link fnft_kdv_discretization_t \endlink. Changes discretization to 
- * \link fnft__akns_discretization_t \endlink type and calls \link fnft__akns_lambda_to_z \endlink.
+ * \link fnft__akns_discretization_t \endlink type and calls \link fnft__akns_discretization_lambda_to_z \endlink.
  * @param[in] n Number of values to be mapped.
  * @param[in] eps_t Real-valued discretization step-size.
  * @param[in,out] vals Pointer to location of first element of array containing
@@ -119,7 +119,7 @@ FNFT_UINT fnft__kdv_discretization_upsampling_factor(fnft_kdv_discretization_t d
  *
  * @ingroup kdv
  */
-FNFT_INT fnft__kdv_lambda_to_z(const FNFT_UINT n, const FNFT_REAL eps_t, 
+FNFT_INT fnft__kdv_discretization_lambda_to_z(const FNFT_UINT n, const FNFT_REAL eps_t, 
         FNFT_COMPLEX * const vals, fnft_kdv_discretization_t discretization);
 
 /**
@@ -129,7 +129,7 @@ FNFT_INT fnft__kdv_lambda_to_z(const FNFT_UINT n, const FNFT_REAL eps_t,
  * This routine maps discrete-time domain value \f$z\f$ to continuous-time domain value
  * \f$\lambda = degree1step\log(z)/(2j\epsilon_t)\f$, where degree1step is based on the discretization 
  * of type \link fnft_kdv_discretization_t \endlink. Changes discretization to 
- * \link fnft__akns_discretization_t \endlink type and calls \link fnft__akns_z_to_lambda \endlink.
+ * \link fnft__akns_discretization_t \endlink type and calls \link fnft__akns_discretization_z_to_lambda \endlink.
  * @param[in] n Number of values to be mapped.
  * @param[in] eps_t Real-valued discretization step-size.
  * @param[in,out] vals Pointer to location of first element of array containing
@@ -141,7 +141,7 @@ FNFT_INT fnft__kdv_lambda_to_z(const FNFT_UINT n, const FNFT_REAL eps_t,
  *
  * @ingroup kdv
  */
-FNFT_INT fnft__kdv_z_to_lambda(const FNFT_UINT n, const FNFT_REAL eps_t, 
+FNFT_INT fnft__kdv_discretization_z_to_lambda(const FNFT_UINT n, const FNFT_REAL eps_t, 
         FNFT_COMPLEX * const vals, fnft_kdv_discretization_t discretization);
 
 
@@ -150,8 +150,8 @@ FNFT_INT fnft__kdv_z_to_lambda(const FNFT_UINT n, const FNFT_REAL eps_t,
 #define kdv_discretization_boundary_coeff(...) fnft__kdv_discretization_boundary_coeff(__VA_ARGS__)
 #define kdv_discretization_to_akns_discretization(...) fnft__kdv_discretization_to_akns_discretization(__VA_ARGS__)
 #define kdv_discretization_upsampling_factor(...) fnft__kdv_discretization_upsampling_factor(__VA_ARGS__)
-#define kdv_lambda_to_z(...) fnft__kdv_lambda_to_z(__VA_ARGS__)
-#define kdv_z_to_lambda(...) fnft__kdv_z_to_lambda(__VA_ARGS__)
+#define kdv_discretization_lambda_to_z(...) fnft__kdv_discretization_lambda_to_z(__VA_ARGS__)
+#define kdv_discretization_z_to_lambda(...) fnft__kdv_discretization_z_to_lambda(__VA_ARGS__)
 #endif
 
 #endif

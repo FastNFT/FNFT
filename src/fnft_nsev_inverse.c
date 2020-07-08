@@ -58,7 +58,7 @@ INT fnft_nsev_inverse_XI(const UINT D, REAL const * const T,
     const REAL eps_t = (T[1] - T[0]) / (D - 1);
     XIC[0] = CEXP(2.0*FNFT_PI*I * (M/2 + 1)/M);
     XIC[1] = -1.0;
-    ret_code = nse_z_to_lambda(2, eps_t, XIC, discretization);
+    ret_code = nse_discretization_z_to_lambda(2, eps_t, XIC, discretization);
     XI[0] = CREAL(XIC[0]);
     XI[1] = CREAL(XIC[1]);
     return ret_code;
@@ -265,13 +265,13 @@ static inline INT remove_boundary_conds_and_reorder_for_fft(
 
     switch (opts_ptr->contspec_type) {
     case fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT:
-        ret_code = nse_phase_factor_rho(eps_t, T[1], &phase_factor,
+        ret_code = nse_discretization_phase_factor_rho(eps_t, T[1], &phase_factor,
                                         opts_ptr->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
         break;
 
     case fnft_nsev_inverse_cstype_B_OF_XI:
-        ret_code = nse_phase_factor_b(eps_t, D, T, &phase_factor,
+        ret_code = nse_discretization_phase_factor_b(eps_t, D, T, &phase_factor,
                                       opts_ptr->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
         break;

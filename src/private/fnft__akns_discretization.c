@@ -201,7 +201,7 @@ UINT fnft__akns_discretization_method_order(akns_discretization_t discretization
  * This routine maps lambda from continuous-time domain to
  * z in the discrete-time domain based on the discretization.
  */
-INT fnft__akns_lambda_to_z(const UINT n, const REAL eps_t,
+INT fnft__akns_discretization_lambda_to_z(const UINT n, const REAL eps_t,
         COMPLEX * const vals, akns_discretization_t discretization)
 {
     REAL degree1step;
@@ -222,7 +222,7 @@ INT fnft__akns_lambda_to_z(const UINT n, const REAL eps_t,
  * This routine maps z from the discrete-time domain to
  * lambda in the continuous-time domain based on the discretization.
  */
-INT fnft__akns_z_to_lambda(const UINT n, const REAL eps_t,
+INT fnft__akns_discretization_z_to_lambda(const UINT n, const REAL eps_t,
         COMPLEX * const vals, akns_discretization_t discretization)
 {
     REAL degree1step;

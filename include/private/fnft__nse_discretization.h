@@ -124,7 +124,7 @@ FNFT_INT fnft__nse_discretization_to_akns_discretization(fnft_nse_discretization
  * This routine maps continuous-time domain value lambda to discrete-time domain value
  * \f$z = e^{2j\lambda\epsilon_t degree1step)\f$, where degree1step is based on the discretization 
  * of type \link fnft_nse_discretization_t \endlink. Changes discretization to 
- * \link fnft__akns_discretization_t \endlink type and calls \link fnft__akns_lambda_to_z \endlink.
+ * \link fnft__akns_discretization_t \endlink type and calls \link fnft__akns_discretization_lambda_to_z \endlink.
  * @param[in] n Number of values to be mapped.
  * @param[in] eps_t Real-valued discretization step-size.
  * @param[in,out] vals Pointer to location of first element of array containing
@@ -136,7 +136,7 @@ FNFT_INT fnft__nse_discretization_to_akns_discretization(fnft_nse_discretization
  *
  * @ingroup nse
  */
-FNFT_INT fnft__nse_lambda_to_z(const FNFT_UINT n, const FNFT_REAL eps_t, 
+FNFT_INT fnft__nse_discretization_lambda_to_z(const FNFT_UINT n, const FNFT_REAL eps_t, 
         FNFT_COMPLEX * const vals, fnft_nse_discretization_t discretization);
 
 /**
@@ -146,7 +146,7 @@ FNFT_INT fnft__nse_lambda_to_z(const FNFT_UINT n, const FNFT_REAL eps_t,
  * This routine maps discrete-time domain value \f$z\f$ to continuous-time domain value
  * \f$\lambda = degree1step\log(z)/(2j\epsilon_t)\f$, where degree1step is based on the discretization 
  * of type \link fnft_nse_discretization_t \endlink. Changes discretization to 
- * \link fnft__akns_discretization_t \endlink type and calls \link fnft__akns_z_to_lambda \endlink.
+ * \link fnft__akns_discretization_t \endlink type and calls \link fnft__akns_discretization_z_to_lambda \endlink.
  * @param[in] n Number of values to be mapped.
  * @param[in] eps_t Real-valued discretization step-size.
  * @param[in,out] vals Pointer to location of first element of array containing
@@ -158,7 +158,7 @@ FNFT_INT fnft__nse_lambda_to_z(const FNFT_UINT n, const FNFT_REAL eps_t,
  *
  * @ingroup nse
  */
-FNFT_INT fnft__nse_z_to_lambda(const FNFT_UINT n, const FNFT_REAL eps_t, 
+FNFT_INT fnft__nse_discretization_z_to_lambda(const FNFT_UINT n, const FNFT_REAL eps_t, 
         FNFT_COMPLEX * const vals, fnft_nse_discretization_t discretization);
 
 /**
@@ -180,7 +180,7 @@ FNFT_INT fnft__nse_z_to_lambda(const FNFT_UINT n, const FNFT_REAL eps_t,
  *
  * @ingroup nse
  */
-FNFT_INT fnft__nse_phase_factor_rho(const FNFT_REAL eps_t, const FNFT_REAL T1,
+FNFT_INT fnft__nse_discretization_phase_factor_rho(const FNFT_REAL eps_t, const FNFT_REAL T1,
         FNFT_REAL * const phase_factor_rho, fnft_nse_discretization_t nse_discretization);
 
 /**
@@ -202,7 +202,7 @@ FNFT_INT fnft__nse_phase_factor_rho(const FNFT_REAL eps_t, const FNFT_REAL T1,
  *
  * @ingroup nse
  */
-FNFT_INT fnft__nse_phase_factor_a(const FNFT_REAL eps_t, const FNFT_UINT D, FNFT_REAL const * const T,
+FNFT_INT fnft__nse_discretization_phase_factor_a(const FNFT_REAL eps_t, const FNFT_UINT D, FNFT_REAL const * const T,
         FNFT_REAL * const phase_factor_a, fnft_nse_discretization_t nse_discretization);
 
 /**
@@ -226,7 +226,7 @@ FNFT_INT fnft__nse_phase_factor_a(const FNFT_REAL eps_t, const FNFT_UINT D, FNFT
  *
  * @ingroup nse
  */
-FNFT_INT fnft__nse_phase_factor_b(const FNFT_REAL eps_t, const FNFT_UINT D, FNFT_REAL const * const T,
+FNFT_INT fnft__nse_discretization_phase_factor_b(const FNFT_REAL eps_t, const FNFT_UINT D, FNFT_REAL const * const T,
         FNFT_REAL * const phase_factor_b, fnft_nse_discretization_t nse_discretization);
         
 
@@ -264,7 +264,7 @@ FNFT_INT fnft__nse_phase_factor_b(const FNFT_REAL eps_t, const FNFT_UINT D, FNFT
  *
  * @ingroup nse
  */
-FNFT_INT fnft__nse_preprocess_signal(const FNFT_UINT D, FNFT_COMPLEX const * const q,
+FNFT_INT fnft__nse_discretization_preprocess_signal(const FNFT_UINT D, FNFT_COMPLEX const * const q,
         FNFT_REAL const eps_t, const FNFT_INT kappa,
         FNFT_UINT * const Dsub_ptr, FNFT_COMPLEX **q_preprocessed_ptr, FNFT_COMPLEX **r_preprocessed_ptr,
         FNFT_UINT * const first_last_index,  fnft_nse_discretization_t discretization);
@@ -276,7 +276,7 @@ FNFT_INT fnft__nse_preprocess_signal(const FNFT_UINT D, FNFT_COMPLEX const * con
  * 
  * This routing computes the special weights required for the 
  * higher-order methods CF\f$^{[4]}_2\f$, CF\f$^{[4]}_3\f$, CF\f$^{[5]}_3\f$ 
- * and CF\f$^{[6]}_4\f$. The weights are used in \link fnft__nse_preprocess_signal \endlink,
+ * and CF\f$^{[6]}_4\f$. The weights are used in \link fnft__nse_discretization_preprocess_signal \endlink,
  * \link fnft__akns_scatter_matrix \endlink and \link fnft__nse_scatter_bound_states\endlink.
  * The weights for CF\f$^{[4]}_3\f$ are taken from Alvermann and Fehske (<a href="https://doi.org/10.1016/j.jcp.2011.04.006">Journal of Computational Phys. 230, 2011</a>)
  * and the weights for the others are from Blanes, Casas and Thalhammer(<a href="https://doi.org/10.1016/j.cpc.2017.07.016">Computer Phys. Comm. 220, 2017</a>).
@@ -300,12 +300,12 @@ FNFT_INT fnft__nse_discretization_method_weights(FNFT_COMPLEX **weights_ptr,
 #define nse_discretization_to_akns_discretization(...) fnft__nse_discretization_to_akns_discretization(__VA_ARGS__)
 #define nse_discretization_upsampling_factor(...) fnft__nse_discretization_upsampling_factor(__VA_ARGS__)
 #define nse_discretization_method_order(...) fnft__nse_discretization_method_order(__VA_ARGS__)
-#define nse_lambda_to_z(...) fnft__nse_lambda_to_z(__VA_ARGS__)
-#define nse_z_to_lambda(...) fnft__nse_z_to_lambda(__VA_ARGS__)
-#define nse_phase_factor_rho(...) fnft__nse_phase_factor_rho(__VA_ARGS__)
-#define nse_phase_factor_a(...) fnft__nse_phase_factor_a(__VA_ARGS__)
-#define nse_phase_factor_b(...) fnft__nse_phase_factor_b(__VA_ARGS__)
-#define nse_preprocess_signal(...) fnft__nse_preprocess_signal(__VA_ARGS__)
+#define nse_discretization_lambda_to_z(...) fnft__nse_discretization_lambda_to_z(__VA_ARGS__)
+#define nse_discretization_z_to_lambda(...) fnft__nse_discretization_z_to_lambda(__VA_ARGS__)
+#define nse_discretization_phase_factor_rho(...) fnft__nse_discretization_phase_factor_rho(__VA_ARGS__)
+#define nse_discretization_phase_factor_a(...) fnft__nse_discretization_phase_factor_a(__VA_ARGS__)
+#define nse_discretization_phase_factor_b(...) fnft__nse_discretization_phase_factor_b(__VA_ARGS__)
+#define nse_discretization_preprocess_signal(...) fnft__nse_discretization_preprocess_signal(__VA_ARGS__)
 #define nse_discretization_method_weights(...) fnft__nse_discretization_method_weights(__VA_ARGS__)
 
 #endif

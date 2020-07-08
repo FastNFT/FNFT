@@ -204,14 +204,14 @@ INT fnft__nse_discretization_to_akns_discretization(nse_discretization_t nse_dis
  * This routine maps lambda from continuous-time domain to
  * z in the discrete-time domain based on the discretization. 
  */
-INT fnft__nse_lambda_to_z(const UINT n, const REAL eps_t, 
+INT fnft__nse_discretization_lambda_to_z(const UINT n, const REAL eps_t, 
         COMPLEX * const vals, nse_discretization_t nse_discretization)
 {
     akns_discretization_t akns_discretization = 0;
     INT ret_code = SUCCESS;
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = fnft__akns_lambda_to_z(n, eps_t, vals, akns_discretization);
+    ret_code = fnft__akns_discretization_lambda_to_z(n, eps_t, vals, akns_discretization);
     leave_fun:    
         return ret_code;
 }
@@ -220,14 +220,14 @@ INT fnft__nse_lambda_to_z(const UINT n, const REAL eps_t,
  * This routine maps z from the discrete-time domain to
  * lambda in the continuous-time domain based on the discretization. 
  */
-INT fnft__nse_z_to_lambda(const UINT n, const REAL eps_t, 
+INT fnft__nse_discretization_z_to_lambda(const UINT n, const REAL eps_t, 
         COMPLEX * const vals, nse_discretization_t nse_discretization)
 {
     akns_discretization_t akns_discretization = 0;
     INT ret_code = SUCCESS;
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = fnft__akns_z_to_lambda(n, eps_t, vals, akns_discretization);
+    ret_code = fnft__akns_discretization_z_to_lambda(n, eps_t, vals, akns_discretization);
     leave_fun:    
         return ret_code;   
 }
@@ -237,7 +237,7 @@ INT fnft__nse_z_to_lambda(const UINT n, const REAL eps_t,
  * It is required for applying boundary conditions to the transfer matrix values
  * based on the discretization. 
  */
-INT fnft__nse_phase_factor_rho(const REAL eps_t, const REAL T1,
+INT fnft__nse_discretization_phase_factor_rho(const REAL eps_t, const REAL T1,
         REAL * const phase_factor_rho, nse_discretization_t nse_discretization)
 {
     REAL boundary_coeff;
@@ -260,7 +260,7 @@ INT fnft__nse_phase_factor_rho(const REAL eps_t, const REAL T1,
  * It is required for applying boundary conditions to the transfer matrix values
  * based on the discretization.
  */
-INT fnft__nse_phase_factor_a(const REAL eps_t, const UINT D, REAL const * const T,
+INT fnft__nse_discretization_phase_factor_a(const REAL eps_t, const UINT D, REAL const * const T,
         REAL * const phase_factor_a, nse_discretization_t nse_discretization)
 {
     REAL boundary_coeff;
@@ -317,7 +317,7 @@ INT fnft__nse_phase_factor_a(const REAL eps_t, const UINT D, REAL const * const 
  * It is required for applying boundary conditions to the transfer matrix values
  * based on the discretization.
  */
-INT fnft__nse_phase_factor_b(const REAL eps_t, const UINT D, REAL const * const T,
+INT fnft__nse_discretization_phase_factor_b(const REAL eps_t, const UINT D, REAL const * const T,
         REAL * const phase_factor_b, nse_discretization_t nse_discretization)
 {
     REAL boundary_coeff;
@@ -383,7 +383,7 @@ INT fnft__nse_phase_factor_b(const REAL eps_t, const UINT D, REAL const * const 
  * This routine preprocess the signal by resampling and subsampling based on the discretization.
  * The preprocessing is necessary for higher-order methods.
  */
-INT fnft__nse_preprocess_signal(const UINT D, COMPLEX const * const q,
+INT fnft__nse_discretization_preprocess_signal(const UINT D, COMPLEX const * const q,
         REAL const eps_t, const INT kappa,
         UINT * const Dsub_ptr, COMPLEX **q_preprocessed_ptr, COMPLEX **r_preprocessed_ptr,
         UINT * const first_last_index,  nse_discretization_t discretization)

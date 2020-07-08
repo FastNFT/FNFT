@@ -164,14 +164,14 @@ INT fnft__kdv_discretization_to_akns_discretization(kdv_discretization_t kdv_dis
  * This routine maps lambda from continuous-time domain to
  * z in the discrete-time domain based on the discretization. 
  */
-INT fnft__kdv_lambda_to_z(const UINT n, const REAL eps_t, 
+INT fnft__kdv_discretization_lambda_to_z(const UINT n, const REAL eps_t, 
         COMPLEX * const vals, kdv_discretization_t kdv_discretization)
 {
     akns_discretization_t akns_discretization = 0;
     INT ret_code = SUCCESS;
     ret_code = kdv_discretization_to_akns_discretization(kdv_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = fnft__akns_lambda_to_z(n, eps_t, vals, akns_discretization);
+    ret_code = fnft__akns_discretization_lambda_to_z(n, eps_t, vals, akns_discretization);
     leave_fun:    
         return ret_code;
 }
@@ -180,14 +180,14 @@ INT fnft__kdv_lambda_to_z(const UINT n, const REAL eps_t,
  * This routine maps z from the discrete-time domain to
  * lambda in the continuous-time domain based on the discretization. 
  */
-INT fnft__kdv_z_to_lambda(const UINT n, const REAL eps_t, 
+INT fnft__kdv_discretization_z_to_lambda(const UINT n, const REAL eps_t, 
         COMPLEX * const vals, kdv_discretization_t kdv_discretization)
 {
     akns_discretization_t akns_discretization = 0;
     INT ret_code = SUCCESS;
     ret_code = kdv_discretization_to_akns_discretization(kdv_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = fnft__akns_z_to_lambda(n, eps_t, vals, akns_discretization);
+    ret_code = fnft__akns_discretization_z_to_lambda(n, eps_t, vals, akns_discretization);
     leave_fun:    
         return ret_code;   
 }
