@@ -4,7 +4,7 @@
 
 The following tools are needed in order to build FNFT:
 
-* [CMake](https://cmake.org/)
+* [CMake](https://cmake.org/), minimum version 3.17.3.
 * A C compiler.
 * A Fortran compiler.
 

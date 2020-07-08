@@ -49,7 +49,7 @@ typedef enum {
  * @brief Routine to run tests for \link fnft_kdvv \endlink.
  *
  * This routine is used by the tests for \link fnft_kdvv \endlink. It runs the
- * specified test case tc with the specificed number of samples D and the
+ * specified test case tc with the specified number of samples D and the
  * options opts, and tests if several errors stay below the provided error
  * bounds in eb.
  *

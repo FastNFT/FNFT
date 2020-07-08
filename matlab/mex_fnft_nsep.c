@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018, 2020.
+* Shrinivas Chimmalgi (TU Delft) 2020.
 */
 
 #include <string.h>
@@ -27,12 +28,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     size_t D;
     double complex * q;
     double * T;
+    double phase_shift = 0.0;
     size_t M;
     double complex * main_spec;
     size_t K;
     double complex * aux_spec = NULL;
     int * sheet_indices = NULL;
     int kappa;
+    int upsampling_factor = 1;
     size_t i;
     ptrdiff_t k;
     double *re, *im;
@@ -61,12 +64,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     kappa = (int)mxGetScalar(prhs[2]);
 
     /* Check values of first three inputs */
-    if ( D<2 || (D & (D-1)) != 0 )
-        mexErrMsgTxt("Length of the first input q should be a positive power of two.");
+    if ( D<2 || D%2 != 0 )
+        mexErrMsgTxt("Length of the first input q should be even.");
     if ( T[0] >= T[1] )
         mexErrMsgTxt("T(1) >= T(2).");
     if ( kappa != +1 && kappa != -1 )
-        mexErrMsgTxt("Fourth input kappa should be +1.0 or -1.0.");
+        mexErrMsgTxt("Third input kappa should be +1.0 or -1.0.");
 
     // Default options for fnft_nsep
     opts = fnft_nsep_default_opts();
@@ -124,7 +127,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             opts.points_per_spine = (FNFT_UINT)mxGetScalar(prhs[k+1]);
             k++;
 
-        } else if ( strcmp(str, "loc_mixed") == 0 ) {
+        } else if ( strcmp(str, "phase_shift") == 0 ) {
+
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+                 || mxGetNumberOfElements(prhs[k+1]) != 1) {
+                snprintf(msg, sizeof msg, "'phase_shift' should be followed by a real number. See the help.");
+                goto on_error;
+            }
+            phase_shift = (FNFT_REAL)mxGetScalar(prhs[k+1]);
+            k++;
+
+        }else if ( strcmp(str, "loc_mixed") == 0 ) {
 
             opts.localization = fnft_nsep_loc_MIXED;
 
@@ -161,6 +174,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "quiet") == 0 ) {
 
             fnft_errwarn_setprintf(NULL);
+            
+        } else if ( strcmp(str, "discr_modal") == 0 ) {
+            
+            opts.discretization = fnft_nse_discretization_2SPLIT2_MODAL;
+            
+        } else if ( strcmp(str, "discr_2split2A") == 0 ) {
+            
+            opts.discretization = fnft_nse_discretization_2SPLIT2A;
+            
+        } else if ( strcmp(str, "discr_2split4A") == 0 ) {
+            
+            opts.discretization = fnft_nse_discretization_2SPLIT4A; upsampling_factor = 4;
+            
+        } else if ( strcmp(str, "discr_2split4B") == 0 ) {
+            
+            opts.discretization = fnft_nse_discretization_2SPLIT4B; upsampling_factor = 2;
+            
+        } else if ( strcmp(str, "discr_4split4B") == 0 ) {
+            
+            opts.discretization = fnft_nse_discretization_4SPLIT4B; upsampling_factor = 4;            
 
         } else {
             snprintf(msg, sizeof msg, "%uth input has invalid value.",
@@ -171,8 +204,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     /* Allocate memory */
     q = mxMalloc(D * sizeof(double complex));
-    K = (opts.points_per_spine)*D + 1;
-    M = D;
+    K = (opts.points_per_spine)*upsampling_factor*D + 1;
+    M = upsampling_factor*D;
     main_spec = mxMalloc(K * sizeof(double complex));
     aux_spec = mxMalloc(M * sizeof(double complex));
     sheet_indices = mxMalloc(M * sizeof(int));
@@ -189,7 +222,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         q[i] = re[i] + I*im[i];
 
     /* Call the C routine */
-    ret_code = fnft_nsep(D, q, T, &K, main_spec, &M, aux_spec, NULL, kappa,
+    ret_code = fnft_nsep(D, q, T, phase_shift, &K, main_spec, &M, aux_spec, NULL, kappa,
         &opts);
     if (ret_code != FNFT_SUCCESS) {
         snprintf(msg, sizeof msg, "fnft_nsep failed (error code %i).",

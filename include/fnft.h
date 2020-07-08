@@ -37,7 +37,7 @@
  * The C interface is separated into a public part ("fnft_" prefix) and a private
  * part ("fnft__" prefix).
  *
- * To get start with the public part of the C interface, study the modules
+ * To get started with the public part of the C interface, study the modules
  * \ref fnft and \ref fnft_inverse, and try the examples in the examples
  * directory.
  */

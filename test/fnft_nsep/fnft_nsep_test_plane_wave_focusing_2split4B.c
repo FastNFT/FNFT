@@ -25,7 +25,7 @@ INT main()
 {
     INT ret_code, i;
     const fnft__nsep_testcases_t tc = nsep_testcases_PLANE_WAVE_FOCUSING;
-    UINT D = 1024;
+    UINT D = 1026;
     REAL error_bounds[3] = {
         9.6e-5, // main spectrum
         4.4e-5, // aux spectrum
@@ -45,8 +45,8 @@ INT main()
     ret_code = nsep_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    // Check for error decay. First error reduces less than quadratically
-    // since spectrum on real line is found with poly_roots_fftgridsearch
+    // Check for error decay. The poly_roots_fftgridsearch routine used to
+    // find the spectrum on real line guarantees only linear error decay
     D *= 2;
     error_bounds[0] /= 2.0;
     error_bounds[1] /= 4.0;
@@ -57,7 +57,8 @@ INT main()
     // Repeat tests without real spectrum
     opts.bounding_box[2] = 0.1;
     D = 1024;
-    error_bounds[0] = 4.5e-5;
+
+    error_bounds[0] = 4.7e-5;
     error_bounds[1] = 4.4e-5;
     error_bounds[2] = 0.0;
     ret_code = nsep_testcases_test_fnft(tc, D, error_bounds, &opts);

@@ -1,8 +1,8 @@
 # FNFT: Fast Nonlinear Fourier Transforms
 
-[![Build Status](https://travis-ci.org/FastNFT/FNFT.svg?branch=master)](https://travis-ci.org/FastNFT/FNFT) [![DOI](http://joss.theoj.org/papers/10.21105/joss.00597/status.svg)](https://doi.org/10.21105/joss.00597)
+[![Version](https://img.shields.io/github/v/release/FastNFT/FNFT)](https://github.com/FastNFT/FNFT/releases) [![Documentation](https://img.shields.io/badge/-documentation-informational)](https://fastnft.github.io/FNFT/) [![Build Status](https://travis-ci.org/FastNFT/FNFT.svg?branch=master)](https://travis-ci.org/FastNFT/FNFT) [![DOI](http://joss.theoj.org/papers/10.21105/joss.00597/status.svg)](https://doi.org/10.21105/joss.00597)
 
-FNFT is a software library for the fast numerical computation of (inverse) nonlinear Fourier transforms, which are also known as (inverse) scattering transforms. FNFT is written in C and comes with a MATLAB interface. A [Python interface](https://github.com/xmhk/FNFTpy) is available seperately.
+FNFT is a software library for the numerical computation of (inverse) nonlinear Fourier transforms, which are also known as (inverse) scattering transforms. The focus of the library is on fast algorithms, but it also contains non-fast methods. FNFT is written in C and comes with a MATLAB interface. A [Python interface](https://github.com/xmhk/FNFTpy) is available separately.
 
 ## Currently Implemented Cases
 
@@ -15,7 +15,7 @@ FNFT is a software library for the fast numerical computation of (inverse) nonli
       * Bound states (eigenvalues)
       * Norming constants and/or residues
 
-    * Periodic boundary conditions
+    * (Quasi-)Periodic boundary conditions
       * Main spectrum
       * Auxiliary spectrum
 
@@ -103,3 +103,7 @@ The algorithms in FNFT utilize ideas from the following references. More informa
 - S. Wahls and V. Vaibhav, ["Fast Inverse Nonlinear Fourier Transforms for Continuous Spectra of Zakharov-Shabat Type"](http://arxiv.org/abs/1607.01305v2), Withdrawn Preprint, Dec. 2016. arXiv:1607.01305v2 [cs.IT]
 - S. Wahls, ["Generation of Time-Limited Signals in the Nonlinear Fourier Domain via b-Modulation"](https://doi.org/10.1109/ECOC.2017.8346231), Proc. European Conference on Optical Communcation (ECOC), Gothenburg, Sweden, Sep. 2017.
 - J. Skaar, L. Wang and T. Erdogan, ["On the synthesis of fiber Bragg gratings by layer peeling"](https://doi.org/10.1109/3.903065), IEEE Journal of Quantum Electronics, vol. 37, no. 2, pp. 165--173, Feb. 2001.
+- S. Chimmalgi, P. J. Prins and S. Wahls, ["Fast Nonlinear Fourier Transform Algorithms Using Higher Order Exponential Integrators"](https://doi.org/10.1109/ACCESS.2019.2945480), IEEE Access, vol. 7, pp. 145161--145176, Oct. 2019.
+- P. J. Prins and S. Wahls, ["Soliton Phase Shift Calculation for the Korteweg–De Vries Equation"](https://doi.org/10.1109/ACCESS.2019.2932256), IEEE Access, vol. 7, pp. 122914--122930, July 2019.
+- S. Medvedev, I. Vaseva, I. Chekhovskoy and M. Fedoruk, ["Exponential fourth order schemes for direct Zakharov-Shabat problem"](https://doi.org/10.1364/OE.377140), Optics Express, vol. 28, pp. 20--39, 2020.
+- J. Mertsching, ["Quasiperiodie Solutions of the Nonlinear Schroedinger Equation"](https://doi.org/10.1002/prop.2190350704), Fortschritte der Physik, vol. 35, pp. 519--536, 1987.

@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
+* Shrinivas Chimmalgi (TU Delft) 2019-2020.
 */
 
 /**
@@ -27,6 +28,7 @@
 #define FNFT__MISC_H
 
 #include "fnft.h"
+#include <string.h>
 
 /**
  * @brief Helper function for debugging. Prints an array in MATLAB style.
@@ -201,7 +203,7 @@ FNFT_INT fnft__misc_downsample(const FNFT_UINT D, FNFT_COMPLEX const * const q,
  * @brief Sinc function for complex arguments.
  *
  * @ingroup misc
- * Functions computes the Sinc function sin(x)/x for \link FNFT_COMPLEX \endlink argument.
+ * Function computes the Sinc function sin(x)/x for \link FNFT_COMPLEX \endlink argument.
  * @param[in] x \link FNFT_COMPLEX \endlink argument.
  * @return Sinc(x).
  */
@@ -216,6 +218,131 @@ FNFT_COMPLEX fnft__misc_CSINC(FNFT_COMPLEX x);
  */
 FNFT_UINT fnft__misc_nextpowerof2(const FNFT_UINT number);
 
+/**
+ * @brief Resamples an array.
+ *
+ * @ingroup misc
+ * Computes a resampled version of q. The length of q is D>=2. Performs
+ * bandlimited interpolation to obtain signal samples at new locations
+ * \f$q(t_{n}+\delta)\f$ from samples given at \f$q(t_{n})\f$ for \f$n=0,1,...,D-1\f$.
+ * This is required for the CF4_2, CF4_3, CF5_3, CF6_4, 4SPLIT4A and 4SPLIT4B discretizations.
+ * The routine checks the difference between the l2-norm of the complete spectrum 
+ * and approximately 90% of the spectrum. The following warning is issued if
+ * the difference is high. "Signal does not appear to be bandlimited. Interpolation 
+ * step may be inaccurate. Try to reduce the step size, or switch to a discretization 
+ * that does not require interpolation".
+ * @param[in] D Number of samples in array q.
+ * @param[in] eps_t Step-size of t.
+ * @param[in] q Complex valued array to be resampled.
+ * @param[in] delta Real valued shift to be applied during resampling.
+ * @param[out] q_new Complex valued array of resampled signal.
+ * @return Returns SUCCESS or an error code.
+ */
+FNFT_INT fnft__misc_resample(const FNFT_UINT D, const FNFT_REAL eps_t, FNFT_COMPLEX const * const q,
+    const FNFT_REAL delta, FNFT_COMPLEX *const q_new);
+
+/**
+ * @brief Multiples two square matrices of size N.
+ *
+ * @ingroup  misc
+ *
+ * Multiples two square matrices U and T of size N. T is replaced by the
+ * result U*T.
+ * @param[in] N Positive integer that is the size of the two matrices.
+ * @param[in] U Pointer to the first element of complex valued NxN matrix U.
+ * @param[in] T Pointer to the first element of complex valued NxN matrix T.
+ * @param[out] TM Pointer to the first element of complex valued NxN matrix TM 
+ * which will contain the result TM=U*T on return.
+ */
+static inline void fnft__misc_mat_mult_proto(const FNFT_UINT N, FNFT_COMPLEX * const U,
+        FNFT_COMPLEX *const T, FNFT_COMPLEX *const TM){
+    FNFT_UINT  c1, c2, c3;
+    FNFT_COMPLEX sum = 0;
+    for (c1 = 0; c1 < N; c1++) {
+        for (c2 = 0; c2 < N; c2++) {
+            for (c3 = 0; c3 < N; c3++) {
+                sum = sum + U[c1*N+c3]*T[c3*N+c2];
+            }
+            TM[c1*N+c2] = sum;
+            sum = 0;
+        }
+    }
+    
+    return;
+}
+
+/**
+ * @brief Multiples two square matrices of size 2.
+ *
+ * @ingroup  misc
+ *
+ * Multiples two square matrices U and T of size 2. T is replaced by the
+ * result U*T.
+ * @param[in] U Pointer to the first element of complex values 2x2 matrix U.
+ * @param[in,out] T Pointer to the first element of complex values 2x2 matrix T.
+ * Contains the result U*T on return.
+ */
+static inline void fnft__misc_mat_mult_2x2(FNFT_COMPLEX * const U,
+        FNFT_COMPLEX *const T){
+
+    FNFT_COMPLEX TM[4] = { 0 };
+    fnft__misc_mat_mult_proto(2, U, T, &TM[0]);
+    memcpy(T,TM,4*sizeof(FNFT_COMPLEX));
+    
+    return;
+}
+
+/**
+ * @brief Multiples two square matrices of size 4.
+ *
+ * @ingroup  misc
+ *
+ * Multiples two square matrices U and T of size 4. T is replaced by the
+ * result U*T.
+ * @param[in] U Pointer to the first element of complex values 4x4 matrix U.
+ * @param[in,out] T Pointer to the first element of complex values 4x4 matrix T.
+ * Contains the result U*T on return.
+ */
+static inline void fnft__misc_mat_mult_4x4(FNFT_COMPLEX * const U,
+        FNFT_COMPLEX *const T){
+
+    FNFT_COMPLEX TM[16] = { 0 };
+    fnft__misc_mat_mult_proto(4, U, T, &TM[0]);
+    memcpy(T,TM,16*sizeof(FNFT_COMPLEX));
+    
+    return;
+}
+
+/**
+ * @brief This routine returns the nth degree Legendre polynomial at x.
+ *
+ * @ingroup  misc
+ *
+ * Calculates the the nth degree Legendre polynomial at x using a recursive 
+ * relation (<a href="https://en.wikipedia.org/wiki/Legendre_polynomials#Definition_via_generating_function">Online, Accessed July 2020</a>)
+ * @param[in] n Positive integer that is the order of the Legendre polynomial.
+ * @param[in] x Real scalar value at which the value of the polynomial is to be calculated.
+ * @return Returns the value of nth degree Legendre polynomial at x.
+ */
+static inline FNFT_REAL fnft__misc_legendre_poly(const FNFT_UINT n, const FNFT_REAL x){
+    FNFT_UINT  i;
+    FNFT_REAL P, P_1, P_2;
+    if (n == 0)
+        P = 1;
+    else if (n == 1)
+        P = x;
+    else{
+        P_1 = x;
+        P_2 = 1;
+        for (i = 2; i <= n; i++) {
+            P = (2.0*i-1)*x*P_1/i -(i-1.0)*P_2/i;
+            P_2 = P_1;
+            P_1 = P;
+        }
+    }
+    return P;
+}
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define misc_print_buf(...) fnft__misc_print_buf(__VA_ARGS__)
 #define misc_rel_err(...) fnft__misc_rel_err(__VA_ARGS__)
@@ -229,6 +356,12 @@ FNFT_UINT fnft__misc_nextpowerof2(const FNFT_UINT number);
 #define misc_downsample(...) fnft__misc_downsample(__VA_ARGS__)
 #define misc_CSINC(...) fnft__misc_CSINC(__VA_ARGS__)
 #define misc_nextpowerof2(...) fnft__misc_nextpowerof2(__VA_ARGS__)
+#define misc_resample(...) fnft__misc_resample(__VA_ARGS__)
+#define misc_mat_mult_proto(...) fnft__misc_mat_mult_proto(__VA_ARGS__)
+#define misc_mat_mult_2x2(...) fnft__misc_mat_mult_2x2(__VA_ARGS__)
+#define misc_mat_mult_4x4(...) fnft__misc_mat_mult_4x4(__VA_ARGS__)
+#define misc_legendre_poly(...) fnft__misc_legendre_poly(__VA_ARGS__)
+
 #endif
 
 #endif

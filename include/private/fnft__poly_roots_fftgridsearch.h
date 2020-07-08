@@ -53,8 +53,9 @@
  * or equal to the absolute value at the eight neighboring grid points are
  * candidates for a root. (This is the first stage of the Lindsey-Fox
  * algorithm.) The polynomial is then approximated locally around the
- * center grid poFNFT_INT and the root of this linerization is computed. The
+ * center grid point and the root of this linerization is computed. The
  * root of the linearization is kept if it is not too far from the grid point.
+ * The routine gurantees only linear convergence.
  *
  * @see https://doi.org/10.1109/MSP.2003.1253552
  * @see poly_roots_fftgridsearch_paraherm

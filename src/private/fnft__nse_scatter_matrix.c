@@ -15,32 +15,32 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
-* Shrinivas Chimmalgi (TU Delft) 2017-2018.
+* Shrinivas Chimmalgi (TU Delft) 2017-2020.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
-#include "fnft__errwarn.h"
 #include "fnft__nse_scatter.h"
-#include "fnft__nse_discretization.h"
 #include <stdio.h>
 
 /**
- * Returns [S11 S12 S21 S22 S11' S12' S21' S22'] in result 
- * where S = [S11, S12; S21, S22] is the scattering matrix.
- * computed using the chosen scheme.
- * Result should be preallocated with size 8 * K
- * Default scheme should be set as BO.
+ * If derivative_flag=0 returns [S11 S12 S21 S22] in result where
+ * S = [S11, S12; S21, S22] is the scattering matrix computed using the 
+ * chosen scheme.
+ * If derivative_flag=1 returns [S11 S12 S21 S22 S11' S12' S21' S22'] in 
+ * result where S11' is the derivative of S11 w.r.t to lambda.
+ * Result should be preallocated with size 4*K or 8*K accordingly.
  */
 INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
-    const REAL eps_t, const INT kappa, const UINT K, 
-    COMPLEX const * const lambda,
-    COMPLEX * const result, nse_discretization_t discretization)
+    COMPLEX * r, const REAL eps_t, const INT kappa, 
+    const UINT K, COMPLEX const * const lambda,
+    COMPLEX * const result, nse_discretization_t discretization,
+    const UINT derivative_flag)
 {
      
     INT ret_code = SUCCESS;
     UINT i;
     akns_discretization_t akns_discretization;
-    COMPLEX *r = NULL;
+    
     
     // Check inputs
     if (D == 0)
@@ -58,27 +58,30 @@ INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
     if (result == NULL)
         return E_INVALID_ARGUMENT(result);
 
-    ret_code = nse_discretization_to_akns_discretization(discretization, &akns_discretization);
+    ret_code = nse_discretization_to_akns_discretization(discretization, 
+            &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
     
-    r = malloc(D*sizeof(COMPLEX));
     if (r == NULL) {
-        ret_code = E_NOMEM;
-        goto leave_fun;
+        r = malloc(D*sizeof(COMPLEX));
+        if (r == NULL) {
+            ret_code = E_NOMEM;
+            goto leave_fun;
+        }
+        
+        
+        if (kappa == 1){
+            for (i = 0; i < D; i++)
+                r[i] = -CONJ(q[i]);
+        }
+        else{
+            for (i = 0; i < D; i++)
+                r[i] = CONJ(q[i]);
+        }
     }
-    
-    if (kappa == 1){
-        for (i = 0; i < D; i++)
-            r[i] = -CONJ(q[i]);
-        }
-    else{
-        for (i = 0; i < D; i++)
-            r[i] = CONJ(q[i]);
-        }
-    
-    ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result, akns_discretization);
+    ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result, 
+            akns_discretization, derivative_flag);
 
 leave_fun:
-    free(r);
     return ret_code;
 }

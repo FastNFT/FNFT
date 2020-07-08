@@ -33,7 +33,7 @@
 INT fnft_nsep_test_numerical_focusing_1()
 {
     INT ret_code = SUCCESS;
-    COMPLEX q[256] = {
+    COMPLEX q[257] = {
       4.915570541397106e+00 + 0.000000000000000e+00*I,
       4.842611768461482e+00 - 5.669162201596430e-03*I,
       4.770298742512298e+00 - 1.128814751205249e-02*I,
@@ -289,7 +289,8 @@ INT fnft_nsep_test_numerical_focusing_1()
       5.213015265039893e+00 + 2.311253762214577e-02*I,
       5.137903705486382e+00 + 1.727609606494724e-02*I,
       5.063260764184878e+00 + 1.147606785153594e-02*I,
-      4.989134537175214e+00 + 5.716190219260737e-03*I
+      4.989134537175214e+00 + 5.716190219260737e-03*I,
+      4.915570541397106e+00 + 0.000000000000000e+00*I
     };
     const REAL T[2] = {0, 6.628591515456010e-01};
 
@@ -325,7 +326,9 @@ INT fnft_nsep_test_numerical_focusing_1()
     opts.bounding_box[1] = 1;
     opts.bounding_box[2] = -10;
     opts.bounding_box[3] = 10;
-    ret_code = fnft_nsep(D, q, T, &K, mainspec, &M, auxspec, NULL, +1, &opts);
+    
+    REAL phase_shift = CARG(q[D-1]/q[0]);
+    ret_code = fnft_nsep(D-1, q, T, phase_shift, &K, mainspec, &M, auxspec, NULL, +1, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Check that the main and auxiliary spectrum are correct
@@ -342,7 +345,7 @@ INT fnft_nsep_test_numerical_focusing_1()
 
     // Compute spines
     opts.points_per_spine = points_per_spine;
-    ret_code = fnft_nsep(D, q, T, &K_spine, spines, &M, NULL, NULL, +1, &opts);
+    ret_code = fnft_nsep(D-1, q, T, phase_shift, &K_spine, spines, &M, NULL, NULL, +1, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Check that all found points are on one of the three spines. The ok_flags
@@ -354,7 +357,7 @@ INT fnft_nsep_test_numerical_focusing_1()
         const COMPLEX lam = spines[k];
 
         // Spines are imaginary in this example
-        if (FABS(CREAL(lam)) > 100*EPSILON)
+        if (FABS(CREAL(lam)) > 150*EPSILON)
             return E_TEST_FAILED;
 
         const REAL lam_i = CIMAG(lam);

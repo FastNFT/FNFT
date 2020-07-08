@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018, 2020.
+* Shrinivas Chimmalgi (TU Delft) 2020.
 */
 
 /**
@@ -27,7 +28,13 @@
 #ifndef FNFT_NSEP_H
 #define FNFT_NSEP_H
 
-#include "fnft_nse_discretization_t.h"
+#include "fnft__errwarn.h"
+#include "fnft__misc.h" // for misc_filter
+#include "fnft__poly_roots_fasteigen.h"
+#include "fnft__poly_roots_fftgridsearch.h"
+#include "fnft__nse_scatter.h"
+#include "fnft__nse_fscatter.h"
+#include <string.h> // for memcpy
 
 /**
  * Enum that controls how spectrum is localized. Used in
@@ -38,7 +45,8 @@
  *  \link fnft_nsev_opts_t::bound_state_localization \endlink.)\n\n
  *  fnft_nsep_opts_loc_GRIDSEARCH: Uses a grid search to localize roots. Can
  *  only find main and auxiliary spectrum points on the real axis. In the
- *  defocusing case, the main spectrum is always real.\n\n
+ *  defocusing case, the main spectrum is always real. The implemented grid 
+ *  search gurantees only linear convergence.\n\n
  *  fnft_nsep_opts_loc_MIXED: Uses the SUBSAMPLE_AND_REFINE method to find the
  *  non-real parts of the spectra and the GRIDSEARCH method to find the real
  *  parts.
@@ -165,7 +173,7 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
 
 /**
  * @brief Fast nonlinear Fourier transform for the nonlinear Schroedinger
- *  equation with periodic boundary conditions.
+ *  equation with (quasi-)periodic boundary conditions.
  *
  * @ingroup fnft
  * \n \n
@@ -173,21 +181,46 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  * Schroedinger equation \f[ iq_x + q_{tt} \pm 2q|q|^2=0, \quad  q=q(x,t), \f]
  * of Kotlyarov and Its (<a href="https://arxiv.org/abs/1401.4445">Problems
  * of Mathemetical Physics and Functional Analysis, 1976)</a> for initial
- * conditions with periodic boundary conditions,
- * \f[ q(x_0,t + L) = q(x_0,t). \f]
+ * conditions with (quasi-)periodic boundary conditions,
+ * \f[ q(x_0,t + L) = mq(x_0,t),|m|=1. \f]
  * \n
  * The main references for the numerical algorithm are:
  *      - Wahls and Poor, <a href="http://dx.doi.org/10.1109/TIT.2015.2485944">&quot;Fast numerical nonlinear Fourier transforms,&quot;</a> IEEE Trans. Inform. Theor. 61(12), 2015.
- *      - Prins and Wahls, &quot;Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot; to appear in Proc. ICASSP 2018.
+ *      - Prins and Wahls, <a href="https://doi.org/10.1109/ICASSP.2018.8461708">&quot;Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot;</a>in Proc.ICASSP 2018, Calgary, AB, 2018, pp. 4524-4528.
+ *      - Mertsching, <a href="https://doi.org/10.1002/prop.2190350704">&quot; Quasiperiodie Solutions of the Nonlinear Schrödinger Equation,&quot;</a> Fortschr. Phys. 35:519-536, 1987.
  *
- * @param[in] D Number of samples. Has to be a power of two.
+ * * The routine supports the following discretizations of type \link fnft_nse_discretization_t \endlink:
+ *       - fnft_nse_discretization_2SPLIT1A
+ *       - fnft_nse_discretization_2SPLIT1B
+ *       - fnft_nse_discretization_2SPLIT2A
+ *       - fnft_nse_discretization_2SPLIT2B
+ *       - fnft_nse_discretization_2SPLIT2S
+ *       - fnft_nse_discretization_2SPLIT2_MODAL
+ *       - fnft_nse_discretization_2SPLIT3A
+ *       - fnft_nse_discretization_2SPLIT3B
+ *       - fnft_nse_discretization_2SPLIT3S
+ *       - fnft_nse_discretization_2SPLIT4A
+ *       - fnft_nse_discretization_2SPLIT4B
+ *       - fnft_nse_discretization_2SPLIT5A
+ *       - fnft_nse_discretization_2SPLIT5B
+ *       - fnft_nse_discretization_2SPLIT6A
+ *       - fnft_nse_discretization_2SPLIT6B
+ *       - fnft_nse_discretization_2SPLIT7A
+ *       - fnft_nse_discretization_2SPLIT7B
+ *       - fnft_nse_discretization_2SPLIT8A
+ *       - fnft_nse_discretization_2SPLIT8B
+ *       - fnft_nse_discretization_4SPLIT4A
+ *
+ * @param[in] D Number of samples. Has to be even.
  * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
- *  where \f$ t_n = T[0] + n*L/D \f$, where L=T[2]-T[1] is the period and
+ *  where \f$ t_n = T[0] + n*L/D \f$, where \f$L=T[1]-T[0]\f$ is the period and
  *  \f$n=0,1,\dots,D-1\f$, of the to-be-transformed signal in ascending order
  *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$)
  * @param[in] T Array of length 2. T[0] is the position in time of the first
- *  sample. T[2] is the beginning of the next period. (The location of the last
- *  sample is thus t_{D-1}=T[2]-L/D.) It should be T[0]<T[1].
+ *  sample. T[1] is the beginning of the next period. (The location of the last
+ *  sample is thus \f$t_{D-1}=T[1]-L/D\f$.) It should be \f$T[0]<T[1]\f$.
+ * @param[in] phase_shift Real scalar constant. It is the change in the phase
+ * over one quasi-period,\f$ arg(q(t+L)/q(t))\f$. For periodic signals it will be 0.
  * @param[in,out] K_ptr Upon entry, *K_ptr should contain the length of the array
  *  main_spec. Upon return, *K_ptr contains the number of actually detected
  *  points in the main spectrum. If the length of the array main_spec was not
@@ -217,7 +250,7 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  *  arbitrary length. Typically, D is a good choice.
  * @param[in] sheet_indices Not yet implemented. Pass NULL.
  * @param[in] kappa =+1 for the focusing nonlinear Schroedinger equation,
- *  =-1 for the defocusing one
+ *  =-1 for the defocusing one.
  * @param[in] opts Pointer to a \link fnft_nsep_opts_t \endlink object. The object
  *  can be used to modify the behavior of the routine. Use
  *  the routine \link fnft_nsep_default_opts \endlink
@@ -228,7 +261,7 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  *  defined in \link fnft_errwarn.h \endlink.
  */
 FNFT_INT fnft_nsep(const FNFT_UINT D, FNFT_COMPLEX const * const q,
-    FNFT_REAL const * const T, FNFT_UINT * const K_ptr,
+    FNFT_REAL const * const T, FNFT_REAL const phase_shift, FNFT_UINT * const K_ptr,
     FNFT_COMPLEX * const main_spec, FNFT_UINT * const M_ptr,
     FNFT_COMPLEX * const aux_spec, FNFT_REAL * const sheet_indices,
     const FNFT_INT kappa, fnft_nsep_opts_t * opts);

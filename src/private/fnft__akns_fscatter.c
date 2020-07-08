@@ -22,12 +22,9 @@
 
 #define FNFT_ENABLE_SHORT_NAMES
 
-#include "fnft__errwarn.h"
-#include "fnft__poly_fmult.h"
+
 #include "fnft__akns_fscatter.h"
-#include "fnft__akns_discretization.h"
-#include "fnft__akns_discretization_t.h"
-#include "fnft__misc.h"
+
 
 /**
  * Returns the length of array to be allocated based on the number
@@ -363,6 +360,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             
             break;
         case akns_discretization_2SPLIT4A:
+        case akns_discretization_4SPLIT4A:
 
             e_2B = &e_Bstorage[0];
             e_4B = &e_Bstorage[3];
@@ -402,6 +400,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
 
             break;
         case akns_discretization_2SPLIT4B:
+        case akns_discretization_4SPLIT4B:
 
             e_0_5B = &e_Bstorage[0];
             e_1B = &e_Bstorage[3];
