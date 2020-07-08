@@ -11,6 +11,7 @@ commands in a terminal.
     ./fnft_nsep_example
     ./fnft_kdvv_example
     ./fnft_nsev_inverse_example
+    ./fnft_nsev_slow_example
 
 The sources for the examples can be found in the same directory. The example binaries have already been built together with the library. If you want to see the exact commands that were used to compile the examples, replace the 'make -j4' command in the build process with
 
@@ -23,9 +24,11 @@ If the MATLAB interface has been built, try the following in MATLAB
     mex_fnft_nsev_example
     mex_fnft_nsep_example
     mex_fnft_kdvv_example
-    mex_fnft_inverse_example_1
-    mex_fnft_inverse_example_2
-    mex_fnft_inverse_example_3
+    mex_fnft_nsev_inverse_example_1
+    mex_fnft_nsev_inverse_example_2
+    mex_fnft_nsev_inverse_example_3
+    mex_fnft_nsev_slow_example_1
+    mex_fnft_nsev_slow_example_2
 
 ## Documentation
 
@@ -41,5 +44,6 @@ The MATLAB interface is documented in the usual way. Run the commands
     help mex_fnft_nsep
     help mex_fnft_kdvv
     help mex_fnft_nsev_inverse
+    help mex_fnft_nsev_slow
 
 in MATLAB to get more information.

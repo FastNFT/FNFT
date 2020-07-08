@@ -21,15 +21,6 @@
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft_nsev_inverse.h"
-#include "fnft__errwarn.h"
-#include "fnft__nse_discretization.h"
-#include "fnft__nse_fscatter.h"
-#include "fnft__poly_chirpz.h"
-#include "fnft__nse_finvscatter.h"
-#include "fnft__fft_wrapper.h"
-#include "fnft__poly_specfact.h"
-#include "fnft__misc.h"
-#include "fnft__nse_scatter.h"
 
 
 static fnft_nsev_inverse_opts_t default_opts = {
@@ -67,7 +58,7 @@ INT fnft_nsev_inverse_XI(const UINT D, REAL const * const T,
     const REAL eps_t = (T[1] - T[0]) / (D - 1);
     XIC[0] = CEXP(2.0*FNFT_PI*I * (M/2 + 1)/M);
     XIC[1] = -1.0;
-    ret_code = nse_z_to_lambda(2, eps_t, XIC, discretization);
+    ret_code = nse_discretization_z_to_lambda(2, eps_t, XIC, discretization);
     XI[0] = CREAL(XIC[0]);
     XI[1] = CREAL(XIC[1]);
     return ret_code;
@@ -274,13 +265,13 @@ static inline INT remove_boundary_conds_and_reorder_for_fft(
 
     switch (opts_ptr->contspec_type) {
     case fnft_nsev_inverse_cstype_REFLECTION_COEFFICIENT:
-        ret_code = nse_phase_factor_rho(eps_t, T[1], &phase_factor,
+        ret_code = nse_discretization_phase_factor_rho(eps_t, T[1], &phase_factor,
                                         opts_ptr->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
         break;
 
     case fnft_nsev_inverse_cstype_B_OF_XI:
-        ret_code = nse_phase_factor_b(eps_t, D, T, &phase_factor,
+        ret_code = nse_discretization_phase_factor_b(eps_t, D, T, &phase_factor,
                                       opts_ptr->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
         break;
@@ -711,6 +702,7 @@ static INT add_discrete_spectrum(
     COMPLEX * acoeff_cs = NULL;
     COMPLEX * phi = NULL;
     COMPLEX * psi = NULL;
+    COMPLEX * r = NULL;
     UINT i,j;
     UINT zc_point = 0; //index of zero-crossing of time
     INT ret_code = SUCCESS;
@@ -778,10 +770,9 @@ static INT add_discrete_spectrum(
             //When continuous spectrum exists, the non-solitonic component
             // of the potential contributes to the residues and needs to be
             // removed.
-            UINT trunc_index;
-            trunc_index = D;
-            ret_code = nse_scatter_bound_states(D, q, T, &trunc_index, K,
-                    bnd_states, acoeff_cs, acoeff_cs+K, acoeff_cs+2*K, nse_discretization_BO);
+
+            ret_code = nse_scatter_bound_states(D, q, r, T, K,
+                    bnd_states, acoeff_cs, acoeff_cs+K, acoeff_cs+2*K, nse_discretization_BO, 1);
             CHECK_RETCODE(ret_code, leave_fun);
         }
         else {
@@ -864,15 +855,9 @@ static INT add_discrete_spectrum(
             ret_code = E_NOMEM;
             goto leave_fun;
         }
-//         // TODO: Find reason why this is needed
-        INT sgn_fac = 1;
-        if (K%2 != 0 &&
-                opts_ptr->contspec_inversion_method == fnft_nsev_inverse_csmethod_USE_SEED_POTENTIAL_INSTEAD){
-            sgn_fac = -1;
-            for (i = 0; i < K; i++)
-                norm_consts[i] = -norm_consts[i];
-        }
-//         //
+
+
+
         ret_code = compute_eigenfunctions(K, bnd_states, D, q, T, phi, psi);
         CHECK_RETCODE(ret_code, leave_fun);
         COMPLEX S1[K], S2[K], phi1, phi2, psi1, psi2, beta, qn;
@@ -901,7 +886,7 @@ static INT add_discrete_spectrum(
                 qn = qn - 2*I*S2[i];
 
             }
-            q[n] = sgn_fac*qn;
+            q[n] = qn;
         }
     }
     else
@@ -916,6 +901,7 @@ static INT add_discrete_spectrum(
         free(bnd_states_diff);
         free(norm_consts);
         free(acoeff_cs);
+        free(r);
         return ret_code;
 }
 

@@ -9,7 +9,7 @@
 %   Provides an interface to the C routine fnft_nsev.
 %
 % INPUTS
-%   q               Complex row vector of length D=2^n
+%   q               Complex row vector of length D>2
 %   T               Real 1x2 vector
 %   XI              Real 1x2 vector
 %   kappa           +1.0 or -1.0
@@ -30,13 +30,13 @@
 %   'bsloc_subsamp_refine' Use a mixed method to locate bound states. First
 %                   get initial guesses for the bound states by applying
 %                   the 'fasteigen' method to a subsampled version of the
-%                   signal. Then refine using 'newton' based on the full
+%                   signal. Then refine using 'Newton' based on the full
 %                   signal. This method is reliable if D is not too low.
-%                   It requires O(niter D log^2 D) flops if Dsub (see
+%                   It requires O(D log^2 D + niter K D) flops if Dsub (see
 %                   below) is set by the algorithm. Not followed by a
 %                   value.
 %   'bsloc_niter'   Number of iterations to be carried by Newton's method.
-%                   Followed by a scalar double.
+%                   Followed by a positive integer.
 %   'bsloc_Dsub'    The desired number of samples for the subsampled signal
 %                   in the 'subsamp_refine' method. Less samples in the
 %                   subsampled stage result in faster execution time, but
@@ -52,6 +52,31 @@
 %   'discr_2split2A' Use split Boffetta-Osborne discretization.
 %   'discr_2split4A' Use fifth order splitting with 4th degree polynomial.
 %   'discr_2split4B' Use fifth order splitting with 2nd degree polynomial.
+%   'discr_4split4B' Fourth-order method. Uses fifth order splitting with 
+%                    2nd degree polynomial.
+%   'discr_BO'      Use the second-order method by Boffetta-Osborne.
+%                   Requires one matrix exponential per sample.
+%   'discr_CF4_2'   Use fourth-order commutator-free exponential integrator
+%                   which requires two matrix exponentials per sample.
+%   'discr_CF4_3'   Use fourth-order commutator-free exponential integrator
+%                   which requires three matrix exponentials per sample.
+%   'discr_CF5_3'   Use fifth-order commutator-free exponential integrator
+%                   which requires three matrix exponentials per sample.
+%   'discr_CF6_4'   Use sixth-order commutator-free exponential integrator
+%                   which requires four matrix exponentials per sample.
+%   'discr_ES4'     Use fourth-order exponential integrator
+%                   which requires one matrix exponential per sample.
+%   'discr_TES4'    Use fourth-order exponential integrator
+%                   which requires three matrix exponentials per sample.
+%   'RE'            Use Richardson extrpolation to improve accuracy. The
+%                   approximations of the nonlinear Fourier spectrum are 
+%                   calcuated using all given samples and again with half of 
+%                   the samples. The two approximations are combined
+%                   through the idea of Richardson extrpolation to
+%                   hopefully obtain a more accurate approximation. Note
+%                   that in certain situations such as discontinuous signals,
+%                   enabling this option may result in worse accuracy than 
+%                   without it.
 %   'dstype_residues'   Return residues instead of norming constants
 %   'cstype_ab'     Returns values of a(xi) and b(xi) individually instead
 %                   of the values of reflection coefficient b(xi)/a(xi)
@@ -86,3 +111,4 @@
 %
 % Contributors:
 % Sander Wahls (TU Delft) 2017-2018.
+% Shrinivas Chimmalgi (TU Delft) 2019-2020.

@@ -50,7 +50,7 @@ static INT nsev_inverse_test_addsoliton_cdt(UINT const D, REAL const error_bound
     for (i = 0; i < D; i++){
         t = T[0] + i*(T[1] - T[0])/(D - 1);
         q_exact[i] = 3.4*misc_sech(t)*CEXP(-5*I*t);
-        q[i] = 0.4*misc_sech(t)*CEXP(-5*I*t);
+        q[i] = -0.4*misc_sech(t)*CEXP(-5*I*t);
     }
 
     //Testing with norming constants
@@ -87,7 +87,7 @@ static INT nsev_inverse_test_addsoliton_cdt(UINT const D, REAL const error_bound
 
     for (i = 0; i < D; i++){
         t = T[0] + i*(T[1] - T[0])/(D - 1);
-        q[i] = 0.4*misc_sech(t)*CEXP(-5*I*t);
+        q[i] = -0.4*misc_sech(t)*CEXP(-5*I*t);
     }
     opts.discspec_type = fnft_nsev_inverse_dstype_RESIDUES;
     opts.contspec_inversion_method

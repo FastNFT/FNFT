@@ -15,7 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
-* Shrinivas Chimmalgi (TU Delft) 2017.
+* Shrinivas Chimmalgi (TU Delft) 2017-2020.
 */
 
 /**
@@ -47,11 +47,18 @@
  * @param[in] eps_t Step-size, eps_t \f$= (T[1]-T[0])/(D-1) \f$.
  * @param[in] K Number of values of \f$\lambda\f$.
  * @param[in] lambda Array of length K, contains the values of \f$\lambda\f$.
- * @param[out] result Array of length 8*K, contains the values [S11 S12 S21 S22 S11' S12' S21' S22'] 
- * where S = [S11, S12; S21, S22] is the scattering matrix. 
+ * @param[out] result Array of length 8*K or 4*K, If derivative_flag=0 returns 
+ * [S11 S12 S21 S22] in result where S = [S11, S12; S21, S22] is the 
+ * scattering matrix computed using the chosen discretization.
+ * If derivative_flag=1 returns [S11 S12 S21 S22 S11' S12' S21' S22'] in 
+ * result where S11' is the derivative of S11 w.r.t to lambda.
+ * Should be preallocated with size 4*K or 8*K accordingly.
  * @param[in] discretization The type of discretization to be used. Should be of type 
  * \link fnft_kdv_discretization_t \endlink. Not all kdv_discretization_t discretizations are supported.
  * Check \link fnft_kdv_discretization_t \endlink for list of supported types.
+ * @param[in] derivative_flag Should be set to either 0 or 1. If set to 1
+ * the derivatives [S11' S12' S21' S22'] are calculated. result should be
+ * preallocated with size 8*K if flag is set to 1.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  * @ingroup kdv
@@ -59,7 +66,8 @@
 FNFT_INT fnft__kdv_scatter_matrix(const FNFT_UINT D, FNFT_COMPLEX const * const q,
     const FNFT_REAL eps_t, const FNFT_UINT K, 
     FNFT_COMPLEX const * const lambda,
-    FNFT_COMPLEX * const result, fnft_kdv_discretization_t discretization);
+    FNFT_COMPLEX * const result, fnft_kdv_discretization_t discretization,
+    const UINT derivative_flag);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define kdv_scatter_matrix(...) fnft__kdv_scatter_matrix(__VA_ARGS__)

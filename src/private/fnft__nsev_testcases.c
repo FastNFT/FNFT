@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
+* Shrinivas Chimmalgi (TU Delft) 2019-2020.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -22,8 +23,10 @@
 #include "fnft__misc.h" // for misc_sech
 #include "fnft__nsev_testcases.h"
 #include "fnft__nse_discretization.h" // for nse_discretization_degree
+#include "fnft_nsev.h"
 #ifdef DEBUG
 #include <stdio.h>
+#include <string.h> // for memcpy
 #endif
 
 INT nsev_testcases(nsev_testcases_t tc, const UINT D,
@@ -61,30 +64,35 @@ INT nsev_testcases(nsev_testcases_t tc, const UINT D,
         return E_INVALID_ARGUMENT(residues_ptr);
     if (kappa_ptr == NULL)
         return E_INVALID_ARGUMENT(kappa_ptr);
-
+    
     // Set the number of points in the continuous spectrum *M_ptr and the
     // number of bound states *K_ptr (needed for proper allocation)
     switch (tc) {
-
-    case nsev_testcases_SECH_FOCUSING:
-        *M_ptr = 16;
-        *K_ptr = 3;
-        break;
-
-    case nsev_testcases_SECH_DEFOCUSING:
-        *M_ptr = 16;
-        *K_ptr = 0;
-        break;
-
-    case nsev_testcases_TRUNCATED_SOLITON:
-        *M_ptr = 16;
-        *K_ptr = 0;
-        break;
-
-    default:
-        return E_INVALID_ARGUMENT(tc);
+        
+        case nsev_testcases_SECH_FOCUSING:
+            *M_ptr = 16;
+            *K_ptr = 3;
+            break;
+            
+        case nsev_testcases_SECH_FOCUSING2:
+            *M_ptr = 16;
+            *K_ptr = 5;
+            break;
+            
+        case nsev_testcases_SECH_DEFOCUSING:
+            *M_ptr = 16;
+            *K_ptr = 0;
+            break;
+            
+        case nsev_testcases_TRUNCATED_SOLITON:
+            *M_ptr = 16;
+            *K_ptr = 0;
+            break;
+            
+        default:
+            return E_INVALID_ARGUMENT(tc);
     }
-
+    
     // Allocate memory for results
     *q_ptr = malloc(D * sizeof(COMPLEX));
     if (*q_ptr == NULL) {
@@ -278,6 +286,180 @@ INT nsev_testcases(nsev_testcases_t tc, const UINT D,
 
         break;
 
+    case nsev_testcases_SECH_FOCUSING2:
+            
+            // This test case can be found in S. Chimmalgi,P.J. Prins and S. Wahls, 
+            // IEEE Access, Vol. 7, No. 1, pp. 145161–145176, Dec. 2019.
+            
+            // Time domain
+            T[0] = -32.0;
+            T[1] = 34.0;
+            
+            // The following MATLAB code has been used to compute the values below.
+            
+            /*
+             *
+             * A = sym(5.4);
+             * hlf = sym(1)/sym(2);
+             * im = sym(1j);
+             * lam0 = sym(3);
+             * syms lam;
+             * a(lam) = gamma(-im*(lam-lam0) + hlf).^2 ./ ( gamma(-im*(lam-lam0) + A + hlf) ...
+             * *gamma(-im*(lam-lam0) - A + hlf) );
+             * da = diff(a, lam);
+             * b(lam) = -sin(sym(pi)*A) ./ cosh(sym(pi) * (lam-lam0));
+             *
+             * bound_states = sym(1j)*(A - (floor(A):-1:1) + hlf) + lam0
+             * normconsts = b(bound_states)
+             * syms h;
+             * da_vals = limit(da(bound_states + h), h, 0);
+             * residues = normconsts ./ da_vals
+             *
+             * xi = (-sym(7):sym(8))/5 + lam0;
+             * XI = [xi(1) xi(end)]
+             * digits(40);
+             * contspec = vpa(b(xi) ./ a(xi)).';
+             * ab = vpa([a(xi) b(xi)]).';
+             *
+             *
+             * for count=0:15
+             * if imag(contspec(count+1))<0
+             * fprintf('\t (*contspec_ptr)[%d] = %s \n\t\t%s*I;\n', count,char(real(contspec(count+1))),char(imag(contspec(count+1))))
+             * else
+             * fprintf('\t (*contspec_ptr)[%d] = %s \n\t\t+%s*I;\n', count,char(real(contspec(count+1))),char(imag(contspec(count+1))))
+             * end
+             * end
+             * for count=0:15
+             * if imag(ab(count+1))<0
+             * fprintf('\t (*ab_ptr)[%d] = %s \n\t\t%s*I;\n', count,char(real(ab(count+1))),char(imag(ab(count+1))))
+             * else
+             * fprintf('\t (*ab_ptr)[%d] = %s \n\t\t+%s*I;\n', count,char(real(ab(count+1))),char(imag(ab(count+1))))
+             * end
+             * end
+             * for count=16:31
+             * if imag(ab(count+1))<0
+             * fprintf('\t (*ab_ptr)[%d] = %s %s*I;\n', count,char(real(ab(count+1))),char(imag(ab(count+1))))
+             * else
+             * fprintf('\t (*ab_ptr)[%d] = %s +%s*I;\n', count,char(real(ab(count+1))),char(imag(ab(count+1))))
+             * end
+             * end
+             */
+            
+            
+            for (i=0; i<D; i++)
+                (*q_ptr)[i] = 5.4 * misc_sech(T[0] + i*((T[1] - T[0])/(D - 1))) * CEXP(-6*I*(T[0] + i*((T[1] - T[0])/(D - 1))));
+            
+            // Nonlinear spectral domain
+            XI[0] = 8.0 / 5.0;
+            XI[1] = 23.0 / 5.0;
+            
+            (*contspec_ptr)[0] = -0.01289273278003152905918121745470847365421
+                    +0.01952442321687538178496497287804460875026*I;
+            (*contspec_ptr)[1] = 0.0004110228185622213651773947863625359381154
+                    +0.04386846056673063214252166530876724394744*I;
+            (*contspec_ptr)[2] = 0.05118857841273878041981365229970875892711
+                    +0.06447211910210706876557338064393669393516*I;
+            (*contspec_ptr)[3] = 0.1530999061308424125667759423303266818395
+                    +0.02352767805803699061473265385901026801587*I;
+            (*contspec_ptr)[4] = 0.2243341367932093727319711402903268069812
+                    -0.1904439868202336158475261772625496323302*I;
+            (*contspec_ptr)[5] = -0.07062432466685394387275577841546898300341
+                    -0.5742469532143871825737737078429363399421*I;
+            (*contspec_ptr)[6] = -1.197848513274026122135421633616793204941
+                    -0.4740093463798981210732486518885878849946*I;
+            (*contspec_ptr)[7] = -3.077683537175253402570290576036909824007
+                    +0.0*I;
+            (*contspec_ptr)[8] = -1.197848513274026122135421633616793204941
+                    +0.4740093463798981210732486518885878849946*I;
+            (*contspec_ptr)[9] = -0.07062432466685394387275577841546898300341
+                    +0.5742469532143871825737737078429363399421*I;
+            (*contspec_ptr)[10] = 0.2243341367932093727319711402903268069812
+                    +0.1904439868202336158475261772625496323302*I;
+            (*contspec_ptr)[11] = 0.1530999061308424125667759423303266818395
+                    -0.02352767805803699061473265385901026801587*I;
+            (*contspec_ptr)[12] = 0.05118857841273878041981365229970875892711
+                    -0.06447211910210706876557338064393669393516*I;
+            (*contspec_ptr)[13] = 0.0004110228185622213651773947863625359381154
+                    -0.04386846056673063214252166530876724394744*I;
+            (*contspec_ptr)[14] = -0.01289273278003152905918121745470847365421
+                    -0.01952442321687538178496497287804460875026*I;
+            (*contspec_ptr)[15] = -0.01123305135343309779512753035134571731394
+                    -0.005440022560146829665059720756218907459592*I;
+            (*ab_ptr)[0] = -0.5508883224398498741455357032117565153713
+                    -0.8342511192979083133082038560515639998599*I;
+            (*ab_ptr)[1] = 0.009360023835442056142111077473968563647467
+                    -0.9989952333183900837231024006403602522748*I;
+            (*ab_ptr)[2] = 0.6197122943039986949196235349415904634129
+                    -0.7805289009054497517383544640087683571515*I;
+            (*ab_ptr)[3] = 0.9767488815483188814742711524607628343479
+                    -0.1501022032565899769418304628745613460413*I;
+            (*ab_ptr)[4] = 0.7313341805241946746381271107447142311081
+                    +0.6208515521885211989814075613931362418614*I;
+            (*ab_ptr)[5] = -0.1056564935663928164873655649798580333476
+                    +0.8590938009534291149158524894935438454092*I;
+            (*ab_ptr)[6] = -0.5701744656703106249760555258514335084085
+                    +0.2256278843275265350402069559530437209489*I;
+            (*ab_ptr)[7] = -0.3090169943749474241022934171828190588602
+                    +0.0*I;
+            (*ab_ptr)[8] = -0.5701744656703106249760555258514335084085
+                    -0.2256278843275265350402069559530437209489*I;
+            (*ab_ptr)[9] = -0.1056564935663928164873655649798580333476
+                    -0.8590938009534291149158524894935438454092*I;
+            (*ab_ptr)[10] = 0.7313341805241946746381271107447142311081
+                    -0.6208515521885211989814075613931362418614*I;
+            (*ab_ptr)[11] = 0.9767488815483188814742711524607628343479
+                    +0.1501022032565899769418304628745613460413*I;
+            (*ab_ptr)[12] = 0.6197122943039986949196235349415904634129
+                    +0.7805289009054497517383544640087683571515*I;
+            (*ab_ptr)[13] = 0.009360023835442056142111077473968563647467
+                    +0.9989952333183900837231024006403602522748*I;
+            (*ab_ptr)[14] = -0.5508883224398498741455357032117565153713
+                    +0.8342511192979083133082038560515639998599*I;
+            (*ab_ptr)[15] = -0.8999422454658634837367075136498547418378
+                    +0.435830475987919759106168274101929247041*I;
+            (*ab_ptr)[16] = 0.0233907278551811859677095969224396957117 +0.0*I;
+            (*ab_ptr)[17] = 0.04382823018255831570567080228852341708061 +0.0*I;
+            (*ab_ptr)[18] = 0.08204454363213137176985421975407187254546 +0.0*I;
+            (*ab_ptr)[19] = 0.1530717183924760158625863771621162907575 +0.0*I;
+            (*ab_ptr)[20] = 0.2823006669175766801574502038748919300431 +0.0*I;
+            (*ab_ptr)[21] = 0.5007939162276681549083069050468682276651 +0.0*I;
+            (*ab_ptr)[22] = 0.7899323619851639401337542814226470743617 +0.0*I;
+            (*ab_ptr)[23] = 0.9510565162951535721164393333793821434057 +0.0*I;
+            (*ab_ptr)[24] = 0.7899323619851639401337542814226470743617 +0.0*I;
+            (*ab_ptr)[25] = 0.5007939162276681549083069050468682276651 +0.0*I;
+            (*ab_ptr)[26] = 0.2823006669175766801574502038748919300431 +0.0*I;
+            (*ab_ptr)[27] = 0.1530717183924760158625863771621162907575 +0.0*I;
+            (*ab_ptr)[28] = 0.08204454363213137176985421975407187254546 +0.0*I;
+            (*ab_ptr)[29] = 0.04382823018255831570567080228852341708061 +0.0*I;
+            (*ab_ptr)[30] = 0.0233907278551811859677095969224396957117 +0.0*I;
+            (*ab_ptr)[31] = 0.01248002508021575354337474577945871169292 +0.0*I;
+            
+            // Discrete spectrum
+            (*bound_states_ptr)[0] = 3.0 + 9.0*I / 10.0;
+            (*bound_states_ptr)[1] = 3.0 + 19.0*I / 10.0;
+            (*bound_states_ptr)[2] = 3.0 + 29.0*I / 10.0;
+            (*bound_states_ptr)[3] = 3.0 + 39.0*I / 10.0;
+            (*bound_states_ptr)[4] = 3.0 + 49.0*I / 10.0;
+            (*normconsts_ptr)[0] = -1.0;
+            (*normconsts_ptr)[1] = 1.0;
+            (*normconsts_ptr)[2] = -1.0;
+            (*normconsts_ptr)[3] = 1.0;
+            (*normconsts_ptr)[4] = -1.0;
+            (*residues_ptr)[0] = -69426.0*I * GAMMA(4.0/5.0) \
+                    / ( 625.0 * CPOW(GAMMA(2.0/5.0), 2.0) );
+            (*residues_ptr)[1] = -1348848.0*I * GAMMA(4.0/5.0) \
+                    / ( 875.0 * CPOW(GAMMA(2.0/5.0), 2.0) );
+            (*residues_ptr)[2] = -1095939.0*I * GAMMA(4.0/5.0) \
+                    / ( 175.0 * CPOW(GAMMA(2.0/5.0), 2.0) );
+            (*residues_ptr)[3] = -5673096.0*I * GAMMA(4.0/5.0) \
+                    / ( 595.0 * CPOW(GAMMA(2.0/5.0), 2.0) );
+            (*residues_ptr)[4] = -902538.0*I * GAMMA(4.0/5.0) \
+                    / ( 187.0 * CPOW(GAMMA(2.0/5.0), 2.0) );
+            
+            *kappa_ptr = +1;
+            
+            break;
+            
     case nsev_testcases_SECH_DEFOCUSING:
 
     // This example (with a different Q) can be found in
@@ -557,15 +739,21 @@ const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
     // Allocate memory
     contspec = malloc(3*M * sizeof(COMPLEX));
     K = nse_discretization_degree(opts->discretization) * D;
+    if (K == 0) //slow discretization
+        K = K_exact;
     bound_states = malloc(K * sizeof(COMPLEX));
     normconsts_and_residues = malloc(2*D * sizeof(COMPLEX));
     if ( q == NULL || contspec == NULL || bound_states == NULL
-    || normconsts_and_residues == NULL) {
+            || normconsts_and_residues == NULL) {
         ret_code = E_NOMEM;
         goto release_mem;
     }
-
-    // Compute the NFT
+    
+    if (opts->bound_state_localization == nsev_bsloc_NEWTON){
+        memcpy(bound_states,bound_states_exact,K * sizeof(COMPLEX));
+    }
+    
+// Compute the NFT
     opts->contspec_type = fnft_nsev_cstype_BOTH;
     opts->discspec_type = fnft_nsev_dstype_BOTH;
     ret_code = fnft_nsev(D, q, T, M, contspec, XI, &K, bound_states,
@@ -585,8 +773,8 @@ const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
             (int)i, errs[i], error_bounds[i]);
     //misc_print_buf(M, contspec, "r_num");
     //misc_print_buf(M, contspec_exact, "r_exact");
-    misc_print_buf(2*M, contspec+M, "ab_num");
-     misc_print_buf(2*M, ab_exact, "ab_exact");
+    //misc_print_buf(2*M, contspec+M, "ab_num");
+     //misc_print_buf(2*M, ab_exact, "ab_exact");
 #endif
 
     // Check if the errors are below the specified bounds. Organized such that

@@ -15,13 +15,15 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017.
-* Peter J Prins (TU Delft) 2018
+* Peter J Prins (TU Delft) 2018.
+* Shrinivas Chimmalgi (TU Delft) 2019-2020.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft__errwarn.h"
 #include <stdio.h>
 #include "fnft__misc.h"
+#include "fnft__fft_wrapper.h"
 
 void misc_print_buf(const INT len, COMPLEX const * const buf,
                     char const * const varname)
@@ -29,7 +31,7 @@ void misc_print_buf(const INT len, COMPLEX const * const buf,
     INT i;
     printf("%s = [", varname);
     for (i = 0; i < len; i++) {
-        printf("%g+%gj", CREAL(buf[i]), CIMAG(buf[i]));
+        printf("%1.12e+%1.12ej", CREAL(buf[i]), CIMAG(buf[i]));
         if (i != len-1)
             printf(", ");
     }
@@ -292,7 +294,7 @@ INT misc_downsample(const UINT D, COMPLEX const * const q,
 
     // Original index of the first and last sample in qsub
     first_last_index[0] = 0;
-    first_last_index[1] = i - 1;
+    first_last_index[1] = i - nskip_per_step;
 
     *qsub_ptr = qsub;
     *Dsub_ptr = Dsub;
@@ -319,4 +321,87 @@ UINT misc_nextpowerof2(const UINT number)
     while (result < number)
         result *= 2;
     return result;
+}
+
+INT misc_resample(const UINT D, const REAL eps_t, COMPLEX const * const q,
+    const REAL delta, COMPLEX *const q_new)
+{
+    if (q == NULL)
+        return E_INVALID_ARGUMENT(q);
+    if (D <= 2)
+        return E_INVALID_ARGUMENT(D);
+    if (q_new == NULL)
+        return E_INVALID_ARGUMENT(q_new);
+    if (eps_t == 0)
+        return E_INVALID_ARGUMENT(eps_t);
+
+    fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
+    fft_wrapper_plan_t plan_inv = fft_wrapper_safe_plan_init();
+    COMPLEX *buf0 = NULL, *buf1 = NULL;
+    REAL *freq = NULL;
+    INT ret_code;
+    UINT i;
+    // Allocate memory
+
+
+    const UINT lenmem = D * sizeof(COMPLEX);
+    buf0 = fft_wrapper_malloc(lenmem);
+    buf1 = fft_wrapper_malloc(lenmem);
+    freq = malloc(D * sizeof(REAL));
+    if (buf0 == NULL || buf1 == NULL || freq == NULL) {
+        ret_code = E_NOMEM;
+        goto release_mem;
+    }
+
+    ret_code = fft_wrapper_create_plan(&plan_fwd, D, buf0, buf1, -1);
+    CHECK_RETCODE(ret_code, release_mem);
+
+
+    ret_code = fft_wrapper_create_plan(&plan_inv, D, buf0, buf1, 1);
+    CHECK_RETCODE(ret_code, release_mem);
+
+    // Continuing the signal periodically
+    for (i = 0; i < D; i++)
+        buf0[i] = q[i];
+
+    ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf1);
+    CHECK_RETCODE(ret_code, release_mem);
+
+    // Check that the signal spectrum decays sufficiently to ensure accurate interpolation
+    
+    // D samples of buf1 correspond to 100% bandwidth. Find the total l2-norm
+    // of buf1 and compare it to l2-norm of 90% bandwidth. To prevent repeated 
+    // computation, the two norms of the 5% bandwidths on both ends of the
+    // spectrum are computed instead.
+    UINT Dlp = D/20;
+    REAL tmp = SQRT(misc_l2norm2(Dlp, buf1+D/2-1-Dlp, 0, Dlp*eps_t) + 
+            misc_l2norm2(Dlp, buf1+D/2+1, 0, Dlp*eps_t))/SQRT(misc_l2norm2(D, buf1, 0, D*eps_t));
+    if (tmp > SQRT(EPSILON))
+        WARN("Signal does not appear to be bandlimited. Interpolation step may be inaccurate. Try to reduce the step size, or switch to a discretization that does not require interpolation");
+    
+    const REAL scl_factor = (REAL)D*eps_t;
+    // Applying phase shift
+    for (i = 0; i <D/2; i++)
+        freq[i] = i/scl_factor;
+    for (i = D/2; i < D; i++)
+        freq[i] = ((REAL)i - (REAL)D)/scl_factor;
+
+    for (i = 0; i < D; i++) {
+        buf1[i] *= CEXP(2*I*PI*delta*freq[i]);
+    }
+
+    // Inverse FFT and truncation
+    ret_code = fft_wrapper_execute_plan(plan_inv, buf1, buf0);
+    CHECK_RETCODE(ret_code, release_mem);
+    for (i = 0; i < D; i++)
+        q_new[i] = buf0[i]/D;
+
+
+release_mem:  
+    fft_wrapper_destroy_plan(&plan_fwd);
+    fft_wrapper_destroy_plan(&plan_inv);
+    fft_wrapper_free(buf0);
+    fft_wrapper_free(buf1);
+    free(freq);
+    return ret_code;
 }

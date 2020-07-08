@@ -27,7 +27,7 @@
 #endif
 
 INT nsep_testcases(nsep_testcases_t tc, const UINT D,
-    COMPLEX ** const q_ptr, REAL * const T,
+    COMPLEX ** const q_ptr, REAL * const T, REAL * const phase_shift, 
     UINT * const K_ptr, COMPLEX ** const mainspec_ptr,
     UINT * const M_ptr, COMPLEX ** const auxspec_ptr,
     REAL ** const sheet_indices_ptr, INT * const kappa_ptr,
@@ -113,8 +113,8 @@ INT nsep_testcases(nsep_testcases_t tc, const UINT D,
 
         T[0] = 0.0; // location of first sample and begin of period
         T[1] = 2.0*PI; // end of period
+        phase_shift[0] = 0.0;
         eps_t = 2.0*PI/D; // location of last sample is T[1]-eps_t
-
         for (i=0; i<D; i++)
             (*q_ptr)[i] = 2.0*CEXP( 3.0*I*(T[0] + i*eps_t) );
 
@@ -154,6 +154,7 @@ INT nsep_testcases(nsep_testcases_t tc, const UINT D,
 
         break;
 
+
    case nsep_testcases_CONSTANT_DEFOCUSING:
 
     /*  The following Matlab code was used to construct this test case. Note
@@ -184,6 +185,7 @@ INT nsep_testcases(nsep_testcases_t tc, const UINT D,
 
         T[0] = 0; // location of 1st sample
         T[1] = 1.0; // end of period
+        phase_shift[0] = 0.0;
         eps_t = (T[1] - T[0])/D; // location of last sample is T[1]-eps_t
 
         for (i=0; i<D; i++)
@@ -275,7 +277,7 @@ static INT nsep_compare_nfs(const UINT K1, const UINT K2,
     } else {
         dists[0] = misc_hausdorff_dist(K1, mainspec_1, K2, mainspec_2);
     }
-
+              
     // Compare auxiliary spectra
     if (M1 == 0 && M2 == 0) {
         dists[1] = 0.0;
@@ -299,6 +301,7 @@ fnft_nsep_opts_t * opts_ptr) {
     COMPLEX * auxspec = NULL;
     REAL * sheet_indices = NULL;
     REAL T[2];
+    REAL phase_shift;
     COMPLEX * mainspec_exact = NULL;
     COMPLEX * auxspec_exact = NULL;
     REAL * sheet_indices_exact = NULL;
@@ -310,7 +313,7 @@ fnft_nsep_opts_t * opts_ptr) {
     INT ret_code;
 
     // Load test case
-    ret_code = nsep_testcases(tc, D, &q, T, &K_exact, &mainspec_exact,
+    ret_code = nsep_testcases(tc, D, &q, T, &phase_shift, &K_exact, &mainspec_exact,
         &M_exact, &auxspec_exact, &sheet_indices_exact, &kappa, remove_box);
     if (ret_code != SUCCESS)
         return E_SUBROUTINE(ret_code);
@@ -331,7 +334,7 @@ fnft_nsep_opts_t * opts_ptr) {
 
     // Compute the NFT (sheet_indices stay NULL because they are not yet
     // implemented)
-    ret_code = fnft_nsep(D, q, T, &K, mainspec, &M, auxspec, sheet_indices,
+    ret_code = fnft_nsep(D, q, T, phase_shift, &K, mainspec, &M, auxspec, sheet_indices,
         kappa, opts_ptr);
     CHECK_RETCODE(ret_code, release_mem);
 
@@ -366,10 +369,13 @@ fnft_nsep_opts_t * opts_ptr) {
         errs[1], error_bounds[1],
         errs[2], error_bounds[2]
     );
-    //print_buf2(K_exact, mainspec_exact, "mainspec_exact");
-    //print_buf2(K, mainspec, "mainspec");
-    //print_buf2(M_exact, auxspec_exact, "auxspec_exact");
-    //print_buf2(M, auxspec, "auxspec");
+
+    misc_print_buf(K_exact, mainspec_exact, "mainspec_exact");
+    misc_print_buf(K, mainspec, "mainspec");
+    misc_print_buf(M_exact, auxspec_exact, "auxspec_exact");
+    misc_print_buf(M, auxspec, "auxspec");
+
+
 #endif
 
     // Check if the errors are below the specified bounds. Organized such that

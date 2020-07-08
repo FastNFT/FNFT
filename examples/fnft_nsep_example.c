@@ -36,7 +36,7 @@ int main()
     FNFT_COMPLEX q[D];
 
     // Location of the 1st time-domain sample and the beginning of the next
-    // period. Note: The last sample is thus located at t=T[1]-(T[1]-T[0])/D.
+    // period. Location of last sample is T[1]-eps_t
     FNFT_REAL T[2] = { 0.0, 2.0*FNFT_PI };
 
     // Define a simple rectangular signal
@@ -63,8 +63,11 @@ int main()
     FNFT_COMPLEX aux_spec[M];
 
     // Focusing nonlinear Schroedinger equation
-    int kappa = +1;
+    FNFT_INT kappa = +1;
 
+    // Phase shift over one period
+    FNFT_REAL phase_shift = 0.0;
+            
     // Default options
     fnft_nsep_opts_t opts = fnft_nsep_default_opts();
 
@@ -78,9 +81,9 @@ int main()
 
     // See the header file fnft_nsep.h for other options
 
-    /** Step 3: Call fnft_nsev and check for errors **/
+    /** Step 3: Call fnft_nsep and check for errors **/
 
-    int ret_code = fnft_nsep(D, q, T, &K, main_spec, &M, aux_spec, NULL, kappa,
+    FNFT_INT ret_code = fnft_nsep(D, q, T, phase_shift, &K, main_spec, &M, aux_spec, NULL, kappa,
         &opts);
     if (ret_code != FNFT_SUCCESS) {
         printf("An error occured!\n");

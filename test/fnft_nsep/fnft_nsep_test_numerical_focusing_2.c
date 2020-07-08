@@ -67,14 +67,13 @@ Fm = 0.5*integral(f,c^2,Inf);
 K0 = 1i*c*exp(Dm*del-Fm);
 %%
 T = [0, Ap];  % T(1) is the beginning of the period, T(2) is the end
-D = 2^8;        % number of samples
+
+D = 2^8+1;        % number of samples
 kappa = +1;     % focusing nonlinear Schroedinger equation
 
 %%% Setup the signal %%%
-ep = (T(2) - T(1))/(D);
-X = T(1) + (0:D-1)*ep;
-% Note: The location of the 1st sample is T(1), but the location of the
-% sample if T(2) - (T(2)-T(1)/D.
+X = linspace(T(1),T(2),D);
+
 
 %% Building the signal
 
@@ -126,7 +125,8 @@ end
 INT fnft_nsep_test_numerical_focusing_2()
 {
     INT ret_code = SUCCESS;
-    COMPLEX q[256] = {
+
+    COMPLEX q[257] = {
       4.342615484209547e+00 + 9.303042232295938e-01*I,
       4.376264025488326e+00 + 9.299262942389809e-01*I,
       4.410337956208852e+00 + 9.295435874185952e-01*I,
@@ -382,7 +382,8 @@ INT fnft_nsep_test_numerical_focusing_2()
       4.212534091486893e+00 + 9.317652532648002e-01*I,
       4.244353011826203e+00 + 9.314078739553496e-01*I,
       4.276647451652630e+00 + 9.310451537724775e-01*I,
-      4.309405693070493e+00 + 9.306772243276101e-01*I
+      4.309405693070493e+00 + 9.306772243276101e-01*I,
+      4.342615484209547e+00 + 9.303042232295938e-01*I
     };
     const REAL T[2] = {0, 6.628591515456010e-01};
 
@@ -411,7 +412,9 @@ INT fnft_nsep_test_numerical_focusing_2()
     opts.bounding_box[1] = 1;
     opts.bounding_box[2] = -10;
     opts.bounding_box[3] = 10;
-    ret_code = fnft_nsep(D, q, T, &K, mainspec, &M, NULL, NULL, +1, &opts);
+    
+    REAL phase_shift = CARG(q[D-1]/q[0]);
+    ret_code = fnft_nsep(D-1, q, T, phase_shift, &K, mainspec, &M, NULL, NULL, +1, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Check that the main and auxiliary spectrum are correct
@@ -426,7 +429,7 @@ INT fnft_nsep_test_numerical_focusing_2()
 
     // Compute spines
     opts.points_per_spine = points_per_spine;
-    ret_code = fnft_nsep(D, q, T, &K_spine, spines, &M, NULL, NULL, +1, &opts);
+    ret_code = fnft_nsep(D-1, q, T, phase_shift, &K_spine, spines, &M, NULL, NULL, +1, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Check that all found points are on one of the three spines. The ok_flags

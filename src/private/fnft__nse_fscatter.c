@@ -24,8 +24,6 @@
 #include "fnft__errwarn.h"
 #include "fnft__poly_fmult.h"
 #include "fnft__nse_fscatter.h"
-#include "fnft__nse_discretization.h"
-#include "fnft__akns_discretization.h"
 #include "fnft__misc.h"
 
 /**

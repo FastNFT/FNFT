@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
+* Shrinivas Chimmalgi (TU Delft) 2019-2020.
 */
 
 #include <string.h>
@@ -209,6 +210,42 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "discr_2split4B") == 0 ) {
             
             opts.discretization = fnft_nse_discretization_2SPLIT4B;
+            
+        } else if ( strcmp(str, "discr_4split4B") == 0 ) {
+            
+            opts.discretization = fnft_nse_discretization_4SPLIT4B; 
+        
+        } else if ( strcmp(str, "discr_BO") == 0 ) {
+            
+            opts.discretization = fnft_nse_discretization_BO;
+            
+        } else if ( strcmp(str, "discr_CF4_2") == 0 ) {
+            
+            opts.discretization = fnft_nse_discretization_CF4_2;
+            
+        } else if ( strcmp(str, "discr_CF4_3") == 0 ) {
+            
+            opts.discretization = fnft_nse_discretization_CF4_3;
+            
+        } else if ( strcmp(str, "discr_CF5_3") == 0 ) {
+            
+            opts.discretization = fnft_nse_discretization_CF5_3;
+            
+        } else if ( strcmp(str, "discr_CF6_4") == 0 ) {
+            
+            opts.discretization = fnft_nse_discretization_CF6_4; 
+
+        } else if ( strcmp(str, "discr_ES4") == 0 ) {
+            
+            opts.discretization = fnft_nse_discretization_ES4; 
+            
+        } else if ( strcmp(str, "discr_TES4") == 0 ) {
+            
+            opts.discretization = fnft_nse_discretization_TES4;
+            
+        } else if ( strcmp(str, "RE") == 0 ) {
+            
+            opts.richardson_extrapolation_flag  = 1;
             
         } else if ( strcmp(str, "dstype_residues") == 0 ) {
             

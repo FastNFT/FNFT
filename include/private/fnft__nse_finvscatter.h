@@ -26,7 +26,7 @@
 #ifndef FNFT__NSE_FINVSCATTER_H
 #define FNFT__NSE_FINVSCATTER_H
 
-#include "fnft_nse_discretization_t.h"
+#include "fnft__nse_discretization.h"
 
 /**
  * @brief Recovers the samples that corresponding to a transfer matrix fast.

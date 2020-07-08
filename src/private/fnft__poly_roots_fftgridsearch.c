@@ -22,6 +22,10 @@
 #include "fnft__errwarn.h"
 #include "fnft__poly_roots_fftgridsearch.h"
 #include "fnft__poly_chirpz.h"
+#ifdef DEBUG
+#include "fnft__misc.h" // for misc_filter
+#include <stdio.h> // for printf
+#endif
 
 // Computation of polynomial roots on the unit circle via gridsearch.
 // *M_ptr is the number of points in the grid. The array roots
@@ -42,15 +46,15 @@ INT poly_roots_fftgridsearch(const UINT deg,
 	// Check inputs
     if ( deg < 2 )
         return E_INVALID_ARGUMENT(deg);
-	if (p == NULL)
-		return E_INVALID_ARGUMENT(p);
+    if (p == NULL)
+	return E_INVALID_ARGUMENT(p);
     if (M_ptr == NULL || *M_ptr < 2)
- 		return E_INVALID_ARGUMENT(M_ptr);      
+ 	return E_INVALID_ARGUMENT(M_ptr);      
     if (PHI == NULL || !(PHI[0] < PHI[1]) || PHI[0] == -INFINITY
     || PHI[1] == INFINITY)
         return E_INVALID_ARGUMENT(PHI);
-	if (roots == NULL)
-		return E_INVALID_ARGUMENT(roots);
+    if (roots == NULL)
+	return E_INVALID_ARGUMENT(roots);
 
     // Allocate memory
     M = *M_ptr;
@@ -69,12 +73,12 @@ INT poly_roots_fftgridsearch(const UINT deg,
         ret_code = poly_chirpz(deg, p, A, W, M, vals + (k+1)*M);
         CHECK_RETCODE(ret_code, release_mem);
     }
-
+   
     // Approximate the roots
     for (i=1; i<M-1; i++) {
 
         // Minimum modulus theorem => minimum absolute value must be on the
-        // boundary of a domain around the current test poINT unless there is a
+        // boundary of a domain around the current test point unless there is a
         // root. Keep track of absolute values of moving grid of nine points.
         tmp = CABS( vals[M + i] );
         if ( tmp > CABS(vals[i - 1]) )
@@ -141,7 +145,6 @@ INT poly_roots_fftgridsearch(const UINT deg,
         // Save the root
         roots[nroots++] = zr;
     }
-
     // Save the number of detected roots
     *M_ptr = nroots;
 
@@ -168,8 +171,8 @@ INT poly_roots_fftgridsearch_paraherm(const UINT deg,
 	// Check inputs
     if ( deg%2 == 1 || deg < 2 ) // degree must be even and >= 2
         return E_INVALID_ARGUMENT(deg);
-	if (p == NULL)
-		return E_INVALID_ARGUMENT(p);
+    if (p == NULL)
+	return E_INVALID_ARGUMENT(p);
     if (M_ptr == NULL || *M_ptr < 2)
  		return E_INVALID_ARGUMENT(M_ptr);      
     if (PHI == NULL || !(PHI[0] < PHI[1]) || PHI[0] == -INFINITY

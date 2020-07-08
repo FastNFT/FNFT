@@ -16,11 +16,11 @@
 # Sander Wahls (TU Delft) 2017-2018.
 # Marius Brehler (TU Dortmund) 2018.
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.17.3)
 project(fnft C)
 
 set(FNFT_VERSION_MAJOR 0)
-set(FNFT_VERSION_MINOR 3)
+set(FNFT_VERSION_MINOR 4)
 set(FNFT_VERSION_PATCH 0)
 set(FNFT_VERSION_SUFFIX "") # should not be longer than FNFT_SUFFIX_MAXLEN
 set(FNFT_VERSION ${FNFT_VERSION_MAJOR}.${FNFT_VERSION_MINOR}.${FNFT_VERSION_PATCH}${FNFT_VERSION_SUFFIX})
@@ -207,7 +207,9 @@ if (WITH_MATLAB)
         message("++ Could not find a C++ compiler, which is sometimes required to localize Matlab.")
         message("++ If the build process fails, deactivate the localization with the -DWITH_MATLAB=OFF switch.")
     endif()
+
   find_package(Matlab COMPONENTS MX_LIBRARY)
+
   if (Matlab_FOUND)
     file(GLOB MEX_SOURCES "matlab/mex_*.c")
     foreach (srcfile ${MEX_SOURCES})

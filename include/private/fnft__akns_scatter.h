@@ -15,7 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
-* Shrinivas Chimmalgi (TU Delft) 2017.
+* Shrinivas Chimmalgi (TU Delft) 2017-2020.
 */
 
 /**
@@ -28,6 +28,10 @@
 #define FNFT__AKNS_SCATTER_H
 
 #include "fnft__akns_discretization.h"
+#include <stdio.h>
+#include <string.h> // for memcpy
+#include "fnft__errwarn.h"
+#include "fnft__misc.h"// for square_matrix_mult
 
 
 /**
@@ -39,30 +43,37 @@
  * (<a href="http://dx.doi.org/10.1016/0021-9991(92)90370-E">J. Comput. Physics 1992 </a>).
  * 
  * @param[in] D Number of samples
- * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
- *  where \f$ t_n = T[0] + n(T[1]-T[0])/(D-1) \f$ and \f$n=0,1,\dots,D-1\f$, of
- *  the to-be-transformed signal in ascending order
- *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$)
- * @param[in] r Array of length D, contains samples \f$ r(t_n)=r(x_0, t_n) \f$,
- *  where \f$ t_n = T[0] + n(T[1]-T[0])/(D-1) \f$ and \f$n=0,1,\dots,D-1\f$, of
- *  the to-be-transformed signal in ascending order
- *  (i.e., \f$ r(t_0), r(t_1), \dots, r(t_{D-1}) \f$)
+ * @param[in] q Array of length D, contains samples \f$ q_n\f$ for \f$n=0,1,\dots,D-1\f$
+ * in ascending order (i.e., \f$ q_0, q_1, \dots, q_{D-1} \f$). The values
+ * should be specifically precalculated based on the chosen discretization.
+ * @param[in,out] r Array of length D, contains samples \f$ r_n\f$ for \f$n=0,1,\dots,D-1\f$
+ * in ascending order (i.e., \f$ r_0, r_1, \dots, r_{D-1} \f$). The values
+ * should be specifically precalculated based on the chosen discretization.
  * @param[in] eps_t Step-size, eps_t \f$= (T[1]-T[0])/(D-1) \f$.
  * @param[in] K Number of values of \f$\lambda\f$.
  * @param[in] lambda Array of length K, contains the values of \f$\lambda\f$.
- * @param[out] result Array of length 8*K, contains the values [S11 S12 S21 S22 S11' S12' S21' S22'] 
- * where S = [S11, S12; S21, S22] is the scattering matrix. 
+ * @param[out] result Array of length 8*K or 4*K,  If derivative_flag=0 returns 
+ * [S11 S12 S21 S22] in result where S = [S11, S12; S21, S22] is the 
+ * scattering matrix computed using the chosen discretization.
+ * If derivative_flag=1 returns [S11 S12 S21 S22 S11' S12' S21' S22'] in 
+ * result where S11' is the derivative of S11 w.r.t to \f$\lambda\f$.
+ * Should be preallocated with size 4*K or 8*K accordingly.
  * @param[in] discretization The type of discretization to be used. Should be of type 
- * \link fnft_nse_discretization_t \endlink. Not all nse_discretization_t discretizations are supported.
- * Check \link fnft_nse_discretization_t \endlink for list of supported types.
+ * \link fnft__akns_discretization_t \endlink. Not all akns_discretization_t 
+ * discretizations are supported. Check \link fnft__akns_discretization_t \endlink 
+ * for list of supported types.
+ * @param[in] derivative_flag Should be set to either 0 or 1. If set to 1
+ * the derivatives [S11' S12' S21' S22'] are calculated. result should be
+ * preallocated with size 8*K if flag is set to 1.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  * @ingroup akns
  */
-FNFT_INT fnft__akns_scatter_matrix(const UINT D, COMPLEX const * const q, 
-    COMPLEX const * const r, const REAL eps_t,
-    const UINT K, COMPLEX const * const lambda,
-    COMPLEX * const result, akns_discretization_t discretization);
+FNFT_INT fnft__akns_scatter_matrix(const FNFT_UINT D, FNFT_COMPLEX const * const q, 
+    FNFT_COMPLEX const * const r, const FNFT_REAL eps_t,
+    const FNFT_UINT K, FNFT_COMPLEX const * const lambda,
+    FNFT_COMPLEX * const result, fnft__akns_discretization_t discretization,
+    const FNFT_UINT derivative_flag);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define akns_scatter_matrix(...) fnft__akns_scatter_matrix(__VA_ARGS__)

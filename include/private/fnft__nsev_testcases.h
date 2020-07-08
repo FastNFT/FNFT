@@ -29,7 +29,6 @@
 
 #include "fnft_nsev.h" // for fnft_nsev_opts_t
 
-
 /**
  * List of currently implemented test cases for the NSE with vanishing
  * boundary conditions.\n \n
@@ -37,13 +36,15 @@
  * fnft__nsev_testcases_SECH_FOCUSING : Test for focusing NSE (kappa = +1) with a sech potential.\n \n
  * fnft__nsev_testcases_SECH_DEFOCUSING : Test for defocusing NSE (kappa = -1) with a sech potential.\n \n
  * fnft__nsev_testcases_TRUNCATED_SOLITON : Test for focusing NSE (kappa = +1) with a truncated solitonic potential.
+ * fnft__nsev_testcases_SECH_FOCUSING2 : Test for focusing NSE (kappa = +1) with a sech potential with five bound states.\n \n
  *
  * @ingroup nse
  */
 typedef enum {
     fnft__nsev_testcases_SECH_FOCUSING, 
     fnft__nsev_testcases_SECH_DEFOCUSING,
-    fnft__nsev_testcases_TRUNCATED_SOLITON
+    fnft__nsev_testcases_TRUNCATED_SOLITON,
+    fnft__nsev_testcases_SECH_FOCUSING2
 } fnft__nsev_testcases_t;
 
 /**
@@ -64,13 +65,16 @@ typedef enum {
 FNFT_INT fnft__nsev_testcases_test_fnft(fnft__nsev_testcases_t tc, FNFT_UINT D,
 	const FNFT_REAL eb[6], fnft_nsev_opts_t * const opts);
 
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define nsev_testcases_t fnft__nsev_testcases_t
 #define nsev_testcases_SECH_FOCUSING fnft__nsev_testcases_SECH_FOCUSING
 #define nsev_testcases_SECH_DEFOCUSING fnft__nsev_testcases_SECH_DEFOCUSING
 #define nsev_testcases_TRUNCATED_SOLITON fnft__nsev_testcases_TRUNCATED_SOLITON
+#define nsev_testcases_SECH_FOCUSING2 fnft__nsev_testcases_SECH_FOCUSING2
 #define nsev_testcases(...) fnft__nsev_testcases(__VA_ARGS__)
 #define nsev_testcases_test_fnft(...) fnft__nsev_testcases_test_fnft(__VA_ARGS__)
+
 #endif
 
 #endif

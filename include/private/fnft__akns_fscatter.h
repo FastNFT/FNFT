@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Shrinivas Chimmalgi (TU Delft) 2018
+* Shrinivas Chimmalgi (TU Delft) 2018-2019
 */
 
 /**
@@ -29,6 +29,9 @@
 #define FNFT__AKNS_FSCATTER_H
 
 #include "fnft__akns_discretization.h"
+#include "fnft__misc.h"
+#include "fnft__errwarn.h"
+#include "fnft__poly_fmult.h"
 
 /**
  * @brief Returns the length of transfer_matrix to be allocated based on the number
@@ -84,7 +87,7 @@ FNFT_UINT fnft__akns_fscatter_numel(FNFT_UINT D,
  * @ingroup akns
  */
 FNFT_INT fnft__akns_fscatter(const FNFT_UINT D, FNFT_COMPLEX const * const q, FNFT_COMPLEX const * const r, const FNFT_REAL eps_t, FNFT_COMPLEX * const result, FNFT_UINT * const deg_ptr,
-                            INT * const W_ptr, fnft__akns_discretization_t discretization);
+                            FNFT_INT * const W_ptr, fnft__akns_discretization_t discretization);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define akns_fscatter_numel(...) fnft__akns_fscatter_numel(__VA_ARGS__)
