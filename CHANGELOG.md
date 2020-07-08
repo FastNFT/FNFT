@@ -1,18 +1,18 @@
 # Changelog
 
-## [0.4.0] -- 2020-07-06
+## [0.4.0] -- 2020-07-08
 
 ### Added
 
-- The routine fnft_nsev for the NFT of the vanishing nonlinear Schroedinger equation has new higher-order discretizations which compute the spectrum using the classical method (see documentation of fnft_nsev). The new fourth-order discretizations 4SPLIT4A and 4SPLIT4B support fast computation of the spectrum (see nse_discretizations_t). 
+- The routine fnft_nsev for the NFT of the vanishing nonlinear Schroedinger equation now supports higher-order discretizations. The new fourth-order discretizations 4SPLIT4A and 4SPLIT4B support fast computation. Furthermore, higher-order methods for the classical non-fast approach were added. See the documentation of nse_discretizations_t for more information.
 - The Matlab routine mex_fnft_nsev has been updated accordingly.
 - The routine fnft_nsep for the NFT of the periodic nonlinear Schroedinger equation can now find spectra of quasi-periodic signals. It also has support for 4SPLIT4A and 4SPLIT4B discretizations.
 - The Matlab routine mex_fnft_nsep has been updated accordingly.
 
 ### Changed
 
-- The routine fnft_nsep for the NFT of the periodic nonlinear Schroedinger equation now requires even number of samples and has an extra input phase shift over one quasi-period (see doc of fnft_nsep).
-- Improved computation of norming constants in fnft__nse_scatter_bound_states (see doc of fnft__nse_scatter_bound_states). 
+- The routine fnft_nsep for the NFT of the periodic nonlinear Schroedinger equation now only requires number of samples to be even (instead of a power of two). It has an extra input that specifies the phase shift over one quasi-period of the signal (see doc of fnft_nsep).
+- Improved computation of norming constants in fnft__nse_scatter_bound_states (see doc of fnft__nse_scatter_bound_states).
 
 ## [0.3.0] -- 2020-03-06
 
