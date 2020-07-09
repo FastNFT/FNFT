@@ -126,6 +126,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             
             opts.bound_state_localization = fnft_nsev_bsloc_FAST_EIGENVALUE;
             
+        } else if ( strcmp(str, "bsloc_pjt") == 0 ) {
+            
+            opts.bound_state_localization = fnft_nsev_bsloc_PJT;
+            
         } else if ( strcmp(str, "bsloc_newton") == 0 ) {
             
             opts.bound_state_localization = fnft_nsev_bsloc_NEWTON;
@@ -345,9 +349,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (skip_bound_states_flag == 0) {
         if (bound_states == NULL) {
             K = fnft_nsev_max_K(D, &opts);
-            if (K == 0) {
-                snprintf(msg, sizeof msg, "fnft_nsev_max_K returned zero.");
-                goto on_error;
+            if (K == 0) { //TODO
+//                 snprintf(msg, sizeof msg, "fnft_nsev_max_K returned zero.");
+//                 goto on_error;
+                K = D;
             }
             bound_states = mxMalloc(K * sizeof(FNFT_COMPLEX));
         }

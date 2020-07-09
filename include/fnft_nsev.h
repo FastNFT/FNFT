@@ -37,6 +37,7 @@
 #include "fnft__poly_roots_fasteigen.h"
 #include "fnft__poly_chirpz.h"
 
+
 /**
  * Enum that specifies how the bound states are filtered. Used in
  * \link fnft_nsev_opts_t \endlink.\n \n
@@ -100,12 +101,16 @@ typedef enum {
  *  signal. By choosing Dsub between 2 and D, the user can be request a
  *  different number of samples. Note that algorithm uses this value only as an
  *  indication.
+ *  fnft_nsev_bsloc_PJT: This method is a modified version of the 
+ *  algorithm based on phase jump tracking to find the bound states in
+ *  Chekhovskoy et al. (https://arxiv.org/abs/2003.02215v2).
  */
 typedef enum {
     fnft_nsev_bsloc_FAST_EIGENVALUE,
     fnft_nsev_bsloc_NEWTON,
     fnft_nsev_bsloc_MULLER,
-    fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE
+    fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE,
+    fnft_nsev_bsloc_PJT
 } fnft_nsev_bsloc_t;
 
 /**
@@ -405,6 +410,7 @@ FNFT_INT fnft_nsev(const FNFT_UINT D, FNFT_COMPLEX * const q,
 #define nsev_bsloc_FAST_EIGENVALUE fnft_nsev_bsloc_FAST_EIGENVALUE
 #define nsev_bsloc_NEWTON fnft_nsev_bsloc_NEWTON
 #define nsev_bsloc_MULLER fnft_nsev_bsloc_MULLER
+#define nsev_bsloc_PJT fnft_nsev_bsloc_PJT
 #define nsev_bsloc_SUBSAMPLE_AND_REFINE fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE
 #define nsev_dstype_NORMING_CONSTANTS fnft_nsev_dstype_NORMING_CONSTANTS
 #define nsev_dstype_RESIDUES fnft_nsev_dstype_RESIDUES

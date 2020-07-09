@@ -23,6 +23,7 @@
 %   'bsloc_fasteigen'   Use fast eigenvalue method to locate bound states.
 %                   This method is very reliable, but requires O(D^2)
 %                   FLOPs. This input is not followed by a value.
+%   'bsloc_pjt'     Use phase jump tracking based method to locate bound states.                 
 %   'bsloc_newton'  Use Newton's method to locate bound states. This method
 %                   is reliable if good intial guesses for the bound states
 %                   are known. Followed by a complex row vector of K

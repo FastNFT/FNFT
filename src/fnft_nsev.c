@@ -22,6 +22,7 @@
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft_nsev.h"
+#include "fnft__fft_wrapper.h"
 
 static fnft_nsev_opts_t default_opts = {
     .bound_state_filtering = nsev_bsfilt_AUTO,
@@ -246,7 +247,8 @@ INT fnft_nsev(
         case nse_discretization_ES4:
         case nse_discretization_TES4:
             if ((opts->bound_state_localization != nsev_bsloc_NEWTON && 
-                    opts->bound_state_localization != nsev_bsloc_MULLER) && kappa == +1){
+                    opts->bound_state_localization != nsev_bsloc_MULLER &&
+                    opts->bound_state_localization != nsev_bsloc_PJT) && kappa == +1){
                 ret_code = E_INVALID_ARGUMENT(opts->bound_state_localization);
                 goto leave_fun;
             }
@@ -267,17 +269,17 @@ INT fnft_nsev(
         goto leave_fun;
     }
 
-    D_effective = D * upsampling_factor; 
+    D_effective = D * upsampling_factor;
     
     // Determine step size
     const REAL eps_t = (T[1] - T[0])/(D - 1);
     
-    // Set-up bounding_box based on choice of filtering    
-    if (opts->bound_state_filtering == nsev_bsfilt_BASIC) {        
+    // Set-up bounding_box based on choice of filtering
+    if (opts->bound_state_filtering == nsev_bsfilt_BASIC) {
         opts->bounding_box[0] = -INFINITY;
         opts->bounding_box[1] = INFINITY;
         opts->bounding_box[2] = 0.0;
-        opts->bounding_box[3] = INFINITY;        
+        opts->bounding_box[3] = INFINITY;
     }else if (opts->bound_state_filtering == nsev_bsfilt_AUTO) {
         REAL degree1step = 0.0 , map_coeff = 2.0;
         degree1step = nse_discretization_degree(opts->discretization);
@@ -289,7 +291,57 @@ INT fnft_nsev(
         opts->bounding_box[1] = re_bound(eps_t, map_coeff);
         opts->bounding_box[0] = -opts->bounding_box[1];
         opts->bounding_box[2] = 0;
-        opts->bounding_box[3] = im_bound(D, q, T);       
+        opts->bounding_box[3] = im_bound(D, q, T);
+        
+        
+        // Fixing search box and some other parameters
+        REAL Cq = 1e-3;
+        fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
+        COMPLEX *buf0 = NULL, *buf1 = NULL;
+        // Allocate memory
+        const UINT lenmem = D * sizeof(COMPLEX);
+        buf0 = fft_wrapper_malloc(lenmem);
+        buf1 = fft_wrapper_malloc(lenmem);
+        if (buf0 == NULL || buf1 == NULL) {
+            ret_code = E_NOMEM;
+            goto leave_fun;
+        }
+        
+        ret_code = fft_wrapper_create_plan(&plan_fwd, D, buf0, buf1, -1);
+        CHECK_RETCODE(ret_code, leave_fun);
+        
+        // Continuing the signal periodically
+        for (i = 0; i < D; i++)
+            buf0[i] = q[i];
+        
+        ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf1);
+        CHECK_RETCODE(ret_code, leave_fun);
+        
+        REAL * FTq = NULL;
+        FTq = malloc(D * sizeof(REAL));
+        if (FTq == NULL) {
+            ret_code = E_NOMEM;
+            goto leave_fun;
+        }
+        for (i = 0; i < D; i++)
+            FTq[i] = CABS(buf1[i])*CABS(buf1[i]);
+        
+        REAL FTq_max = misc_max(D,FTq);
+        
+        REAL eps_xi = (2*0.9*PI/(eps_t))/(D-1);
+        for (i = D/2 - 1; i > 0; i--){
+            if ((FTq[i]/FTq_max)>Cq){
+                opts->bounding_box[1] = eps_xi*i;
+                break;
+            }
+        }
+        for (i = D/2; i < D; i++){
+            if ((FTq[i]/FTq_max)>Cq){
+                opts->bounding_box[0] = -eps_xi*(D-i);
+                break;
+            }
+        }
+
     }else if (opts->bound_state_filtering == nsev_bsfilt_NONE){
         opts->bounding_box[0] = -INFINITY;
         opts->bounding_box[1] = INFINITY;
@@ -665,7 +717,7 @@ static inline INT nsev_compute_boundstates(
         fnft_nsev_opts_t * const opts)
 {
     REAL degree1step = 0.0;
-    UINT K, upsampling_factor;
+    UINT K, upsampling_factor, D_given;
     COMPLEX * buffer = NULL;
     INT ret_code = SUCCESS;
     COMPLEX * q_tmp = NULL;
@@ -679,6 +731,7 @@ static inline INT nsev_compute_boundstates(
         ret_code = E_INVALID_ARGUMENT(opts->discretization);
         goto leave_fun;
     }
+    D_given = D/upsampling_factor;
     
     // Localize bound states ...
     switch (opts->bound_state_localization) {
@@ -753,6 +806,24 @@ static inline INT nsev_compute_boundstates(
 
             break;
 
+        // ... using the phase jump tracking based root finding
+        case nsev_bsloc_PJT:
+            
+            K = *K_ptr;
+            buffer = bound_states; // Store intermediate results directly
+            // Setting 'discretization' as the base method for discretizations based on
+            // splitting schemes.
+            if (upsampling_factor == 1 && degree1step != 0){
+                discretization = nse_discretization_BO;
+            }else if(upsampling_factor == 2 && degree1step != 0){
+                discretization = nse_discretization_CF4_2;
+            }else
+                discretization = opts->discretization;
+            
+            ret_code = nsev_localize_bound_states_pjt(D, q, r, T, &K, buffer,
+                    discretization, 8*D_given, opts->bounding_box);
+            break;
+            
         default:
 
             return E_INVALID_ARGUMENT(opts->bound_state_localization);
@@ -1195,8 +1266,11 @@ static inline INT nsev_localize_bound_states_pjt(
         REAL const * const bounding_box)
 {
     INT ret_code = SUCCESS;
-    UINT i;
- 
+    UINT i, evals = 0;
+    COMPLEX *xi = NULL;
+    COMPLEX *a_vals = NULL;
+    COMPLEX * jump_points = NULL;
+    REAL * phi_jump_points = NULL;
     
     // Check inputs
     if (bound_states == NULL)
@@ -1212,7 +1286,7 @@ static inline INT nsev_localize_bound_states_pjt(
         return E_INVALID_ARGUMENT(bounding_box);
     
     if (max_evals == 0)
-        max_evals = 5*D;
+        max_evals = 4*D;
     REAL bounding_box_local[4] = { NAN };
     UINT K = *K_ptr;
     // D is interpolated number of samples but eps_t is the step-size
@@ -1222,47 +1296,7 @@ static inline INT nsev_localize_bound_states_pjt(
         ret_code = E_INVALID_ARGUMENT(discretization);
         goto leave_fun;
     }
-    UINT D_given = D/upsampling_factor;
-    const REAL eps_t = (T[1] - T[0])/(D_given - 1);
-    
-// Fixing search box and some other parameters
-//     REAL xilim = 0.9*PI/(2*eps_t);
-    
-    REAL Cq = 1e-3;
-    
-// TODO
-    
-// FTq = abs(fftshift(fft(q))).^2;
-// FTq_max = max(FTq);
-// idx_list = (FTq/FTq_max)>Cq;
-// idx1 = find(idx_list,1,'first');
-// idx2 = find(idx_list,1,'last');
-// xi = linspace(-xilim, xilim, D);
-//
-// xb = xi(idx1);     // real part range begin
-// xe = xi(idx2);     // real part range end
-    
-// fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
-// COMPLEX *buf0 = NULL, *buf1 = NULL;
-// // Allocate memory
-// const UINT lenmem = D * sizeof(COMPLEX);
-// buf0 = fft_wrapper_malloc(lenmem);
-// buf1 = fft_wrapper_malloc(lenmem);
-// if (buf0 == NULL || buf1 == NULL) {
-//     ret_code = E_NOMEM;
-//     goto leave_fun;
-// }
-//
-// ret_code = fft_wrapper_create_plan(&plan_fwd, D, buf0, buf1, -1);
-// CHECK_RETCODE(ret_code, release_mem);
-//
-// // Continuing the signal periodically
-// for (i = 0; i < D; i++)
-//     buf0[i] = q[i];
-//
-// ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf1);
-// CHECK_RETCODE(ret_code, release_mem);
-    
+    UINT D_given = D/upsampling_factor;    
     
     if (bounding_box[0] < -5)
         bounding_box_local[0] = -5;
@@ -1284,9 +1318,6 @@ static inline INT nsev_localize_bound_states_pjt(
     else
         bounding_box_local[3] = bounding_box[3];
     
-    
-    COMPLEX * jump_points = NULL;
-    REAL * phi_jump_points = NULL;
     jump_points = malloc(K * sizeof(COMPLEX));
     phi_jump_points = malloc(K * sizeof(REAL));    
     if (jump_points == NULL || phi_jump_points == NULL) {
@@ -1299,12 +1330,9 @@ static inline INT nsev_localize_bound_states_pjt(
     
     // Fixing step-size for real-axis
     UINT M = (bounding_box_local[1] - bounding_box_local[0])/Tol;
-    if (M > D)
-        M = D;
+    if (M > D_given)
+        M = D_given;
     
-    
-    COMPLEX *xi = NULL;
-    COMPLEX *a_vals = NULL;
     xi = malloc(M * sizeof(COMPLEX));
     a_vals = malloc(M * sizeof(COMPLEX));
     if (xi == NULL || a_vals == NULL) {
@@ -1322,7 +1350,7 @@ static inline INT nsev_localize_bound_states_pjt(
         ret_code = E_SUBROUTINE(ret_code);
         CHECK_RETCODE(ret_code, leave_fun);
     }
-    
+    evals += M;
     
     K = 0;
     for (i = 1; i < M; i++){
@@ -1354,6 +1382,7 @@ static inline INT nsev_localize_bound_states_pjt(
         ret_code = E_SUBROUTINE(ret_code);
         CHECK_RETCODE(ret_code, leave_fun);
     }
+    evals += M;
     
     for (i = 1; i < M; i++){
         if ((CARG(a_vals[i])*CARG(a_vals[i-1]))<0 && FABS(CARG(a_vals[i])-CARG(a_vals[i-1]))>(1.3*PI)){
@@ -1364,7 +1393,7 @@ static inline INT nsev_localize_bound_states_pjt(
     }
     
     // Upper boundary
-    M = (bounding_box_local[1] - bounding_box_local[0])/hG;
+    M = (bounding_box_local[1] - bounding_box_local[0])/hG; 
     xi = malloc(M * sizeof(COMPLEX));
     a_vals = malloc(M * sizeof(COMPLEX));
     if (xi == NULL || a_vals == NULL) {
@@ -1380,6 +1409,7 @@ static inline INT nsev_localize_bound_states_pjt(
         ret_code = E_SUBROUTINE(ret_code);
         CHECK_RETCODE(ret_code, leave_fun);
     }
+    evals += M;
     
     for (i = 1; i < M; i++){
         if ((CARG(a_vals[i])*CARG(a_vals[i-1]))<0 && FABS(CARG(a_vals[i])-CARG(a_vals[i-1]))>(1.3*PI)){
@@ -1390,7 +1420,7 @@ static inline INT nsev_localize_bound_states_pjt(
     }
     
     // Left boundary
-    M = (bounding_box_local[3] - bounding_box_local[2])/hG;
+    M = (bounding_box_local[3] - bounding_box_local[2])/hG; 
     xi = malloc(M * sizeof(COMPLEX));
     a_vals = malloc(M * sizeof(COMPLEX));
     if (xi == NULL || a_vals == NULL) {
@@ -1406,6 +1436,7 @@ static inline INT nsev_localize_bound_states_pjt(
         ret_code = E_SUBROUTINE(ret_code);
         CHECK_RETCODE(ret_code, leave_fun);
     }
+    evals += M;
     
     for (i = 1; i < M; i++){
         if ((CARG(a_vals[i])*CARG(a_vals[i-1]))<0 && FABS(CARG(a_vals[i])-CARG(a_vals[i-1]))>(1.3*PI)){
@@ -1415,14 +1446,127 @@ static inline INT nsev_localize_bound_states_pjt(
         }
     }
     
-    printf("K=%ld\n",K);
-    
     REAL hg = (1.0/15.0)*misc_min_dist(K,jump_points);
     if (hg < Tol/2)
         hg = Tol/2;
+    
+   COMPLEX curr_jump_point;
+   COMPLEX jump_point_neighbors[2] = {0};
+   UINT quadrants[2];
+   REAL angles[2] = {0}, phi_mid, m, hgc;
+   for (i = 0; i < K; i++){ 
+    hgc = 8*hg;
+    curr_jump_point = jump_points[i];
+    while (hgc>hg){
+        jump_point_neighbors[0] = curr_jump_point-hgc*CEXP(I*phi_jump_points[i]);
+        jump_point_neighbors[1] = curr_jump_point+hgc*CEXP(I*phi_jump_points[i]);        
+        ret_code = nse_scatter_bound_states(D, q, r, T, 2,
+                &jump_point_neighbors[0], a_vals, NULL, NULL, discretization);
+        if (ret_code != SUCCESS){
+            ret_code = E_SUBROUTINE(ret_code);
+            CHECK_RETCODE(ret_code, leave_fun);
+        }
+        
+        evals += 2;
+        
+       ret_code = misc_quadrant(2,a_vals,&quadrants[0],&angles[0]);
+       if (ret_code != SUCCESS){
+            ret_code = E_SUBROUTINE(ret_code);
+            CHECK_RETCODE(ret_code, leave_fun);
+        }
+        
+        phi_mid = (PI/2)*ROUND(((angles[0]+angles[1])/2)/(PI/2));
+        m = (angles[1]-angles[0])/hgc;
+        jump_point_neighbors[1] = jump_point_neighbors[1]-CEXP(I*phi_jump_points[i])*(angles[1]-(phi_mid+m*0.5*hgc))/m;
+        jump_point_neighbors[0] = jump_point_neighbors[0]+CEXP(I*phi_jump_points[i])*((phi_mid-m*0.5*hgc)-angles[0])/m;
+        curr_jump_point = (jump_point_neighbors[0]+jump_point_neighbors[1])/2;
+        hgc = hgc/2;         
+    }
+    if (quadrants[0] == quadrants[1]){
+        ret_code = E_ASSERTION_FAILED;
+        goto leave_fun;
+    }
+    jump_points[i] = curr_jump_point;
+   }
 
-    
-    
-     leave_fun:
+   // Actual phase jump tracking
+   hg = 3*hg;
+   REAL phic, hgs;
+   COMPLEX jump_point_neighbors_guesses[2] = {0}, new_jump_point;
+   UINT quadrants_guess[2];
+   for (i = 0; i < K; i++){
+       
+       hgs = hg/16;
+       
+       jump_point_neighbors[0] = jump_points[i]-0.5*hg*CEXP(I*phi_jump_points[i]);
+       jump_point_neighbors[1] = jump_points[i]+0.5*hg*CEXP(I*phi_jump_points[i]);
+       
+       ret_code = nse_scatter_bound_states(D, q, r, T, 2,
+               &jump_point_neighbors[0], a_vals, NULL, NULL, discretization);
+       if (ret_code != SUCCESS){
+           ret_code = E_SUBROUTINE(ret_code);
+           CHECK_RETCODE(ret_code, leave_fun);
+       }
+       evals += 2;
+       
+       ret_code = misc_quadrant(2,a_vals,&quadrants[0],&angles[0]);
+       if (ret_code != SUCCESS){
+           ret_code = E_SUBROUTINE(ret_code);
+           CHECK_RETCODE(ret_code, leave_fun);
+       }
+       
+       phi_mid = (PI/2)*ROUND(((angles[0]+angles[1])/2)/(PI/2));
+       m = (angles[1]-angles[0])/hg;
+       jump_point_neighbors[1] = jump_point_neighbors[1]-CEXP(I*phi_jump_points[i])*(angles[1]-(phi_mid+m*0.5*hg))/m;
+       jump_point_neighbors[0] = jump_point_neighbors[0]+CEXP(I*phi_jump_points[i])*((phi_mid-m*0.5*hg)-angles[0])/m;
+       curr_jump_point = (jump_point_neighbors[0]+jump_point_neighbors[1])/2;
+       phic = phi_jump_points[i] + PI/2;
+       
+       while (evals < max_evals && phic != NAN){
+           
+           jump_point_neighbors_guesses[0] = jump_point_neighbors[0] + hgs*CEXP(I*phic);
+           jump_point_neighbors_guesses[1] = jump_point_neighbors[1] + hgs*CEXP(I*phic);
+           
+           ret_code = nse_scatter_bound_states(D, q, r, T, 2,
+                   &jump_point_neighbors_guesses[0], a_vals, NULL, NULL, discretization);
+           if (ret_code != SUCCESS){
+               ret_code = E_SUBROUTINE(ret_code);
+               CHECK_RETCODE(ret_code, leave_fun);
+           }
+           evals += 2;
+           
+           ret_code = misc_quadrant(2,a_vals,&quadrants_guess[0],&angles[0]);
+           if (ret_code != SUCCESS){
+               ret_code = E_SUBROUTINE(ret_code);
+               CHECK_RETCODE(ret_code, leave_fun);
+           }
+           
+           if (quadrants[0] != quadrants_guess[0] || quadrants[1] != quadrants_guess[1]){
+               if (hgs<hg/16){
+                   bound_states[i] = curr_jump_point;
+                   break;
+               }
+               else
+                   hgs = hgs/2;
+           }else{
+               if (hgs < hg*16)
+                   hgs = hgs*2;
+               
+               new_jump_point = jump_point_neighbors_guesses[1] - (jump_point_neighbors_guesses[1]-jump_point_neighbors_guesses[0])*(angles[1]-phi_mid)/(angles[1]-angles[0]);
+               phic = CARG(new_jump_point-curr_jump_point);
+               jump_point_neighbors[0] = CEXP(I*(phic+PI/2))*0.5*hg + new_jump_point;
+               jump_point_neighbors[1] = CEXP(I*(phic-PI/2))*0.5*hg + new_jump_point;
+               curr_jump_point = new_jump_point;
+           }
+       }
+   }
+//      printf("K=%ld\n",K);
+//        printf("evals=%ld\n",evals);
+   *K_ptr = K;
+   leave_fun:
+         free(xi);
+         free(a_vals);
+         free(jump_points);
+         free(phi_jump_points);
         return ret_code;
 }

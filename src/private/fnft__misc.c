@@ -104,6 +104,32 @@ REAL misc_min_dist(const UINT lenA,
     return min_dist;
 }
 
+REAL misc_min(const UINT lenA,
+        REAL const * const vecA)
+{
+    UINT i;
+    REAL min_val = vecA[0];
+    
+    for (i=1; i<lenA; i++) {
+        if (vecA[i] < min_val)
+            min_val = vecA[i];
+    }
+    return min_val;
+}
+
+REAL misc_max(const UINT lenA,
+        REAL const * const vecA)
+{
+    UINT i;
+    REAL max_val = vecA[0];
+    
+    for (i=1; i<lenA; i++) {
+        if (vecA[i] > max_val)
+            max_val = vecA[i];
+    }    
+    return max_val;
+}
+
 COMPLEX misc_sech(COMPLEX Z)
 {
     return 2.0 / (CEXP(Z) + CEXP(-Z));
@@ -427,3 +453,37 @@ release_mem:
     free(freq);
     return ret_code;
 }
+
+INT misc_quadrant(UINT N, COMPLEX * const vals, 
+       UINT * const quadrants, REAL * const arguments)
+{
+    REAL real_val, imag_val;
+    UINT i;
+    if (vals == NULL)
+        return E_INVALID_ARGUMENT(vals);
+    if (quadrants == NULL)
+        return E_INVALID_ARGUMENT(qudrants);
+    if (arguments == NULL)
+        return E_INVALID_ARGUMENT(arguments);
+    
+    for (i = 0; i < N; i++){
+        real_val = CREAL(vals[i]);
+        imag_val = CIMAG(vals[i]);
+        arguments[i] = CARG(vals[i]);
+        quadrants[i] = 0;
+        if (real_val>0 && imag_val>=0)
+            quadrants[i] = 1;
+        else if (real_val<=0 && imag_val>0)
+            quadrants[i] = 2;
+        else if (real_val<0 && imag_val<=0){
+            quadrants[i] = 3;
+            arguments[i] += 2*PI;
+        }
+        else if (real_val>=0 && imag_val<0){
+            quadrants[i] = 4;
+            arguments[i] += 2*PI;
+        }        
+    }
+    return SUCCESS;
+}
+        

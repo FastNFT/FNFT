@@ -30,6 +30,7 @@
 #include "fnft.h"
 #include <string.h>
 
+
 /**
  * @brief Helper function for debugging. Prints an array in MATLAB style.
  *
@@ -84,6 +85,30 @@ FNFT_REAL fnft__misc_hausdorff_dist(const FNFT_UINT lenA,
  */
 FNFT_REAL fnft__misc_min_dist(const FNFT_UINT lenA,
     FNFT_COMPLEX const * const vecA);
+
+/**
+ * @brief Minimum number in an array
+ *
+ * @ingroup misc
+ * This finds the smallest element in the vector vecA.
+ * @param[in] lenA Length of vector vecA.
+ * @param[in] vecA Real vector of length lenA.
+ * @return Returns the smallest element in the vector vecA.
+ */
+FNFT_REAL fnft__misc_min(const FNFT_UINT lenA,
+    FNFT_REAL const * const vecA);
+
+/**
+ * @brief Maximum number in an array
+ *
+ * @ingroup misc
+ * This finds the largest element in the vector vecA.
+ * @param[in] lenA Length of vector vecA.
+ * @param[in] vecA Real vector of length lenA.
+ * @return Returns the largest element in the vector vecA.
+ */
+FNFT_REAL fnft__misc_max(const FNFT_UINT lenA,
+    FNFT_REAL const * const vecA);
 
 /**
  * @brief Hyperbolic secant.
@@ -357,6 +382,24 @@ static inline FNFT_REAL fnft__misc_legendre_poly(const FNFT_UINT n, const FNFT_R
     return P;
 }
 
+/**
+ * @brief This routine calcuates the argument and quadrant of complex values.
+ *
+ * @ingroup  misc
+ *
+ * Calculates the argument from 0 to 2*Pi and the quadrant a complex point
+ * lies in.
+ * @param[in] N Length of vals array.
+ * @param[in] vals Complex array.
+ * @param[out] quadrants Integer valued array. If the complex point is in
+ * first quadrant then it will be 1. It will be 2 for second qudrant and so on.
+ * @param[out] arguments Real valued array containing the argument of the 
+ * complex value between 0 to 2*PI rather than the usual -PI to PI.
+ * @return Returns SUCCESS or an error code.
+ */
+FNFT_INT fnft__misc_quadrant(FNFT_UINT N, FNFT_COMPLEX * const vals, 
+        FNFT_UINT * const quadrants, FNFT_REAL * const arguments);
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define misc_print_buf(...) fnft__misc_print_buf(__VA_ARGS__)
 #define misc_rel_err(...) fnft__misc_rel_err(__VA_ARGS__)
@@ -376,6 +419,9 @@ static inline FNFT_REAL fnft__misc_legendre_poly(const FNFT_UINT n, const FNFT_R
 #define misc_mat_mult_4x4(...) fnft__misc_mat_mult_4x4(__VA_ARGS__)
 #define misc_legendre_poly(...) fnft__misc_legendre_poly(__VA_ARGS__)
 #define misc_min_dist(...) fnft__misc_min_dist(__VA_ARGS__)
+#define misc_quadrant(...) fnft__misc_quadrant(__VA_ARGS__)
+#define misc_min(...) fnft__misc_min(__VA_ARGS__)
+#define misc_max(...) fnft__misc_max(__VA_ARGS__)
 
 #endif
 
