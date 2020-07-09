@@ -27,6 +27,10 @@
 %                   is reliable if good intial guesses for the bound states
 %                   are known. Followed by a complex row vector of K
 %                   initial guesses. It requires O(niter KD) FLOPs.
+%   'bsloc_muller'  Use Muller's method to locate bound states. This method
+%                   is reliable if good intial guesses for the bound states
+%                   are known. Followed by a complex row vector of K
+%                   initial guesses. It requires O(niter KD) FLOPs.
 %   'bsloc_subsamp_refine' Use a mixed method to locate bound states. First
 %                   get initial guesses for the bound states by applying
 %                   the 'fasteigen' method to a subsampled version of the
@@ -46,8 +50,11 @@
 %   'bsfilt_none'   Do not filter bound states at all.
 %   'bsfilt_basic'  Basic bound state filtering. Removes duplicates and
 %                   bound states in the lower half plane.
-%   'bsfilt_full'   Full bound state filtering. Additionally removes
+%   'bsfilt_auto'   Automatic bound state filtering. Additionally removes
 %		            physically implausible bound states.
+%   'bsfilt_manual' Lookfor bound states inside a given bounding box. This argument
+%                   must be followed by a real 1x4 vector [min_real max_real
+%                   min_imag max_imag] that specifies the box.
 %   'discr_modal'   Use modified Ablowitz-Ladik discretization.
 %   'discr_2split2A' Use split Boffetta-Osborne discretization.
 %   'discr_2split4A' Use fifth order splitting with 4th degree polynomial.

@@ -24,7 +24,11 @@
 #include "fnft_nsev.h"
 
 static fnft_nsev_opts_t default_opts = {
-    .bound_state_filtering = nsev_bsfilt_FULL,
+    .bound_state_filtering = nsev_bsfilt_AUTO,
+    .bounding_box[0] = -FNFT_INF,
+    .bounding_box[1] = FNFT_INF,
+    .bounding_box[2] = -FNFT_INF,
+    .bounding_box[3] = FNFT_INF,
     .bound_state_localization = nsev_bsloc_SUBSAMPLE_AND_REFINE,
     .niter = 10,
     .Dsub = 0, // auto
@@ -121,6 +125,33 @@ static inline INT nsev_refine_bound_states_newton(const UINT D,
         UINT niter,
         REAL const * const bounding_box);
 
+static inline INT nsev_refine_bound_states_muller(
+        const UINT D,
+        COMPLEX const * const q,
+        COMPLEX * r,
+        REAL const * const T,
+        const UINT K,
+        COMPLEX * bound_states,
+        nse_discretization_t discretization,
+        const UINT niter,
+        REAL const * const bounding_box);
+
+static inline INT nsev_localize_bound_states_pjt(
+        const UINT D,
+        COMPLEX const * const q,
+        COMPLEX * r,
+        REAL const * const T,
+        UINT * const K_ptr,
+        COMPLEX * bound_states,
+        nse_discretization_t discretization,
+        UINT max_evals,
+        REAL const * const bounding_box);
+
+static inline REAL re_bound(const REAL eps_t, const REAL map_coeff);
+
+static inline REAL im_bound(const UINT D, COMPLEX const * const q,
+        REAL const * const T);
+
 /**
  * Fast nonlinear Fourier transform for the nonlinear Schroedinger
  * equation with vanishing boundary conditions.
@@ -176,9 +207,13 @@ INT fnft_nsev(
         if (K_ptr == NULL)
             return E_INVALID_ARGUMENT(K_ptr);
     }
+    if ( !(opts->bounding_box[0] <= opts->bounding_box[1]) //!(...) ensures error with NANs
+    || !(opts->bounding_box[2] <= opts->bounding_box[3]) )
+        return E_INVALID_ARGUMENT(opts->bounding_box);
+    
     if (opts == NULL)
         opts = &default_opts;
-
+    
     // This switch checks for incompatible bound_state_localization options
     switch (opts->discretization) {
         case nse_discretization_2SPLIT2_MODAL:
@@ -210,7 +245,8 @@ INT fnft_nsev(
         case nse_discretization_CF6_4:
         case nse_discretization_ES4:
         case nse_discretization_TES4:
-            if (opts->bound_state_localization != nsev_bsloc_NEWTON && kappa == +1){
+            if ((opts->bound_state_localization != nsev_bsloc_NEWTON && 
+                    opts->bound_state_localization != nsev_bsloc_MULLER) && kappa == +1){
                 ret_code = E_INVALID_ARGUMENT(opts->bound_state_localization);
                 goto leave_fun;
             }
@@ -235,6 +271,31 @@ INT fnft_nsev(
     
     // Determine step size
     const REAL eps_t = (T[1] - T[0])/(D - 1);
+    
+    // Set-up bounding_box based on choice of filtering    
+    if (opts->bound_state_filtering == nsev_bsfilt_BASIC) {        
+        opts->bounding_box[0] = -INFINITY;
+        opts->bounding_box[1] = INFINITY;
+        opts->bounding_box[2] = 0.0;
+        opts->bounding_box[3] = INFINITY;        
+    }else if (opts->bound_state_filtering == nsev_bsfilt_AUTO) {
+        REAL degree1step = 0.0 , map_coeff = 2.0;
+        degree1step = nse_discretization_degree(opts->discretization);
+        // degree1step == 0 here indicates a valid slow method. Incorrect
+        // discretizations should have been caught earlier.
+        if (degree1step != 0)
+            map_coeff = 2/(degree1step);
+        
+        opts->bounding_box[1] = re_bound(eps_t, map_coeff);
+        opts->bounding_box[0] = -opts->bounding_box[1];
+        opts->bounding_box[2] = 0;
+        opts->bounding_box[3] = im_bound(D, q, T);       
+    }else if (opts->bound_state_filtering == nsev_bsfilt_NONE){
+        opts->bounding_box[0] = -INFINITY;
+        opts->bounding_box[1] = INFINITY;
+        opts->bounding_box[2] = -INFINITY;
+        opts->bounding_box[3] = INFINITY;
+    }
     
     // If Richardson extrapolation is not requested or if it is requested but
     // opts->discspec_type is nsev_dstype_NORMCONSTS,then normconsts_or_residues_reserve
@@ -563,7 +624,6 @@ static inline INT fnft_nsev_base(
         free(transfer_matrix);
         return ret_code;
 }
-
 // Auxiliary function for filtering: We assume that bound states must have
 // real part in the interval [-re_bound, re_bound].
 static inline REAL re_bound(const REAL eps_t, const REAL map_coeff)
@@ -604,9 +664,8 @@ static inline INT nsev_compute_boundstates(
         COMPLEX * const bound_states,
         fnft_nsev_opts_t * const opts)
 {
-    REAL degree1step = 0.0 , map_coeff = 2.0;
-    UINT K, upsampling_factor, i, j, D_given;
-    REAL bounding_box[4] = { NAN };
+    REAL degree1step = 0.0;
+    UINT K, upsampling_factor;
     COMPLEX * buffer = NULL;
     INT ret_code = SUCCESS;
     COMPLEX * q_tmp = NULL;
@@ -620,44 +679,7 @@ static inline INT nsev_compute_boundstates(
         ret_code = E_INVALID_ARGUMENT(opts->discretization);
         goto leave_fun;
     }
-    if (degree1step != 0)
-        map_coeff = 2/(degree1step);
-    D_given = D/upsampling_factor;
     
-    // Set-up bounding_box based on choice of filtering
-    if (opts->bound_state_filtering == nsev_bsfilt_BASIC) {        
-        bounding_box[0] = -INFINITY;
-        bounding_box[1] = INFINITY;
-        bounding_box[2] = 0.0;
-        bounding_box[3] = INFINITY;        
-    }else if (opts->bound_state_filtering == nsev_bsfilt_FULL) {
-        bounding_box[1] = re_bound(eps_t, map_coeff);
-        bounding_box[0] = -bounding_box[1];
-        bounding_box[2] = 0;
-        // This step is required as q contains scaled values on a
-        // non-equispaced grid
-        if (upsampling_factor == 1){
-            bounding_box[3] = im_bound(D_given, q, T);
-        } else {
-            q_tmp = malloc(D_given * sizeof(COMPLEX));
-            if (q_tmp == NULL) {
-                ret_code = E_NOMEM;
-                goto leave_fun;
-            }
-            j = 1;
-            for (i = 0; i < D_given; i++) {
-                q_tmp[i] = upsampling_factor*q[j];
-                j = j+upsampling_factor;
-            }
-            bounding_box[3] = im_bound(D_given, q_tmp, T);
-        }
-    }else{
-        bounding_box[0] = -INFINITY;
-        bounding_box[1] = INFINITY;
-        bounding_box[2] = -INFINITY;
-        bounding_box[3] = INFINITY;
-    }
-
     // Localize bound states ...
     switch (opts->bound_state_localization) {
 
@@ -680,10 +702,33 @@ static inline INT nsev_compute_boundstates(
                 discretization = opts->discretization;
 
             ret_code = nsev_refine_bound_states_newton(D, q, r, T, K, buffer,
-                    discretization, opts->niter, bounding_box);
-            CHECK_RETCODE(ret_code, leave_fun);
+                    discretization, opts->niter, opts->bounding_box);
+            CHECK_RETCODE(ret_code, leave_fun);           
             break;
+            
+        // ... using Muller's method
+        case nsev_bsloc_MULLER:
 
+            K = *K_ptr;
+            buffer = bound_states; // Store intermediate results directly
+
+            // Perform Newton iterations. Initial guesses of bound-states
+            // should be in the continuous-time domain.
+
+            // Setting 'discretization' as the base method for discretizations based on
+            // splitting schemes.
+            if (upsampling_factor == 1 && degree1step != 0){
+                discretization = nse_discretization_BO;
+            }else if(upsampling_factor == 2 && degree1step != 0){
+                discretization = nse_discretization_CF4_2;
+            }else
+                discretization = opts->discretization;
+
+            ret_code = nsev_refine_bound_states_muller(D, q, r, T, K, buffer,
+                    discretization, opts->niter, opts->bounding_box);
+            CHECK_RETCODE(ret_code, leave_fun);            
+            break;
+            
             // ... using the fast eigenvaluebased root finding
         case nsev_bsloc_FAST_EIGENVALUE:
 
@@ -712,17 +757,17 @@ static inline INT nsev_compute_boundstates(
 
             return E_INVALID_ARGUMENT(opts->bound_state_localization);
     }
-
+    
     // Filter bound states
-    if (opts->bound_state_filtering != nsev_bsfilt_NONE) {
+    if (opts->bound_state_filtering != nsev_bsfilt_NONE) {    
         
-        ret_code = misc_filter(&K, buffer, NULL, bounding_box);
+        ret_code = misc_filter(&K, buffer, NULL, opts->bounding_box);
         CHECK_RETCODE(ret_code, leave_fun);
-
+        
         ret_code = misc_merge(&K, buffer, SQRT(EPSILON));
         CHECK_RETCODE(ret_code, leave_fun);        
     }
-    
+
     // Copy result from buffer to user-supplied array (if not identical)
     if (buffer != bound_states) {
         if (*K_ptr < K) {
@@ -939,7 +984,7 @@ static inline INT nsev_compute_normconsts_or_residues(
         discretization = opts->discretization;
 
     ret_code = nse_scatter_bound_states(D, q, r, T, K,
-            bound_states, a_vals, aprime_vals, normconsts_or_residues, discretization, 0);
+            bound_states, a_vals, aprime_vals, normconsts_or_residues, discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Update to or add residues if requested
@@ -983,7 +1028,7 @@ static inline INT nsev_refine_bound_states_newton(
 {
     INT ret_code = SUCCESS;
     UINT i, iter;
-    COMPLEX a_val, b_val, aprime_val, error;
+    COMPLEX a_val, aprime_val, error;
     REAL eprecision = EPSILON * 100;
     
     // Check inputs
@@ -1009,7 +1054,7 @@ static inline INT nsev_refine_bound_states_newton(
         do {
             // Compute a(lam) and a'(lam) at the current root
             ret_code = nse_scatter_bound_states(D, q, r, T, 1,
-                    bound_states + i, &a_val, &aprime_val, &b_val, discretization, 1);
+                    bound_states + i, &a_val, &aprime_val, NULL, discretization);
             if (ret_code != SUCCESS){
                 ret_code = E_SUBROUTINE(ret_code);
                 CHECK_RETCODE(ret_code, leave_fun);
@@ -1032,7 +1077,352 @@ static inline INT nsev_refine_bound_states_newton(
 
         } while (CABS(error) > eprecision && iter < niter);
     }
-
     leave_fun:
+        return ret_code;
+}
+
+// Auxiliary function: Refines the bound-states using Muller's method
+static inline INT nsev_refine_bound_states_muller(
+        const UINT D,
+        COMPLEX const * const q,
+        COMPLEX * r,
+        REAL const * const T,
+        const UINT K,
+        COMPLEX * bound_states,
+        nse_discretization_t discretization,
+        const UINT niter,
+        REAL const * const bounding_box)
+{
+    INT ret_code = SUCCESS;
+    UINT i, iter;
+    COMPLEX a_val[4], lam[4], valA, valB, valC, ratio, disc, den1, den2;
+    REAL eprecision = EPSILON * 100;
+    
+    // Check inputs
+    if (K == 0) // no bound states to refine
+        return SUCCESS;
+    if (niter == 0) // no refinement requested
+        return SUCCESS;
+    if (bound_states == NULL)
+        return E_INVALID_ARGUMENT(bound_states);
+    if (q == NULL)
+        return E_INVALID_ARGUMENT(q);
+    if (T == NULL)
+        return E_INVALID_ARGUMENT(T);
+    if (bounding_box == NULL)
+        return E_INVALID_ARGUMENT(bounding_box);
+    if ( !(bounding_box[0] <= bounding_box[1]) //!(...) ensures error with NANs
+    || !(bounding_box[2] <= bounding_box[3]) )
+        return E_INVALID_ARGUMENT(bounding_box);
+
+    // Perform iterations of Muller's method
+    for (i = 0; i < K; i++) {
+        lam[1] = bound_states[i];
+        lam[0] = bound_states[i] + bound_states[i]/115;
+        lam[2] = bound_states[i] - bound_states[i]/85;
+        for  (iter = 0; iter < niter; iter++){
+            // Compute a(lam)
+            ret_code = nse_scatter_bound_states(D, q, r, T, 3,
+                    &lam[0], &a_val[0], NULL, NULL, discretization);
+            if (ret_code != SUCCESS){
+                ret_code = E_SUBROUTINE(ret_code);
+                CHECK_RETCODE(ret_code, leave_fun);
+            }           
+            
+            ratio = (lam[2]-lam[1])/(lam[1]-lam[0]);
+            valA = ratio*a_val[2] - ratio*(1+ratio)*a_val[1] + ratio*ratio*a_val[0];
+            valB = (2*ratio + 1)*a_val[2] - (1 + ratio)*(1 + ratio)*a_val[1] + ratio*ratio*a_val[0];            
+            valC = (1 + ratio)*a_val[2];
+            
+            if ( valA != 0 ){                
+                disc = valB*valB - 4*valA*valC;
+                den1 = (valB + CSQRT(disc));
+                den2 = (valB - CSQRT(disc));
+                
+                if (CABS(den1) < CABS(den2))
+                    lam[3] = lam[2] - (lam[2] - lam[1])*(2*valC/den2);
+                else
+                    lam[3] = lam[2] - (lam[2] - lam[1])*(2*valC/den1);
+                
+            }else if (valB != 0)
+                lam[3] = lam[2] - (lam[2] - lam[1])*(2*valC/valB);
+            else{
+                break;
+            }
+            
+            ret_code = nse_scatter_bound_states(D, q, r, T, 1,
+                    &lam[3], &a_val[3], NULL, NULL, discretization);
+            if (ret_code != SUCCESS){
+                ret_code = E_SUBROUTINE(ret_code);
+                CHECK_RETCODE(ret_code, leave_fun);
+            }
+            
+            if (CABS(lam[3] - lam[2]) < eprecision || CABS(a_val[3]) < eprecision){
+                lam[2] = lam[3];
+                break;
+            }
+            
+            lam[0] = lam[1];
+            lam[1] = lam[2];
+            lam[2] = lam[3];
+            
+            a_val[0] = a_val[1];
+            a_val[1] = a_val[2];
+            a_val[2] = a_val[3];
+            
+            if (CIMAG(lam[2]) > bounding_box[3]
+                    || CREAL(lam[2]) > bounding_box[1]
+                    || CREAL(lam[2]) < bounding_box[0]
+                    || CIMAG(lam[2]) < bounding_box[2])
+                break;            
+        }
+        bound_states[i] = lam[2];
+    }
+    leave_fun:
+        return ret_code;
+}
+
+// Auxiliary function: Finds bound states by tracking the phase-jumps
+static inline INT nsev_localize_bound_states_pjt(
+        const UINT D,
+        COMPLEX const * const q,
+        COMPLEX * r,
+        REAL const * const T,
+        UINT * const K_ptr,
+        COMPLEX * bound_states,
+        nse_discretization_t discretization,
+        UINT max_evals,
+        REAL const * const bounding_box)
+{
+    INT ret_code = SUCCESS;
+    UINT i;
+ 
+    
+    // Check inputs
+    if (bound_states == NULL)
+        return E_INVALID_ARGUMENT(bound_states);
+    if (q == NULL)
+        return E_INVALID_ARGUMENT(q);
+    if (T == NULL)
+        return E_INVALID_ARGUMENT(T);
+    if (bounding_box == NULL)
+        return E_INVALID_ARGUMENT(bounding_box);
+    if ( !(bounding_box[0] <= bounding_box[1]) //!(...) ensures error with NANs
+    || !(bounding_box[2] <= bounding_box[3]) )
+        return E_INVALID_ARGUMENT(bounding_box);
+    
+    if (max_evals == 0)
+        max_evals = 5*D;
+    REAL bounding_box_local[4] = { NAN };
+    UINT K = *K_ptr;
+    // D is interpolated number of samples but eps_t is the step-size
+    // corresponding to original number of samples.
+    UINT upsampling_factor = nse_discretization_upsampling_factor(discretization);
+    if (upsampling_factor == 0) {
+        ret_code = E_INVALID_ARGUMENT(discretization);
+        goto leave_fun;
+    }
+    UINT D_given = D/upsampling_factor;
+    const REAL eps_t = (T[1] - T[0])/(D_given - 1);
+    
+// Fixing search box and some other parameters
+//     REAL xilim = 0.9*PI/(2*eps_t);
+    
+    REAL Cq = 1e-3;
+    
+// TODO
+    
+// FTq = abs(fftshift(fft(q))).^2;
+// FTq_max = max(FTq);
+// idx_list = (FTq/FTq_max)>Cq;
+// idx1 = find(idx_list,1,'first');
+// idx2 = find(idx_list,1,'last');
+// xi = linspace(-xilim, xilim, D);
+//
+// xb = xi(idx1);     // real part range begin
+// xe = xi(idx2);     // real part range end
+    
+// fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
+// COMPLEX *buf0 = NULL, *buf1 = NULL;
+// // Allocate memory
+// const UINT lenmem = D * sizeof(COMPLEX);
+// buf0 = fft_wrapper_malloc(lenmem);
+// buf1 = fft_wrapper_malloc(lenmem);
+// if (buf0 == NULL || buf1 == NULL) {
+//     ret_code = E_NOMEM;
+//     goto leave_fun;
+// }
+//
+// ret_code = fft_wrapper_create_plan(&plan_fwd, D, buf0, buf1, -1);
+// CHECK_RETCODE(ret_code, release_mem);
+//
+// // Continuing the signal periodically
+// for (i = 0; i < D; i++)
+//     buf0[i] = q[i];
+//
+// ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf1);
+// CHECK_RETCODE(ret_code, release_mem);
+    
+    
+    if (bounding_box[0] < -5)
+        bounding_box_local[0] = -5;
+    else
+        bounding_box_local[0] = bounding_box[0];
+    
+    if (bounding_box[1] > 5)
+        bounding_box_local[1] = 5;
+    else
+        bounding_box_local[1] = bounding_box[1];
+    
+    if (bounding_box[2] < 0)
+        bounding_box_local[2] = 0;
+    else
+        bounding_box_local[2] = bounding_box[2];
+    
+    if (LOG(0.9*DBL_MAX)/((T[1]-T[0])/2) < bounding_box[3])
+        bounding_box_local[3] = LOG(0.9*DBL_MAX)/((T[1]-T[0])/2); //TODO
+    else
+        bounding_box_local[3] = bounding_box[3];
+    
+    
+    COMPLEX * jump_points = NULL;
+    REAL * phi_jump_points = NULL;
+    jump_points = malloc(K * sizeof(COMPLEX));
+    phi_jump_points = malloc(K * sizeof(REAL));    
+    if (jump_points == NULL || phi_jump_points == NULL) {
+        ret_code = E_NOMEM;
+        goto leave_fun;
+    }
+    
+    
+    REAL Tol = 1e-3;
+    
+    // Fixing step-size for real-axis
+    UINT M = (bounding_box_local[1] - bounding_box_local[0])/Tol;
+    if (M > D)
+        M = D;
+    
+    
+    COMPLEX *xi = NULL;
+    COMPLEX *a_vals = NULL;
+    xi = malloc(M * sizeof(COMPLEX));
+    a_vals = malloc(M * sizeof(COMPLEX));
+    if (xi == NULL || a_vals == NULL) {
+        ret_code = E_NOMEM;
+        goto leave_fun;
+    }
+    
+    REAL eps_xi = (bounding_box_local[1] - bounding_box_local[0])/(M - 1);
+    for (i = 0; i < M; i++)
+        xi[i] = bounding_box_local[0] + i*eps_xi;
+    
+    ret_code = nse_scatter_bound_states(D, q, r, T, M,
+            xi, a_vals, NULL, NULL, discretization);
+    if (ret_code != SUCCESS){
+        ret_code = E_SUBROUTINE(ret_code);
+        CHECK_RETCODE(ret_code, leave_fun);
+    }
+    
+    
+    K = 0;
+    for (i = 1; i < M; i++){
+        if ((CARG(a_vals[i])*CARG(a_vals[i-1]))<0 && FABS(CARG(a_vals[i])-CARG(a_vals[i-1]))>(1.3*PI)){
+            jump_points[K] = (xi[i]+xi[i-1])/2;
+            phi_jump_points[K]  = 0;
+            K++;
+        }
+    }
+    
+    REAL hG = 0.5*misc_min_dist(K,jump_points);// step-size for remaining contour
+    if ((bounding_box_local[3]+bounding_box_local[1]-bounding_box_local[0])*0.01 < hG)
+        hG = (bounding_box_local[3]+bounding_box_local[1]-bounding_box_local[0])*0.01;
+    
+    // Right boundary
+    M = (bounding_box_local[3] - bounding_box_local[2])/hG;
+    xi = malloc(M * sizeof(COMPLEX));
+    a_vals = malloc(M * sizeof(COMPLEX));
+    if (xi == NULL || a_vals == NULL) {
+        ret_code = E_NOMEM;
+        goto leave_fun;
+    }
+    for (i = 0; i < M; i++)
+        xi[i] = bounding_box_local[1] + (bounding_box_local[2]+i*hG)*I;
+    
+    ret_code = nse_scatter_bound_states(D, q, r, T, M,
+            xi, a_vals, NULL, NULL, discretization);
+    if (ret_code != SUCCESS){
+        ret_code = E_SUBROUTINE(ret_code);
+        CHECK_RETCODE(ret_code, leave_fun);
+    }
+    
+    for (i = 1; i < M; i++){
+        if ((CARG(a_vals[i])*CARG(a_vals[i-1]))<0 && FABS(CARG(a_vals[i])-CARG(a_vals[i-1]))>(1.3*PI)){
+            jump_points[K] = (xi[i]+xi[i-1])/2;
+            phi_jump_points[K]  = PI/2;
+            K++;
+        }
+    }
+    
+    // Upper boundary
+    M = (bounding_box_local[1] - bounding_box_local[0])/hG;
+    xi = malloc(M * sizeof(COMPLEX));
+    a_vals = malloc(M * sizeof(COMPLEX));
+    if (xi == NULL || a_vals == NULL) {
+        ret_code = E_NOMEM;
+        goto leave_fun;
+    }
+    for (i = 0; i < M; i++)
+        xi[i] = bounding_box_local[3]*I + (bounding_box_local[0]+i*hG);
+    
+    ret_code = nse_scatter_bound_states(D, q, r, T, M,
+            xi, a_vals, NULL, NULL, discretization);
+    if (ret_code != SUCCESS){
+        ret_code = E_SUBROUTINE(ret_code);
+        CHECK_RETCODE(ret_code, leave_fun);
+    }
+    
+    for (i = 1; i < M; i++){
+        if ((CARG(a_vals[i])*CARG(a_vals[i-1]))<0 && FABS(CARG(a_vals[i])-CARG(a_vals[i-1]))>(1.3*PI)){
+            jump_points[K] = (xi[i]+xi[i-1])/2;
+            phi_jump_points[K]  = PI;
+            K++;
+        }
+    }
+    
+    // Left boundary
+    M = (bounding_box_local[3] - bounding_box_local[2])/hG;
+    xi = malloc(M * sizeof(COMPLEX));
+    a_vals = malloc(M * sizeof(COMPLEX));
+    if (xi == NULL || a_vals == NULL) {
+        ret_code = E_NOMEM;
+        goto leave_fun;
+    }
+    for (i = 0; i < M; i++)
+        xi[i] = bounding_box_local[0] + (bounding_box_local[2]+i*hG)*I;
+    
+    ret_code = nse_scatter_bound_states(D, q, r, T, M,
+            xi, a_vals, NULL, NULL, discretization);
+    if (ret_code != SUCCESS){
+        ret_code = E_SUBROUTINE(ret_code);
+        CHECK_RETCODE(ret_code, leave_fun);
+    }
+    
+    for (i = 1; i < M; i++){
+        if ((CARG(a_vals[i])*CARG(a_vals[i-1]))<0 && FABS(CARG(a_vals[i])-CARG(a_vals[i-1]))>(1.3*PI)){
+            jump_points[K] = (xi[i]+xi[i-1])/2;
+            phi_jump_points[K]  = 3*PI/2;
+            K++;
+        }
+    }
+    
+    printf("K=%ld\n",K);
+    
+    REAL hg = (1.0/15.0)*misc_min_dist(K,jump_points);
+    if (hg < Tol/2)
+        hg = Tol/2;
+
+    
+    
+     leave_fun:
         return ret_code;
 }

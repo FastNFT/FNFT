@@ -55,7 +55,7 @@ REAL misc_hausdorff_dist(const UINT lenA,
     COMPLEX const * const vecB)
 {
     UINT i, j;
-    double tmp, dist, max_dist = -1.0;
+    REAL tmp, dist, max_dist = -1.0;
 
     for (i=0; i<lenA; i++) {
         dist = INFINITY;
@@ -80,6 +80,28 @@ REAL misc_hausdorff_dist(const UINT lenA,
     }
 
     return max_dist;
+}
+
+REAL misc_min_dist(const UINT lenA,
+    COMPLEX const * const vecA)
+{
+    UINT i, j;
+    REAL tmp, dist, min_dist = INFINITY;
+
+    for (i=0; i<lenA; i++) {
+        dist = INFINITY;
+        for (j=0; j<lenA; j++) {
+            if (j != i){
+                tmp = CABS(vecA[i] - vecA[j]);
+                if (tmp < dist)
+                    dist = tmp;
+            }
+        }
+        if (dist < min_dist)
+            min_dist = dist;
+    }
+    
+    return min_dist;
 }
 
 COMPLEX misc_sech(COMPLEX Z)

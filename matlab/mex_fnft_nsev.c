@@ -130,10 +130,34 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             
             opts.bound_state_localization = fnft_nsev_bsloc_NEWTON;
             
-            /* Extract initial guesses for Newtons method */
+            /* Extract initial guesses for Newton's method */
             if ( k+1 == nrhs || !mxIsComplex(prhs[k+1])
             || mxGetM(prhs[k+1]) != 1 || mxGetN(prhs[k+1]) < 1) {
                 snprintf(msg, sizeof msg, "'bsloc_newton' should be followed by a complex row vector of initial guesses for Newton's method. Try passing complex(...).");
+                goto on_error;
+            }
+            K = mxGetN(prhs[k+1]);
+            bound_states = mxMalloc(K * sizeof(FNFT_COMPLEX));
+            if (bound_states == NULL) {
+                snprintf(msg, sizeof msg, "Out of memory.");
+                goto on_error;
+            }
+            re = mxGetPr(prhs[k+1]);
+            im = mxGetPi(prhs[k+1]);
+            for (j=0; j<K; j++)
+                bound_states[j] = re[j] + I*im[j];
+            
+            /* Increase k to account for vector of initial guesses */
+            k++;
+        
+        } else if ( strcmp(str, "bsloc_muller") == 0 ) {
+            
+            opts.bound_state_localization = fnft_nsev_bsloc_MULLER;
+            
+            /* Extract initial guesses for Muller's method */
+            if ( k+1 == nrhs || !mxIsComplex(prhs[k+1])
+            || mxGetM(prhs[k+1]) != 1 || mxGetN(prhs[k+1]) < 1) {
+                snprintf(msg, sizeof msg, "'bsloc_muller' should be followed by a complex row vector of initial guesses for Newton's method. Try passing complex(...).");
                 goto on_error;
             }
             K = mxGetN(prhs[k+1]);
@@ -162,7 +186,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             opts.niter = (FNFT_UINT)mxGetScalar(prhs[k+1]);
             
             /* Increase k to account for vector of initial guesses */
-    	    k++;
+            k++;
             
         } else if ( strcmp(str, "bsloc_subsamp_refine") == 0 ) {
             
@@ -191,9 +215,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             
             opts.bound_state_filtering = fnft_nsev_bsfilt_BASIC;
             
-        } else if ( strcmp(str, "bsfilt_full") == 0 ) {
+        } else if ( strcmp(str, "bsfilt_auto") == 0 ) {
             
-            opts.bound_state_filtering = fnft_nsev_bsfilt_FULL;
+            opts.bound_state_filtering = fnft_nsev_bsfilt_AUTO;
+            
+        } else if ( strcmp(str, "bsfilt_manual") == 0 ) {
+
+            opts.bound_state_filtering = fnft_nsev_bsfilt_MANUAL;
+
+            /* Extract bounding box for manual filltering */
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+            || mxGetM(prhs[k+1]) != 1 || mxGetN(prhs[k+1]) != 4) {
+                snprintf(msg, sizeof msg, "'bsfilt_manual' should be followed by a real row vector of length four. See the help.");
+                goto on_error;
+            }
+            double const * const tmp = mxGetPr(prhs[k+1]);
+            opts.bounding_box[0] = (FNFT_REAL)tmp[0];
+            opts.bounding_box[1] = (FNFT_REAL)tmp[1];
+            opts.bounding_box[2] = (FNFT_REAL)tmp[2];
+            opts.bounding_box[3] = (FNFT_REAL)tmp[3];
+
+            /* Increase k to account for bounding box vector */
+            k++;
             
         } else if ( strcmp(str, "discr_modal") == 0 ) {
             

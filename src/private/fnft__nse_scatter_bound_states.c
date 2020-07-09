@@ -30,11 +30,11 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
         COMPLEX *r, REAL const *const T, UINT K,
         COMPLEX *bound_states, COMPLEX *a_vals,
         COMPLEX *aprime_vals, COMPLEX *b,
-        nse_discretization_t discretization, UINT skip_b_flag)
+        nse_discretization_t discretization)
 {
     
     INT ret_code = SUCCESS;
-    UINT neig;
+    UINT neig, skip_b_flag = 0, skip_aprime_flag = 0;
     UINT n, upsampling_factor, D_given, n_given, count;
     COMPLEX * l = NULL, qn, rn, ks, k,ch,chi,sh,u1,ud1,ud2, l_curr;
     REAL eps_t_n = 0, eps_t = 0, scl_factor = 0;
@@ -58,13 +58,13 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
     if (K <= 0.0)
         return E_INVALID_ARGUMENT(K);
     if (bound_states == NULL)
-        return E_INVALID_ARGUMENT(bound_states);
+        return E_INVALID_ARGUMENT(bound_states);    
     if (a_vals == NULL)
         return E_INVALID_ARGUMENT(a);
     if (aprime_vals == NULL)
-        return E_INVALID_ARGUMENT(a_prime);
+        skip_aprime_flag = 1;
     if (b == NULL)
-        return E_INVALID_ARGUMENT(b);
+        skip_b_flag = 1;
     
     
     if (r == NULL) {
@@ -277,12 +277,14 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
         // Scattering PHI and PHI_D from T[0] to T[1]
         // PHI is stored at intermediate values as they are needed for the
         // accurate computation of b-coefficient.
-        COMPLEX U[4][4] = {{0}};        
+        COMPLEX U[4][4] = {{0}};
         PHI1[0] = 1.0*CEXP(-I*l_curr*(T[0]-eps_t*boundary_coeff));
         PHI2[0] = 0.0;
-        PHI1_D = PHI1[0]*(-I*(T[0]-eps_t*boundary_coeff));
-        PHI2_D = 0.0;
-        
+        if (skip_aprime_flag == 0){
+            PHI1_D = PHI1[0]*(-I*(T[0]-eps_t*boundary_coeff));
+            PHI2_D = 0.0;
+        }
+
         n_given = 0;
         switch (discretization) {
             
@@ -307,20 +309,23 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                         sh = eps_t;
                     
                     u1 = l[n]*sh*I;
-                    ud1 = eps_t*l[n]*l[n]*chi*I;
-                    ud2 = l[n]*(eps_t*ch-sh)/ks;
+                   
                     U[0][0] = ch-u1;
                     U[0][1] = qn*sh;
                     U[1][0] = rn*sh;
                     U[1][1] = ch + u1;
-                    U[2][0] = ud1-(l[n]*eps_t+I+(l[n]*l[n]*I)/ks)*sh;
-                    U[2][1] = -qn*ud2;
-                    U[3][0] = -rn*ud2;
-                    U[3][1] = -ud1-(l[n]*eps_t-I-(l[n]*l[n]*I)/ks)*sh;
-                    c = U[2][0]*phi1 + U[2][1]*phi2 + U[0][0]*PHI1_D + U[0][1]*PHI2_D;
-                    PHI2_D = U[3][0]*phi1 + U[3][1]*phi2 + U[1][0]*PHI1_D + U[1][1]*PHI2_D;
-                    PHI1_D = c;
                     
+                    if (skip_aprime_flag == 0){
+                        ud1 = eps_t*l[n]*l[n]*chi*I;
+                        ud2 = l[n]*(eps_t*ch-sh)/ks;
+                        U[2][0] = ud1-(l[n]*eps_t+I+(l[n]*l[n]*I)/ks)*sh;
+                        U[2][1] = -qn*ud2;
+                        U[3][0] = -rn*ud2;
+                        U[3][1] = -ud1-(l[n]*eps_t-I-(l[n]*l[n]*I)/ks)*sh;
+                        c = U[2][0]*phi1 + U[2][1]*phi2 + U[0][0]*PHI1_D + U[0][1]*PHI2_D;
+                        PHI2_D = U[3][0]*phi1 + U[3][1]*phi2 + U[1][0]*PHI1_D + U[1][1]*PHI2_D;
+                        PHI1_D = c;
+                    }
                     c = U[1][0]*phi1 + U[1][1]*phi2;
                     phi1 = U[0][0]*phi1 + U[0][1]*phi2;
                     phi2 = c;
@@ -351,21 +356,25 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     else
                         s = 1;
                     c = CCOS(w);
-                    w_d = -(1/w)*(a1*tmp2[n]+a2*tmp2[n+1]+a3*tmp2[n+2]);
-                    c_d = -CSIN(w)*w_d;
-                    s_d = w_d*(c-s)/w;
+                   
                     U[0][0] = (c+s*a3);
                     U[0][1] = s*(a1-I*a2);
                     U[1][0] = s*(a1+I*a2);
                     U[1][1] = (c-s*a3);
-                    U[2][0] = c_d+s_d*a3+s*tmp2[n+2];
-                    U[2][1] = s_d*a1+s*tmp2[n]-I*s_d*a2-I*s*tmp2[n+1];
-                    U[3][0] = s_d*a1+s*tmp2[n]+I*s_d*a2+I*s*tmp2[n+1];
-                    U[3][1] = c_d-s_d*a3-s*tmp2[n+2];
-
-                    c = U[2][0]*PHI1[n_given] + U[2][1]*PHI2[n_given] + U[0][0]*PHI1_D + U[0][1]*PHI2_D;
-                    PHI2_D = U[3][0]*PHI1[n_given] + U[3][1]*PHI2[n_given] + U[1][0]*PHI1_D + U[1][1]*PHI2_D;
-                    PHI1_D = c;
+                    
+                    if (skip_aprime_flag == 0){
+                        w_d = -(1/w)*(a1*tmp2[n]+a2*tmp2[n+1]+a3*tmp2[n+2]);
+                        c_d = -CSIN(w)*w_d;
+                        s_d = w_d*(c-s)/w;
+                        U[2][0] = c_d+s_d*a3+s*tmp2[n+2];
+                        U[2][1] = s_d*a1+s*tmp2[n]-I*s_d*a2-I*s*tmp2[n+1];
+                        U[3][0] = s_d*a1+s*tmp2[n]+I*s_d*a2+I*s*tmp2[n+1];
+                        U[3][1] = c_d-s_d*a3-s*tmp2[n+2];
+                        
+                        c = U[2][0]*PHI1[n_given] + U[2][1]*PHI2[n_given] + U[0][0]*PHI1_D + U[0][1]*PHI2_D;
+                        PHI2_D = U[3][0]*PHI1[n_given] + U[3][1]*PHI2[n_given] + U[1][0]*PHI1_D + U[1][1]*PHI2_D;
+                        PHI1_D = c;
+                    }
                     
                     c = U[1][0]*PHI1[n_given] + U[1][1]*PHI2[n_given];
                     PHI1[n_given+1] = U[0][0]*PHI1[n_given] + U[0][1]*PHI2[n_given];
@@ -394,10 +403,13 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     TM[0][1] = s*(a1-I*a2);
                     TM[1][0] = s*(a1+I*a2);
                     TM[1][1] = c;
+                    
+                    if (skip_aprime_flag == 0){
                     TMD[0][0] = TM[0][0];
                     TMD[0][1] = TM[0][1];
                     TMD[1][0] = TM[1][0];
                     TMD[1][1] = TM[1][1];
+                    }
                     
                     a1 = (eps_t*(q[n] + r[n]))*0.5;
                     a2 = (eps_t*(q[n]*I - r[n]*I))*0.5;
@@ -412,16 +424,20 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     UN[0][1] = s*(a1-I*a2);
                     UN[1][0] = s*(a1+I*a2);
                     UN[1][1] = (c-s*a3);
-                    s_d = CSIN(w*eps_t)/w;
-                    c_d = -eps_t*l_curr*s_d;
-                    w_d = l_curr*(eps_t*w*CCOS(w*eps_t)-CSIN(w*eps_t))/(w*w*w);
-                    UD[0][0] = c_d-I*s_d;
-                    UD[0][1] = w_d*q[n];
-                    UD[1][0] = w_d*r[n];
-                    UD[1][1] = c_d+I*s_d;
                     
-                    misc_mat_mult_2x2(&UN[0][0], &TM[0][0]);
-                    misc_mat_mult_2x2(&UD[0][0], &TMD[0][0]);
+                    misc_mat_mult_2x2(&UN[0][0], &TM[0][0]);  
+                    
+                    if (skip_aprime_flag == 0){
+                        s_d = CSIN(w*eps_t)/w;
+                        c_d = -eps_t*l_curr*s_d;
+                        w_d = l_curr*(eps_t*w*CCOS(w*eps_t)-CSIN(w*eps_t))/(w*w*w);
+                        UD[0][0] = c_d-I*s_d;
+                        UD[0][1] = w_d*q[n];
+                        UD[1][0] = w_d*r[n];
+                        UD[1][1] = c_d+I*s_d;
+                        
+                        misc_mat_mult_2x2(&UD[0][0], &TMD[0][0]);                        
+                    }
                     
                     a1 = tmp2[n];
                     a2 = tmp2[n+1];
@@ -436,26 +452,31 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     UN[0][1] = s*(a1-I*a2);
                     UN[1][0] = s*(a1+I*a2);
                     UN[1][1] = c;
-                    UD[0][0] = UN[0][0];
-                    UD[0][1] = UN[0][1];
-                    UD[1][0] = UN[1][0];
-                    UD[1][1] = UN[1][1];
                     
                     misc_mat_mult_2x2(&UN[0][0], &TM[0][0]);
-                    misc_mat_mult_2x2(&UD[0][0], &TMD[0][0]);
                     
                     U[0][0] = TM[0][0];
                     U[0][1] = TM[0][1];
                     U[1][0] = TM[1][0];
                     U[1][1] = TM[1][1];
-                    U[2][0] = TMD[0][0];
-                    U[2][1] = TMD[0][1];
-                    U[3][0] = TMD[1][0];
-                    U[3][1] = TMD[1][1];
-
-                    c = U[2][0]*PHI1[n_given] + U[2][1]*PHI2[n_given] + U[0][0]*PHI1_D + U[0][1]*PHI2_D;
-                    PHI2_D = U[3][0]*PHI1[n_given] + U[3][1]*PHI2[n_given] + U[1][0]*PHI1_D + U[1][1]*PHI2_D;
-                    PHI1_D = c;
+                    
+                    if (skip_aprime_flag == 0){
+                        UD[0][0] = UN[0][0];
+                        UD[0][1] = UN[0][1];
+                        UD[1][0] = UN[1][0];
+                        UD[1][1] = UN[1][1];
+                        
+                        misc_mat_mult_2x2(&UD[0][0], &TMD[0][0]);
+                        
+                        U[2][0] = TMD[0][0];
+                        U[2][1] = TMD[0][1];
+                        U[3][0] = TMD[1][0];
+                        U[3][1] = TMD[1][1];
+                        
+                        c = U[2][0]*PHI1[n_given] + U[2][1]*PHI2[n_given] + U[0][0]*PHI1_D + U[0][1]*PHI2_D;
+                        PHI2_D = U[3][0]*PHI1[n_given] + U[3][1]*PHI2[n_given] + U[1][0]*PHI1_D + U[1][1]*PHI2_D;
+                        PHI1_D = c;
+                    }
                     
                     c = U[1][0]*PHI1[n_given] + U[1][1]*PHI2[n_given];
                     PHI1[n_given+1] = U[0][0]*PHI1[n_given] + U[0][1]*PHI2[n_given];
@@ -637,8 +658,9 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
         }
         
         a_vals[neig] = PHI1[D_given]*CEXP(I*l_curr*(T[1]+eps_t*boundary_coeff));
-        aprime_vals[neig] = scl_factor*(PHI1_D*CEXP(I*l_curr*(T[1]+eps_t*boundary_coeff))+(I*(T[1]+eps_t*boundary_coeff))* a_vals[neig]);
-        
+        if (skip_aprime_flag == 0)
+            aprime_vals[neig] = scl_factor*(PHI1_D*CEXP(I*l_curr*(T[1]+eps_t*boundary_coeff))+(I*(T[1]+eps_t*boundary_coeff))* a_vals[neig]);
+
         if (skip_b_flag == 0){
             // Calculation of b assuming a=0
             // Uses the metric from DOI: 10.1109/ACCESS.2019.2932256 for choosing the

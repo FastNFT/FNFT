@@ -44,14 +44,17 @@
  *  fnft_nsev_bsfilt_NONE: All detected roots of \f$ a(\lambda) \f$ are returned. \n \n
  *  fnft_nsev_bsfilt_BASIC: Only roots in the upper halfplane are returned and roots very close
  *  to each other are merged. \n \n
- *  fnft_nsev_bsfilt_FULL: Bound states in physically implausible regions and
+ *  fnft_nsev_bsfilt_AUTO: Bound states in physically implausible regions and
  *  outside the region based on the step-size of the supplied samples are
  *  rejected.
+ *  fnft_nsev_opts_filt_MANUAL: Only points within the specified
+ *  \link fnft_nsev_opts_t::bounding_box \endlink are kept. \n\n
  */
 typedef enum {
     fnft_nsev_bsfilt_NONE,
     fnft_nsev_bsfilt_BASIC,
-    fnft_nsev_bsfilt_FULL
+    fnft_nsev_bsfilt_AUTO,
+    fnft_nsev_bsfilt_MANUAL
 } fnft_nsev_bsfilt_t;
 
 /**
@@ -65,6 +68,16 @@ typedef enum {
  *  routine as no release was available yet.) This method is relatively slow,
  *  but very reliable. \n \n
  *  fnft_nsev_bsloc_NEWTON: Newton's method is used to refine a given set of initial guesses.
+ *  The discretization used for the the refinement is one of the base methods \link fnft_nse_discretization_t.h \endlink.
+ *  The number of iterations is specified through the field \link fnft_nsev_opts_t::niter
+ *  \endlink.
+ *  The array bound_states passed to \link fnft_nsev \endlink
+ *  should contain the initial guesses and *K_ptr should specify the number of
+ *  initial guesses. It is sufficient if bound_states and normconst_or_residues
+ *  are of length *K_ptr in this case. This method can be very fast if good
+ *  initial guesses for the bound states are available. The complexity is
+ *  \f$ O(niter (*K\_ptr) D) \f$. \n \n
+  *  fnft_nsev_bsloc_Muller: Muller's method is used to refine a given set of initial guesses.
  *  The discretization used for the the refinement is one of the base methods \link fnft_nse_discretization_t.h \endlink.
  *  The number of iterations is specified through the field \link fnft_nsev_opts_t::niter
  *  \endlink.
@@ -91,6 +104,7 @@ typedef enum {
 typedef enum {
     fnft_nsev_bsloc_FAST_EIGENVALUE,
     fnft_nsev_bsloc_NEWTON,
+    fnft_nsev_bsloc_MULLER,
     fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE
 } fnft_nsev_bsloc_t;
 
@@ -147,6 +161,12 @@ typedef enum {
  *  root of \f$ a(\lambda) \f$ is an actual bound state or not. \n
  *  Should be of type \link fnft_nsev_bsfilt_t \endlink.
  *
+ * @var fnft_nsep_opts_t::bounding_box
+ *  Array of four reals. Defines a box in the complex plane that is used for
+ *  filtering: \n
+ *  bounding_box[0] <= real(lambda) <= bounding_box[1] \n
+ *  bounding_box[2] <= imag(lambda) <= bounding_box[3] \n
+ *
  * @var fnft_nsev_opts_t::bound_state_localization
  *  Controls how \link fnft_nsev \endlink localizes bound states. \n
  * Should be of type \link fnft_nsev_bsloc_t \endlink.
@@ -197,6 +217,7 @@ typedef enum {
  */
 typedef struct {
     fnft_nsev_bsfilt_t bound_state_filtering;
+    FNFT_REAL bounding_box[4];
     fnft_nsev_bsloc_t bound_state_localization;
     FNFT_UINT niter;
     FNFT_UINT Dsub;
@@ -379,9 +400,11 @@ FNFT_INT fnft_nsev(const FNFT_UINT D, FNFT_COMPLEX * const q,
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define nsev_bsfilt_NONE fnft_nsev_bsfilt_NONE
 #define nsev_bsfilt_BASIC fnft_nsev_bsfilt_BASIC
-#define nsev_bsfilt_FULL fnft_nsev_bsfilt_FULL
+#define nsev_bsfilt_AUTO fnft_nsev_bsfilt_AUTO
+#define nsev_bsfilt_MANUAL fnft_nsev_bsfilt_MANUAL
 #define nsev_bsloc_FAST_EIGENVALUE fnft_nsev_bsloc_FAST_EIGENVALUE
 #define nsev_bsloc_NEWTON fnft_nsev_bsloc_NEWTON
+#define nsev_bsloc_MULLER fnft_nsev_bsloc_MULLER
 #define nsev_bsloc_SUBSAMPLE_AND_REFINE fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE
 #define nsev_dstype_NORMING_CONSTANTS fnft_nsev_dstype_NORMING_CONSTANTS
 #define nsev_dstype_RESIDUES fnft_nsev_dstype_RESIDUES

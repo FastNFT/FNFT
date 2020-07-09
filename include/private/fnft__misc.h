@@ -72,6 +72,20 @@ FNFT_REAL fnft__misc_hausdorff_dist(const FNFT_UINT lenA,
     FNFT_COMPLEX const * const vecB);
 
 /**
+ * @brief Minimum distance elements of a vector.
+ *
+ * @ingroup misc
+ * This function computes the minimum distance between the elements of 
+ * the vector vecA.
+ * @param[in] lenA Length of vector vecA.
+ * @param[in] vecA Complex vector of length lenA.
+ * @return Returns the real valued minimum distance between the elements of 
+ * the vector vecA.
+ */
+FNFT_REAL fnft__misc_min_dist(const FNFT_UINT lenA,
+    FNFT_COMPLEX const * const vecA);
+
+/**
  * @brief Hyperbolic secant.
  *
  * @ingroup misc
@@ -361,6 +375,7 @@ static inline FNFT_REAL fnft__misc_legendre_poly(const FNFT_UINT n, const FNFT_R
 #define misc_mat_mult_2x2(...) fnft__misc_mat_mult_2x2(__VA_ARGS__)
 #define misc_mat_mult_4x4(...) fnft__misc_mat_mult_4x4(__VA_ARGS__)
 #define misc_legendre_poly(...) fnft__misc_legendre_poly(__VA_ARGS__)
+#define misc_min_dist(...) fnft__misc_min_dist(__VA_ARGS__)
 
 #endif
 

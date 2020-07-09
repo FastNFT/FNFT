@@ -112,7 +112,7 @@ INT nse_scatter_bound_states_test_bo()
     for (i=0; i<D; i++)
         q[i] = 3.0*misc_sech(T[0] + i*eps_t);
     ret_code = nse_scatter_bound_states(D, q, r, T, 3,
-        bound_states, a_vals, aprime_vals, b_vals, nse_discretization_BO, 0);
+        bound_states, a_vals, aprime_vals, b_vals, nse_discretization_BO);
     if (ret_code != SUCCESS)
         return E_SUBROUTINE(ret_code);
     error_bounds[0] = 100*EPSILON;

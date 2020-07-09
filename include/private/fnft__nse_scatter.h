@@ -61,14 +61,15 @@
  * @param[out] a_vals Array of length K, contains the values of \f$a(\lambda)\f$.
  * @param[out] aprime_vals Array of length K, contains the values of
  * \f$ a'(\lambda) = \frac{\partial a(\lambda)}{\partial \lambda}\f$.
+ * Computation of \f$ a'(\lambda) \f$ is skipped if NULL is passed. 
  * @param[out] b Array of length K, contains the values of \f$b(\lambda)\f$. 
  * The \f$b(\lambda)\f$ are calculated using the criterion from 
  * Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2932256">&quot; 
  * Soliton Phase Shift Calculation for the Korteweg–De Vries Equation,&quot;</a>.
+ * Computation of \f$ b(\lambda) \f$ is skipped if NULL is passed. 
  * @param[in] discretization The type of discretization to be used. Should be of type 
  * \link fnft_nse_discretization_t \endlink. Not all nse_discretization_t discretizations are supported.
  * Check \link fnft_nse_discretization_t \endlink for list of supported types.
- * @param[in] skip_b_flag If set to 1 the routine will not compute \f$b(\lambda)\f$.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  * @ingroup nse
@@ -77,7 +78,7 @@ FNFT_INT fnft__nse_scatter_bound_states(const FNFT_UINT D, FNFT_COMPLEX const *c
     FNFT_COMPLEX * r, FNFT_REAL const *const T, FNFT_UINT K,
     FNFT_COMPLEX *bound_states, FNFT_COMPLEX *a_vals,
     FNFT_COMPLEX *aprime_vals, FNFT_COMPLEX *b,
-    fnft_nse_discretization_t discretization, FNFT_UINT skip_b_flag);
+    fnft_nse_discretization_t discretization);
 
 /**
  * @brief Computes the scattering matrix and its derivative.
