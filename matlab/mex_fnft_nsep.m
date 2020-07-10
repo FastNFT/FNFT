@@ -8,8 +8,8 @@
 %   Provides an interface to the C routine fnft_nsep.
 %
 % INPUTS
-%   q               Complex row vector of length D=2n>2. The first sample
-%                   q(1) should correspond to T(1) and the last sample
+%   q               Complex row vector of length D, which should be power of 2.
+%                   The first sample q(1) should correspond to T(1) and the last sample
 %                   q(D) should correspond to T(2)-(T(2)-T(1))/D.
 %   T               Real 1x2 vector with T(2)>T(1).
 %   kappa           +1.0 or -1.0

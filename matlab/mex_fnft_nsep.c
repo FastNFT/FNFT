@@ -64,8 +64,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     kappa = (int)mxGetScalar(prhs[2]);
 
     /* Check values of first three inputs */
-    if ( D<2 || D%2 != 0 )
-        mexErrMsgTxt("Length of the first input q should be even.");
+    if ( D<2 || (D & (D-1)) != 0 )
+        mexErrMsgTxt("Length of the first input q should be a positive power of two.");
     if ( T[0] >= T[1] )
         mexErrMsgTxt("T(1) >= T(2).");
     if ( kappa != +1 && kappa != -1 )

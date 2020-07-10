@@ -28,7 +28,7 @@ close all;
 %%% Setup parameters %%%
 
 T = [0, 2*pi];  % T(1) is the beginning of the period, T(2) is the end
-D = 300;        % number of samples(NOTE: This has to be a even positive integer)
+D = 2^9;        % number of samples(NOTE: This has to be a even positive integer)
 kappa = +1;     % focusing nonlinear Schroedinger equation  
 
 %%% Setup the signal %%%

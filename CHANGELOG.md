@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.1] -- 2020-07-10
+
+### Fixed
+
+- Missing check in fnft_nsep for Dsub to be even was leading to errors. Reverting to number of samples for fnft_nsep to be power of two.
+
 ## [0.4.0] -- 2020-07-08
 
 ### Added
