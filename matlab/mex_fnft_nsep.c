@@ -65,7 +65,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     /* Check values of first three inputs */
     if ( D<2 || (D & (D-1)) != 0 )
-        mexErrMsgTxt("Length of the first input q should be a positive power of two.");
+        mexErrMsgTxt("Length of the first input q should be >=2 and a power of two.");
     if ( T[0] >= T[1] )
         mexErrMsgTxt("T(1) >= T(2).");
     if ( kappa != +1 && kappa != -1 )
@@ -174,26 +174,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "quiet") == 0 ) {
 
             fnft_errwarn_setprintf(NULL);
-            
+
         } else if ( strcmp(str, "discr_modal") == 0 ) {
-            
+
             opts.discretization = fnft_nse_discretization_2SPLIT2_MODAL;
-            
+
         } else if ( strcmp(str, "discr_2split2A") == 0 ) {
-            
+
             opts.discretization = fnft_nse_discretization_2SPLIT2A;
-            
+
         } else if ( strcmp(str, "discr_2split4A") == 0 ) {
-            
+
             opts.discretization = fnft_nse_discretization_2SPLIT4A; upsampling_factor = 4;
-            
+
         } else if ( strcmp(str, "discr_2split4B") == 0 ) {
-            
+
             opts.discretization = fnft_nse_discretization_2SPLIT4B; upsampling_factor = 2;
-            
+
         } else if ( strcmp(str, "discr_4split4B") == 0 ) {
-            
-            opts.discretization = fnft_nse_discretization_4SPLIT4B; upsampling_factor = 4;            
+
+            opts.discretization = fnft_nse_discretization_4SPLIT4B; upsampling_factor = 4;
 
         } else {
             snprintf(msg, sizeof msg, "%uth input has invalid value.",
