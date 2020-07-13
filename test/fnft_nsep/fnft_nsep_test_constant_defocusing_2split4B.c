@@ -25,7 +25,7 @@ INT main()
 {
     INT ret_code;
     const fnft__nsep_testcases_t tc = nsep_testcases_CONSTANT_DEFOCUSING;
-    UINT D = 1026;
+    UINT D = 1024;
     REAL error_bounds[3] = {
         7.6e-5, // main spectrum
         2.5e-8, // aux spectrum

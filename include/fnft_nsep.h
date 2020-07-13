@@ -189,7 +189,7 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  *      - Prins and Wahls, <a href="https://doi.org/10.1109/ICASSP.2018.8461708">&quot;Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot;</a>in Proc.ICASSP 2018, Calgary, AB, 2018, pp. 4524-4528.
  *      - Mertsching, <a href="https://doi.org/10.1002/prop.2190350704">&quot; Quasiperiodie Solutions of the Nonlinear Schrödinger Equation,&quot;</a> Fortschr. Phys. 35:519-536, 1987.
  *
- * * The routine supports the following discretizations of type \link fnft_nse_discretization_t \endlink:
+ * The routine supports the following discretizations of type \link fnft_nse_discretization_t \endlink:
  *       - fnft_nse_discretization_2SPLIT1A
  *       - fnft_nse_discretization_2SPLIT1B
  *       - fnft_nse_discretization_2SPLIT2A
@@ -211,7 +211,7 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  *       - fnft_nse_discretization_2SPLIT8B
  *       - fnft_nse_discretization_4SPLIT4A
  *
- * @param[in] D Number of samples. Has to be even.
+ * @param[in] D Number of samples. Should be power of two and \f$ D\geq 2\f$.
  * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
  *  where \f$ t_n = T[0] + n*L/D \f$, where \f$L=T[1]-T[0]\f$ is the period and
  *  \f$n=0,1,\dots,D-1\f$, of the to-be-transformed signal in ascending order

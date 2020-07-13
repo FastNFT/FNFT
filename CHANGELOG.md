@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.4.1] -- 2020-07-13
+
+### Changed
+
+- Number of samples for fnft_nsep again has to be a power of two.
+
+### Fixed
+
+- misc_downsample could return incorrect values for first_last_index[1]
+
 ## [0.4.0] -- 2020-07-08
 
 ### Added
