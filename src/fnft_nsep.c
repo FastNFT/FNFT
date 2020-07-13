@@ -92,7 +92,11 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
     COMPLEX *q_preprocessed = NULL;
     
     // Check inputs
-    if (D < 2 || D%2 == 1)
+    // D (and Dsub in line 493) only need to be even to ensure that deg in line 279 and 537 are also even for all discretizations. 
+    // deg is required to be even so that its use in lines 321, 355 and 587 make sense. 
+    // Due to the periodic boundary conditions, Dsub has to be an even factor of D. For some choices like D=514, this means Dsub can only be 514 as D=514=2*257.
+    // This makes the idea of subsampling unintuitive. Hence at this stage D is restricted to powers of two for which subsampling still makes sense. 
+    if (D < 2 || (D & (D-1)) != 0 )
         return E_INVALID_ARGUMENT(D);
     if (q == NULL)
         return E_INVALID_ARGUMENT(q);
@@ -483,19 +487,23 @@ static inline INT subsample_and_refine(const UINT D,
             first_last_index, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
     
-    
     // Create a subsampled/resampled version of q for computing initial guesses.
     Dsub = opts_ptr->Dsub;
     if (Dsub == 0) // users wants Dsub to be chosen automatically
-        Dsub = ROUND(SQRT(D * LOG2(D) * LOG2(D)));
-    nskip_per_step = ROUND((REAL)D / Dsub);
-    Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
+        Dsub = POW(2.0, CEIL( 0.5 * LOG2(D * LOG2(D) * LOG2(D)) ));
+    else
+        Dsub = POW(2.0, ROUND(LOG2(Dsub))); 
     
     ret_code = nse_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &qsub_preprocessed, &rsub_preprocessed,
             first_last_index, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
+
+    nskip_per_step = D/Dsub;
+    if ( first_last_index[0] != 0 || first_last_index[1]+nskip_per_step != D )
+        return E_ASSERTION_FAILED; // Correct update of T for general
+                                   // downsampling still needs to be
+                                 // implemented
     
-      
     if (upsampling_factor == 2) {        
         nse_discretization = nse_discretization_CF4_2;
     } else if (upsampling_factor == 1) {

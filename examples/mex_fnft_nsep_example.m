@@ -21,14 +21,13 @@
 % conditions can be computed using mex_fnft_nsep. The signal is the same
 % plane wave as in the paper https://doi.org/10.1109/TIT.2015.2485944
 
-
 clear all;
 close all;
 
 %%% Setup parameters %%%
 
 T = [0, 2*pi];  % T(1) is the beginning of the period, T(2) is the end
-D = 300;        % number of samples(NOTE: This has to be a even positive integer)
+D = 2^9;        % number of samples (has to be a power of two)
 kappa = +1;     % focusing nonlinear Schroedinger equation  
 
 %%% Setup the signal %%%
