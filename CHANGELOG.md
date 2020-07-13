@@ -1,10 +1,14 @@
 # Changelog
 
-## [0.4.1] -- 2020-07-10
+## [0.4.1] -- 2020-07-13
+
+### Changed
+
+- Number of samples for fnft_nsep again has to be a power of two.
 
 ### Fixed
 
-- Missing check in fnft_nsep for Dsub to be even was leading to errors. Reverting to number of samples for fnft_nsep to be power of two.
+- misc_downsample could return incorrect values for first_last_index[1]
 
 ## [0.4.0] -- 2020-07-08
 
