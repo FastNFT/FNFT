@@ -211,7 +211,7 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  *       - fnft_nse_discretization_2SPLIT8B
  *       - fnft_nse_discretization_4SPLIT4A
  *
- * @param[in] D Number of samples. Should be power of two and \f$ D>2\f$.
+ * @param[in] D Number of samples. Should be power of two and \f$ D\geq 2\f$.
  * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
  *  where \f$ t_n = T[0] + n*L/D \f$, where \f$L=T[1]-T[0]\f$ is the period and
  *  \f$n=0,1,\dots,D-1\f$, of the to-be-transformed signal in ascending order

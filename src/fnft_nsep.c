@@ -92,6 +92,10 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
     COMPLEX *q_preprocessed = NULL;
     
     // Check inputs
+    // D (and Dsub in line 493) only need to be even to ensure that deg in line 279 and 537 are also even for all discretizations. 
+    // deg is required to be even so that its use in lines 321, 355 and 587 make sense. 
+    // Due to the periodic boundary conditions, Dsub has to be an even factor of D. For some choices like D=514, this means Dsub can only be 514 as D=514=2*257.
+    // This makes the idea of subsampling unintuitive. Hence at this stage D is restricted to powers of two for which subsampling still makes sense. 
     if (D < 2 || (D & (D-1)) != 0 )
         return E_INVALID_ARGUMENT(D);
     if (q == NULL)
