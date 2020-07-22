@@ -17,7 +17,7 @@
 % Sander Wahls (TU Delft) 2020.
 
 % This example shows the feature of computing bound states using the phase 
-% jump tracking algorithm. The example is Example 1 from doi: 10.1103/PhysRevE.96.063302
+% analysis based algorithm. The example is Example 1 from doi: 10.1103/PhysRevE.96.063302
 
 clear;
 close all;
@@ -25,17 +25,17 @@ clc;
 
 %%% Setup parameters %%%
 
-T = [-350,350];   % location of the 1st and last sample in the time domain
+T = [-600,600];   % location of the 1st and last sample in the time domain
 XI = [-10,10];  % location of the 1st and last sample in the xi-domain
 kappa = +1;     % focusing nonlinear Schroedinger equation
-D = 2^11;
+D = 2^12;
 
 %%% Exact values of the bound states %%%
 
-K = 32; % Number of bound states
+K = 48; % Number of bound states
 theta0=pi/3;
-J=4;
-L=14;
+J = 4;
+L = K/J;
 deltatheta=(pi-2*theta0)/(J-1);
 theta=theta0+((1:J)-1)*deltatheta;
 lactual=kron([1:L],exp(1i*theta));
@@ -52,7 +52,7 @@ q = mex_fnft_nsev_inverse([], [-1,1], bound_states_exact, normconsts_exact, D, T
 %%% Compute the discrete part of the nonlinear Fourier transform %%%
 
 [~,bound_states_computed,normconsts_computed]=mex_fnft_nsev(q, T, XI,... 
-    kappa,'discr_ES4','bsloc_pjt');
+    kappa,'discr_ES4','bsloc_GRPF', 'skip_cs');
 
 %%% Plot results %%%
 

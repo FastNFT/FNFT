@@ -98,6 +98,12 @@ typedef size_t FNFT_UINT;
 #define FNFT_COS(X) cos(X)
 
 /**
+ * Cosine inverse of a \link FNFT_REAL \endlink.
+ * @ingroup numtype
+ */
+#define FNFT_ACOS(X) acos(X)
+
+/**
  * Sine of a \link FNFT_REAL \endlink.
  * @ingroup numtype
  */
@@ -276,6 +282,7 @@ typedef size_t FNFT_UINT;
 #define LOG(X)          FNFT_LOG(X)
 #define CLOG(X)         FNFT_CLOG(X)
 #define COS(X)          FNFT_COS(X)
+#define ACOS(X)          FNFT_ACOS(X)
 #define SIN(X)          FNFT_SIN(X)
 #define ATAN(X)         FNFT_ATAN(X)
 #define SQRT(X)         FNFT_SQRT(X)

@@ -100,17 +100,23 @@ typedef enum {
  *  call to the fnft_nsev_bsloc_FAST_EIGENVALUE method w.r.t. the subsampled
  *  signal. By choosing Dsub between 2 and D, the user can be request a
  *  different number of samples. Note that algorithm uses this value only as an
- *  indication.
+ *  indication.\n \n
  *  fnft_nsev_bsloc_PJT: This method is a modified version of the 
  *  algorithm based on phase jump tracking to find the bound states in
- *  Chekhovskoy et al. (https://arxiv.org/abs/2003.02215v2).
+ *  Chekhovskoy et al. (https://arxiv.org/abs/2003.02215v2).\n \n
+ *  fnft_nsev_bsloc_GRPF: This algorithm finds the bound states by interatively 
+ *  refining a mesh of points by analysing the phase of \f$ a \f$. It is based
+ *  on the papers Kowalczyk(https://doi.org/10.1145/2699457) and 
+ *  Kowalczyk (https://doi.org/10.1109/TAP.2018.2869213). The exact implmentation
+ *  is based on the MATLAB version available at https://github.com/PioKow/GRPF.
  */
 typedef enum {
     fnft_nsev_bsloc_FAST_EIGENVALUE,
     fnft_nsev_bsloc_NEWTON,
     fnft_nsev_bsloc_MULLER,
     fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE,
-    fnft_nsev_bsloc_PJT
+    fnft_nsev_bsloc_PJT,
+    fnft_nsev_bsloc_GRPF
 } fnft_nsev_bsloc_t;
 
 /**
@@ -166,7 +172,7 @@ typedef enum {
  *  root of \f$ a(\lambda) \f$ is an actual bound state or not. \n
  *  Should be of type \link fnft_nsev_bsfilt_t \endlink.
  *
- * @var fnft_nsep_opts_t::bounding_box
+ * @var fnft_nsev_opts_t::bounding_box
  *  Array of four reals. Defines a box in the complex plane that is used for
  *  filtering: \n
  *  bounding_box[0] <= real(lambda) <= bounding_box[1] \n
@@ -411,6 +417,7 @@ FNFT_INT fnft_nsev(const FNFT_UINT D, FNFT_COMPLEX * const q,
 #define nsev_bsloc_NEWTON fnft_nsev_bsloc_NEWTON
 #define nsev_bsloc_MULLER fnft_nsev_bsloc_MULLER
 #define nsev_bsloc_PJT fnft_nsev_bsloc_PJT
+#define nsev_bsloc_GRPF fnft_nsev_bsloc_GRPF
 #define nsev_bsloc_SUBSAMPLE_AND_REFINE fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE
 #define nsev_dstype_NORMING_CONSTANTS fnft_nsev_dstype_NORMING_CONSTANTS
 #define nsev_dstype_RESIDUES fnft_nsev_dstype_RESIDUES

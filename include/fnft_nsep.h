@@ -189,7 +189,7 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  *      - Prins and Wahls, <a href="https://doi.org/10.1109/ICASSP.2018.8461708">&quot;Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot;</a>in Proc.ICASSP 2018, Calgary, AB, 2018, pp. 4524-4528.
  *      - Mertsching, <a href="https://doi.org/10.1002/prop.2190350704">&quot; Quasiperiodie Solutions of the Nonlinear Schrödinger Equation,&quot;</a> Fortschr. Phys. 35:519-536, 1987.
  *
- * * The routine supports the following discretizations of type \link fnft_nse_discretization_t \endlink:
+ * The routine supports the following discretizations of type \link fnft_nse_discretization_t \endlink:
  *       - fnft_nse_discretization_2SPLIT1A
  *       - fnft_nse_discretization_2SPLIT1B
  *       - fnft_nse_discretization_2SPLIT2A

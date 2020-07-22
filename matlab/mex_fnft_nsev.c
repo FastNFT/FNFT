@@ -130,6 +130,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             
             opts.bound_state_localization = fnft_nsev_bsloc_PJT;
             
+        } else if ( strcmp(str, "bsloc_GRPF") == 0 ) {
+            
+            opts.bound_state_localization = fnft_nsev_bsloc_GRPF;
+            
         } else if ( strcmp(str, "bsloc_newton") == 0 ) {
             
             opts.bound_state_localization = fnft_nsev_bsloc_NEWTON;
