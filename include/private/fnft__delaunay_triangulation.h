@@ -190,8 +190,8 @@ FNFT_INT fnft__delaunay_triangulation(fnft__delaunay_triangulation_data_t * DT_p
  * @param[out] ArrayOfCandidateElements_ptr This is the pointer to the ArrayOfCandidateElements array
  * which contains the indices of triangles which were found to have the specified edges. 
  * NOTE: The indices of the triangles may have repitition if the triangle has
- * more than one of the specified edges. The memory for the array is allocated 
- * by the routine and should be freed by the calling function.
+ * more than one of the specified edges. Atleast 3*NrOfElements amount of
+ * memory should be alloted.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  * @ingroup delaunay_triangulation
@@ -200,7 +200,7 @@ FNFT_INT fnft__delaunay_triangulation_edgeAttachments(FNFT_UINT NrOfElements,
         FNFT_UINT *Elements1, FNFT_UINT *Elements2, FNFT_UINT *Elements3,
         FNFT_UINT NrOfNodes, FNFT_UINT *Nodes1, FNFT_UINT *Nodes2,
         FNFT_UINT *NrOfCandidateElements_ptr,
-        FNFT_UINT **ArrayOfCandidateElements_ptr);
+        FNFT_UINT *ArrayOfCandidateElements);
 
 /**
  * @brief Finds all the triangles which have specified vertices.
@@ -222,8 +222,8 @@ FNFT_INT fnft__delaunay_triangulation_edgeAttachments(FNFT_UINT NrOfElements,
  * @param[out] ArrayOfCandidateElements_ptr This is the pointer to the ArrayOfCandidateElements array
  * which contains the indices of triangles which were found to have the specified nodes.
  * NOTE: The indices of the triangles may have repitition if the triangle has
- * more than one of the specified nodes. The memory for the array is allocated 
- * by the routine and should be freed by the calling function.
+ * more than one of the specified nodes. Atleast 3*NrOfElements amount of
+ * memory should be alloted.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  * @ingroup delaunay_triangulation
@@ -232,7 +232,7 @@ FNFT_INT fnft__delaunay_triangulation_vertexAttachments(FNFT_UINT NrOfElements,
         FNFT_UINT *Elements1, FNFT_UINT *Elements2, FNFT_UINT *Elements3,
         FNFT_UINT NrOfNodes, FNFT_UINT *Nodes,
         FNFT_UINT *NrOfCandidateElements_ptr,
-        FNFT_UINT **ArrayOfCandidateElements_ptr);
+        FNFT_UINT *ArrayOfCandidateElements);
 
 /**
  * @brief Generates rectangular mesh.

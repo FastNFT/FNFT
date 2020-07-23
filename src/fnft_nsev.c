@@ -206,6 +206,9 @@ INT fnft_nsev(
     INT bs_loc_opt = 0, ds_type_opt = 0;
     INT ret_code = SUCCESS;
     UINT i, j, upsampling_factor, D_effective, nskip_per_step;
+    fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
+    COMPLEX *buf0 = NULL, *buf1 = NULL;
+    REAL * FTq = NULL;
 
     // Check inputs
     if (D < 2)
@@ -313,8 +316,6 @@ INT fnft_nsev(
         
         // Fixing search box and some other parameters
         REAL Cq = 1e-3;
-        fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
-        COMPLEX *buf0 = NULL, *buf1 = NULL;
         // Allocate memory
         const UINT lenmem = D * sizeof(COMPLEX);
         buf0 = fft_wrapper_malloc(lenmem);
@@ -323,7 +324,6 @@ INT fnft_nsev(
             ret_code = E_NOMEM;
             goto leave_fun;
         }
-        
         ret_code = fft_wrapper_create_plan(&plan_fwd, D, buf0, buf1, -1);
         CHECK_RETCODE(ret_code, leave_fun);
         
@@ -335,7 +335,6 @@ INT fnft_nsev(
         ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf1);
         CHECK_RETCODE(ret_code, leave_fun);
         
-        REAL * FTq = NULL;
         FTq = calloc(D, sizeof(REAL));
         if (FTq == NULL) {
             ret_code = E_NOMEM;
@@ -587,6 +586,10 @@ INT fnft_nsev(
         free(contspec_sub);
         free(bound_states_sub);
         free(normconsts_or_residues_sub);
+        fft_wrapper_destroy_plan(&plan_fwd);
+        fft_wrapper_free(buf0);
+        fft_wrapper_free(buf1);
+        free(FTq);
         return ret_code;
 }
 
@@ -1709,6 +1712,21 @@ static inline INT nsev_localize_bound_states_GRPF(
     UINT *FlagOfFirstZoneCandidateElements = NULL;
     UINT *FlagOfSecondZoneCandidateElements = NULL;
     UINT *TempExtraEdges1 = NULL, *TempExtraEdges2 = NULL;
+    UINT DT_built = 0;
+    
+    
+    UINT * NodeOfTriangles1 = NULL;
+    UINT * NodeOfTriangles2 = NULL;
+    UINT * NodeOfTriangles3 = NULL;
+    UINT * EdgesOfTriangles1 = NULL;
+    UINT * EdgesOfTriangles2 = NULL;
+    UINT * EdgesOfTriangles3 = NULL;
+    UINT * Edges1 = NULL;
+    UINT * Edges2 = NULL;
+    UINT NrOfEdges = 0;
+    UINT NrOfTriangles = 0;
+    UINT NrOfNodesToRemove = 0;
+    
     // D is interpolated number of samples but eps_t is the step-size
     // corresponding to original number of samples.
     UINT upsampling_factor = nse_discretization_upsampling_factor(discretization);
@@ -1737,7 +1755,7 @@ static inline INT nsev_localize_bound_states_GRPF(
 //     printf("bbox[1]=%f\n",bounding_box_local[1]);
 //     printf("bbox[2]=%f\n",bounding_box_local[2]);
 //     printf("bbox[3]=%f\n",bounding_box_local[3]);
-    
+
     ret_code =  delaunay_triangulation_rect_dom(bounding_box_local[0], bounding_box_local[1],
             bounding_box_local[2], bounding_box_local[3],
             (bounding_box_local[3] - bounding_box_local[2])/5,
@@ -1751,6 +1769,25 @@ static inline INT nsev_localize_bound_states_GRPF(
     DT_ptr->NrOfNodes = 0;
     DT_ptr->NodesMax = 0;    
     UINT status_flag = 0;
+    // Setting all poniters to NULL so that they can be
+    // freed if allocation fails for some pointer
+    // before it.
+    DT_ptr->NodeOfTriangles1 = NULL;
+    DT_ptr->NodeOfTriangles2 = NULL;
+    DT_ptr->NodeOfTriangles3 = NULL;
+    DT_ptr->EdgesOfTriangles1 = NULL;
+    DT_ptr->EdgesOfTriangles2 = NULL;
+    DT_ptr->EdgesOfTriangles3 = NULL;
+    DT_ptr->Edges1 = NULL;
+    DT_ptr->Edges2 = NULL;
+    DT_ptr->NodesCoordX = NULL;
+    DT_ptr->NodesCoordY = NULL;
+    DT_ptr->XCoordOfCCOfTriangles = NULL;
+    DT_ptr->YCoordOfCCOfTriangles = NULL;
+    DT_ptr->RadiusOfCCOfTriangles = NULL;
+    DT_ptr->StatusOfTriangles = NULL;
+    DT_ptr->CheckEdge = NULL;
+    DT_built = 1;
     
     NodesCoordX = malloc(NodesMax * sizeof(REAL));
     NodesCoordY = malloc(NodesMax * sizeof(REAL));
@@ -1790,13 +1827,14 @@ static inline INT nsev_localize_bound_states_GRPF(
         goto leave_fun;
     }
     
+    ArrayOfCandidateElements = malloc(1*sizeof(UINT));        
     CandidateEdges1 = malloc(1*sizeof(UINT));
     CandidateEdges2 = malloc(1*sizeof(UINT));
-    if (CandidateEdges1 == NULL || CandidateEdges2 == NULL){
+    if (CandidateEdges1 == NULL || CandidateEdges2 == NULL
+            || ArrayOfCandidateElements == NULL){
         ret_code = E_NOMEM;
         goto leave_fun;
-    }
-    
+    }    
     
     Temp = malloc(NodesMax*sizeof(UINT));
      if (Temp == NULL ){
@@ -1830,10 +1868,10 @@ static inline INT nsev_localize_bound_states_GRPF(
         goto leave_fun;
     }
     
-    REAL Tol = (bounding_box_local[1]-bounding_box_local[0])/D_given;
-    if ((bounding_box_local[3]-bounding_box_local[2])/D_given < Tol)
-        Tol = (bounding_box_local[3]-bounding_box_local[2])/D_given;
-    
+//     REAL Tol = (bounding_box_local[1]-bounding_box_local[0])/D_given;
+//     if ((bounding_box_local[3]-bounding_box_local[2])/D_given < Tol)
+//         Tol = (bounding_box_local[3]-bounding_box_local[2])/D_given;
+    REAL Tol = 0.9*PI/(T[1]-T[0]);
     ////////////////////////////////////////
     for (UINT iter=1; iter<=50; iter++){
         
@@ -1892,19 +1930,18 @@ static inline INT nsev_localize_bound_states_GRPF(
 //         printf("NodesMax=%ld \n",DT_ptr->NodesMax);
 //         printf("NrOfTriangles=%ld \n",DT_ptr->NrOfTriangles);
 //         printf("NrOfEdges=%ld \n",DT_ptr->NrOfEdges);
-//         
-        UINT * NodeOfTriangles1 = DT_ptr->NodeOfTriangles1;
-        UINT * NodeOfTriangles2 = DT_ptr->NodeOfTriangles2;
-        UINT * NodeOfTriangles3 = DT_ptr->NodeOfTriangles3;
-        UINT * Edges1 = DT_ptr->Edges1;
-        UINT * Edges2 = DT_ptr->Edges2;
-        UINT NrOfEdges = DT_ptr->NrOfEdges;
-        UINT * EdgesOfTriangles1 = DT_ptr->EdgesOfTriangles1;
-        UINT * EdgesOfTriangles2 = DT_ptr->EdgesOfTriangles2;
-        UINT * EdgesOfTriangles3 = DT_ptr->EdgesOfTriangles3;
-        UINT NrOfNodes = DT_ptr->NrOfNodes;
-        UINT NrOfTriangles = DT_ptr->NrOfTriangles;
-        UINT NrOfNodesToRemove = DT_ptr->NrOfNodesToRemove;
+        
+        NodeOfTriangles1 = DT_ptr->NodeOfTriangles1;
+        NodeOfTriangles2 = DT_ptr->NodeOfTriangles2;
+        NodeOfTriangles3 = DT_ptr->NodeOfTriangles3;
+        Edges1 = DT_ptr->Edges1;
+        Edges2 = DT_ptr->Edges2;
+        NrOfEdges = DT_ptr->NrOfEdges;
+        EdgesOfTriangles1 = DT_ptr->EdgesOfTriangles1;
+        EdgesOfTriangles2 = DT_ptr->EdgesOfTriangles2;
+        EdgesOfTriangles3 = DT_ptr->EdgesOfTriangles3;
+        NrOfTriangles = DT_ptr->NrOfTriangles;
+        NrOfNodesToRemove = DT_ptr->NrOfNodesToRemove;
         
         ValidEdges = realloc(ValidEdges,NrOfEdges*sizeof(UINT));
         if (ValidEdges == NULL){
@@ -2026,13 +2063,16 @@ static inline INT nsev_localize_bound_states_GRPF(
         }
 //         printf(" NrOfCandidateNodes =%ld\n", NrOfCandidateNodes  );
 
-        
-        NrOfCandidateElements = 0;
-        
         // Listing all the triangles that the nodes in CandidateNodes are part
         // of
+        NrOfCandidateElements = 0;
+        ArrayOfCandidateElements= realloc(ArrayOfCandidateElements, 3*NrOfElements*sizeof(UINT));
+        if (ArrayOfCandidateElements == NULL){
+            ret_code = E_NOMEM;
+            goto leave_fun;
+        }
         ret_code =  delaunay_triangulation_vertexAttachments(NrOfElements,Elements1, Elements2, Elements3,
-                NrOfCandidateNodes, CandidateNodes, &NrOfCandidateElements, &ArrayOfCandidateElements);
+                NrOfCandidateNodes, CandidateNodes, &NrOfCandidateElements, ArrayOfCandidateElements);
         if (ret_code != SUCCESS){
             ret_code = E_SUBROUTINE(ret_code);
             CHECK_RETCODE(ret_code, leave_fun);
@@ -2052,7 +2092,7 @@ static inline INT nsev_localize_bound_states_GRPF(
             ElementsCount[i] = 0;
         for (i=0; i<NrOfCandidateElements; i++)
             ElementsCount[ArrayOfCandidateElements[i]] = ElementsCount[ArrayOfCandidateElements[i]]+1;
-        
+                
         NrOfFirstZoneCandidateElements = 0;
         NrOfSecondZoneCandidateElements = 0;
         
@@ -2193,13 +2233,19 @@ static inline INT nsev_localize_bound_states_GRPF(
     
     
 // Evaluation of contour edges from all candidates edges
+    NrOfCandidateElements = 0;
+    ArrayOfCandidateElements= realloc(ArrayOfCandidateElements, 3*NrOfElements*sizeof(UINT));
+    if (ArrayOfCandidateElements == NULL){
+        ret_code = E_NOMEM;
+        goto leave_fun;
+    }
     ret_code = delaunay_triangulation_edgeAttachments(NrOfElements,Elements1, Elements2, Elements3,
-            NrOfCandidateEdges, CandidateEdges1, CandidateEdges2, &NrOfCandidateElements, &ArrayOfCandidateElements);
+            NrOfCandidateEdges, CandidateEdges1, CandidateEdges2, &NrOfCandidateElements, ArrayOfCandidateElements);
     if (ret_code != SUCCESS){
         ret_code = E_SUBROUTINE(ret_code);
         CHECK_RETCODE(ret_code, leave_fun);
     }
-//    printf("NrOfCandidateElements=%ld\n",NrOfCandidateElements); 
+//    printf("NrOfCandidateElements=%ld\n",NrOfCandidateElements);
 // Removing repeated mention of triangles
     ElementsCount = realloc(ElementsCount, NrOfElements*sizeof(UINT));
     if (ElementsCount == NULL){
@@ -2413,6 +2459,8 @@ static inline INT nsev_localize_bound_states_GRPF(
 //     misc_print_buf(*K_ptr,bound_states,"bs");
    
     leave_fun:
+        free(NewNodesCoordX);
+        free(NewNodesCoordY);
         free(NodesCoordX);
         free(NodesCoordY);
         free(FuntionValues);
@@ -2443,6 +2491,26 @@ static inline INT nsev_localize_bound_states_GRPF(
         free(NrOfNodesOfRegions);
         free(z);
         free(z_m);
+        free(ArrayOfCandidateElements);
+        free(CandidateNodes);
+        free(Temp);
+        if (DT_built == 1){
+            free(DT_ptr->NodeOfTriangles1);
+            free(DT_ptr->NodeOfTriangles2);
+            free(DT_ptr->NodeOfTriangles3);
+            free(DT_ptr->EdgesOfTriangles1);
+            free(DT_ptr->EdgesOfTriangles2);
+            free(DT_ptr->EdgesOfTriangles3);
+            free(DT_ptr->Edges1);
+            free(DT_ptr->Edges2);
+            free(DT_ptr->NodesCoordX);
+            free(DT_ptr->NodesCoordY);
+            free(DT_ptr->XCoordOfCCOfTriangles);
+            free(DT_ptr->YCoordOfCCOfTriangles);
+            free(DT_ptr->RadiusOfCCOfTriangles);
+            free(DT_ptr->StatusOfTriangles);
+            free(DT_ptr->CheckEdge);
+        }
         return ret_code;
 
 }

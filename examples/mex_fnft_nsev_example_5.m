@@ -25,14 +25,14 @@ clc;
 
 %%% Setup parameters %%%
 
-T = [-600,600];   % location of the 1st and last sample in the time domain
+T = [-350,350];   % location of the 1st and last sample in the time domain
 XI = [-10,10];  % location of the 1st and last sample in the xi-domain
 kappa = +1;     % focusing nonlinear Schroedinger equation
-D = 2^12;
+D = 2^11;
 
 %%% Exact values of the bound states %%%
 
-K = 48; % Number of bound states
+K = 32; % Number of bound states
 theta0=pi/3;
 J = 4;
 L = K/J;
@@ -50,9 +50,12 @@ normconsts_exact = bactual(1:K);
 q = mex_fnft_nsev_inverse([], [-1,1], bound_states_exact, normconsts_exact, D, T, kappa);
 
 %%% Compute the discrete part of the nonlinear Fourier transform %%%
-
-[~,bound_states_computed,normconsts_computed]=mex_fnft_nsev(q, T, XI,... 
+[~,bound_states_computed]=mex_fnft_nsev(complex(q), T, XI,... 
     kappa,'discr_ES4','bsloc_GRPF', 'skip_cs');
+
+%%% Refine using Newton's method
+[~,bound_states_computed,normconsts_computed]=mex_fnft_nsev(complex(q), T, XI,... 
+    kappa,'discr_ES4','bsloc_newton', bound_states_computed, 'skip_cs');
 
 %%% Plot results %%%
 
@@ -62,3 +65,11 @@ plot(bound_states_computed,'xk')
 xlabel('Real part');
 ylabel('Imaginary part');
 legend('Exact bound state', 'Computed bound state');
+
+figure
+plot(normconsts_exact,'o')
+hold on
+plot(normconsts_computed,'xk')
+xlabel('Real part');
+ylabel('Imaginary part');
+legend('Exact norming constant', 'Computed norming constant');

@@ -70,8 +70,8 @@ INT delaunay_triangulation(fnft__delaunay_triangulation_data_t * DT_ptr,
         REAL xb = misc_min(NrOfNewNodes, NewNodesCoordX);
         REAL xe = misc_max(NrOfNewNodes, NewNodesCoordX);
         REAL xmax = xe-xb;
-        REAL ymax = ye-yb;
-        
+        REAL ymax = ye-yb;     
+                
         DT_ptr->NodeOfTriangles1 = malloc(2*NodesMax * sizeof(UINT));
         DT_ptr->NodeOfTriangles2 = malloc(2*NodesMax * sizeof(UINT));
         DT_ptr->NodeOfTriangles3 = malloc(2*NodesMax * sizeof(UINT));
@@ -100,6 +100,7 @@ INT delaunay_triangulation(fnft__delaunay_triangulation_data_t * DT_ptr,
             ret_code = E_NOMEM;
             goto leave_fun;
         }
+
 //    Super rectangle
         DT_ptr->NodesCoordX[0] = xb-xmax/2;
         DT_ptr->NodesCoordY[0] = yb-ymax/2;
@@ -512,26 +513,36 @@ INT delaunay_triangulation_vertexAttachments(UINT NrOfElements,
         UINT *Elements1, UINT *Elements2, UINT *Elements3,
         UINT NrOfNodes, UINT *Nodes,
         UINT *NrOfCandidateElements_ptr,
-        UINT **ArrayOfCandidateElements_ptr)
+        UINT *ArrayOfCandidateElements)
 {
-    INT ret_code = SUCCESS;
-    UINT count = 0, i, j;
-    UINT * CandidateElements = NULL;
-    CandidateElements = malloc(NrOfNodes*NrOfElements*sizeof(UINT)); //TODO Fix size
-    if (CandidateElements == NULL)
-        return E_NOMEM;
+    if(NrOfElements == 0)
+        return E_INVALID_ARGUMENT(NrOfElements);
+    if (Elements1 == NULL)
+        return E_INVALID_ARGUMENT(Elements1);
+    if (Elements2 == NULL)
+        return E_INVALID_ARGUMENT(Elements2);
+    if (Elements3 == NULL)
+        return E_INVALID_ARGUMENT(Elements3);
+     if(NrOfNodes == 0)
+        return E_INVALID_ARGUMENT(NrOfNodes);
+    if (Nodes == NULL)
+        return E_INVALID_ARGUMENT(Nodes);
+    if (NrOfCandidateElements_ptr == NULL)
+        return E_INVALID_ARGUMENT(NrOfCandidateElements_ptr);
+    if (ArrayOfCandidateElements == NULL)
+        return E_INVALID_ARGUMENT(ArrayOfCandidateElements);
     
+    INT ret_code = SUCCESS;
+    UINT count = 0, i, j;    
     for (i=0; i<NrOfNodes; i++){
         for (j=0; j<NrOfElements; j++){
             if (Elements1[j] == Nodes[i] || Elements2[j] == Nodes[i] || Elements3[j] == Nodes[i]){
-                CandidateElements[count] = j;
+                ArrayOfCandidateElements[count] = j;
                 count = count+1;
             }
         }
     }
-    *NrOfCandidateElements_ptr = count;
-    *ArrayOfCandidateElements_ptr = CandidateElements;
-    
+    *NrOfCandidateElements_ptr = count;    
     return ret_code;
 }
 
@@ -539,51 +550,47 @@ INT delaunay_triangulation_edgeAttachments(UINT NrOfElements,
         UINT *Elements1, UINT *Elements2, UINT *Elements3,
         UINT NrOfNodes, UINT *Nodes1, UINT *Nodes2,
         UINT *NrOfCandidateElements_ptr,
-        UINT **ArrayOfCandidateElements_ptr)
+        UINT *ArrayOfCandidateElements)
 {
+    if(NrOfElements == 0)
+        return E_INVALID_ARGUMENT(NrOfElements);
+    if (Elements1 == NULL)
+        return E_INVALID_ARGUMENT(Elements1);
+    if (Elements2 == NULL)
+        return E_INVALID_ARGUMENT(Elements2);
+    if (Elements3 == NULL)
+        return E_INVALID_ARGUMENT(Elements3);
+     if(NrOfNodes == 0)
+        return E_INVALID_ARGUMENT(NrOfNodes);
+    if (Nodes1 == NULL)
+        return E_INVALID_ARGUMENT(Nodes1);
+    if (Nodes2 == NULL)
+        return E_INVALID_ARGUMENT(Nodes2);
+    if (NrOfCandidateElements_ptr == NULL)
+        return E_INVALID_ARGUMENT(NrOfCandidateElements_ptr);
+    if (ArrayOfCandidateElements == NULL)
+        return E_INVALID_ARGUMENT(ArrayOfCandidateElements);
+    
     INT ret_code = SUCCESS;
     UINT count = 0, i, j;
-    UINT * CandidateElements = NULL;
-    CandidateElements = malloc(NrOfNodes*NrOfElements*sizeof(UINT)); //TODO Fix size
-    if (CandidateElements == NULL)
-        return E_NOMEM;
-    
     for (i=0; i<NrOfNodes; i++){
         for (j=0; j<NrOfElements; j++){
             if (Elements1[j] == Nodes1[i] || Elements2[j] == Nodes1[i] || Elements3[j] == Nodes1[i]){
                 if (Elements1[j] == Nodes2[i] || Elements2[j] == Nodes2[i] || Elements3[j] == Nodes2[i]){
-                    CandidateElements[count] = j;
+                    ArrayOfCandidateElements[count] = j;
                     count = count+1;
                 }
             }
         }
     }
-    *NrOfCandidateElements_ptr = count;
-    *ArrayOfCandidateElements_ptr = CandidateElements;
-    
+    *NrOfCandidateElements_ptr = count;    
     return ret_code;
 }
 
 INT delaunay_triangulation_rect_dom(REAL xb, REAL xe, REAL yb, REAL ye, REAL r,
         UINT * const NrOfNewNodesCoord_ptr, REAL ** NewNodesCoordX_ptr, REAL ** NewNodesCoordY_ptr)
 {
-    
-// %  rect_dom: generates the initial mesh for rectangular domain z=x+jy x\in[xb,xe] , y\in[yb,ye]
-// %
-// % INPUTS
-// %
-// %  xb     : real part range begin
-// %  xe     : real part range end
-// %  yb     : imag part range begin
-// %  ye     : imag part range end
-// %  r      : initial mesh step
-// %
-// % OUTPUTS
-// %
-// %  NewNodesCoordX..Y     : generated nodes coordinates
-// %
-//
-    
+
     if (xe < xb)
         return E_INVALID_ARGUMENT(xe);
     if (ye < yb)
@@ -609,8 +616,8 @@ INT delaunay_triangulation_rect_dom(REAL xb, REAL xe, REAL yb, REAL ye, REAL r,
 //     printf("n = %ld\n",n);
     UINT len = m*n+(UINT)FLOOR(m/2);
 //     printf("len = %ld\n",len); 
-    REAL * const NewNodesCoordX = malloc(len * sizeof(REAL));
-    REAL * const NewNodesCoordY = malloc(len * sizeof(REAL));
+    REAL *NewNodesCoordX = malloc(len * sizeof(REAL));
+    REAL *NewNodesCoordY = malloc(len * sizeof(REAL));
     if (NewNodesCoordX == NULL || NewNodesCoordY == NULL)
         return E_NOMEM;
     
