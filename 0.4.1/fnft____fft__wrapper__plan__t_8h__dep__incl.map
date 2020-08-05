@@ -1,0 +1,13 @@
+<map id="include/private/fnft__fft_wrapper_plan_t.h" name="include/private/fnft__fft_wrapper_plan_t.h">
+<area shape="rect" id="node1" title=" " alt="" coords="251,5,422,47"/>
+<area shape="rect" id="node2" href="$fnft____poly__fmult_8h.html" title="Fast multiplication of n polynomials." alt="" coords="209,95,355,136"/>
+<area shape="rect" id="node11" href="$fnft____fft__wrapper_8h.html" title="Wraps underlying FFT library." alt="" coords="357,184,503,225"/>
+<area shape="rect" id="node3" href="$fnft____akns__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="179,184,326,225"/>
+<area shape="rect" id="node4" href="$fnft____kdv__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="9,273,155,315"/>
+<area shape="rect" id="node5" href="$fnft____nse__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="179,273,326,315"/>
+<area shape="rect" id="node6" href="$fnft__nsep_8h.html" title="Fast nonlinear Fourier transform for the periodic nonlinear Schroedinger equation." alt="" coords="6,363,153,389"/>
+<area shape="rect" id="node8" href="$fnft__nsev_8h.html" title="Fast nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="177,363,323,389"/>
+<area shape="rect" id="node10" href="$fnft__nsev__inverse_8h.html" title="Fast inverse nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="347,363,548,389"/>
+<area shape="rect" id="node7" href="$fnft____nsep__testcases_8h.html" title="Provides test cases for the tests of fnft_nsep." alt="" coords="5,437,153,479"/>
+<area shape="rect" id="node9" href="$fnft____nsev__testcases_8h.html" title="Provides test cases for the tests of fnft_nsev." alt="" coords="177,437,325,479"/>
+</map>
