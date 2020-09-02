@@ -39,7 +39,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     char msg[128]; // buffer for error messages
     fnft_nsev_inverse_opts_t opts;
     FNFT_INT ret_code;
-    FNFT_INT k;
+    FNFT_UINT k;
 
     if (nlhs < 1)
         return;
@@ -94,7 +94,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     /* Check remaining inputs, if any */
 
-    for (k=7; k<nrhs; k++) {
+    for (k=7; k<(FNFT_UINT)nrhs; k++) {
 
         /* Check if current input is a string as desired and convert it */
         if ( !mxIsChar(prhs[k]) ) {
@@ -131,7 +131,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             opts.contspec_inversion_method =
                 fnft_nsev_inverse_csmethod_USE_SEED_POTENTIAL_INSTEAD ;
             /* Extract initial potential */
-            if ( k+1 == nrhs || !mxIsComplex(prhs[k+1])
+            if ( k+1 == (FNFT_UINT)nrhs || !mxIsComplex(prhs[k+1])
                  || mxGetM(prhs[k+1]) != 1 || mxGetN(prhs[k+1]) != D ) {
                 snprintf(msg, sizeof msg, "'csmethod_use_seed_potential_instead' should be followed by a complex 1xD vector. Try passing complex(q0).");
                 goto on_error;
@@ -160,7 +160,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "oversampling_factor") == 0 ) {
 
             /* Extract desired oversampling factor */
-            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+            if ( k+1 == (FNFT_UINT)nrhs || !mxIsDouble(prhs[k+1])
                  || mxGetNumberOfElements(prhs[k+1]) != 1
                  || mxGetScalar(prhs[k+1]) < 1 ) {
                 snprintf(msg, sizeof msg, "'oversampling_factor' should be followed by a positive natural number.");

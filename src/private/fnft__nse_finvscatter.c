@@ -280,7 +280,7 @@ INT nse_finvscatter(
     COMPLEX * const buf1 = fft_wrapper_malloc(max_len*sizeof(COMPLEX));
     COMPLEX * const buf2 = fft_wrapper_malloc(max_len*sizeof(COMPLEX));
 
-    const UINT stack_size = LOG2(D) + 1;
+    const UINT stack_size = (UINT) ROUND(LOG2(D)) + 1;
     struct fnft__nse_finvscatter_stack_elem * const s = malloc(
         stack_size * sizeof(struct fnft__nse_finvscatter_stack_elem));
 

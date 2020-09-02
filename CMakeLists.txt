@@ -94,6 +94,7 @@ include_directories(include/3rd_party/eiscor)
 include(CheckCCompilerFlag)
 
 # configure C compiler
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -pedantic -Werror=implicit-function-declaration -Wsign-conversion")
 if (CMAKE_COMPILER_IS_GNUCC) # gcc
   if (DEBUG)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
@@ -112,6 +113,8 @@ if (CMAKE_COMPILER_IS_GNUCC) # gcc
   check_c_source_compiles("#pragma GCC optimize(\"Ofast\") \n int main() { int g = 1; return g; }" HAVE_PRAGMA_GCC_OPTIMIZE_OFAST)
 else()
   message(WARNING "++ Compiler is not gcc. Will try to set flags anyway.")
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wconversion")
+  message("++ Enabled -Wconversion flag in the C compiler")
   if (DEBUG)
     check_c_compiler_flag("-g" HAS_C_G_FLAG)
     if (HAS_C_G_FLAG)

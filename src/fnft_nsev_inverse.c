@@ -168,7 +168,7 @@ INT fnft_nsev_inverse(
         return E_INVALID_ARGUMENT(XI);
 
     INT ret_code = SUCCESS;
-    INT contspec_flag = 0;
+    UINT contspec_flag = 0;
     COMPLEX *transfer_matrix = NULL;
 
     if (contspec != NULL) {

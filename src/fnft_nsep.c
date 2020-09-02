@@ -234,7 +234,7 @@ static inline INT gridsearch(const UINT D,
     UINT deg;
     INT W = 0, *W_ptr = NULL;
     UINT K, K_filtered;
-    UINT M;
+    UINT M = 0;
     UINT i, upsampling_factor, D_effective;// upsampling_factor*D gives the effective number of samples
     INT ret_code = SUCCESS;
     COMPLEX *q_preprocessed = NULL;
@@ -490,9 +490,9 @@ static inline INT subsample_and_refine(const UINT D,
     // Create a subsampled/resampled version of q for computing initial guesses.
     Dsub = opts_ptr->Dsub;
     if (Dsub == 0) // users wants Dsub to be chosen automatically
-        Dsub = POW(2.0, CEIL( 0.5 * LOG2(D * LOG2(D) * LOG2(D)) ));
+        Dsub = (UINT) POW(2.0, CEIL( 0.5 * LOG2(D * LOG2(D) * LOG2(D)) ));
     else
-        Dsub = POW(2.0, ROUND(LOG2(Dsub))); 
+        Dsub = (UINT) POW(2.0, ROUND(LOG2(Dsub))); 
     
     ret_code = nse_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &qsub_preprocessed, &rsub_preprocessed,
             first_last_index, opts_ptr->discretization);

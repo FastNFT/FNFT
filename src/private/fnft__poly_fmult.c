@@ -15,6 +15,7 @@
  *
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
+ * Peter J Prins (TU Delft) 2020.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -42,7 +43,7 @@ UINT poly_fmult2x2_numel(UINT deg, UINT n)
     return 4*(deg+1)*misc_nextpowerof2(n);
 }
 
-inline INT poly_fmult_two_polys_len(const UINT deg)
+inline UINT poly_fmult_two_polys_len(const UINT deg)
 {
     return fft_wrapper_next_fft_length(2*(deg + 1) - 1);
 }
@@ -123,7 +124,7 @@ leave_fun:
 static inline INT poly_rescale(const UINT d, COMPLEX * const p)
 {
     UINT i;
-    INT a;
+    REAL a;
     REAL scl;
     REAL cur_abs;
     REAL max_abs = 0.0;
@@ -146,7 +147,7 @@ static inline INT poly_rescale(const UINT d, COMPLEX * const p)
     for (i=0; i<=d; i++)
         p[i] *= scl;
 
-    return a;
+    return (INT) a;
 }
 
 INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
@@ -334,7 +335,7 @@ static inline INT poly_rescale2x2(const UINT d,
     COMPLEX * const p22)
 {
     UINT i;
-    INT a;
+    REAL a;
     REAL scl;
     REAL cur_abs;
     REAL max_abs = 0.0;
@@ -370,7 +371,7 @@ static inline INT poly_rescale2x2(const UINT d,
         p22[i] *= scl;
     }
 
-    return a;
+    return (INT) a;
 }
 
 /*

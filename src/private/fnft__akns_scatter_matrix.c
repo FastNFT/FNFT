@@ -16,6 +16,7 @@
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
+ * Peter J Prins (TU Delft) 2020.
  */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -63,14 +64,14 @@ INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
     REAL scl_factor = 0;
     COMPLEX a1, a2, a3, s, c, w;
     COMPLEX *tmp1 = NULL, *tmp2 = NULL;
-    
+    COMPLEX *weights = NULL;
+
     l = malloc(D*sizeof(COMPLEX));
     if (l == NULL) {
         ret_code = E_NOMEM;
         goto leave_fun;
     }
-    
-    COMPLEX *weights = NULL;
+
     COMPLEX l_weights[4] = {0};
     UINT M = 0, N = 0;
     // Pre-computing weights required for higher-order CF methods that are

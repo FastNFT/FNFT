@@ -35,7 +35,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     double complex * aux_spec = NULL;
     int * sheet_indices = NULL;
     int kappa;
-    int upsampling_factor = 1;
+    size_t upsampling_factor = 1;
     size_t i;
     ptrdiff_t k;
     double *re, *im;
