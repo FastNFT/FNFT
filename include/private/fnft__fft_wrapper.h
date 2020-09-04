@@ -99,18 +99,15 @@ static inline FNFT_INT fnft__fft_wrapper_create_plan(
     if (is_inverse != 1 && is_inverse != -1)
         return FNFT__E_INVALID_ARGUMENT(is_inverse);
 
-#ifdef HAVE_FFTW3
-    // Check if typecast to int is lossless
+    // Check if typecast to unsigned int is lossless
     if (fft_length>INT_MAX) // overflow
         return FNFT_EC_ASSERTION_FAILED;
+#ifdef HAVE_FFTW3
     *plan_ptr = fftw_plan_dft_1d((int) fft_length, in, out, is_inverse, FFTW_ESTIMATE);
 #else
-    // Check if typecast to unsigned int is lossless
-    if (fft_length>UINT_MAX) // overflow
-        return FNFT_EC_ASSERTION_FAILED;
     (void)in;
     (void)out;
-    *plan_ptr = kiss_fft_alloc((unsigned int) fft_length, (is_inverse+1)/2, NULL, NULL);
+    *plan_ptr = kiss_fft_alloc((int) fft_length, (is_inverse+1)/2, NULL, NULL);
 #endif
 
     if (*plan_ptr == NULL)

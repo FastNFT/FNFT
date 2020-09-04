@@ -78,7 +78,7 @@ typedef struct kiss_fft_state* kiss_fft_cfg;
  *      buffer size in *lenmem.
  * */
 
-kiss_fft_cfg kiss_fft_alloc(unsigned int nfft,int inverse_fft,void * mem,size_t * lenmem); 
+kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem); 
 
 /*
  * kiss_fft(cfg,in_out_buf)
@@ -95,7 +95,7 @@ void kiss_fft(kiss_fft_cfg cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout);
 /*
  A more generic version of the above function. It reads its input from every Nth sample.
  * */
-void kiss_fft_stride(kiss_fft_cfg cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout,unsigned int fin_stride);
+void kiss_fft_stride(kiss_fft_cfg cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout,int fin_stride);
 
 /* If kiss_fft_alloc allocated a buffer, it is one contiguous 
    buffer and can be simply free()d when no longer needed*/

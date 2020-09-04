@@ -29,9 +29,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
  */
 
 struct kiss_fft_state{
-    unsigned int nfft;
+    int nfft;
     int inverse;
-    unsigned int factors[2*MAXFACTORS];
+    int factors[2*MAXFACTORS];
     kiss_fft_cpx twiddles[1];
 };
 
