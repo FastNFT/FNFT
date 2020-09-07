@@ -44,12 +44,8 @@
 static inline FNFT_UINT fnft__fft_wrapper_next_fft_length(
     FNFT_UINT desired_length)
 {
-    // Check if typecast to int is lossless
-    if (desired_length>INT_MAX) // overflow
-        FNFT__E_SUBROUTINE(FNFT_EC_ASSERTION_FAILED);
-
     // Also seems to work well with FFTW
-    return (FNFT_UINT) kiss_fft_next_fast_size((int) desired_length);
+    return kiss_fft_next_fast_size(desired_length);
 }
 
 /**
@@ -100,14 +96,14 @@ static inline FNFT_INT fnft__fft_wrapper_create_plan(
         return FNFT__E_INVALID_ARGUMENT(is_inverse);
 
     // Check if typecast to unsigned int is lossless
+#ifdef HAVE_FFTW3
     if (fft_length>INT_MAX) // overflow
         return FNFT_EC_ASSERTION_FAILED;
-#ifdef HAVE_FFTW3
     *plan_ptr = fftw_plan_dft_1d((int) fft_length, in, out, is_inverse, FFTW_ESTIMATE);
 #else
     (void)in;
     (void)out;
-    *plan_ptr = kiss_fft_alloc((int) fft_length, (is_inverse+1)/2, NULL, NULL);
+    *plan_ptr = kiss_fft_alloc(fft_length,(FNFT_UINT)(is_inverse+1)/2, NULL, NULL);
 #endif
 
     if (*plan_ptr == NULL)
