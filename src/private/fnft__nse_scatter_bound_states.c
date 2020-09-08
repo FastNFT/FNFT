@@ -66,7 +66,8 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
     if (b == NULL)
         return E_INVALID_ARGUMENT(b);
     
-    
+    COMPLEX *weights = NULL; // must be initialized before jumping to leave_fun
+
     if (r == NULL) {
         r = malloc(D*sizeof(COMPLEX));
         if (r == NULL) {
@@ -114,8 +115,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
         ret_code = E_INVALID_ARGUMENT(>discretization);
         goto leave_fun;
     }
-    
-    COMPLEX *weights = NULL;
+
     COMPLEX l_weights[4] = {0};
     UINT M = 0, N = 0, j = 0, i = 0;
 

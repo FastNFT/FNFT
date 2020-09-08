@@ -155,7 +155,8 @@ INT fnft_nsev(
     COMPLEX *bound_states_sub = NULL;
     COMPLEX *normconsts_or_residues_sub = NULL;
     COMPLEX *normconsts_or_residues_reserve = NULL;
-    INT bs_loc_opt = 0, ds_type_opt = 0;
+    fnft_nsev_bsloc_t bs_loc_opt = 0;
+    fnft_nsev_dstype_t ds_type_opt = 0;
     INT ret_code = SUCCESS;
     UINT i, j, upsampling_factor, D_effective, nskip_per_step;
 
@@ -281,9 +282,9 @@ INT fnft_nsev(
         // version of q, qsub, will be passed to the fast eigenroutine.
         Dsub = opts->Dsub;
         if (Dsub == 0) // The user wants us to determine Dsub
-            Dsub = SQRT(D * LOG2(D) * LOG2(D));
-        nskip_per_step = ROUND((REAL)D / Dsub);
-        Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
+            Dsub = (UINT) SQRT(D * LOG2(D) * LOG2(D));
+        nskip_per_step = (UINT) ROUND((REAL)D / Dsub);
+        Dsub = (UINT) ROUND((REAL)D / nskip_per_step); // actual Dsub
 
         ret_code = nse_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &qsub_preprocessed, &rsub_preprocessed,
                 first_last_index, opts->discretization);
@@ -373,7 +374,7 @@ INT fnft_nsev(
         // preprocessed as required for the discretization. This is
         // required for obtaining a second approximation of the spectrum
         // which will be used for Richardson extrapolation.
-        Dsub = CEIL(D/2);        
+        Dsub = (UINT) CEIL(D/2);
         ret_code = nse_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &qsub_preprocessed, &rsub_preprocessed,
                 first_last_index, opts->discretization);
         CHECK_RETCODE(ret_code, leave_fun);

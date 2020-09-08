@@ -15,7 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017.
-* Peter J Prins (TU Delft) 2018.
+* Peter J Prins (TU Delft) 2018-2020.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
 */
 #define FNFT_ENABLE_SHORT_NAMES
@@ -25,10 +25,10 @@
 #include "fnft__misc.h"
 #include "fnft__fft_wrapper.h"
 
-void misc_print_buf(const INT len, COMPLEX const * const buf,
+void misc_print_buf(const UINT len, COMPLEX const * const buf,
                     char const * const varname)
 {
-    INT i;
+    UINT i;
     printf("%s = [", varname);
     for (i = 0; i < len; i++) {
         printf("%1.12e+%1.12ej", CREAL(buf[i]), CIMAG(buf[i]));
@@ -38,10 +38,10 @@ void misc_print_buf(const INT len, COMPLEX const * const buf,
     printf("];\n");
 }
 
-REAL misc_rel_err(const INT len, COMPLEX const * const vec_numer,
+REAL misc_rel_err(const UINT len, COMPLEX const * const vec_numer,
     COMPLEX const * const vec_exact)
 {
-    INT i;
+    UINT i;
     double n = 0.0, d = 0.0;
     for (i=0; i<len; i++) {
         n += CABS(vec_numer[i] - vec_exact[i]);
@@ -278,8 +278,8 @@ INT misc_downsample(const UINT D, COMPLEX const * const q,
        Dsub = 2;
     if (Dsub > D)
         Dsub = D;
-    const UINT nskip_per_step = ROUND((REAL)D / Dsub);
-    Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
+    const UINT nskip_per_step = (UINT) ROUND((REAL)D / Dsub);
+    Dsub = (UINT) ROUND((REAL)D / nskip_per_step); // actual Dsub
 
     COMPLEX * const qsub = malloc(Dsub * sizeof(COMPLEX));
     if (qsub == NULL)
