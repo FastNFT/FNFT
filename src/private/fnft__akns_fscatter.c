@@ -1,6 +1,6 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
+* This file is part of FNFT.
+*
 * FNFT is free software; you can redistribute it and/or
 * modify it under the terms of the version 2 of the GNU General
 * Public License as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-*                                                                      
+*
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
@@ -22,31 +22,28 @@
 
 #define FNFT_ENABLE_SHORT_NAMES
 
-
 #include "fnft__akns_fscatter.h"
 #include <limits.h>
-
 
 /**
  * Returns the length of array to be allocated based on the number
  * of samples and discretization.
  */
-
 UINT akns_fscatter_numel(UINT D, akns_discretization_t discretization)
 {
-
     const UINT deg = akns_discretization_degree(discretization);
     if (deg == 0)
         return 0; // unknown discretization
     else
         return poly_fmult2x2_numel(deg, D);
 }
+
 /**
  * Returns the scattering matrix for a single step at frequency zero.
  */
 static inline void akns_fscatter_zero_freq_scatter_matrix(COMPLEX * const M,
                                                 const REAL eps_t, const COMPLEX q, const COMPLEX r)
-{   
+{
     // This function computes the matrix exponential
     //   M = expm([0,q;r,0]*eps_t);
     COMPLEX Delta, del;
@@ -55,8 +52,6 @@ static inline void akns_fscatter_zero_freq_scatter_matrix(COMPLEX * const M,
     M[0] = CCOS(Delta);
     M[2] = r * del;
     M[1] = q * del;
-    
-
 }
 /**
  * Fast computation of polynomial approximation of the combined scattering
@@ -66,7 +61,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                  const REAL eps_t, COMPLEX * const result, UINT * const deg_ptr,
                  INT * const W_ptr, akns_discretization_t discretization)
 {
-    
+
     INT ret_code;
     COMPLEX *p, *p11, *p12, *p21, *p22;
     UINT i, n, len;
@@ -97,11 +92,11 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
         return E_INVALID_ARGUMENT(discretization);
     }
     p = malloc(len*sizeof(COMPLEX));
-    
+
     // degree 1 polynomials
     if (p == NULL)
         return E_NOMEM;
-    
+
     // Set the individual scattering matrices up
     *deg_ptr = akns_discretization_degree(discretization);
     if (*deg_ptr == 0) {
@@ -113,7 +108,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
     p12 = p11 + D*(deg+1);
     p21 = p12 + D*(deg+1);
     p22 = p21 + D*(deg+1);
-    
+
     switch (discretization) {
 
         case akns_discretization_2SPLIT2_MODAL: // Modified Ablowitz-Ladik discretization
@@ -128,7 +123,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                     scl = 1.0/CSQRT(1-eps_t*q[i]*eps_t*r[i]);
                 } else
                     scl = 1.0/CSQRT(1-eps_t*q[i]*eps_t*r[i]);
-              
+
                 // construct the scattering matrix for the i-th sample
                 p11[0] = 0.0;
                 p11[1] = scl;
@@ -145,19 +140,19 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p22 += deg + 1;
 
             }
-            
+
             break;
 
         case akns_discretization_2SPLIT1A:
-            
+
             e_1B = &e_Bstorage[0];
-            
+
             for (i=D; i-->0;) {
-                
+
                 //e_1B = expm([0,q[i];r[i],0]*1*eps_t/deg)
                 akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ deg, q[i], r[i]);
-                
-                
+
+
                 // construct the scattering matrix for the i-th sample
                 p11[0] = 0.0;       //coef of z^1
                 p11[1] = e_1B[0];   //coef of z^0
@@ -167,24 +162,24 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p21[1] = 0.0;
                 p22[0] = e_1B[0];
                 p22[1] = 0.0;
-                
+
                 p11 += deg + 1;
                 p21 += deg + 1;
                 p12 += deg + 1;
                 p22 += deg + 1;
             }
-            
+
             break;
-        
+
         case akns_discretization_2SPLIT1B: //Intentional fallthrough
         case akns_discretization_2SPLIT2A: //Differs by correction in fnft_kdvv.c
-            
+
             e_1B = &e_Bstorage[0];
-            
+
             for (i=D; i-->0;) {
-                
+
                 akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ deg, q[i], r[i]);
-                
+
                 // construct the scattering matrix for the i-th sample
                 p11[0] = 0.0;
                 p11[1] = e_1B[0];
@@ -194,13 +189,13 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p21[1] = e_1B[2];
                 p22[0] = e_1B[0];
                 p22[1] = 0.0;
-                
+
                 p11 += deg + 1;
                 p21 += deg + 1;
                 p12 += deg + 1;
                 p22 += deg + 1;
             }
-            
+
             break;
         case akns_discretization_2SPLIT2B:
 
@@ -229,13 +224,13 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             break;
 
         case akns_discretization_2SPLIT2S:
-            
+
             e_1B = &e_Bstorage[0];
-            
+
             for (i=D; i-->0;) {
-                
+
                 akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ deg, q[i], r[i]);
-                
+
                 // construct the scattering matrix for the i-th sample
                 p11[0] = 0.0;
                 p11[1] = e_1B[0];
@@ -245,15 +240,15 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p21[1] = e_1B[2]/2;
                 p22[0] = e_1B[0];
                 p22[1] = 0.0;
-                
+
                 p11 += deg + 1;
                 p21 += deg + 1;
                 p12 += deg + 1;
                 p22 += deg + 1;
             }
-            
+
             break;
-            
+
         case akns_discretization_2SPLIT3A:
 
             e_1B = &e_Bstorage[0];
@@ -291,7 +286,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             }
 
             break;
-            
+
         case akns_discretization_2SPLIT3B:
 
             e_1B = &e_Bstorage[0];
@@ -330,12 +325,12 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
 
             break;
         case akns_discretization_2SPLIT3S:
-            
+
             e_1B = &e_Bstorage[0];
             e_2B = &e_Bstorage[3];
 
             for (i=D; i-->0;) {
-                
+
                 akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_2B, 2*eps_t/ deg, q[i], r[i]);
 
@@ -352,25 +347,25 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p22[0] = p11[2];
                 p22[1] = 0.0;
                 p22[2] = p11[0];
-                
+
                 p11 += deg + 1;
                 p21 += deg + 1;
                 p12 += deg + 1;
                 p22 += deg + 1;
             }
-            
+
             break;
         case akns_discretization_2SPLIT4A:
         case akns_discretization_4SPLIT4A:
 
             e_2B = &e_Bstorage[0];
             e_4B = &e_Bstorage[3];
-            
+
             for (i=D; i-->0;) {
-                
+
                 akns_fscatter_zero_freq_scatter_matrix(e_2B, 2*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_4B, 4*eps_t/ deg, q[i], r[i]);
-                
+
                 // construct the scattering matrix for the i-th sample
                 p11[0] = 0.0;
                 p11[1] = 0.0;
@@ -392,7 +387,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p22[2] = p11[2];
                 p22[3] = 0.0;
                 p22[4] = 0.0;
-                
+
                 p11 += deg + 1;
                 p21 += deg + 1;
                 p12 += deg + 1;
@@ -405,12 +400,12 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
 
             e_0_5B = &e_Bstorage[0];
             e_1B = &e_Bstorage[3];
-            
+
             for (i=D; i-->0;) {
-                
+
                 akns_fscatter_zero_freq_scatter_matrix(e_0_5B, 0.5*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ deg, q[i], r[i]);
-                
+
                 // construct the scattering matrix for the i-th sample
                 p11[0] = (4*e_1B[0]*e_0_5B[1]*e_0_5B[2] - e_1B[1]*e_1B[2])/3;
                 p11[1] = 4*(e_1B[1]*e_0_5B[0]*e_0_5B[2] + e_1B[2]*e_0_5B[0]*e_0_5B[1])/3;
@@ -424,7 +419,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p22[0] = p11[2];
                 p22[1] = p11[1];
                 p22[2] = p11[0];
-                
+
                 p11 += deg + 1;
                 p21 += deg + 1;
                 p12 += deg + 1;
@@ -432,118 +427,118 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             }
 
             break;
-        
+
         case akns_discretization_2SPLIT5A:
-            
+
             for (n=0; n<len; n++)
                 p[n] = 0.0;
-            
+
             e_3B = &e_Bstorage[0];
             e_5B = &e_Bstorage[3];
             e_6B = &e_Bstorage[6];
             e_10B = &e_Bstorage[9];
             e_15B = &e_Bstorage[12];
-            
+
             for (i=D; i-->0;) {
-                
+
                 akns_fscatter_zero_freq_scatter_matrix(e_3B, 3*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_5B, 5*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_6B, 6*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_10B, 10*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_15B, 15*eps_t/ deg, q[i], r[i]);
-                
+
                 // construct the scattering matrix for the i-th sample
-                
+
                 //p11
                 p11[3] = 625*e_3B[2]*e_6B[0]*e_6B[1]/384;
                 p11[5] = -81*e_5B[2]*e_10B[1]/128;
                 p11[9]  = 625*(e_3B[0]*e_6B[1]*e_6B[2] + e_3B[2]*e_6B[0]*e_6B[1])/384;
                 p11[15]  = 625*e_3B[0]*e_6B[0]*e_6B[0]/384 + e_15B[0]/192 - 81*e_5B[0]*e_10B[0]/128;
-                
+
                 //p12
                 p12[3] = 625*e_3B[0]*e_6B[0]*e_6B[1]/384;
                 p12[5] = -81*e_5B[0]*e_10B[1]/128;
                 p12[9]  = 625*(e_3B[0]*e_6B[0]*e_6B[1] + e_3B[1]*e_6B[1]*e_6B[2])/384;
                 p12[15]  = 625*e_3B[1]*e_6B[0]*e_6B[0]/384 + e_15B[1]/192 - 81*e_5B[1]*e_10B[0]/128;
-                
+
                 //p21
                 p21[0] = 625*e_3B[2]*e_6B[0]*e_6B[0]/384 + e_15B[2]/192 - 81*e_5B[2]*e_10B[0]/128;
                 p21[6]  = 625*(e_3B[0]*e_6B[0]*e_6B[2] + e_3B[2]*e_6B[1]*e_6B[2])/384;
                 p21[10]  = -81*e_5B[0]*e_10B[2]/128;
                 p21[12]  = 625*e_3B[0]*e_6B[0]*e_6B[2]/384;
-                
+
                 //p22
                 p22[0] = p11[15];
                 p22[6]  = 625*(e_3B[0]*e_6B[1]*e_6B[2] + e_3B[1]*e_6B[0]*e_6B[2])/384;
                 p22[10]  = -81*e_5B[1]*e_10B[2]/128;
                 p22[12]  = 625*e_3B[1]*e_6B[0]*e_6B[2]/384;
-                
+
                 p11 += deg + 1;
                 p21 += deg + 1;
                 p12 += deg + 1;
                 p22 += deg + 1;
             }
-            
+
             break;
-            
+
         case akns_discretization_2SPLIT5B:
-            
+
             for (n=0; n<len; n++)
                 p[n] = 0.0;
-            
+
             e_3B = &e_Bstorage[0];
             e_5B = &e_Bstorage[3];
             e_6B = &e_Bstorage[6];
             e_10B = &e_Bstorage[9];
             e_15B = &e_Bstorage[12];
-            
+
             for (i=D; i-->0;) {
-                
+
                 akns_fscatter_zero_freq_scatter_matrix(e_3B, 3*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_5B, 5*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_6B, 6*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_10B, 10*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_15B, 15*eps_t/ deg, q[i], r[i]);
-                
+
                 // construct the scattering matrix for the i-th sample
-                
+
                 //p11
                 p11[3] = 625*e_3B[1]*e_6B[0]*e_6B[2]/384;
                 p11[5] = -81*e_5B[1]*e_10B[2]/128;
                 p11[9]  = 625*(e_3B[0]*e_6B[1]*e_6B[2] + e_3B[1]*e_6B[0]*e_6B[2])/384;
                 p11[15]  = 625*e_3B[0]*e_6B[0]*e_6B[0]/384 + e_15B[0]/192 - 81*e_5B[0]*e_10B[0]/128;
-                
+
                 //p12
                 p12[0] = 625*e_3B[1]*e_6B[0]*e_6B[0]/384 + e_15B[1]/192 - 81*e_5B[1]*e_10B[0]/128;
                 p12[6]  = 625*(e_3B[0]*e_6B[0]*e_6B[1] + e_3B[1]*e_6B[1]*e_6B[2])/384;
                 p12[10]  = -81*e_5B[0]*e_10B[1]/128;
                 p12[12]  = 625*e_3B[0]*e_6B[0]*e_6B[1]/384;
-                
+
                 //p21
                 p21[3] = 625*e_3B[0]*e_6B[0]*e_6B[2]/384;
                 p21[5] = -81*e_5B[0]*e_10B[2]/128;
                 p21[9]  = 625*(e_3B[0]*e_6B[0]*e_6B[2] + e_3B[2]*e_6B[1]*e_6B[2])/384;
                 p21[15]  = 625*e_3B[2]*e_6B[0]*e_6B[0]/384 + e_15B[2]/192 - 81*e_5B[2]*e_10B[0]/128;
-                
+
                 //p22
                 p22[0] = p11[15];
                 p22[6]  = 625*(e_3B[0]*e_6B[1]*e_6B[2] + e_3B[2]*e_6B[0]*e_6B[1])/384;
                 p22[10]  = -81*e_5B[2]*e_10B[1]/128;
                 p22[12]  = 625*e_3B[2]*e_6B[0]*e_6B[1]/384;
-                
+
                 p11 += deg + 1;
                 p21 += deg + 1;
                 p12 += deg + 1;
                 p22 += deg + 1;
             }
-            
+
             break;
-            
+
         case akns_discretization_2SPLIT6A:
-            
+
             for (n=0; n<len; n++)
                 p[n] = 0.0;
-            
+
             e_4B = &e_Bstorage[0];
             e_6B = &e_Bstorage[3];
             e_12B = &e_Bstorage[6];
@@ -560,21 +555,21 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p11[6]  = -16*e_6B[1]*e_6B[2]/15;
                 p11[8]  = 2*p11[4];
                 p11[12]  = 81*e_4B[0]*e_4B[0]*e_4B[0]/40 + e_12B[0]/24 - 16*e_6B[0]*e_6B[0]/15;
-                
+
                 //p12
                 p12[2] = 81*e_4B[0]*e_4B[0]*e_4B[1]/40;
                 p12[3]  = -16*e_6B[0]*e_6B[1]/15;
                 p12[6]  = p12[2] + 81*e_4B[2]*e_4B[1]*e_4B[1]/40 + e_12B[1]/24;
                 p12[9]  = p12[3];
                 p12[10]  = p12[2];
-                
+
                 //p21
                 p21[2] = 81*e_4B[0]*e_4B[0]*e_4B[2]/40;
                 p21[3]  = -16*e_6B[0]*e_6B[2]/15;
                 p21[6]  = p21[2] + 81*e_4B[1]*e_4B[2]*e_4B[2]/40 + e_12B[2]/24;
                 p21[9]  = p21[3];
                 p21[10]  = p21[2];
-                
+
                 //p22
                 p22[0] = p11[12];
                 p22[4]  = p11[8];
@@ -588,12 +583,12 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             }
 
             break;
-        
+
         case akns_discretization_2SPLIT6B:
 
             for (n=0; n<len; n++)
                 p[n] = 0.0;
-            
+
             e_1B = &e_Bstorage[0];
             e_1_5B = &e_Bstorage[3];
             e_2B = &e_Bstorage[6];
@@ -614,28 +609,28 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p11[3] = -16*(e_3B[1]*e_1_5B[0]*e_1_5B[2] + e_3B[2]*e_1_5B[0]*e_1_5B[1])/15;
                 p11[4] = 81*(e_1B[0]*e_1B[0]*e_2B[1]*e_2B[2] + e_1B[0]*e_1B[1]*e_2B[0]*e_2B[2] + e_1B[0]*e_1B[2]*e_2B[0]*e_2B[1])/40;
                 p11[6] = 81*e_1B[0]*e_1B[0]*e_2B[0]*e_2B[0]/40 + e_3B[0]*e_3B[0]/24 - 16*e_1_5B[0]*e_1_5B[0]*e_3B[0]/15;
-                
+
                 //p12
                 p12[0] = 81*e_1B[0]*e_1B[1]*e_2B[0]*e_2B[0]/40 + e_3B[0]*e_3B[1]/24 - 16*e_3B[0]*e_1_5B[0]*e_1_5B[1]/15;
                 p12[2] = 81*(e_2B[0]*e_2B[1]*e_1B[0]*e_1B[0] + e_2B[1]*e_2B[2]*e_1B[0]*e_1B[1] + e_2B[0]*e_2B[2]*e_1B[1]*e_1B[1])/40;
                 p12[3] = -16*(e_3B[1]*e_1_5B[0]*e_1_5B[0] + e_3B[2]*e_1_5B[1]*e_1_5B[1])/15;
                 p12[4] = p12[2];
                 p12[6] = p12[0];
-                
+
                 //p21
                 p21[0] = 81*e_1B[0]*e_1B[2]*e_2B[0]*e_2B[0]/40 + e_3B[0]*e_3B[2]/24 - 16*e_3B[0]*e_1_5B[0]*e_1_5B[2]/15;
                 p21[2] = 81*(e_2B[0]*e_2B[2]*e_1B[0]*e_1B[0] + e_2B[1]*e_2B[2]*e_1B[0]*e_1B[2] + e_2B[0]*e_2B[1]*e_1B[2]*e_1B[2])/40;
                 p21[3] = -16*(e_3B[2]*e_1_5B[0]*e_1_5B[0] + e_3B[1]*e_1_5B[2]*e_1_5B[2])/15;
                 p21[4] = p21[2];
                 p21[6] = p21[0];
-                
+
                 //p22
                 p22[0] = p11[6];
                 p22[2] = p11[4];
                 p22[3] = p11[3];
                 p22[4] = p11[2];
                 p22[6] = p11[0];
-                
+
                 p11 += deg + 1;
                 p21 += deg + 1;
                 p12 += deg + 1;
@@ -643,12 +638,12 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             }
 
             break;
-            
+
         case akns_discretization_2SPLIT7A:
 
             for (n=0; n<len; n++)
                 p[n] = 0.0;
-            
+
             e_15B = &e_Bstorage[0];
             e_21B = &e_Bstorage[3];
             e_30B = &e_Bstorage[6];
@@ -656,9 +651,9 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             e_42B = &e_Bstorage[12];
             e_70B = &e_Bstorage[15];
             e_105B = &e_Bstorage[18];
-            
+
             for (i=D; i-->0;) {
-                
+
                 akns_fscatter_zero_freq_scatter_matrix(e_15B, 15*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_21B, 21*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_30B, 30*eps_t/ deg, q[i], r[i]);
@@ -666,9 +661,9 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 akns_fscatter_zero_freq_scatter_matrix(e_42B, 42*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_70B, 70*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_105B, 105*eps_t/ deg, q[i], r[i]);
-                
+
                 // construct the scattering matrix for the i-th sample
-                
+
                 //p11
                 p11[15] = 2874587633249303*e_15B[2]*e_30B[0]*e_30B[0]*e_30B[1]/1125899906842624;
                 p11[21] = -15625*e_21B[2]*e_42B[0]*e_42B[1]/9216;
@@ -677,7 +672,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p11[63] = -15625*(e_21B[0]*e_42B[1]*e_42B[2] + e_21B[2]*e_42B[0]*e_42B[1])/9216;
                 p11[75] = 2874587633249303*(e_15B[2]*e_30B[1]*e_30B[0]*e_30B[0] + 2*e_15B[0]*e_30B[1]*e_30B[2]*e_30B[0])/1125899906842624;
                 p11[105]  = 2874587633249303*e_15B[0]*e_30B[0]*e_30B[0]*e_30B[0]/1125899906842624 - e_105B[0]/9216 + 729*e_35B[0]*e_70B[0]/5120 - 15625*e_21B[0]*e_42B[0]*e_42B[0]/9216;
-                
+
                 //p12
                 p12[15] = 2874587633249303*e_15B[0]*e_30B[0]*e_30B[0]*e_30B[1]/1125899906842624;
                 p12[21] = -15625*e_21B[0]*e_42B[0]*e_42B[1]/9216;
@@ -686,7 +681,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p12[63] = -15625*(e_21B[0]*e_42B[0]*e_42B[1] + e_21B[1]*e_42B[1]*e_42B[2])/9216;
                 p12[75] = 2874587633249303*(e_15B[0]*e_30B[1]*e_30B[0]*e_30B[0] + 2*e_15B[1]*e_30B[1]*e_30B[2]*e_30B[0])/1125899906842624;
                 p12[105]  = 2874587633249303*e_15B[1]*e_30B[0]*e_30B[0]*e_30B[0]/1125899906842624 - e_105B[1]/9216 + 729*e_35B[1]*e_70B[0]/5120 - 15625*e_21B[1]*e_42B[0]*e_42B[0]/9216;
-                
+
                 //p21
                 p21[0] = 2874587633249303*e_15B[2]*e_30B[0]*e_30B[0]*e_30B[0]/1125899906842624 - e_105B[2]/9216 + 729*e_35B[2]*e_70B[0]/5120 - 15625*e_21B[2]*e_42B[0]*e_42B[0]/9216;
                 p21[30]  = 2874587633249303*(e_15B[0]*e_30B[2]*e_30B[0]*e_30B[0] + 2*e_15B[2]*e_30B[1]*e_30B[2]*e_30B[0])/1125899906842624;
@@ -695,7 +690,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p21[70]  = 729*e_35B[0]*e_70B[2]/5120;
                 p21[84]  = -15625*e_21B[0]*e_42B[0]*e_42B[2]/9216;
                 p21[90]  = 2874587633249303*e_15B[0]*e_30B[0]*e_30B[0]*e_30B[2]/1125899906842624;
-                
+
                 //p22
                 p22[0] = p11[105];
                 p22[30]  = 2874587633249303*(e_15B[1]*e_30B[2]*e_30B[0]*e_30B[0] + 2*e_15B[0]*e_30B[1]*e_30B[2]*e_30B[0])/1125899906842624;
@@ -704,7 +699,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p22[70]  = 729*e_35B[1]*e_70B[2]/5120;
                 p22[84]  = -15625*e_21B[1]*e_42B[0]*e_42B[2]/9216;
                 p22[90]  = 2874587633249303*e_15B[1]*e_30B[0]*e_30B[0]*e_30B[2]/1125899906842624;
-                
+
                 p11 += deg + 1;
                 p21 += deg + 1;
                 p12 += deg + 1;
@@ -712,12 +707,12 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             }
 
             break;
-            
+
         case akns_discretization_2SPLIT7B:
 
             for (n=0; n<len; n++)
                 p[n] = 0.0;
-            
+
             e_15B = &e_Bstorage[0];
             e_21B = &e_Bstorage[3];
             e_30B = &e_Bstorage[6];
@@ -725,9 +720,9 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             e_42B = &e_Bstorage[12];
             e_70B = &e_Bstorage[15];
             e_105B = &e_Bstorage[18];
-            
+
             for (i=D; i-->0;) {
-                
+
                 akns_fscatter_zero_freq_scatter_matrix(e_15B, 15*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_21B, 21*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_30B, 30*eps_t/ deg, q[i], r[i]);
@@ -735,9 +730,9 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 akns_fscatter_zero_freq_scatter_matrix(e_42B, 42*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_70B, 70*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_105B, 105*eps_t/ deg, q[i], r[i]);
-                
+
                 // construct the scattering matrix for the i-th sample
-                
+
                 //p11
                 p11[15]  = 2874587633249303*e_15B[1]*e_30B[0]*e_30B[0]*e_30B[2]/1125899906842624;
                 p11[21]  = -15625*e_21B[1]*e_42B[0]*e_42B[2]/9216;
@@ -746,7 +741,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p11[63]  = -15625*(e_21B[0]*e_42B[1]*e_42B[2] + e_21B[1]*e_42B[0]*e_42B[2])/9216;
                 p11[75]  = 2874587633249303*(e_15B[1]*e_30B[2]*e_30B[0]*e_30B[0] + 2*e_15B[0]*e_30B[1]*e_30B[2]*e_30B[0])/1125899906842624;
                 p11[105]   = 2874587633249303*e_15B[0]*e_30B[0]*e_30B[0]*e_30B[0]/1125899906842624 - e_105B[0]/9216 + 729*e_35B[0]*e_70B[0]/5120 - 15625*e_21B[0]*e_42B[0]*e_42B[0]/9216;
-                
+
                 //p12
                 p12[0] = 2874587633249303*e_15B[1]*e_30B[0]*e_30B[0]*e_30B[0]/1125899906842624 - e_105B[1]/9216 + 729*e_35B[1]*e_70B[0]/5120 - 15625*e_21B[1]*e_42B[0]*e_42B[0]/9216;
                 p12[30]  = 2874587633249303*(e_15B[0]*e_30B[1]*e_30B[0]*e_30B[0] + 2*e_15B[1]*e_30B[1]*e_30B[2]*e_30B[0])/1125899906842624;
@@ -755,7 +750,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p12[70]  = 729*e_35B[0]*e_70B[1]/5120;
                 p12[84]  = -15625*e_21B[0]*e_42B[0]*e_42B[1]/9216;
                 p12[90]  = 2874587633249303*e_15B[0]*e_30B[0]*e_30B[0]*e_30B[1]/1125899906842624;
-                
+
                 //p21
                 p21[15]  = 2874587633249303*e_15B[0]*e_30B[0]*e_30B[0]*e_30B[2]/1125899906842624;
                 p21[21]  = -15625*e_21B[0]*e_42B[0]*e_42B[2]/9216;
@@ -764,7 +759,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p21[63]  = -15625*(e_21B[0]*e_42B[0]*e_42B[2] + e_21B[2]*e_42B[1]*e_42B[2])/9216;
                 p21[75]  = 2874587633249303*(e_15B[0]*e_30B[2]*e_30B[0]*e_30B[0] + 2*e_15B[2]*e_30B[1]*e_30B[2]*e_30B[0])/1125899906842624;
                 p21[105]   = 2874587633249303*e_15B[2]*e_30B[0]*e_30B[0]*e_30B[0]/1125899906842624 - e_105B[2]/9216 + 729*e_35B[2]*e_70B[0]/5120 - 15625*e_21B[2]*e_42B[0]*e_42B[0]/9216;
-                
+
                 //p22
                 p22[0] = 2874587633249303*e_15B[0]*e_30B[0]*e_30B[0]*e_30B[0]/1125899906842624 - e_105B[0]/9216 + 729*e_35B[0]*e_70B[0]/5120 - 15625*e_21B[0]*e_42B[0]*e_42B[0]/9216;
                 p22[30]  = 2874587633249303*(e_15B[2]*e_30B[1]*e_30B[0]*e_30B[0] + 2*e_15B[0]*e_30B[1]*e_30B[2]*e_30B[0])/1125899906842624;
@@ -773,7 +768,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p22[70]  = 729*e_35B[2]*e_70B[1]/5120;
                 p22[84]  = -15625*e_21B[2]*e_42B[0]*e_42B[1]/9216;
                 p22[90]  = 2874587633249303*e_15B[2]*e_30B[0]*e_30B[0]*e_30B[1]/1125899906842624;
-                
+
                 p11 += deg + 1;
                 p21 += deg + 1;
                 p12 += deg + 1;
@@ -783,24 +778,24 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             break;
 
         case akns_discretization_2SPLIT8A:
-            
+
             for (n=0; n<len; n++)
                 p[n] = 0.0;
-            
+
             e_6B = &e_Bstorage[0];
             e_8B = &e_Bstorage[3];
             e_12B = &e_Bstorage[6];
             e_24B = &e_Bstorage[9];
 
             for (i=D; i-->0;) {
-                
+
                 akns_fscatter_zero_freq_scatter_matrix(e_6B, 6*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_8B, 8*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_12B, 12*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_24B, 24*eps_t/ deg, q[i], r[i]);
 
                 // construct the scattering matrix for the i-th sample
- 
+
                 //p11
                 p11[6] = 1024*e_6B[0]*e_6B[0]*e_6B[1]*e_6B[2]/315;
                 p11[8] = -729*e_8B[0]*e_8B[1]*e_8B[2]/280;
@@ -808,7 +803,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p11[16]  = 2*p11[8];
                 p11[18]  = 3*p11[6];
                 p11[24]  = 1024*e_6B[0]*e_6B[0]*e_6B[0]*e_6B[0]/315 + 16*e_12B[0]*e_12B[0]/45 - e_24B[0]/360 - 729*e_8B[0]*e_8B[0]*e_8B[0]/280;
-                
+
                 //p12
                 p12[3] = 1024*e_6B[0]*e_6B[0]*e_6B[0]*e_6B[1]/315;
                 p12[4] = -729*e_8B[0]*e_8B[0]*e_8B[1]/280;
@@ -819,7 +814,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p12[18]  = p12[6];
                 p12[20]  = p12[4];
                 p12[21]  = p12[3] ;
-                
+
                 //p21
                 p21[3] = 1024*e_6B[0]*e_6B[0]*e_6B[0]*e_6B[2]/315;
                 p21[4] = -729*e_8B[0]*e_8B[0]*e_8B[2]/280;
@@ -830,7 +825,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p21[18]  = p21[6];
                 p21[20]  = p21[4];
                 p21[21]  = p21[3];
-                
+
                 //p22
                 p22[0] = p11[24];
                 p22[6] = p11[18];
@@ -838,7 +833,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p22[12] = p11[12];
                 p22[16]  = p11[8];
                 p22[18]  = p11[6];
-                
+
                 p11 += deg + 1;
                 p21 += deg + 1;
                 p12 += deg + 1;
@@ -846,12 +841,12 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             }
 
             break;
-            
+
         case akns_discretization_2SPLIT8B:
-            
+
             for (n=0; n<len; n++)
                 p[n] = 0.0;
-            
+
             e_1_5B = &e_Bstorage[0];
             e_2B = &e_Bstorage[3];
             e_3B = &e_Bstorage[6];
@@ -867,7 +862,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 akns_fscatter_zero_freq_scatter_matrix(e_6B, 6*eps_t/ deg, q[i], r[i]);
 
                 // construct the scattering matrix for the i-th sample
-                
+
                                //p11
                 p11[0] = 1024*e_1_5B[1]*e_1_5B[2]*e_3B[0]*e_3B[0]*e_3B[0]/315 - e_6B[1]*e_6B[2]/360 + 16*e_3B[1]*e_3B[2]*e_6B[0]/45 - 729*e_2B[1]*e_2B[2]*e_4B[0]*e_4B[0]/280;
                 p11[3]  = 1024*(e_3B[0]*e_3B[0]*e_3B[1]*e_1_5B[0]*e_1_5B[2] + e_3B[0]*e_3B[0]*e_3B[2]*e_1_5B[0]*e_1_5B[1] + 2*e_3B[0]*e_3B[1]*e_3B[2]*e_1_5B[1]*e_1_5B[2])/315;
@@ -876,7 +871,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p11[8]  = -729*(e_2B[0]*e_2B[0]*e_4B[1]*e_4B[2] + e_2B[0]*e_2B[1]*e_4B[0]*e_4B[2] + e_2B[0]*e_2B[2]*e_4B[0]*e_4B[1])/280;
                 p11[9]  = 1024*(2*e_3B[0]*e_3B[1]*e_3B[2]*e_1_5B[0]*e_1_5B[0] + e_3B[0]*e_3B[0]*e_3B[1]*e_1_5B[0]*e_1_5B[2] + e_3B[0]*e_3B[0]*e_3B[2]*e_1_5B[0]*e_1_5B[1])/315;
                 p11[12]  = 1024*e_3B[0]*e_3B[0]*e_3B[0]*e_1_5B[0]*e_1_5B[0]/315 + 16*e_3B[0]*e_3B[0]*e_6B[0]/45 - e_6B[0]*e_6B[0]/360 - 729*e_2B[0]*e_2B[0]*e_4B[0]*e_4B[0]/280;
-                
+
                 //p12
                 p12[0] = 1024*e_1_5B[0]*e_1_5B[1]*e_3B[0]*e_3B[0]*e_3B[0]/315 + 16*e_3B[1]*e_6B[0]*e_3B[0]/45 - e_6B[0]*e_6B[1]/360 - 729*e_2B[0]*e_2B[1]*e_4B[0]*e_4B[0]/280;
                 p12[3]  = 1024*(e_3B[1]*e_3B[0]*e_3B[0]*e_1_5B[0]*e_1_5B[0] + e_3B[2]*e_3B[0]*e_3B[0]*e_1_5B[1]*e_1_5B[1] + 2*e_3B[1]*e_3B[2]*e_3B[0]*e_1_5B[0]*e_1_5B[1])/315;
@@ -885,7 +880,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p12[8]  = p12[4];
                 p12[9]  = p12[3];
                 p12[12]  = p12[0];
-                
+
                 //p21
                 p21[0] = 1024*e_1_5B[0]*e_1_5B[2]*e_3B[0]*e_3B[0]*e_3B[0]/315 + 16*e_3B[2]*e_6B[0]*e_3B[0]/45 - e_6B[0]*e_6B[2]/360 - 729*e_2B[0]*e_2B[2]*e_4B[0]*e_4B[0]/280;
                 p21[3]  = 1024*(e_3B[2]*e_3B[0]*e_3B[0]*e_1_5B[0]*e_1_5B[0] + e_3B[1]*e_3B[0]*e_3B[0]*e_1_5B[2]*e_1_5B[2] + 2*e_3B[1]*e_3B[2]*e_3B[0]*e_1_5B[0]*e_1_5B[2])/315;
@@ -894,7 +889,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p21[8]  = p21[4];
                 p21[9]  = p21[3];
                 p21[12]  = p21[0];
-                
+
                 //p22
                 p22[0] = p11[12];
                 p22[3]  = p11[9];
@@ -903,7 +898,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p22[8]  = p11[4];
                 p22[9]  = p11[3];
                 p22[12]  = p11[0];
-                
+
                 p11 += deg + 1;
                 p21 += deg + 1;
                 p12 += deg + 1;
@@ -911,7 +906,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             }
 
             break;
-            
+
         default: // Unknown discretization
             ret_code = E_INVALID_ARGUMENT(discretization);
             goto release_mem;
