@@ -28,7 +28,12 @@ int main(void) {
         return EXIT_FAILURE;
 
     D = 16384;
-    error_bound = 4223*FNFT_EPSILON;
+    error_bound = 
+#ifdef HAVE_FFTW3
+        4223*FNFT_EPSILON;
+#else
+	111414*FNFT_EPSILON;
+#endif
     if (kdv_finvscatter_test(D, error_bound, discretization) != SUCCESS)
         return EXIT_FAILURE;
 
