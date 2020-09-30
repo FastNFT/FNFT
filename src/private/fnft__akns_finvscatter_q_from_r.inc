@@ -72,7 +72,9 @@ struct finvscatter_stack_elem {
 static INT finvscatter_recurse(
     struct finvscatter_stack_elem * const s,
     const REAL eps_t,
+    #ifdef FNFT__AKNS_FINVSCATTER_Q_FROM_R_HAS_KAPPA
     const INT kappa,
+    #endif
     const FNFT__AKNS_FINVSCATTER_Q_FROM_R_PREFIX(discretization_t) discretization,
     COMPLEX * const buf0,
     COMPLEX * const buf1,
@@ -179,7 +181,8 @@ start_pos_2:
             const COMPLEX R = T_21[1] / T_11[1];
             const COMPLEX Q = FNFT__AKNS_FINVSCATTER_Q_FROM_R(R);
 
-            const COMPLEX scl_den = 1.0 - Q*R;
+            COMPLEX scl_den;
+            scl_den = 1.0 - Q*R;
             if (scl_den == 0.0) {
                 ret_code = E_DIV_BY_ZERO;
                 goto leave_fun;
@@ -203,6 +206,9 @@ start_pos_2:
             switch (discretization) {
             case FNFT__AKNS_FINVSCATTER_Q_FROM_R_PREFIX(discretization_2SPLIT2_MODAL):
                 *s[i].q = X/eps_t;
+                break;
+            case FNFT__AKNS_FINVSCATTER_Q_FROM_R_PREFIX(discretization_2SPLIT2_MODAL2):
+                *s[i].q = ATANH(CABS(X))*CEXP(I*CARG(X))/eps_t;
                 break;
             case FNFT__AKNS_FINVSCATTER_Q_FROM_R_PREFIX(discretization_2SPLIT2A):
                 *s[i].q = ATAN(CABS(X))*CEXP(I*CARG(X))/eps_t;
@@ -231,14 +237,11 @@ INT FNFT__AKNS_FINVSCATTER_Q_FROM_R__PREFIX(finvscatter)(
     COMPLEX * const transfer_matrix,
     COMPLEX * const q,
     const REAL eps_t,
-#ifdef FNFT__AKNS_FINVSCATTER_Q_FROM_R_HAS_KAPPA
+    #ifdef FNFT__AKNS_FINVSCATTER_Q_FROM_R_HAS_KAPPA
     const INT kappa,
-#endif
+    #endif
     const FNFT__AKNS_FINVSCATTER_Q_FROM_R_PREFIX(discretization_t) discretization)
 {
-#ifndef FNFT__AKNS_FINVSCATTER_Q_FROM_R_HAS_KAPPA
-    const INT kappa = 1;
-#endif
     if (deg == 0)
         return E_INVALID_ARGUMENT(de);
     if (transfer_matrix == NULL)
@@ -247,8 +250,10 @@ INT FNFT__AKNS_FINVSCATTER_Q_FROM_R__PREFIX(finvscatter)(
         return E_INVALID_ARGUMENT(q);
     if (!(eps_t > 0.0))
         return E_INVALID_ARGUMENT(eps_t);
+    #ifdef FNFT__AKNS_FINVSCATTER_Q_FROM_R_HAS_KAPPA
     if (kappa != -1 && kappa != 1)
         return E_INVALID_ARGUMENT(kappa);
+    #endif
     const UINT discretization_degree =
         FNFT__AKNS_FINVSCATTER_Q_FROM_R__PREFIX(discretization_degree)(
             discretization);
@@ -332,8 +337,11 @@ INT FNFT__AKNS_FINVSCATTER_Q_FROM_R__PREFIX(finvscatter)(
 
     // Run the recursion
 
-    ret_code = finvscatter_recurse(s, eps_t, kappa, discretization, buf0,
-        buf1, buf2);
+    ret_code = finvscatter_recurse(s, eps_t,
+                                   #ifdef FNFT__AKNS_FINVSCATTER_Q_FROM_R_HAS_KAPPA
+                                   kappa,
+                                   #endif
+                                   discretization, buf0, buf1, buf2);
     CHECK_RETCODE(ret_code, leave_fun_2);
 
 leave_fun_2:

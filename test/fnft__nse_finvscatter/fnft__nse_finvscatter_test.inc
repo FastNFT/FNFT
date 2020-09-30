@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2018.
+ * Sander Wahls (TU Delft) 2018, 2020.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -25,12 +25,11 @@
 #include "fnft__nse_finvscatter.h"
 #include "fnft__misc.h"
 
-static INT nse_finvscatter_test(const INT kappa, const REAL error_bound,
-    nse_discretization_t discretization)
+static INT nse_finvscatter_test(const UINT D, const INT kappa,
+    const REAL error_bound, nse_discretization_t discretization)
 {
     INT ret_code = SUCCESS;
 
-    const UINT D = 16384;
     COMPLEX * q, * q_exact, * result;
     REAL eps_t = 0.12;
     UINT deg, i;

@@ -23,12 +23,12 @@ int main(void) {
     const kdv_discretization_t discretization = kdv_discretization_2SPLIT2A;
 
     UINT D = 8;
-    REAL error_bound = 10*FNFT_EPSILON;
+    REAL error_bound = 1.8e12*FNFT_EPSILON;
     if (kdv_finvscatter_test(D, error_bound, discretization) != SUCCESS)
         return EXIT_FAILURE;
 
     D = 16384;
-    error_bound = 112000*FNFT_EPSILON;
+    error_bound = 4e9*FNFT_EPSILON;
     if (kdv_finvscatter_test(D, error_bound, discretization) != SUCCESS)
         return EXIT_FAILURE;
 

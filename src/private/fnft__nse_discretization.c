@@ -114,6 +114,9 @@ INT fnft__nse_discretization_to_akns_discretization(nse_discretization_t nse_dis
         case nse_discretization_2SPLIT2_MODAL:
             *akns_discretization = akns_discretization_2SPLIT2_MODAL;
             break;
+        case nse_discretization_2SPLIT2_MODAL2:
+            *akns_discretization = akns_discretization_2SPLIT2_MODAL2;
+            break;
         case nse_discretization_2SPLIT1A:
             *akns_discretization = akns_discretization_2SPLIT1A;
             break;
@@ -291,6 +294,7 @@ INT fnft__nse_discretization_phase_factor_a(const REAL eps_t, const UINT D, REAL
         case nse_discretization_4SPLIT4B:
         case nse_discretization_2SPLIT2A:
         case nse_discretization_2SPLIT2_MODAL:
+        case nse_discretization_2SPLIT2_MODAL2:
             *phase_factor_a = -eps_t*D + (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
             break;
@@ -353,6 +357,7 @@ INT fnft__nse_discretization_phase_factor_b(const REAL eps_t, const UINT D, REAL
             
         case nse_discretization_2SPLIT2A:
         case nse_discretization_2SPLIT2_MODAL:
+        case nse_discretization_2SPLIT2_MODAL2:
             degree1step = nse_discretization_degree(nse_discretization);
             if (degree1step == 0)
                 return E_INVALID_ARGUMENT(nse_discretization);
@@ -464,6 +469,7 @@ INT fnft__nse_discretization_preprocess_signal(const UINT D, COMPLEX const * con
         case nse_discretization_2SPLIT8A:
         case nse_discretization_2SPLIT8B:
         case nse_discretization_2SPLIT2_MODAL:    
+        case nse_discretization_2SPLIT2_MODAL2:    
             i = 0;
             for (isub=0; isub<D_effective; isub++) {
                 q_preprocessed[isub] = q[i];
@@ -486,7 +492,6 @@ INT fnft__nse_discretization_preprocess_signal(const UINT D, COMPLEX const * con
             ret_code = misc_resample(D, eps_t, q, eps_t*scl_factor*nskip_per_step, q_2);
             CHECK_RETCODE(ret_code, release_mem);
             
-            
             ret_code = nse_discretization_method_weights(&weights,discretization);
             CHECK_RETCODE(ret_code, release_mem);
             
@@ -498,7 +503,6 @@ INT fnft__nse_discretization_preprocess_signal(const UINT D, COMPLEX const * con
                 r_preprocessed[isub+1] = -kappa*CONJ(q_preprocessed[isub+1]);
                 i += nskip_per_step;
             }
-             
              
             break;
         case nse_discretization_CF4_3:

@@ -81,6 +81,9 @@ INT fnft__kdv_discretization_to_akns_discretization(kdv_discretization_t kdv_dis
         case kdv_discretization_2SPLIT2_MODAL:
              *akns_discretization = akns_discretization_2SPLIT2_MODAL;
              break;
+        case kdv_discretization_2SPLIT2_MODAL2:
+             *akns_discretization = akns_discretization_2SPLIT2_MODAL2;
+             break;
         case kdv_discretization_2SPLIT1A:
             *akns_discretization = akns_discretization_2SPLIT1A;
             break;

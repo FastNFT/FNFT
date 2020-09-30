@@ -62,9 +62,6 @@ static INT kdv_finvscatter_test(const UINT D,
     ret_code = kdv_finvscatter(deg, result, r, eps_t, kdv_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    misc_print_buf(D, r, "r");
-    misc_print_buf(D, r_exact, "r_exact");
-
     REAL error = misc_rel_err(D, r, r_exact);
 #ifdef DEBUG
     printf("error = %g\n", error);

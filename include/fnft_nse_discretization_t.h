@@ -103,6 +103,7 @@
  */
 typedef enum {
     fnft_nse_discretization_2SPLIT2_MODAL,
+    fnft_nse_discretization_2SPLIT2_MODAL2,
     fnft_nse_discretization_BO,
     fnft_nse_discretization_2SPLIT1A,
     fnft_nse_discretization_2SPLIT1B,
@@ -134,6 +135,7 @@ typedef enum {
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define nse_discretization_2SPLIT2_MODAL fnft_nse_discretization_2SPLIT2_MODAL
+#define nse_discretization_2SPLIT2_MODAL2 fnft_nse_discretization_2SPLIT2_MODAL2
 #define nse_discretization_BO fnft_nse_discretization_BO
 #define nse_discretization_t fnft_nse_discretization_t
 #define nse_discretization_2SPLIT1A fnft_nse_discretization_2SPLIT1A

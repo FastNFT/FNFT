@@ -65,7 +65,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
     INT ret_code;
     COMPLEX *p, *p11, *p12, *p21, *p22;
     UINT i, n, len;
-    COMPLEX e_Bstorage[21], scl;
+    COMPLEX e_Bstorage[21], scl, scl_den, Q, R;
     // These variables are used to store the values of matrix exponentials
     // e_aB = expm([0,q;r,0]*a*eps_t/degree1step)
     COMPLEX *e_0_5B, *e_1B, *e_1_5B, *e_2B, *e_3B, *e_4B, *e_5B, *e_6B, *e_8B,
@@ -114,23 +114,23 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
         case akns_discretization_2SPLIT2_MODAL: // Modified Ablowitz-Ladik discretization
 
             for (i=D; i-->0;) {
-                scl = eps_t*CABS(q[i]);
-		if (CREAL(q[i]) == CREAL(r[i])) {
-                    if ((double)scl >= 1.0) {
-                        ret_code = E_OTHER("kappa == -1 but eps_t*|q[i]|>=1 ... decrease step size");
-                        goto release_mem;
-                    }
-                    scl = 1.0/CSQRT(1-eps_t*q[i]*eps_t*r[i]);
-                } else
-                    scl = 1.0/CSQRT(1-eps_t*q[i]*eps_t*r[i]);
+                Q = eps_t * q[i];
+                R = eps_t * r[i];
+
+                scl_den = CSQRT(1 - Q*R);
+                if (scl_den == 0.0) {
+                    ret_code = E_DIV_BY_ZERO;
+                    goto release_mem;
+                }
+                scl = 1.0/scl_den;
 
                 // construct the scattering matrix for the i-th sample
                 p11[0] = 0.0;
                 p11[1] = scl;
-                p12[0] = scl*eps_t*q[i];
+                p12[0] = scl*Q;
                 p12[1] = 0.0;
                 p21[0] = 0.0;
-                p21[1] = scl*eps_t*r[i];
+                p21[1] = scl*R;
                 p22[0] = scl;
                 p22[1] = 0.0;
 
@@ -138,9 +138,37 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p21 += deg + 1;
                 p12 += deg + 1;
                 p22 += deg + 1;
-
             }
+            break;
 
+        case akns_discretization_2SPLIT2_MODAL2: // 2nd modified Ablowitz-Ladik discretization
+
+            for (i=D; i-->0;) {
+                Q = TANH(eps_t*CABS(q[i])) * CEXP(I*CARG(q[i]));
+                R = TANH(eps_t*CABS(r[i])) * CEXP(I*CARG(r[i]));
+
+                scl_den = CSQRT(1 - Q*R);
+                if (scl_den == 0.0) {
+                    ret_code = E_DIV_BY_ZERO;
+                    goto release_mem;
+                }
+                scl = 1.0/scl_den;
+
+                // construct the scattering matrix for the i-th sample
+                p11[0] = 0.0;
+                p11[1] = scl;
+                p12[0] = scl*Q;
+                p12[1] = 0.0;
+                p21[0] = 0.0;
+                p21[1] = scl*R;
+                p22[0] = scl;
+                p22[1] = 0.0;
+
+                p11 += deg + 1;
+                p21 += deg + 1;
+                p12 += deg + 1;
+                p22 += deg + 1;
+            }
             break;
 
         case akns_discretization_2SPLIT1A:
