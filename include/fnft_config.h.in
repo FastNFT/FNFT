@@ -1,0 +1,37 @@
+/*
+ * This file is part of FNFT.
+ *
+ * FNFT is free software; you can redistribute it and/or
+ * modify it under the terms of the version 2 of the GNU General
+ * Public License as published by the Free Software Foundation.
+ *
+ * FNFT is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ * Sander Wahls (TU Delft) 2017-2018.
+ */
+
+#ifndef FNFT_CONFIG_H
+#define FNFT_CONFIG_H
+
+#define FNFT_VERSION_MAJOR @FNFT_VERSION_MAJOR@
+#define FNFT_VERSION_MINOR @FNFT_VERSION_MINOR@
+#define FNFT_VERSION_PATCH @FNFT_VERSION_PATCH@
+#define FNFT_VERSION_SUFFIX "@FNFT_VERSION_SUFFIX@"
+// The suffix should not exceed the length defined below (not counting the NULL
+// termination symbol)
+#define FNFT_VERSION_SUFFIX_MAXLEN 8
+
+#cmakedefine HAVE__THREAD_LOCAL 1
+#cmakedefine HAVE___THREAD 1
+#cmakedefine DEBUG 1
+#cmakedefine HAVE_FFTW3 1
+#cmakedefine HAVE_PRAGMA_GCC_OPTIMIZE_OFAST 1
+
+#endif

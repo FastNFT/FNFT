@@ -1,0 +1,48 @@
+language: c
+
+install:
+    - sudo apt-get remove -y cmake
+    - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
+    - mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
+
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        CMAKE_URL="https://cmake.org/files/v3.17/cmake-3.17.3-Linux-x86_64.tar.gz";
+        mkdir cmake && travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake;
+        export PATH=${DEPS_DIR}/cmake/bin:${PATH};
+      else
+        brew outdated cmake || brew upgrade cmake;
+      fi
+    - cmake --version
+    - cd ..
+
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          sources: 
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-5
+            - gfortran-5
+    - os: linux
+      addons:
+        apt:
+          sources: 
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-5
+            - gfortran-5
+            - libfftw3-dev
+
+            
+before_script:
+    - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 100
+    - sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-5 100
+    - mkdir build
+    - cd build
+ 
+script:
+    - if dpkg -s libfftw3-dev; then cmake .. -DENABLE_FFTW=ON; else cmake ..; fi
+    - make 
+    - make test CTEST_OUTPUT_ON_FAILURE=1
