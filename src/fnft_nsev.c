@@ -450,6 +450,8 @@ INT fnft_nsev(
         free(contspec_sub);
         free(bound_states_sub);
         free(normconsts_or_residues_sub);
+        if (normconsts_or_residues_reserve != normconsts_or_residues)
+            free(normconsts_or_residues_reserve);
         return ret_code;
 }
 
