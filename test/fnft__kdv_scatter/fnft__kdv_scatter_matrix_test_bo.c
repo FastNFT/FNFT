@@ -16,6 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
 * Shrinivas Chimmalgi (TU Delft) 2017-2018,2020.
+* Peter J Prins (TU Delft) 2020.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -28,7 +29,7 @@ INT kdv_scatter_matrix_test_bo()
     UINT i, D = 8;
     INT ret_code;
     const REAL eps_t = 0.13;
-    COMPLEX q[8];
+    COMPLEX q[8], r[8];
     COMPLEX result[2*8];
     COMPLEX lam[2] = {2, 1+0.5*I};
     COMPLEX result_exact[16] = { \
@@ -72,10 +73,13 @@ INT kdv_scatter_matrix_test_bo()
     end
     format long g; result_exact.'
     */
-    for (i=0; i<D; i++)
+    for (i=0; i<D; i++) {
         q[i] = 0.4*cos(i+1) + 0.5*I*sin(0.3*(i+1));
+        r[i] = -1.0;
+    }
 
-    ret_code = kdv_scatter_matrix(D, q, eps_t, 2, lam, result, kdv_discretization_BO, 1);
+    INT kappa=1; // unused
+    ret_code = kdv_scatter_matrix(D, q, r, eps_t, kappa, 2, lam, result, kdv_discretization_BO, 1);
     if (ret_code != SUCCESS)
         return E_SUBROUTINE(ret_code);
     if (misc_rel_err(16, result, result_exact) > 10*EPSILON)

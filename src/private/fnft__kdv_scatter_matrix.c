@@ -31,16 +31,15 @@
  * Result should be preallocated with size 4*K or 8*K accordingly.
  */
 INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
-        const REAL eps_t, const UINT K,
-        COMPLEX const * const lambda,
-        COMPLEX * const result, kdv_discretization_t discretization,
-        const UINT derivative_flag)
+    COMPLEX * r, const REAL eps_t, const INT kappa,
+    const UINT K, COMPLEX const * const lambda,
+    COMPLEX * const result, kdv_discretization_t discretization,
+    const UINT derivative_flag)
 {
-    
+    (void) &kappa; // Suppress compiler warning
     INT ret_code = SUCCESS;
     UINT i;
     akns_discretization_t akns_discretization;
-    COMPLEX *r = NULL;
     
     // Check inputs
     if (D == 0)
@@ -66,7 +65,7 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
         goto leave_fun;
     }
     
-    
+    //TODO: Fetch hard coded r-values below from Richardson weights
     
     switch (akns_discretization) {
         
