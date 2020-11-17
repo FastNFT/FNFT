@@ -105,7 +105,7 @@ INT fnft_kdvv(const UINT D,
     const REAL eps_t = (T[1] - T[0])/(D - 1);
 
     // Compute the transfer matrix 
-    ret_code = kdv_fscatter(D, u, eps_t, transfer_matrix, &deg,
+    ret_code = kdv_fscatter(D, u, eps_t, 1, transfer_matrix, &deg,
         W_ptr, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
 
