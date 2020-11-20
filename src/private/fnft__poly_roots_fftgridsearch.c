@@ -16,6 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
 * Marius Brehler (TU Dortmund) 2018.
+* Peter J Prins (TU Delft) 2020.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -39,7 +40,7 @@ INT poly_roots_fftgridsearch(const UINT deg,
     INT ret_code;
     COMPLEX A, W, c, zi, z0, yi, y0, zr;
     UINT i, j, M, nroots = 0;
-    INT k;
+    UINT k_plus_one;
     COMPLEX * vals;
     REAL tmp;
 
@@ -67,10 +68,10 @@ INT poly_roots_fftgridsearch(const UINT deg,
     // Evaluate polynomial using the Chirp transform on three rings
     const REAL eps = (PHI[1] - PHI[0]) / (M - 1);
     W = CEXP(I*eps);
-    for (k=-1; k<=1; k++) {
+    for (k_plus_one=0; k_plus_one<=2; k_plus_one++) {
 
-        A = (1.0 + k*eps) * CEXP(-I*PHI[0]);
-        ret_code = poly_chirpz(deg, p, A, W, M, vals + (k+1)*M);
+        A = (1.0 + (((REAL)k_plus_one)-1.0)*eps) * CEXP(-I*PHI[0]);
+        ret_code = poly_chirpz(deg, p, A, W, M, vals + k_plus_one*M);
         CHECK_RETCODE(ret_code, release_mem);
     }
    
@@ -108,13 +109,13 @@ INT poly_roots_fftgridsearch(const UINT deg,
         tmp = 0.0;
         y0 = vals[M + i];
         for (j=i-1; j<i+2; j++) {
-            for (k=-1; k<2; k++) {
+            for (k_plus_one=0; k_plus_one<3; k_plus_one++) {
 
-                if (j == 0 && k == 0)
+                if (j == 0 && k_plus_one == 1)
                     continue; // Skip the center point
 
-                zi = (1 - k*eps)*CEXP(I*(PHI[0] + j*eps));
-                yi = vals[(k + 1)*M + j];
+                zi = (1 - (((REAL)k_plus_one)-1.0)*eps)*CEXP(I*(PHI[0] + j*eps));
+                yi = vals[k_plus_one*M + j];
                 c += CONJ( zi - z0 )*( yi - y0 );
                 tmp += CABS( zi - z0 )*CABS( zi - z0 );
             }
@@ -207,7 +208,7 @@ INT poly_roots_fftgridsearch_paraherm(const UINT deg,
             phi1 = PHI[0] + eps*(i - 1);
             phi2 = phi1 + eps;
             if (roots[i-1] != roots[i])
-                phi = phi1 - roots[i-1]*(phi2 - phi1)/(roots[i] - roots[i-1]);
+                phi = phi1 - (REAL) CREAL(roots[i-1])*(phi2 - phi1)/CREAL(roots[i] - roots[i-1]);
             else
                 phi = 0.5*(phi1 + phi2); // angle of the root estimate
             roots[nroots++] = CEXP(I*phi);

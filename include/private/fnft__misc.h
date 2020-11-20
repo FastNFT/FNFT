@@ -39,7 +39,7 @@
  * @param[in] buf Array to be printed.
  * @param[in] varname Name of the array being printed.
  */
-void fnft__misc_print_buf(const FNFT_INT len, FNFT_COMPLEX const * const buf,
+void fnft__misc_print_buf(const FNFT_UINT len, FNFT_COMPLEX const * const buf,
                           char const * const varname);
 
 /**
@@ -53,7 +53,7 @@ void fnft__misc_print_buf(const FNFT_INT len, FNFT_COMPLEX const * const buf,
  * @param[in] vec_exact Complex array of exact result of length len.
  * @return Returns the real valued relative error err.
  */
-FNFT_REAL fnft__misc_rel_err(const FNFT_INT len,
+FNFT_REAL fnft__misc_rel_err(const FNFT_UINT len,
     FNFT_COMPLEX const * const vec_numer, FNFT_COMPLEX const * const vec_exact);
 
 /**

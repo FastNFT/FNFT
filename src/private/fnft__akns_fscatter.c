@@ -15,7 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
-* Peter J Prins (TU Delft) 2017-2018.
+* Peter J Prins (TU Delft) 2017-2020.
 * Shrinivas Chimmalgi (TU Delft) 2018.
 
 */
@@ -24,6 +24,7 @@
 
 
 #include "fnft__akns_fscatter.h"
+#include <limits.h>
 
 
 /**
@@ -66,9 +67,9 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                  INT * const W_ptr, akns_discretization_t discretization)
 {
     
-    INT i, ret_code;
+    INT ret_code;
     COMPLEX *p, *p11, *p12, *p21, *p22;
-    UINT n, len;
+    UINT i, n, len;
     COMPLEX e_Bstorage[21], scl;
     // These variables are used to store the values of matrix exponentials
     // e_aB = expm([0,q;r,0]*a*eps_t/degree1step)
@@ -77,7 +78,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                                         *e_30B, *e_35B, *e_42B, *e_70B, *e_105B;
 
     // Check inputs
-    if (D == 0)
+    if (D == 0 || D>INT_MAX)
         return E_INVALID_ARGUMENT(D);
     if (q == NULL)
         return E_INVALID_ARGUMENT(q);
@@ -117,7 +118,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
 
         case akns_discretization_2SPLIT2_MODAL: // Modified Ablowitz-Ladik discretization
 
-            for (i=D-1; i>=0; i--) {
+            for (i=D; i-->0;) {
                 scl = eps_t*CABS(q[i]);
 		if (CREAL(q[i]) == CREAL(r[i])) {
                     if ((double)scl >= 1.0) {
@@ -151,7 +152,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             
             e_1B = &e_Bstorage[0];
             
-            for (i=D-1; i>=0; i--) {
+            for (i=D; i-->0;) {
                 
                 //e_1B = expm([0,q[i];r[i],0]*1*eps_t/deg)
                 akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ deg, q[i], r[i]);
@@ -180,7 +181,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             
             e_1B = &e_Bstorage[0];
             
-            for (i=D-1; i>=0; i--) {
+            for (i=D; i-->0;) {
                 
                 akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ deg, q[i], r[i]);
                 
@@ -205,7 +206,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
 
             e_0_5B = &e_Bstorage[0];
 
-            for (i=D-1; i>=0; i--) {
+            for (i=D; i-->0;) {
                 //e_0_5B = expm([0,q[i];r[i],0]*0.5*eps_t/deg)
                 akns_fscatter_zero_freq_scatter_matrix(e_0_5B, 0.5*eps_t/ deg, q[i], r[i]);
 
@@ -231,7 +232,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             
             e_1B = &e_Bstorage[0];
             
-            for (i=D-1; i>=0; i--) {
+            for (i=D; i-->0;) {
                 
                 akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ deg, q[i], r[i]);
                 
@@ -259,7 +260,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             e_2B = &e_Bstorage[3];
             e_3B = &e_Bstorage[6];
 
-            for (i=D-1; i>=0; i--) {
+            for (i=D; i-->0;) {
 
                 akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_2B, 2*eps_t/ deg, q[i], r[i]);
@@ -297,7 +298,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             e_2B = &e_Bstorage[3];
             e_3B = &e_Bstorage[6];
 
-            for (i=D-1; i>=0; i--) {
+            for (i=D; i-->0;) {
 
                 akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_2B, 2*eps_t/ deg, q[i], r[i]);
@@ -333,7 +334,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             e_1B = &e_Bstorage[0];
             e_2B = &e_Bstorage[3];
 
-            for (i=D-1; i>=0; i--) {
+            for (i=D; i-->0;) {
                 
                 akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_2B, 2*eps_t/ deg, q[i], r[i]);
@@ -365,7 +366,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             e_2B = &e_Bstorage[0];
             e_4B = &e_Bstorage[3];
             
-            for (i=D-1; i>=0; i--) {
+            for (i=D; i-->0;) {
                 
                 akns_fscatter_zero_freq_scatter_matrix(e_2B, 2*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_4B, 4*eps_t/ deg, q[i], r[i]);
@@ -405,7 +406,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             e_0_5B = &e_Bstorage[0];
             e_1B = &e_Bstorage[3];
             
-            for (i=D-1; i>=0; i--) {
+            for (i=D; i-->0;) {
                 
                 akns_fscatter_zero_freq_scatter_matrix(e_0_5B, 0.5*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ deg, q[i], r[i]);
@@ -443,7 +444,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             e_10B = &e_Bstorage[9];
             e_15B = &e_Bstorage[12];
             
-            for (i=D-1; i>=0; i--) {
+            for (i=D; i-->0;) {
                 
                 akns_fscatter_zero_freq_scatter_matrix(e_3B, 3*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_5B, 5*eps_t/ deg, q[i], r[i]);
@@ -496,7 +497,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             e_10B = &e_Bstorage[9];
             e_15B = &e_Bstorage[12];
             
-            for (i=D-1; i>=0; i--) {
+            for (i=D; i-->0;) {
                 
                 akns_fscatter_zero_freq_scatter_matrix(e_3B, 3*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_5B, 5*eps_t/ deg, q[i], r[i]);
@@ -547,7 +548,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             e_6B = &e_Bstorage[3];
             e_12B = &e_Bstorage[6];
 
-            for (i=D-1; i>=0; i--) {
+            for (i=D; i-->0;) {
 
                 akns_fscatter_zero_freq_scatter_matrix(e_4B, 4*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_6B, 6*eps_t/ deg, q[i], r[i]);
@@ -598,7 +599,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             e_2B = &e_Bstorage[6];
             e_3B = &e_Bstorage[9];
 
-            for (i=D-1; i>=0; i--) {
+            for (i=D; i-->0;) {
 
                 akns_fscatter_zero_freq_scatter_matrix(e_1B, eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_1_5B, 1.5*eps_t/ deg, q[i], r[i]);
@@ -656,7 +657,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             e_70B = &e_Bstorage[15];
             e_105B = &e_Bstorage[18];
             
-            for (i=D-1; i>=0; i--) {
+            for (i=D; i-->0;) {
                 
                 akns_fscatter_zero_freq_scatter_matrix(e_15B, 15*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_21B, 21*eps_t/ deg, q[i], r[i]);
@@ -725,7 +726,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             e_70B = &e_Bstorage[15];
             e_105B = &e_Bstorage[18];
             
-            for (i=D-1; i>=0; i--) {
+            for (i=D; i-->0;) {
                 
                 akns_fscatter_zero_freq_scatter_matrix(e_15B, 15*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_21B, 21*eps_t/ deg, q[i], r[i]);
@@ -791,7 +792,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             e_12B = &e_Bstorage[6];
             e_24B = &e_Bstorage[9];
 
-            for (i=D-1; i>=0; i--) {
+            for (i=D; i-->0;) {
                 
                 akns_fscatter_zero_freq_scatter_matrix(e_6B, 6*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_8B, 8*eps_t/ deg, q[i], r[i]);
@@ -857,7 +858,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             e_4B = &e_Bstorage[9];
             e_6B = &e_Bstorage[12];
 
-            for (i=D-1; i>=0; i--) {
+            for (i=D; i-->0;) {
 
                 akns_fscatter_zero_freq_scatter_matrix(e_1_5B, 1.5*eps_t/ deg, q[i], r[i]);
                 akns_fscatter_zero_freq_scatter_matrix(e_2B, 2*eps_t/ deg, q[i], r[i]);

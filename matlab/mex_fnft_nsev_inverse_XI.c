@@ -47,9 +47,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if ( !mxIsDouble(prhs[2]) || mxGetNumberOfElements(prhs[2]) != 1 )
         mexErrMsgTxt("Third input M should be a scalar.");
 
-    D = (int)mxGetScalar(prhs[0]);
+    D = (FNFT_UINT) FNFT_ROUND(mxGetScalar(prhs[0]));
     T = mxGetPr(prhs[1]);
-    M = (int)mxGetScalar(prhs[2]);
+    M = (FNFT_UINT) FNFT_ROUND(mxGetScalar(prhs[2]));
 
     /* Allocate memory for the output */
 

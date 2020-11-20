@@ -426,8 +426,8 @@ INT fnft__nse_discretization_preprocess_signal(const UINT D, COMPLEX const * con
         Dsub = 2;
     if (Dsub > D)
         Dsub = D;
-    const UINT nskip_per_step = ROUND((REAL)D / Dsub);
-    Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
+    const UINT nskip_per_step = (UINT) ROUND((REAL)D / Dsub);
+    Dsub = (UINT) ROUND((REAL)D / nskip_per_step); // actual Dsub
     
     UINT upsampling_factor = nse_discretization_upsampling_factor(discretization);
     if (upsampling_factor == 0){

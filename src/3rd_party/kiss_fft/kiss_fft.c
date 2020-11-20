@@ -10,6 +10,9 @@ Redistribution and use in source and binary forms, with or without modification,
     * Neither the author nor the names of any contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Changelog
+2020-09-07, Peter J. Prins (TU Delft): All integer types replaced by FNFT_UINT to remove unnecessary implicit type casts between size_t and int.
 */
 
 
@@ -20,9 +23,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 static void kf_bfly2(
         kiss_fft_cpx * Fout,
-        const size_t fstride,
+        const FNFT_UINT fstride,
         const kiss_fft_cfg st,
-        int m
+        FNFT_UINT m
         )
 {
     kiss_fft_cpx * Fout2;
@@ -43,16 +46,16 @@ static void kf_bfly2(
 
 static void kf_bfly4(
         kiss_fft_cpx * Fout,
-        const size_t fstride,
+        const FNFT_UINT fstride,
         const kiss_fft_cfg st,
-        const size_t m
+        const FNFT_UINT m
         )
 {
     kiss_fft_cpx *tw1,*tw2,*tw3;
     kiss_fft_cpx scratch[6];
-    size_t k=m;
-    const size_t m2=2*m;
-    const size_t m3=3*m;
+    FNFT_UINT k=m;
+    const FNFT_UINT m2=2*m;
+    const FNFT_UINT m3=3*m;
 
 
     tw3 = tw2 = tw1 = st->twiddles;
@@ -91,13 +94,13 @@ static void kf_bfly4(
 
 static void kf_bfly3(
          kiss_fft_cpx * Fout,
-         const size_t fstride,
+         const FNFT_UINT fstride,
          const kiss_fft_cfg st,
-         size_t m
+         FNFT_UINT m
          )
 {
-     size_t k=m;
-     const size_t m2 = 2*m;
+     FNFT_UINT k=m;
+     const FNFT_UINT m2 = 2*m;
      kiss_fft_cpx *tw1,*tw2;
      kiss_fft_cpx scratch[5];
      kiss_fft_cpx epi3;
@@ -135,13 +138,13 @@ static void kf_bfly3(
 
 static void kf_bfly5(
         kiss_fft_cpx * Fout,
-        const size_t fstride,
+        const FNFT_UINT fstride,
         const kiss_fft_cfg st,
-        int m
+        FNFT_UINT m
         )
 {
     kiss_fft_cpx *Fout0,*Fout1,*Fout2,*Fout3,*Fout4;
-    int u;
+    FNFT_UINT u;
     kiss_fft_cpx scratch[13];
     kiss_fft_cpx * twiddles = st->twiddles;
     kiss_fft_cpx *tw;
@@ -197,16 +200,16 @@ static void kf_bfly5(
 /* perform the butterfly for one stage of a mixed radix FFT */
 static void kf_bfly_generic(
         kiss_fft_cpx * Fout,
-        const size_t fstride,
+        const FNFT_UINT fstride,
         const kiss_fft_cfg st,
-        int m,
-        int p
+        FNFT_UINT m,
+        FNFT_UINT p
         )
 {
-    int u,k,q1,q;
+    FNFT_UINT u,k,q1,q;
     kiss_fft_cpx * twiddles = st->twiddles;
     kiss_fft_cpx t;
-    int Norig = st->nfft;
+    FNFT_UINT Norig = st->nfft;
 
     kiss_fft_cpx * scratch = (kiss_fft_cpx*)KISS_FFT_TMP_ALLOC(sizeof(kiss_fft_cpx)*p);
 
@@ -220,7 +223,7 @@ static void kf_bfly_generic(
 
         k=u;
         for ( q1=0 ; q1<p ; ++q1 ) {
-            int twidx=0;
+            FNFT_UINT twidx=0;
             Fout[ k ] = scratch[0];
             for (q=1;q<p;++q ) {
                 twidx += fstride * k;
@@ -238,15 +241,15 @@ static
 void kf_work(
         kiss_fft_cpx * Fout,
         const kiss_fft_cpx * f,
-        const size_t fstride,
-        int in_stride,
-        int * factors,
+        const FNFT_UINT fstride,
+        FNFT_UINT in_stride,
+        FNFT_UINT * factors,
         const kiss_fft_cfg st
         )
 {
     kiss_fft_cpx * Fout_beg=Fout;
-    const int p=*factors++; /* the radix  */
-    const int m=*factors++; /* stage's fft length/p */
+    const FNFT_UINT p=*factors++; /* the radix  */
+    const FNFT_UINT m=*factors++; /* stage's fft length/p */
     const kiss_fft_cpx * Fout_end = Fout + p*m;
 
 #ifdef _OPENMP
@@ -254,7 +257,7 @@ void kf_work(
     // top-level (not recursive)
     if (fstride==1 && p<=5)
     {
-        int k;
+        FNFT_UINT k;
 
         // execute the p different work units in different threads
 #       pragma omp parallel for
@@ -306,9 +309,9 @@ void kf_work(
     p[i] * m[i] = m[i-1]
     m0 = n                  */
 static 
-void kf_factor(int n,int * facbuf)
+void kf_factor(FNFT_UINT n, FNFT_UINT * facbuf)
 {
-    int p=4;
+    FNFT_UINT p=4;
     double floor_sqrt;
     floor_sqrt = floor( sqrt((double)n) );
 
@@ -336,10 +339,10 @@ void kf_factor(int n,int * facbuf)
  * The return value is a contiguous block of memory, allocated with malloc.  As such,
  * It can be freed with free(), rather than a kiss_fft-specific function.
  * */
-kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem )
+kiss_fft_cfg kiss_fft_alloc(FNFT_UINT nfft,FNFT_UINT inverse_fft,void * mem,FNFT_UINT * lenmem )
 {
     kiss_fft_cfg st=NULL;
-    size_t memneeded = sizeof(struct kiss_fft_state)
+    FNFT_UINT memneeded = sizeof(struct kiss_fft_state)
         + sizeof(kiss_fft_cpx)*(nfft-1); /* twiddle factors*/
 
     if ( lenmem==NULL ) {
@@ -350,7 +353,7 @@ kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem 
         *lenmem = memneeded;
     }
     if (st) {
-        int i;
+        FNFT_UINT i;
         st->nfft=nfft;
         st->inverse = inverse_fft;
 
@@ -368,7 +371,7 @@ kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem 
 }
 
 
-void kiss_fft_stride(kiss_fft_cfg st,const kiss_fft_cpx *fin,kiss_fft_cpx *fout,int in_stride)
+void kiss_fft_stride(kiss_fft_cfg st,const kiss_fft_cpx *fin,kiss_fft_cpx *fout,FNFT_UINT in_stride)
 {
     if (fin == fout) {
         //NOTE: this is not really an in-place FFT algorithm.
@@ -393,10 +396,10 @@ void kiss_fft_cleanup(void)
     // nothing needed any more
 }
 
-int kiss_fft_next_fast_size(int n)
+FNFT_UINT kiss_fft_next_fast_size(FNFT_UINT n)
 {
     while(1) {
-        int m=n;
+        FNFT_UINT m=n;
         while ( (m%2) == 0 ) m/=2;
         while ( (m%3) == 0 ) m/=3;
         while ( (m%5) == 0 ) m/=5;

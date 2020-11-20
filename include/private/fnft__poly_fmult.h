@@ -36,7 +36,7 @@
  *   required by \link fnft__poly_fmult_two_polys \endlink.
  * @ingroup poly
  */
-FNFT_INT fnft__poly_fmult_two_polys_len(const FNFT_UINT deg);
+FNFT_UINT fnft__poly_fmult_two_polys_len(const FNFT_UINT deg);
 
 /**
  * @brief Multiplies two polynomials.
