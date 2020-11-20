@@ -302,6 +302,7 @@ FNFT_INT fnft__kdv_discretization_method_weights(FNFT_COMPLEX **weights_ptr,
 FNFT_INT fnft__kdv_change_of_basis_matrix_to_S(FNFT_COMPLEX * const T,
                                                FNFT_COMPLEX const xi,
                                                FNFT_UINT  const derivative_flag, // 0- > 2x2, 1->4x4
+                                               FNFT_REAL const eps_t,
                                                fnft_kdv_discretization_t const kdv_discretization);
 
 /**
@@ -314,6 +315,7 @@ FNFT_INT fnft__kdv_change_of_basis_matrix_to_S(FNFT_COMPLEX * const T,
 FNFT_INT fnft__kdv_change_of_basis_matrix_from_S(FNFT_COMPLEX * const T,
                                                FNFT_COMPLEX const xi,
                                                FNFT_UINT  const derivative_flag, // 0- > 2x2, 1->4x4
+                                               FNFT_REAL const eps_t,
                                                fnft_kdv_discretization_t const kdv_discretization);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES

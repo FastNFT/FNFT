@@ -130,29 +130,20 @@ INT fnft__kdv_discretization_to_akns_discretization(kdv_discretization_t kdv_dis
         case kdv_discretization_2SPLIT2S:
             *akns_discretization = akns_discretization_2SPLIT2S;
             break;
-        case kdv_discretization_2SPLIT3S:
-            *akns_discretization = akns_discretization_2SPLIT3S;
-            break;
-        case kdv_discretization_2SPLIT4B:
-            *akns_discretization = akns_discretization_2SPLIT4B;
-            break;
         case kdv_discretization_2SPLIT3A:
             *akns_discretization = akns_discretization_2SPLIT3A;
             break;
         case kdv_discretization_2SPLIT3B:
             *akns_discretization = akns_discretization_2SPLIT3B;
             break;
+        case kdv_discretization_2SPLIT3S:
+            *akns_discretization = akns_discretization_2SPLIT3S;
+            break;
         case kdv_discretization_2SPLIT4A:
             *akns_discretization = akns_discretization_2SPLIT4A;
             break;
-        case kdv_discretization_2SPLIT6B:
-            *akns_discretization = akns_discretization_2SPLIT6B;
-            break;
-        case kdv_discretization_2SPLIT6A:
-            *akns_discretization = akns_discretization_2SPLIT6A;
-            break;
-        case kdv_discretization_2SPLIT8B:
-            *akns_discretization = akns_discretization_2SPLIT8B;
+        case kdv_discretization_2SPLIT4B:
+            *akns_discretization = akns_discretization_2SPLIT4B;
             break;
         case kdv_discretization_2SPLIT5A:
             *akns_discretization = akns_discretization_2SPLIT5A;
@@ -160,14 +151,23 @@ INT fnft__kdv_discretization_to_akns_discretization(kdv_discretization_t kdv_dis
         case kdv_discretization_2SPLIT5B:
             *akns_discretization = akns_discretization_2SPLIT5B;
             break;
-        case kdv_discretization_2SPLIT8A:
-            *akns_discretization = akns_discretization_2SPLIT8A;
+        case kdv_discretization_2SPLIT6A:
+            *akns_discretization = akns_discretization_2SPLIT6A;
+            break;
+        case kdv_discretization_2SPLIT6B:
+            *akns_discretization = akns_discretization_2SPLIT6B;
             break;
         case kdv_discretization_2SPLIT7A:
             *akns_discretization = akns_discretization_2SPLIT7A;
             break;
         case kdv_discretization_2SPLIT7B:
             *akns_discretization = akns_discretization_2SPLIT7B;
+            break;
+        case kdv_discretization_2SPLIT8A:
+            *akns_discretization = akns_discretization_2SPLIT8A;
+            break;
+        case kdv_discretization_2SPLIT8B:
+            *akns_discretization = akns_discretization_2SPLIT8B;
             break;
         case kdv_discretization_BO:
             *akns_discretization = akns_discretization_BO;
@@ -646,6 +646,7 @@ INT fnft__kdv_discretization_preprocess_signal(const UINT D, COMPLEX const * con
 INT fnft__kdv_change_of_basis_matrix_to_S(COMPLEX * const T,
                                           COMPLEX const xi,
                                           const UINT derivative_flag, // 0- > 2x2, 1->4x4
+                                          const REAL eps_t,
                                           kdv_discretization_t kdv_discretization)
 {
     INT ret_code = SUCCESS;
@@ -660,7 +661,6 @@ INT fnft__kdv_change_of_basis_matrix_to_S(COMPLEX * const T,
 
         case kdv_discretization_2SPLIT1A:
         case kdv_discretization_2SPLIT1B:
-        case kdv_discretization_2SPLIT2A:
         case kdv_discretization_2SPLIT2B:
         case kdv_discretization_2SPLIT2S:
         case kdv_discretization_2SPLIT3A:
@@ -700,6 +700,26 @@ INT fnft__kdv_change_of_basis_matrix_to_S(COMPLEX * const T,
                 T[9]  = 0.0;        //T_32 = d/dxi T_12
                 T[12] = -T[8];      //T_41 = d/dxi T_21
                 T[13] = 0.0;        //T_42 = d/dxi T_22
+            }
+
+            break;
+
+        case kdv_discretization_2SPLIT2A:
+            //T from modified AKNS basis to S basis. This modification reduces the degree of the polynomial scattering matrix by 1 per step.
+
+            T[0] = CEXP(-0.5*I*xi*eps_t) * -I * 0.5 / xi; //T_11;
+            T[1] = 0.0;                                   //T_12;
+            if(!derivative_flag){
+                T[2]  = -T[0];                            //T_21;
+                T[3]  = CEXP(+0.5*I*xi*eps_t);            //T_22;
+            } else {
+                T[4]  = -T[0];                            //T_21;
+                T[5]  = CEXP(+0.5*I*xi*eps_t);            //T_22;
+
+                T[8]  = -T[0] * (1.0/xi + 0.5*I*eps_t);   //T_31 = d/dxi T_11
+                T[9]  = 0.0;                              //T_32 = d/dxi T_12
+                T[12] = -T[8];                            //T_41 = d/dxi T_21
+                T[13] = 0.5 * I * eps_t * T[5];           //T_42 = d/dxi T_22
             }
 
             break;
@@ -771,6 +791,7 @@ INT fnft__kdv_change_of_basis_matrix_to_S(COMPLEX * const T,
 INT fnft__kdv_change_of_basis_matrix_from_S(COMPLEX * const T,
                                             COMPLEX const xi,
                                             UINT const derivative_flag, // 0- > 2x2, 1->4x4
+                                            REAL const eps_t,
                                             kdv_discretization_t const kdv_discretization)
 {
     INT ret_code = SUCCESS;
@@ -785,7 +806,6 @@ INT fnft__kdv_change_of_basis_matrix_from_S(COMPLEX * const T,
 
         case kdv_discretization_2SPLIT1A:
         case kdv_discretization_2SPLIT1B:
-        case kdv_discretization_2SPLIT2A:
         case kdv_discretization_2SPLIT2B:
         case kdv_discretization_2SPLIT2S:
         case kdv_discretization_2SPLIT3A:
@@ -825,6 +845,26 @@ INT fnft__kdv_change_of_basis_matrix_from_S(COMPLEX * const T,
                 T[9]  = 0.0;       //T_32 = d/dxi T_12
                 T[12] = 0.0;       //T_41 = d/dxi T_21
                 T[13] = 0.0;       //T_42 = d/dxi T_22
+            }
+
+            break;
+
+        case kdv_discretization_2SPLIT2A:
+            // T from S basis to modified AKNS basis. This modification reduces the degree of the polynomial scattering matrix by 1 per step.
+
+            T[0] = CEXP(+0.5*I*xi*eps_t) * 2.0 * I * xi;  //T_11;
+            T[1] = 0.0;                                   //T_12;
+            if(!derivative_flag){
+                T[2]  = CEXP(-0.5*I*xi*eps_t);            //T_21;
+                T[3]  = T[2];                             //T_22;
+            } else {
+                T[4]  = CEXP(-0.5*I*xi*eps_t);            //T_21;
+                T[5]  = T[2];                             //T_22;
+
+                T[8]  = T[0] * (1.0/xi + 0.5*I*eps_t);    //T_31 = d/dxi T_11
+                T[9]  = 0.0;                              //T_32 = d/dxi T_12
+                T[12] = T[4] * -0.5 * I * eps_t;          //T_41 = d/dxi T_21
+                T[13] = T[12];                            //T_42 = d/dxi T_22
             }
 
             break;
