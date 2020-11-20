@@ -178,7 +178,7 @@ INT fnft_nsev(
     }
     if (opts == NULL)
         opts = &default_opts;
-
+    
     // This switch checks for incompatible bound_state_localization options
     switch (opts->discretization) {
         case nse_discretization_2SPLIT2_MODAL:
@@ -210,7 +210,8 @@ INT fnft_nsev(
         case nse_discretization_CF6_4:
         case nse_discretization_ES4:
         case nse_discretization_TES4:
-            if (opts->bound_state_localization != nsev_bsloc_NEWTON && kappa == +1){
+            if (opts->bound_state_localization != nsev_bsloc_NEWTON && 
+                    kappa == +1 && bound_states != 0){
                 ret_code = E_INVALID_ARGUMENT(opts->bound_state_localization);
                 goto leave_fun;
             }
