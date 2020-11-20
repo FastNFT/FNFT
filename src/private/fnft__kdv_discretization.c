@@ -245,7 +245,7 @@ INT fnft__kdv_discretization_phase_factor_rho(const REAL eps_t, const REAL T1,
     boundary_coeff = kdv_discretization_boundary_coeff(kdv_discretization);
     if (boundary_coeff == NAN)
         return E_INVALID_ARGUMENT(kdv_discretization);
-    if (kdv_discretization == kdv_discretization_2SPLIT2A || kdv_discretization == kdv_discretization_2SPLIT2_MODAL){
+    if (kdv_discretization == kdv_discretization_2SPLIT2_MODAL){
         UINT degree1step = kdv_discretization_degree(kdv_discretization);
         if (degree1step == 0)
             return E_INVALID_ARGUMENT(kdv_discretization);
@@ -331,6 +331,7 @@ INT fnft__kdv_discretization_phase_factor_b(const REAL eps_t, const UINT D, REAL
 
         case kdv_discretization_2SPLIT1A:
         case kdv_discretization_2SPLIT1B:
+        case kdv_discretization_2SPLIT2A:
         case kdv_discretization_2SPLIT2B:
         case kdv_discretization_2SPLIT2S:
         case kdv_discretization_2SPLIT3A:
@@ -348,11 +349,11 @@ INT fnft__kdv_discretization_phase_factor_b(const REAL eps_t, const UINT D, REAL
         case kdv_discretization_2SPLIT8B:
         case kdv_discretization_4SPLIT4A:
         case kdv_discretization_4SPLIT4B:
+
             *phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
             break;
 
-        case kdv_discretization_2SPLIT2A:
         case kdv_discretization_2SPLIT2_MODAL:
             degree1step = kdv_discretization_degree(kdv_discretization);
             if (degree1step == 0)
