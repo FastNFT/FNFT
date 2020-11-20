@@ -468,7 +468,7 @@ INT fnft__kdv_discretization_preprocess_signal(const UINT D, COMPLEX const * con
             i = 0;
             for (isub=0; isub<D_effective; isub++) {
                 q_preprocessed[isub] = q[i];
-                r_preprocessed[isub] = -kappa*CONJ(q[i]);
+                r_preprocessed[isub] = -1.0;
                 i += nskip_per_step;
             }
             break;
@@ -495,8 +495,8 @@ INT fnft__kdv_discretization_preprocess_signal(const UINT D, COMPLEX const * con
             for (isub=0; isub<D_effective; isub=isub+2) {
                 q_preprocessed[isub] = weights[0]*q_1[i] + weights[1]*q_2[i];
                 q_preprocessed[isub+1] = weights[2]*q_1[i] + weights[3]*q_2[i];
-                r_preprocessed[isub] = -kappa*CONJ(q_preprocessed[isub]);
-                r_preprocessed[isub+1] = -kappa*CONJ(q_preprocessed[isub+1]);
+                r_preprocessed[isub] = -1.0 * (weights[0] + weights[1]);
+                r_preprocessed[isub+1] = -1.0 * (weights[2] + weights[3]);
                 i += nskip_per_step;
             }
 
@@ -523,19 +523,17 @@ INT fnft__kdv_discretization_preprocess_signal(const UINT D, COMPLEX const * con
                 q_preprocessed[isub] = weights[0]*q_1[i] + weights[1]*q[i] + weights[2]*q_3[i];
                 q_preprocessed[isub+1] = weights[3]*q_1[i] + weights[4]*q[i] + weights[5]*q_3[i];
                 q_preprocessed[isub+2] = weights[6]*q_1[i] + weights[7]*q[i] + weights[8]*q_3[i];
-                r_preprocessed[isub] = -kappa*CONJ(q_preprocessed[isub]);
-                r_preprocessed[isub+1] = -kappa*CONJ(q_preprocessed[isub+1]);
-                r_preprocessed[isub+2] = -kappa*CONJ(q_preprocessed[isub+2]);
+                r_preprocessed[isub] = -1.0 * (weights[0] + weights[1] + weights[2]);
+                r_preprocessed[isub+1] = -1.0 * (weights[3] + weights[4] + weights[5]);
+                r_preprocessed[isub+2] = -1.0 * (weights[6] + weights[7] + weights[8]);
                 i += nskip_per_step;
             }
             break;
         case kdv_discretization_CF5_3:
             q_1 = malloc(D * sizeof(COMPLEX));
             q_3 = malloc(D * sizeof(COMPLEX));
-            r_1 = malloc(D * sizeof(COMPLEX));
-            r_2 = malloc(D * sizeof(COMPLEX));
-            r_3 = malloc(D * sizeof(COMPLEX));
-            if (q_1 == NULL || q_3 == NULL || r_1 == NULL || r_2 == NULL || r_3 == NULL) {
+
+            if (q_1 == NULL || q_3 == NULL) {
                 ret_code = E_NOMEM;
                 goto release_mem;
             }
@@ -545,25 +543,17 @@ INT fnft__kdv_discretization_preprocess_signal(const UINT D, COMPLEX const * con
             ret_code = misc_resample(D, eps_t, q, eps_t*SQRT(15.0)/10.0*nskip_per_step, q_3);
             CHECK_RETCODE(ret_code, release_mem);
 
-            for (i=0; i < D; i++){
-                r_1[i] = -kappa*CONJ(q_1[i]);
-                r_2[i] = -kappa*CONJ(q[i]);
-                r_3[i] = -kappa*CONJ(q_3[i]);
-            }
-
-
             ret_code = kdv_discretization_method_weights(&weights,discretization);
             CHECK_RETCODE(ret_code, release_mem);
-
 
             i = 0;
             for (isub=0; isub<D_effective; isub=isub+3) {
                 q_preprocessed[isub] = weights[0]*q_1[i]  + weights[1]*q[i] + weights[2]*q_3[i];
-                r_preprocessed[isub] = weights[0]*r_1[i]  + weights[1]*r_2[i] + weights[2]*r_3[i];
+                r_preprocessed[isub] = -1.0 * (weights[0] + weights[1] + weights[2]);
                 q_preprocessed[isub+1] = weights[3]*q_1[i]+ weights[4]*q[i] + weights[5]*q_3[i];
-                r_preprocessed[isub+1] = weights[3]*r_1[i]+ weights[4]*r_2[i] + weights[5]*r_3[i];
+                r_preprocessed[isub+1] = -1.0 * (weights[3] + weights[4] + weights[5]);
                 q_preprocessed[isub+2] = weights[6]*q_1[i] + weights[7]*q[i] +  weights[8]*q_3[i];
-                r_preprocessed[isub+2] = weights[6]*r_1[i] + weights[7]*r_2[i] +  weights[8]*r_3[i];
+                r_preprocessed[isub+2] = -1.0 * (weights[6] + weights[7] + weights[8]);
                 i += nskip_per_step;
             }
 
@@ -572,10 +562,7 @@ INT fnft__kdv_discretization_preprocess_signal(const UINT D, COMPLEX const * con
         case kdv_discretization_CF6_4:
             q_1 = malloc(D * sizeof(COMPLEX));
             q_3 = malloc(D * sizeof(COMPLEX));
-            r_1 = malloc(D * sizeof(COMPLEX));
-            r_2 = malloc(D * sizeof(COMPLEX));
-            r_3 = malloc(D * sizeof(COMPLEX));
-            if (q_1 == NULL || q_3 == NULL || r_1 == NULL || r_2 == NULL || r_3 == NULL) {
+            if (q_1 == NULL || q_3 == NULL) {
                 ret_code = E_NOMEM;
                 goto release_mem;
             }
@@ -585,25 +572,19 @@ INT fnft__kdv_discretization_preprocess_signal(const UINT D, COMPLEX const * con
             ret_code = misc_resample(D, eps_t, q, eps_t*nskip_per_step*SQRT(15.0)/10.0, q_3);
             CHECK_RETCODE(ret_code, release_mem);
 
-            for (i=0; i < D; i++){
-                r_1[i] = -kappa*CONJ(q_1[i]);
-                r_2[i] = -kappa*CONJ(q[i]);
-                r_3[i] = -kappa*CONJ(q_3[i]);
-            }
-
             ret_code = kdv_discretization_method_weights(&weights,discretization);
             CHECK_RETCODE(ret_code, release_mem);
 
             i = 0;
             for (isub=0; isub<D_effective; isub=isub+4) {
                 q_preprocessed[isub] = weights[0]*q_1[i]  + weights[1]*q[i] + weights[2]*q_3[i];
-                r_preprocessed[isub] = weights[0]*r_1[i]  + weights[1]*r_2[i] + weights[2]*r_3[i];
+                r_preprocessed[isub] = -1.0 * (weights[0] + weights[1] + weights[2]);
                 q_preprocessed[isub+1] = weights[3]*q_1[i]+ weights[4]*q[i] + weights[5]*q_3[i];
-                r_preprocessed[isub+1] = weights[3]*r_1[i]+ weights[4]*r_2[i] + weights[5]*r_3[i];
+                r_preprocessed[isub+1] = -1.0 * (weights[3] + weights[4] + weights[5]);
                 q_preprocessed[isub+2] = weights[6]*q_1[i] + weights[7]*q[i] + weights[8]*q_3[i];
-                r_preprocessed[isub+2] = weights[6]*r_1[i] + weights[7]*r_2[i] +  weights[8]*r_3[i];
+                r_preprocessed[isub+2] = -1.0 * (weights[6] + weights[7] + weights[8]);
                 q_preprocessed[isub+3] = weights[9]*q_1[i] + weights[10]*q[i] +  weights[11]*q_3[i];
-                r_preprocessed[isub+3] = weights[9]*r_1[i] + weights[10]*r_2[i] +  weights[11]*r_3[i];
+                r_preprocessed[isub+3] = -1.0 * (weights[9] + weights[10] + weights[11]);
                 i += nskip_per_step;
             }
             break;
@@ -612,6 +593,7 @@ INT fnft__kdv_discretization_preprocess_signal(const UINT D, COMPLEX const * con
             i = 0;
             for (isub=0; isub<D_effective; isub=isub+3) {
                 q_preprocessed[isub] = q[i];
+                r_preprocessed[isub] = -1.0;
                 i += nskip_per_step;
             }
 
@@ -621,16 +603,18 @@ INT fnft__kdv_discretization_preprocess_signal(const UINT D, COMPLEX const * con
             q_preprocessed[2] = (q_preprocessed[3]-2*q_preprocessed[0]+0)/eps_t_sub_2;
             q_preprocessed[D_effective-2] = (0-q_preprocessed[D_effective-6])/(2*eps_t_sub);
             q_preprocessed[D_effective-1] = (0-2*q_preprocessed[D_effective-3]+q_preprocessed[D_effective-6])/eps_t_sub_2;
-
+            r_preprocessed[1] = (r_preprocessed[3]-0)/(2*eps_t_sub);
+            r_preprocessed[2] = (r_preprocessed[3]-2*r_preprocessed[0]+0)/eps_t_sub_2;
+            r_preprocessed[D_effective-2] = (0-r_preprocessed[D_effective-6])/(2*eps_t_sub);
+            r_preprocessed[D_effective-1] = (0-2*r_preprocessed[D_effective-3]+r_preprocessed[D_effective-6])/eps_t_sub_2;
 
             for (isub=3; isub<D_effective-3; isub=isub+3) {
                 q_preprocessed[isub+1] = (q_preprocessed[isub+3]-q_preprocessed[isub-3])/(2*eps_t_sub);
                 q_preprocessed[isub+2] = (q_preprocessed[isub+3]-2*q_preprocessed[isub]+q_preprocessed[isub-3])/eps_t_sub_2;
+                r_preprocessed[isub+1] = (r_preprocessed[isub+3]-r_preprocessed[isub-3])/(2*eps_t_sub);
+                r_preprocessed[isub+2] = (r_preprocessed[isub+3]-2*r_preprocessed[isub]+r_preprocessed[isub-3])/eps_t_sub_2;
             }
 
-            for (i=0; i<D_effective; i++) {
-                r_preprocessed[i] = -kappa*CONJ(q_preprocessed[i]);
-            }
             break;
         default: // Unknown discretization
 
@@ -653,5 +637,255 @@ INT fnft__kdv_discretization_preprocess_signal(const UINT D, COMPLEX const * con
         free(r_2);
         free(r_3);
         free(weights);
+        return ret_code;
+}
+
+/**
+ * This routine returns the change of basis matrix from the basis of the discretization to the S basis.
+ */
+INT fnft__kdv_change_of_basis_matrix_to_S(COMPLEX * const T,
+                                          COMPLEX const xi,
+                                          const UINT derivative_flag, // 0- > 2x2, 1->4x4
+                                          kdv_discretization_t kdv_discretization)
+{
+    INT ret_code = SUCCESS;
+
+    if(xi==0){
+        ret_code = E_DIV_BY_ZERO;
+        CHECK_RETCODE(ret_code, release_mem);
+    }
+
+    switch (kdv_discretization) {
+        // Fill the first two columns of T for the discretization basis
+
+        case kdv_discretization_2SPLIT1A:
+        case kdv_discretization_2SPLIT1B:
+        case kdv_discretization_2SPLIT2A:
+        case kdv_discretization_2SPLIT2B:
+        case kdv_discretization_2SPLIT2S:
+        case kdv_discretization_2SPLIT3A:
+        case kdv_discretization_2SPLIT3B:
+        case kdv_discretization_2SPLIT3S:
+        case kdv_discretization_2SPLIT4A:
+        case kdv_discretization_2SPLIT4B:
+        case kdv_discretization_2SPLIT5A:
+        case kdv_discretization_2SPLIT5B:
+        case kdv_discretization_2SPLIT6A:
+        case kdv_discretization_2SPLIT6B:
+        case kdv_discretization_2SPLIT7A:
+        case kdv_discretization_2SPLIT7B:
+        case kdv_discretization_2SPLIT8A:
+        case kdv_discretization_2SPLIT8B:
+        case kdv_discretization_4SPLIT4A:
+        case kdv_discretization_4SPLIT4B:
+        case kdv_discretization_BO: // Bofetta-Osborne scheme
+        case kdv_discretization_CF4_2:
+        case kdv_discretization_CF4_3:
+        case kdv_discretization_CF5_3:
+        case kdv_discretization_CF6_4:
+        case kdv_discretization_ES4:
+        case kdv_discretization_TES4:
+            // T from AKNS basis to S basis:
+            
+            T[0] = -I * 0.5 / xi;   //T_11;
+            T[1] = 0.0;             //T_12;
+            if(!derivative_flag){
+                T[2]  = -T[0];      //T_21;
+                T[3]  = 1.0;        //T_22;
+            } else {
+                T[4]  = -T[0];      //T_21;
+                T[5]  = 1.0;        //T_22;
+
+                T[8]  = -T[0] / xi; //T_31 = d/dxi T_11
+                T[9]  = 0.0;        //T_32 = d/dxi T_12
+                T[12] = -T[8];      //T_41 = d/dxi T_21
+                T[13] = 0.0;        //T_42 = d/dxi T_22
+            }
+
+            break;
+
+//        case
+//            // T from companion basis to S basis
+//
+//            T[0] = 0.5;             //T_11;
+//            T[1] = 0.5 * I / xi;    //T_12;
+//            if(!derivative_flag){
+//                T[2]  = 0.5;        //T_21;
+//                T[3]  = -T[1];      //T_22;
+//            } else {
+//                T[4]  = 0.5;        //T_21;
+//                T[5]  = -T[1];      //T_22;
+//
+//                T[8]  = 0.0;        //T_31 = d/dxi T_11
+//                T[9]  = -T[1]/xi;   //T_32 = d/dxi T_12
+//                T[12] = 0.0;        //T_41 = d/dxi T_21
+//                T[13] = -T[9];      //T_42 = d/dxi T_22
+//            }
+//
+//            break;
+//
+//        case
+//            //
+//            T[0] = ; //T_11;
+//            T[1] = ; //T_12;
+//            if(!derivative_flag){
+//                T[2]  = ; //T_21;
+//                T[3]  = ; //T_22;
+//            } else {
+//                T[4]  = ; //T_21;
+//                T[5]  = ; //T_22;
+//
+//                T[8]  = ; //T_31 = d/dxi T_11
+//                T[9]  = ; //T_32 = d/dxi T_12
+//                T[12] = ; //T_41 = d/dxi T_21
+//                T[13] = ; //T_42 = d/dxi T_22
+//            }
+//
+//            break;
+
+
+        default: // Unknown discretization
+
+            return E_INVALID_ARGUMENT(kdv_discretization);
+    }
+
+    if (derivative_flag) {
+        // Fill the last two columns of T from the first two
+        T[2]  = 0.0;  // T_13 = 0
+        T[3]  = 0.0;  // T_14 = 0
+        T[6]  = 0.0;  // T_23 = 0
+        T[7]  = 0.0;  // T_24 = 0
+        T[10] = T[0]; // T_33 = T_11
+        T[11] = T[1]; // T_34 = T_12
+        T[14] = T[4]; // T_43 = T_21
+        T[15] = T[5]; // T_44 = T_22
+    }
+
+    release_mem:
+        return ret_code;
+}
+
+/**
+ * This routine returns the change of basis matrix from the S basis to the basis of the discretization.
+ */
+INT fnft__kdv_change_of_basis_matrix_from_S(COMPLEX * const T,
+                                            COMPLEX const xi,
+                                            UINT const derivative_flag, // 0- > 2x2, 1->4x4
+                                            kdv_discretization_t const kdv_discretization)
+{
+    INT ret_code = SUCCESS;
+
+    if(xi==0){
+        ret_code = E_DIV_BY_ZERO;
+        CHECK_RETCODE(ret_code, release_mem);
+    }
+
+    switch (kdv_discretization) {
+        // Fill the first two columns of T for the discretization basis
+
+        case kdv_discretization_2SPLIT1A:
+        case kdv_discretization_2SPLIT1B:
+        case kdv_discretization_2SPLIT2A:
+        case kdv_discretization_2SPLIT2B:
+        case kdv_discretization_2SPLIT2S:
+        case kdv_discretization_2SPLIT3A:
+        case kdv_discretization_2SPLIT3B:
+        case kdv_discretization_2SPLIT3S:
+        case kdv_discretization_2SPLIT4A:
+        case kdv_discretization_2SPLIT4B:
+        case kdv_discretization_2SPLIT5A:
+        case kdv_discretization_2SPLIT5B:
+        case kdv_discretization_2SPLIT6A:
+        case kdv_discretization_2SPLIT6B:
+        case kdv_discretization_2SPLIT7A:
+        case kdv_discretization_2SPLIT7B:
+        case kdv_discretization_2SPLIT8A:
+        case kdv_discretization_2SPLIT8B:
+        case kdv_discretization_4SPLIT4A:
+        case kdv_discretization_4SPLIT4B:
+        case kdv_discretization_BO: // Bofetta-Osborne scheme
+        case kdv_discretization_CF4_2:
+        case kdv_discretization_CF4_3:
+        case kdv_discretization_CF5_3:
+        case kdv_discretization_CF6_4:
+        case kdv_discretization_ES4:
+        case kdv_discretization_TES4:
+            // T from S basis to AKNS basis:
+
+            T[0] = 2.0 * I * xi;   //T_11;
+            T[1] = 0.0;            //T_12;
+            if(!derivative_flag){
+                T[2]  = 1.0;       //T_21;
+                T[3]  = 1.0;       //T_22;
+            } else {
+                T[4]  = 1.0;       //T_21;
+                T[5]  = 1.0;       //T_22;
+
+                T[8]  = 2.0 * I;   //T_31 = d/dxi T_11
+                T[9]  = 0.0;       //T_32 = d/dxi T_12
+                T[12] = 0.0;       //T_41 = d/dxi T_21
+                T[13] = 0.0;       //T_42 = d/dxi T_22
+            }
+
+            break;
+
+//        case
+//            // T from S basis to companion basis
+//
+//            T[0] = 1.0;            //T_11;
+//            T[1] = 1.0;            //T_12;
+//            if(!derivative_flag){
+//                T[2]  = -I * xi;   //T_21;
+//                T[3]  = I * xi;    //T_22;
+//            } else {
+//                T[4]  = -I * xi;   //T_21;
+//                T[5]  = I * xi;    //T_22;
+//
+//                T[8]  = 0.0;       //T_31 = d/dxi T_11
+//                T[9]  = 0.0;       //T_32 = d/dxi T_12
+//                T[12] = -I;        //T_41 = d/dxi T_21
+//                T[13] = I;         //T_42 = d/dxi T_22
+//            }
+//
+//            break;
+//
+//        case
+//            //
+//            T[0] = ; //T_11;
+//            T[1] = ; //T_12;
+//            if(!derivative_flag){
+//                T[2]  = ; //T_21;
+//                T[3]  = ; //T_22;
+//            } else {
+//                T[4]  = ; //T_21;
+//                T[5]  = ; //T_22;
+//
+//                T[8]  = ; //T_31 = d/dxi T_11
+//                T[9]  = ; //T_32 = d/dxi T_12
+//                T[12] = ; //T_41 = d/dxi T_21
+//                T[13] = ; //T_42 = d/dxi T_22
+//            }
+//
+//            break;
+
+
+        default: // Unknown discretization
+
+            return E_INVALID_ARGUMENT(kdv_discretization);
+    }
+
+    if (derivative_flag) {
+        // Fill the last two columns of T from the first two
+        T[2]  = 0.0;  // T_13 = 0
+        T[3]  = 0.0;  // T_14 = 0
+        T[6]  = 0.0;  // T_23 = 0
+        T[7]  = 0.0;  // T_24 = 0
+        T[10] = T[0]; // T_33 = T_11
+        T[11] = T[1]; // T_34 = T_12
+        T[14] = T[4]; // T_43 = T_21
+        T[15] = T[5]; // T_44 = T_22
+    }
+
+    release_mem:
         return ret_code;
 }

@@ -16,6 +16,7 @@
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
+ * Peter J Prins (TU Delft) 2020.
  */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -40,6 +41,7 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
     INT ret_code = SUCCESS;
     UINT i;
     akns_discretization_t akns_discretization;
+
     
     // Check inputs
     if (D == 0)
@@ -59,83 +61,80 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
             &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
         
-    r = malloc(D*sizeof(COMPLEX));
     if (r == NULL) {
-        ret_code = E_NOMEM;
-        goto leave_fun;
+        return E_INVALID_ARGUMENT(r);
+//        r = malloc(D*sizeof(COMPLEX));
+//        if (r == NULL) {
+//            ret_code = E_NOMEM;
+//            goto leave_fun;
+//        }
+//
+//        for (i = 0; i < D; i++)
+//            r[i] = -1.0;
     }
     
-    //TODO: Fetch hard coded r-values below from Richardson weights
-    
-    switch (akns_discretization) {
-        
-        case akns_discretization_BO: // Bofetta-Osborne scheme
-            for (i = 0; i < D; i++)
-                r[i] = -1;
-            
-            break;
-            
-        case akns_discretization_CF4_2:
-            // commutator-free fourth-order two exponentials
-            if (D%2 != 0){
-                ret_code = E_ASSERTION_FAILED;
-                goto leave_fun;
-            }
-            for (i = 0; i < D; i++)
-                r[i] = -0.5;
-            break;
-        case akns_discretization_CF4_3:
-            // commutator-free fourth-order three exponentials
-            if (D%3 != 0){
-                ret_code = E_ASSERTION_FAILED;
-                goto leave_fun;
-            }
-            for (i = 0; i < D; i = i+3)
-                r[i] = -0.275;
-            for (i = 1; i < D; i = i+3)
-                r[i] = -0.45;
-            for (i = 2; i < D; i = i+3)
-                r[i] = -0.275;
-            break;
-            
-        case akns_discretization_CF5_3:
-            // commutator-free fifth-order three exponentials
-            if (D%3 != 0){
-                ret_code = E_ASSERTION_FAILED;
-                goto leave_fun;
-            }
-            for (i = 0; i < D; i = i+3)
-                r[i] = -0.3-0.1*I;
-            for (i = 1; i < D; i = i+3)
-                r[i] = -0.4;
-            for (i = 2; i < D; i = i+3)
-                r[i] = -0.3+0.1*I;
-            break;
-            
-        case akns_discretization_CF6_4:
-            // commutator-free sixth-order four exponentials
-            if (D%4 != 0){
-                ret_code = E_ASSERTION_FAILED;
-                goto leave_fun;
-            }
-            for (i = 0; i < D; i = i+4)
-                r[i] = -0.210073786808785 - 0.046600721949282*I;
-            for (i = 1; i < D; i = i+4)
-                r[i] = -0.289926213191215 + 0.046600721949282*I;
-            for (i = 2; i < D; i = i+4)
-                r[i] = -0.289926213191215 + 0.046600721949282*I;
-            for (i = 3; i < D; i = i+4)
-                r[i] = -0.210073786808785 - 0.046600721949282*I;
-            break;
-        default: // Unknown discretization
-            
-            ret_code = E_INVALID_ARGUMENT(discretization);
-            goto leave_fun;
-    }
-    
-    
+    // Calculate the change of state matrix in AKNS basis across the potential
     ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result, 
             akns_discretization, derivative_flag);
+
+    // Change the basis of the change of state matrix to the S-basis
+    UINT const N = derivative_flag ? 4 : 2; // size of the matrices: 2x2 or 4x4
+    COMPLEX T[4][4], M[4][4], H[4*4];
+    UINT const H_idx_to_result_idx[4*4] = { 0,1,8,8,
+                                            2,3,8,8,
+                                            4,5,0,1,
+                                            6,7,2,3 };
+    COMPLEX const W[8][16] = {
+        {0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.0,0.0},
+        {0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.0},
+        {0.0,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0},
+        {0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5},
+        {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0},
+        {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0},
+        {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0},
+        {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0} };
+    for (i=0; i<K; i++) { // Loop over lambda samples
+        // Copy the values of the change of state matrix in AKNS basis to a 2 dimensional array
+        if (!derivative_flag) {
+            for (UINT n=0; n<N*N; n++){
+                H[n] = result[i*4+n];
+            }
+        } else {
+            for (UINT n=0; n<N*N; n++){
+                if (H_idx_to_result_idx[n]==8){
+                    H[n] = 0.0;
+                } else {
+                    H[n] = result[i*8+H_idx_to_result_idx[n]];
+                }
+            }
+        }
+
+        // Fetch the change of basis matrix from S to AKNS
+        ret_code = kdv_change_of_basis_matrix_from_S(&T[0][0],lambda[i],derivative_flag,discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
+
+        // Right-multiply the change of state matrix by the change of basis matrix from S to AKNS
+        misc_matrix_mult(N,N,N,&H[0],&T[0][0],&M[0][0]);
+
+        // Fetch the change of basis matrix from AKNS to S
+        ret_code = kdv_change_of_basis_matrix_to_S(&T[0][0],lambda [i],derivative_flag,discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
+
+        // Left-multiply the change of state matrix by the change of basis matrix from AKNS to S
+        misc_matrix_mult(N,N,N,&T[0][0],&M[0][0],&H[0]);
+
+        // Copy to the result
+        if (!derivative_flag) {
+            for (UINT n=0; n<4; n++){
+                result[i*4+n] = H[n];
+            }
+        } else {
+            for (UINT n=0; n<8; n++){
+                // The line below looks in Matlab notation like result(8*i+n) = W(n,:) * H(:);
+                misc_matrix_mult(1,16,1,&W[n][0],&H[0],&result[i*8+n]);
+            }
+        }
+    }
     
     leave_fun:
         return ret_code;

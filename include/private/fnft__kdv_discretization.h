@@ -292,7 +292,29 @@ FNFT_INT fnft__kdv_discretization_preprocess_signal(const FNFT_UINT D, FNFT_COMP
 FNFT_INT fnft__kdv_discretization_method_weights(FNFT_COMPLEX **weights_ptr,
         fnft_kdv_discretization_t kdv_discretization);
 
+/**
+ * @brief This routine returns the change of basis matrix from the basis of the discretization to S.
+ * @param[out] T 2x2 or 4x4 matrix. Left multiplication of a vector in the basis of the discretization by T changes it to the equivalent vector in S basis.
+ * @param[in] xi spectral parameter \f$ \xi \f$.
+ * @param[in] derivative_flag When 0, T is 2x2. When 1 T is 4x4, to include the derivatives.
+ * @param[in] kdv_discretization Discretization of type \link fnft_kdv_discretization_t \endlink.
+ */
+FNFT_INT fnft__kdv_change_of_basis_matrix_to_S(FNFT_COMPLEX * const T,
+                                               FNFT_COMPLEX const xi,
+                                               FNFT_UINT  const derivative_flag, // 0- > 2x2, 1->4x4
+                                               fnft_kdv_discretization_t const kdv_discretization);
 
+/**
+ * @brief This routine returns the change of basis matrix from the Sbasis to the basis of the discretization.
+ * @param[out] T 2x2 or 4x4 matrix. Left multiplication of a vector in the S basis of the discretization by T changes it to the equivalent vector in the basis of the discretization.
+ * @param[in] xi spectral parameter \f$ \xi \f$.
+ * @param[in] derivative_flag When 0, T is 2x2. When 1 T is 4x4, to include the derivatives.
+ * @param[in] kdv_discretization Discretization of type \link fnft_kdv_discretization_t \endlink.
+ */
+FNFT_INT fnft__kdv_change_of_basis_matrix_from_S(FNFT_COMPLEX * const T,
+                                               FNFT_COMPLEX const xi,
+                                               FNFT_UINT  const derivative_flag, // 0- > 2x2, 1->4x4
+                                               fnft_kdv_discretization_t const kdv_discretization);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define kdv_discretization_degree(...) fnft__kdv_discretization_degree(__VA_ARGS__)
@@ -307,7 +329,8 @@ FNFT_INT fnft__kdv_discretization_method_weights(FNFT_COMPLEX **weights_ptr,
 #define kdv_discretization_phase_factor_b(...) fnft__kdv_discretization_phase_factor_b(__VA_ARGS__)
 #define kdv_discretization_preprocess_signal(...) fnft__kdv_discretization_preprocess_signal(__VA_ARGS__)
 #define kdv_discretization_method_weights(...) fnft__kdv_discretization_method_weights(__VA_ARGS__)
-
+#define kdv_change_of_basis_matrix_to_S(...) fnft__kdv_change_of_basis_matrix_to_S(__VA_ARGS__)
+#define kdv_change_of_basis_matrix_from_S(...) fnft__kdv_change_of_basis_matrix_from_S(__VA_ARGS__)
 #endif
 
 #endif

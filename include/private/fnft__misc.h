@@ -348,6 +348,7 @@ static inline FNFT_REAL fnft__misc_legendre_poly(const FNFT_UINT n, const FNFT_R
     return P;
 }
 
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define misc_print_buf(...) fnft__misc_print_buf(__VA_ARGS__)
 #define misc_rel_err(...) fnft__misc_rel_err(__VA_ARGS__)
@@ -362,7 +363,7 @@ static inline FNFT_REAL fnft__misc_legendre_poly(const FNFT_UINT n, const FNFT_R
 #define misc_CSINC(...) fnft__misc_CSINC(__VA_ARGS__)
 #define misc_nextpowerof2(...) fnft__misc_nextpowerof2(__VA_ARGS__)
 #define misc_resample(...) fnft__misc_resample(__VA_ARGS__)
-#define misc_mat_mult_proto(...) fnft__misc_mat_mult_proto(__VA_ARGS__)
+#define misc_matrix_mult(...) fnft__misc_matrix_mult(__VA_ARGS__)
 #define misc_mat_mult_2x2(...) fnft__misc_mat_mult_2x2(__VA_ARGS__)
 #define misc_mat_mult_4x4(...) fnft__misc_mat_mult_4x4(__VA_ARGS__)
 #define misc_legendre_poly(...) fnft__misc_legendre_poly(__VA_ARGS__)

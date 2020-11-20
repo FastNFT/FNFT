@@ -26,10 +26,10 @@ INT main()
     INT ret_code, i;
     fnft_kdvv_opts_t opts = fnft_kdvv_default_opts();
     const kdvv_testcases_t tc = kdvv_testcases_SECH;
-    opts.discretization = kdv_discretization_2SPLIT4B;
+    opts.discretization = kdv_discretization_BO;
     UINT D = 1024;
     REAL eb[6] = {  // error bounds
-        5.78e-5,     // continuous spectrum
+        5.78e-5,    // continuous spectrum
         FNFT_INF,   // a(xi)
         FNFT_INF,   // b(xi)
         FNFT_INF,   // bound states

@@ -52,8 +52,8 @@
  * @param[in] eps_t Step-size, eps_t \f$= (T[1]-T[0])/(D-1) \f$.
  * @param[in] K Number of values of \f$\lambda\f$.
  * @param[in] lambda Array of length K, contains the values of \f$\lambda\f$.
- * @param[out] result Array of length 8*K or 4*K,  If derivative_flag=0 returns 
- * [S11 S12 S21 S22] in result where S = [S11, S12; S21, S22] is the 
+ * @param[out] result Array of length K*8 or K*4,  If derivative_flag=0 returns
+ * [S11(lambda[0]) S12(lambda[0]) S21(lambda[0]) S22(lambda[0]) S11(lambda[1]) ... S22(lambda[K-1]] in result where S = [S11, S12; S21, S22] is the
  * scattering matrix computed using the chosen discretization.
  * If derivative_flag=1 returns [S11 S12 S21 S22 S11' S12' S21' S22'] in 
  * result where S11' is the derivative of S11 w.r.t to \f$\lambda\f$.

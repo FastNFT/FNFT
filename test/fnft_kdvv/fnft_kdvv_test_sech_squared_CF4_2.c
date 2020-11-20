@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
+* Peter J Prins (TU Delft) 2020.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -23,15 +24,15 @@
 
 INT main()
 {
-    INT ret_code, i;
+    INT ret_code;
     fnft_kdvv_opts_t opts = fnft_kdvv_default_opts();
-    const kdvv_testcases_t tc = kdvv_testcases_SECH;
-    opts.discretization = kdv_discretization_2SPLIT4B;
-    UINT D = 1024;
+    const kdvv_testcases_t tc = kdvv_testcases_SECH_SQUARED;
+    opts.discretization = kdv_discretization_CF4_2;
+    UINT D = 256;
     REAL eb[6] = {  // error bounds
-        5.78e-5,     // continuous spectrum
-        FNFT_INF,   // a(xi)
-        FNFT_INF,   // b(xi)
+        3.4e-6,     // continuous spectrum
+        2.4e-4,     // a(xi)
+        4.1e-6,     // b(xi)
         FNFT_INF,   // bound states
         FNFT_INF,   // norming constants
         FNFT_INF    // residues
@@ -42,16 +43,18 @@ INT main()
 
     ret_code = kdvv_testcases_test_fnft(tc, D+1, eb, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-   
+
     ret_code = kdvv_testcases_test_fnft(tc, D-1, eb, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    // check for quadratic error decay
-    D *= 2;
-    for (i=0; i<6; i++)
-        eb[i] /= 4.0;
-    ret_code = kdvv_testcases_test_fnft(tc, D, eb, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);
+    // check for 4th order error decay
+    for (UINT n=0; n<5; n++){
+        D *= 2;
+        for (UINT i=0; i<6; i++)
+            eb[i] /= 16.0;
+        ret_code = kdvv_testcases_test_fnft(tc, D, eb, &opts);
+        CHECK_RETCODE(ret_code, leave_fun);
+    }
 
 leave_fun:
     if (ret_code != SUCCESS)
