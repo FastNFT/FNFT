@@ -245,14 +245,7 @@ INT fnft__kdv_discretization_phase_factor_rho(const REAL eps_t, const REAL T1,
     boundary_coeff = kdv_discretization_boundary_coeff(kdv_discretization);
     if (boundary_coeff == NAN)
         return E_INVALID_ARGUMENT(kdv_discretization);
-    if (kdv_discretization == kdv_discretization_2SPLIT2_MODAL){
-        UINT degree1step = kdv_discretization_degree(kdv_discretization);
-        if (degree1step == 0)
-            return E_INVALID_ARGUMENT(kdv_discretization);
-        *phase_factor_rho = -2.0*(T1 + eps_t*boundary_coeff) + eps_t/degree1step;
-    }
-    else
-        *phase_factor_rho = -2.0*(T1 + eps_t*boundary_coeff);
+    *phase_factor_rho = -2.0*(T1 + eps_t*boundary_coeff);
     return SUCCESS;
 }
 
@@ -705,6 +698,7 @@ INT fnft__kdv_change_of_basis_matrix_to_S(COMPLEX * const T,
 
             break;
 
+        case kdv_discretization_2SPLIT2_MODAL:
         case kdv_discretization_2SPLIT2A:
             //T from modified AKNS basis to S basis. This modification reduces the degree of the polynomial scattering matrix by 1 per step.
 
@@ -850,6 +844,7 @@ INT fnft__kdv_change_of_basis_matrix_from_S(COMPLEX * const T,
 
             break;
 
+        case kdv_discretization_2SPLIT2_MODAL:
         case kdv_discretization_2SPLIT2A:
             // T from S basis to modified AKNS basis. This modification reduces the degree of the polynomial scattering matrix by 1 per step.
 

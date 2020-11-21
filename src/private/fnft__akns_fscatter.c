@@ -120,7 +120,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
 
             for (i=D; i-->0;) {
                 scl = eps_t*CABS(q[i]);
-		if (CREAL(q[i]) == CREAL(r[i])) {
+                if (CREAL(q[i]) == CREAL(r[i])) {
                     if ((double)scl >= 1.0) {
                         ret_code = E_OTHER("kappa == -1 but eps_t*|q[i]|>=1 ... decrease step size");
                         goto release_mem;
