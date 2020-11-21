@@ -32,7 +32,7 @@ static fnft_kdvv_opts_t default_opts = {
     .discspec_type = kdvv_dstype_NORMING_CONSTANTS,
     .contspec_type = kdvv_cstype_REFLECTION_COEFFICIENT,
     .normalization_flag = 1,
-    .discretization = kdv_discretization_2SPLIT4B_VANILLA,
+    .discretization = kdv_discretization_2SPLIT4B,
     .richardson_extrapolation_flag = 0
 };
 
@@ -207,6 +207,27 @@ INT fnft_kdvv(
         case kdv_discretization_2SPLIT7B_VANILLA:
         case kdv_discretization_4SPLIT4A_VANILLA:
         case kdv_discretization_4SPLIT4B_VANILLA:
+        case kdv_discretization_2SPLIT2_MODAL:
+        case kdv_discretization_2SPLIT1A:
+        case kdv_discretization_2SPLIT1B:
+        case kdv_discretization_2SPLIT2A:
+        case kdv_discretization_2SPLIT2B:
+        case kdv_discretization_2SPLIT2S:
+        case kdv_discretization_2SPLIT3S:
+        case kdv_discretization_2SPLIT4B:
+        case kdv_discretization_2SPLIT3A:
+        case kdv_discretization_2SPLIT3B:
+        case kdv_discretization_2SPLIT4A:
+        case kdv_discretization_2SPLIT6B:
+        case kdv_discretization_2SPLIT6A:
+        case kdv_discretization_2SPLIT8B:
+        case kdv_discretization_2SPLIT5A:
+        case kdv_discretization_2SPLIT5B:
+        case kdv_discretization_2SPLIT8A:
+        case kdv_discretization_2SPLIT7A:
+        case kdv_discretization_2SPLIT7B:
+        case kdv_discretization_4SPLIT4A:
+        case kdv_discretization_4SPLIT4B:
             break;
         case kdv_discretization_BO_VANILLA:
         case kdv_discretization_CF4_2_VANILLA:
@@ -215,6 +236,13 @@ INT fnft_kdvv(
         case kdv_discretization_CF6_4_VANILLA:
         case kdv_discretization_ES4_VANILLA:
         case kdv_discretization_TES4_VANILLA:
+        case kdv_discretization_BO:
+        case kdv_discretization_CF4_2:
+        case kdv_discretization_CF4_3:
+        case kdv_discretization_CF5_3:
+        case kdv_discretization_CF6_4:
+        case kdv_discretization_ES4:
+        case kdv_discretization_TES4:
             if (opts->bound_state_localization != kdvv_bsloc_NEWTON){
                 ret_code = E_INVALID_ARGUMENT(opts->bound_state_localization);
                 goto leave_fun;
@@ -680,9 +708,9 @@ static inline INT kdvv_compute_boundstates(
             // Setting 'discretization' as the base method for discretizations based on
             // splitting schemes.
             if (upsampling_factor == 1 && degree1step != 0){
-                discretization = kdv_discretization_BO_VANILLA;
+                discretization = kdv_discretization_BO;
             }else if(upsampling_factor == 2 && degree1step != 0){
-                discretization = kdv_discretization_CF4_2_VANILLA;
+                discretization = kdv_discretization_CF4_2;
             }else
                 discretization = opts->discretization;
 
@@ -859,14 +887,14 @@ static inline INT kdvv_compute_contspec(
             }
 
             // Fetch the change of basis matrix from S to the chosen discretization basis
-            ret_code = kdv_change_of_basis_matrix_from_S(&Tmx[0][0],xi[i],0,eps_t,opts->discretization);
+            ret_code = kdv_discretization_change_of_basis_matrix_from_S(&Tmx[0][0],xi[i],0,eps_t,opts->discretization);
             CHECK_RETCODE(ret_code, leave_fun);
 
             // Right-multiply the change of state matrix by the change of basis matrix from S to the chosen discretization basis
             misc_matrix_mult(2,2,2,&Hmx[0],&Tmx[0][0],&Mmx[0][0]);
 
             // Fetch the change of basis matrix from the chosen discretization basis to S
-            ret_code = kdv_change_of_basis_matrix_to_S(&Tmx[0][0],xi[i],0,eps_t,opts->discretization);
+            ret_code = kdv_discretization_change_of_basis_matrix_to_S(&Tmx[0][0],xi[i],0,eps_t,opts->discretization);
             CHECK_RETCODE(ret_code, leave_fun);
 
             // Left-multiply the change of state matrix by the change of basis matrix from the chosen discretization basis to S
@@ -977,9 +1005,9 @@ static inline INT kdvv_compute_normconsts_or_residues(
     // degree1step == 0 here implies method not based on polynomial
     // transfer matrix.
     if (upsampling_factor == 1 && degree1step != 0)
-        discretization  = kdv_discretization_BO_VANILLA;
+        discretization  = kdv_discretization_BO;
     else if (upsampling_factor == 2 && degree1step != 0)
-        discretization  = kdv_discretization_CF4_2_VANILLA;
+        discretization  = kdv_discretization_CF4_2;
     else
         discretization = opts->discretization;
 

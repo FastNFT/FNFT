@@ -113,87 +113,115 @@ INT fnft__kdv_discretization_to_akns_discretization(kdv_discretization_t kdv_dis
 
     switch (kdv_discretization) {
         case kdv_discretization_2SPLIT2_MODAL_VANILLA:
+        case kdv_discretization_2SPLIT2_MODAL:
             *akns_discretization = akns_discretization_2SPLIT2_MODAL;
             break;
         case kdv_discretization_2SPLIT1A_VANILLA:
+        case kdv_discretization_2SPLIT1A:
             *akns_discretization = akns_discretization_2SPLIT1A;
             break;
         case kdv_discretization_2SPLIT1B_VANILLA:
+        case kdv_discretization_2SPLIT1B:
             *akns_discretization = akns_discretization_2SPLIT1B;
             break;
         case kdv_discretization_2SPLIT2A_VANILLA:
+        case kdv_discretization_2SPLIT2A:
             *akns_discretization = akns_discretization_2SPLIT2A;
             break;
         case kdv_discretization_2SPLIT2B_VANILLA:
+        case kdv_discretization_2SPLIT2B:
             *akns_discretization = akns_discretization_2SPLIT2B;
             break;
         case kdv_discretization_2SPLIT2S_VANILLA:
+        case kdv_discretization_2SPLIT2S:
             *akns_discretization = akns_discretization_2SPLIT2S;
             break;
         case kdv_discretization_2SPLIT3A_VANILLA:
+        case kdv_discretization_2SPLIT3A:
             *akns_discretization = akns_discretization_2SPLIT3A;
             break;
         case kdv_discretization_2SPLIT3B_VANILLA:
+        case kdv_discretization_2SPLIT3B:
             *akns_discretization = akns_discretization_2SPLIT3B;
             break;
         case kdv_discretization_2SPLIT3S_VANILLA:
+        case kdv_discretization_2SPLIT3S:
             *akns_discretization = akns_discretization_2SPLIT3S;
             break;
         case kdv_discretization_2SPLIT4A_VANILLA:
+        case kdv_discretization_2SPLIT4A:
             *akns_discretization = akns_discretization_2SPLIT4A;
             break;
         case kdv_discretization_2SPLIT4B_VANILLA:
+        case kdv_discretization_2SPLIT4B:
             *akns_discretization = akns_discretization_2SPLIT4B;
             break;
         case kdv_discretization_2SPLIT5A_VANILLA:
+        case kdv_discretization_2SPLIT5A:
             *akns_discretization = akns_discretization_2SPLIT5A;
             break;
         case kdv_discretization_2SPLIT5B_VANILLA:
+        case kdv_discretization_2SPLIT5B:
             *akns_discretization = akns_discretization_2SPLIT5B;
             break;
         case kdv_discretization_2SPLIT6A_VANILLA:
+        case kdv_discretization_2SPLIT6A:
             *akns_discretization = akns_discretization_2SPLIT6A;
             break;
         case kdv_discretization_2SPLIT6B_VANILLA:
+        case kdv_discretization_2SPLIT6B:
             *akns_discretization = akns_discretization_2SPLIT6B;
             break;
         case kdv_discretization_2SPLIT7A_VANILLA:
+        case kdv_discretization_2SPLIT7A:
             *akns_discretization = akns_discretization_2SPLIT7A;
             break;
         case kdv_discretization_2SPLIT7B_VANILLA:
+        case kdv_discretization_2SPLIT7B:
             *akns_discretization = akns_discretization_2SPLIT7B;
             break;
         case kdv_discretization_2SPLIT8A_VANILLA:
+        case kdv_discretization_2SPLIT8A:
             *akns_discretization = akns_discretization_2SPLIT8A;
             break;
         case kdv_discretization_2SPLIT8B_VANILLA:
+        case kdv_discretization_2SPLIT8B:
             *akns_discretization = akns_discretization_2SPLIT8B;
             break;
         case kdv_discretization_BO_VANILLA:
+        case kdv_discretization_BO:
             *akns_discretization = akns_discretization_BO;
             break;
         case kdv_discretization_4SPLIT4A_VANILLA:
+        case kdv_discretization_4SPLIT4A:
             *akns_discretization = akns_discretization_4SPLIT4A;
             break;
         case kdv_discretization_4SPLIT4B_VANILLA:
+        case kdv_discretization_4SPLIT4B:
             *akns_discretization = akns_discretization_4SPLIT4B;
             break;
         case kdv_discretization_CF4_2_VANILLA:
+        case kdv_discretization_CF4_2:
             *akns_discretization = akns_discretization_CF4_2;
             break;
         case kdv_discretization_CF4_3_VANILLA:
+        case kdv_discretization_CF4_3:
             *akns_discretization = akns_discretization_CF4_3;
             break;
         case kdv_discretization_CF5_3_VANILLA:
+        case kdv_discretization_CF5_3:
             *akns_discretization = akns_discretization_CF5_3;
             break;
         case kdv_discretization_CF6_4_VANILLA:
+        case kdv_discretization_CF6_4:
             *akns_discretization = akns_discretization_CF6_4;
             break;
         case kdv_discretization_ES4_VANILLA:
+        case kdv_discretization_ES4:
             *akns_discretization = akns_discretization_ES4;
             break;
         case kdv_discretization_TES4_VANILLA:
+        case kdv_discretization_TES4:
             *akns_discretization = akns_discretization_TES4;
             break;
         default: // Unknown discretization
@@ -285,6 +313,27 @@ INT fnft__kdv_discretization_phase_factor_a(const REAL eps_t, const UINT D, REAL
         case kdv_discretization_4SPLIT4B_VANILLA:
         case kdv_discretization_2SPLIT2A_VANILLA:
         case kdv_discretization_2SPLIT2_MODAL_VANILLA:
+        case kdv_discretization_2SPLIT1A:
+        case kdv_discretization_2SPLIT1B:
+        case kdv_discretization_2SPLIT2B:
+        case kdv_discretization_2SPLIT2S:
+        case kdv_discretization_2SPLIT3A:
+        case kdv_discretization_2SPLIT3B:
+        case kdv_discretization_2SPLIT3S:
+        case kdv_discretization_2SPLIT4A:
+        case kdv_discretization_2SPLIT4B:
+        case kdv_discretization_2SPLIT5A:
+        case kdv_discretization_2SPLIT5B:
+        case kdv_discretization_2SPLIT6A:
+        case kdv_discretization_2SPLIT6B:
+        case kdv_discretization_2SPLIT7A:
+        case kdv_discretization_2SPLIT7B:
+        case kdv_discretization_2SPLIT8A:
+        case kdv_discretization_2SPLIT8B:
+        case kdv_discretization_4SPLIT4A:
+        case kdv_discretization_4SPLIT4B:
+        case kdv_discretization_2SPLIT2A:
+        case kdv_discretization_2SPLIT2_MODAL:
             *phase_factor_a = -eps_t*D + (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
             break;
@@ -296,6 +345,13 @@ INT fnft__kdv_discretization_phase_factor_a(const REAL eps_t, const UINT D, REAL
         case kdv_discretization_CF6_4_VANILLA:
         case kdv_discretization_ES4_VANILLA:
         case kdv_discretization_TES4_VANILLA:
+        case kdv_discretization_BO: // Bofetta-Osborne scheme
+        case kdv_discretization_CF4_2:
+        case kdv_discretization_CF4_3:
+        case kdv_discretization_CF5_3:
+        case kdv_discretization_CF6_4:
+        case kdv_discretization_ES4:
+        case kdv_discretization_TES4:
             *phase_factor_a = (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
             break;
@@ -342,6 +398,27 @@ INT fnft__kdv_discretization_phase_factor_b(const REAL eps_t, const UINT D, REAL
         case kdv_discretization_2SPLIT8B_VANILLA:
         case kdv_discretization_4SPLIT4A_VANILLA:
         case kdv_discretization_4SPLIT4B_VANILLA:
+        case kdv_discretization_2SPLIT2_MODAL:
+        case kdv_discretization_2SPLIT1A:
+        case kdv_discretization_2SPLIT1B:
+        case kdv_discretization_2SPLIT2A:
+        case kdv_discretization_2SPLIT2B:
+        case kdv_discretization_2SPLIT2S:
+        case kdv_discretization_2SPLIT3A:
+        case kdv_discretization_2SPLIT3B:
+        case kdv_discretization_2SPLIT3S:
+        case kdv_discretization_2SPLIT4A:
+        case kdv_discretization_2SPLIT4B:
+        case kdv_discretization_2SPLIT5A:
+        case kdv_discretization_2SPLIT5B:
+        case kdv_discretization_2SPLIT6A:
+        case kdv_discretization_2SPLIT6B:
+        case kdv_discretization_2SPLIT7A:
+        case kdv_discretization_2SPLIT7B:
+        case kdv_discretization_2SPLIT8A:
+        case kdv_discretization_2SPLIT8B:
+        case kdv_discretization_4SPLIT4A:
+        case kdv_discretization_4SPLIT4B:
             *phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
             break;
@@ -353,6 +430,13 @@ INT fnft__kdv_discretization_phase_factor_b(const REAL eps_t, const UINT D, REAL
         case kdv_discretization_CF6_4_VANILLA:
         case kdv_discretization_ES4_VANILLA:
         case kdv_discretization_TES4_VANILLA:
+        case kdv_discretization_BO: // Bofetta-Osborne scheme
+        case kdv_discretization_CF4_2:
+        case kdv_discretization_CF4_3:
+        case kdv_discretization_CF5_3:
+        case kdv_discretization_CF6_4:
+        case kdv_discretization_ES4:
+        case kdv_discretization_TES4:
             *phase_factor_b =  - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
             break;
@@ -450,6 +534,26 @@ INT fnft__kdv_discretization_preprocess_signal(const UINT D, COMPLEX const * con
         case kdv_discretization_2SPLIT8A_VANILLA:
         case kdv_discretization_2SPLIT8B_VANILLA:
         case kdv_discretization_2SPLIT2_MODAL_VANILLA:
+        case kdv_discretization_BO: // Bofetta-Osborne scheme
+        case kdv_discretization_2SPLIT1A:
+        case kdv_discretization_2SPLIT1B:
+        case kdv_discretization_2SPLIT2A:
+        case kdv_discretization_2SPLIT2B:
+        case kdv_discretization_2SPLIT2S:
+        case kdv_discretization_2SPLIT3A:
+        case kdv_discretization_2SPLIT3B:
+        case kdv_discretization_2SPLIT3S:
+        case kdv_discretization_2SPLIT4A:
+        case kdv_discretization_2SPLIT4B:
+        case kdv_discretization_2SPLIT5A:
+        case kdv_discretization_2SPLIT5B:
+        case kdv_discretization_2SPLIT6A:
+        case kdv_discretization_2SPLIT6B:
+        case kdv_discretization_2SPLIT7A:
+        case kdv_discretization_2SPLIT7B:
+        case kdv_discretization_2SPLIT8A:
+        case kdv_discretization_2SPLIT8B:
+        case kdv_discretization_2SPLIT2_MODAL:
             i = 0;
             for (isub=0; isub<D_effective; isub++) {
                 q_preprocessed[isub] = q[i];
@@ -460,6 +564,9 @@ INT fnft__kdv_discretization_preprocess_signal(const UINT D, COMPLEX const * con
         case kdv_discretization_CF4_2_VANILLA:
         case kdv_discretization_4SPLIT4A_VANILLA:
         case kdv_discretization_4SPLIT4B_VANILLA:
+        case kdv_discretization_CF4_2:
+        case kdv_discretization_4SPLIT4A:
+        case kdv_discretization_4SPLIT4B:
             q_1 = malloc(D * sizeof(COMPLEX));
             q_2 = malloc(D * sizeof(COMPLEX));
             if (q_1 == NULL || q_2 == NULL) {
@@ -488,6 +595,7 @@ INT fnft__kdv_discretization_preprocess_signal(const UINT D, COMPLEX const * con
 
             break;
         case kdv_discretization_CF4_3_VANILLA:
+        case kdv_discretization_CF4_3:
             q_1 = malloc(D * sizeof(COMPLEX));
             q_3 = malloc(D * sizeof(COMPLEX));
             if (q_1 == NULL || q_3 == NULL) {
@@ -515,6 +623,7 @@ INT fnft__kdv_discretization_preprocess_signal(const UINT D, COMPLEX const * con
             }
             break;
         case kdv_discretization_CF5_3_VANILLA:
+        case kdv_discretization_CF5_3:
             q_1 = malloc(D * sizeof(COMPLEX));
             q_3 = malloc(D * sizeof(COMPLEX));
 
@@ -545,6 +654,7 @@ INT fnft__kdv_discretization_preprocess_signal(const UINT D, COMPLEX const * con
 
             break;
         case kdv_discretization_CF6_4_VANILLA:
+        case kdv_discretization_CF6_4:
             q_1 = malloc(D * sizeof(COMPLEX));
             q_3 = malloc(D * sizeof(COMPLEX));
             if (q_1 == NULL || q_3 == NULL) {
@@ -575,6 +685,8 @@ INT fnft__kdv_discretization_preprocess_signal(const UINT D, COMPLEX const * con
             break;
         case kdv_discretization_ES4_VANILLA:
         case kdv_discretization_TES4_VANILLA:
+        case kdv_discretization_ES4:
+        case kdv_discretization_TES4:
             i = 0;
             for (isub=0; isub<D_effective; isub=isub+3) {
                 q_preprocessed[isub] = q[i];
@@ -628,7 +740,7 @@ INT fnft__kdv_discretization_preprocess_signal(const UINT D, COMPLEX const * con
 /**
  * This routine returns the change of basis matrix from the basis of the discretization to the S basis.
  */
-INT fnft__kdv_change_of_basis_matrix_to_S(COMPLEX * const T,
+INT fnft__kdv_discretization_change_of_basis_matrix_to_S(COMPLEX * const T,
                                           COMPLEX const xi,
                                           const UINT derivative_flag, // 0- > 2x2, 1->4x4
                                           const REAL eps_t,
@@ -689,6 +801,51 @@ INT fnft__kdv_change_of_basis_matrix_to_S(COMPLEX * const T,
 
             break;
 
+        case kdv_discretization_2SPLIT1A:
+        case kdv_discretization_2SPLIT1B:
+        case kdv_discretization_2SPLIT2B:
+        case kdv_discretization_2SPLIT2S:
+        case kdv_discretization_2SPLIT3A:
+        case kdv_discretization_2SPLIT3B:
+        case kdv_discretization_2SPLIT3S:
+        case kdv_discretization_2SPLIT4A:
+        case kdv_discretization_2SPLIT4B:
+        case kdv_discretization_2SPLIT5A:
+        case kdv_discretization_2SPLIT5B:
+        case kdv_discretization_2SPLIT6A:
+        case kdv_discretization_2SPLIT6B:
+        case kdv_discretization_2SPLIT7A:
+        case kdv_discretization_2SPLIT7B:
+        case kdv_discretization_2SPLIT8A:
+        case kdv_discretization_2SPLIT8B:
+        case kdv_discretization_4SPLIT4A:
+        case kdv_discretization_4SPLIT4B:
+        case kdv_discretization_BO: // Bofetta-Osborne scheme
+        case kdv_discretization_CF4_2:
+        case kdv_discretization_CF4_3:
+        case kdv_discretization_CF5_3:
+        case kdv_discretization_CF6_4:
+        case kdv_discretization_ES4:
+        case kdv_discretization_TES4:
+            // T from flipped AKNS basis to S basis:
+
+            T[0] = 1.0;             //T_11;
+            T[1] = -I * 0.5 / xi;   //T_12;
+            if(!derivative_flag){
+                T[2]  = 0.0;        //T_21;
+                T[3]  = -T[1];      //T_22;
+            } else {
+                T[4]  = 0.0;        //T_21;
+                T[5]  = -T[1];      //T_22;
+
+                T[8]  = 0.0;        //T_31 = d/dxi T_11
+                T[9]  = -T[1] / xi; //T_32 = d/dxi T_12
+                T[12] = 0.0;        //T_41 = d/dxi T_21
+                T[13] = -T[9];      //T_42 = d/dxi T_22
+            }
+
+            break;
+
         case kdv_discretization_2SPLIT2_MODAL_VANILLA:
         case kdv_discretization_2SPLIT2A_VANILLA:
             //T from modified AKNS basis to S basis. This modification reduces the degree of the polynomial scattering matrix by 1 per step.
@@ -708,6 +865,27 @@ INT fnft__kdv_change_of_basis_matrix_to_S(COMPLEX * const T,
                 T[13] = 0.5 * I * eps_t * T[5];           //T_42 = d/dxi T_22
             }
 
+            break;
+
+        case kdv_discretization_2SPLIT2_MODAL:
+        case kdv_discretization_2SPLIT2A:
+            //T from flipped modified AKNS basis to S basis. This modification reduces the degree of the polynomial scattering matrix by 1 per step.
+
+            T[1] = CEXP(-0.5*I*xi*eps_t) * -I * 0.5 / xi; //T_12;
+            T[0] = 0.0;                                   //T_11;
+            if(!derivative_flag){
+                T[3]  = -T[1];                            //T_22;
+                T[2]  = CEXP(+0.5*I*xi*eps_t);            //T_21;
+            } else {
+                T[5]  = -T[1];                            //T_22;
+                T[4]  = CEXP(+0.5*I*xi*eps_t);            //T_21;
+
+                T[9]  = -T[1] * (1.0/xi + 0.5*I*eps_t);   //T_32 = d/dxi T_12
+                T[8]  = 0.0;                              //T_31 = d/dxi T_11
+                T[13] = -T[9];                            //T_42 = d/dxi T_22
+                T[12] = 0.5 * I * eps_t * T[4];           //T_41 = d/dxi T_21
+            }
+            // FIXME: The matrix above is not correct, cf the other non-vanilla cases
             break;
 
 //        case
@@ -774,7 +952,7 @@ INT fnft__kdv_change_of_basis_matrix_to_S(COMPLEX * const T,
 /**
  * This routine returns the change of basis matrix from the S basis to the basis of the discretization.
  */
-INT fnft__kdv_change_of_basis_matrix_from_S(COMPLEX * const T,
+INT fnft__kdv_discretization_change_of_basis_matrix_from_S(COMPLEX * const T,
                                             COMPLEX const xi,
                                             UINT const derivative_flag, // 0- > 2x2, 1->4x4
                                             REAL const eps_t,
@@ -835,6 +1013,51 @@ INT fnft__kdv_change_of_basis_matrix_from_S(COMPLEX * const T,
 
             break;
 
+        case kdv_discretization_2SPLIT1A:
+        case kdv_discretization_2SPLIT1B:
+        case kdv_discretization_2SPLIT2B:
+        case kdv_discretization_2SPLIT2S:
+        case kdv_discretization_2SPLIT3A:
+        case kdv_discretization_2SPLIT3B:
+        case kdv_discretization_2SPLIT3S:
+        case kdv_discretization_2SPLIT4A:
+        case kdv_discretization_2SPLIT4B:
+        case kdv_discretization_2SPLIT5A:
+        case kdv_discretization_2SPLIT5B:
+        case kdv_discretization_2SPLIT6A:
+        case kdv_discretization_2SPLIT6B:
+        case kdv_discretization_2SPLIT7A:
+        case kdv_discretization_2SPLIT7B:
+        case kdv_discretization_2SPLIT8A:
+        case kdv_discretization_2SPLIT8B:
+        case kdv_discretization_4SPLIT4A:
+        case kdv_discretization_4SPLIT4B:
+        case kdv_discretization_BO: // Bofetta-Osborne scheme
+        case kdv_discretization_CF4_2:
+        case kdv_discretization_CF4_3:
+        case kdv_discretization_CF5_3:
+        case kdv_discretization_CF6_4:
+        case kdv_discretization_ES4:
+        case kdv_discretization_TES4:
+            // T from S basis to flipped AKNS basis:
+
+            T[0] = 1.0;                //T_11;
+            T[1] = 1.0;                //T_12;
+            if(!derivative_flag){
+                T[2]  = 0.0;           //T_21;
+                T[3]  = -2.0 * I * xi; //T_22;
+            } else {
+                T[4]  = 0.0;           //T_21;
+                T[5]  = -2.0 * I * xi; //T_22;
+
+                T[8]  = 0.0;           //T_31 = d/dxi T_11
+                T[9]  = 0.0;           //T_32 = d/dxi T_12
+                T[12] = 0.0;           //T_41 = d/dxi T_21
+                T[13] = -2.0 * I;      //T_42 = d/dxi T_22
+            }
+
+            break;
+
         case kdv_discretization_2SPLIT2_MODAL_VANILLA:
         case kdv_discretization_2SPLIT2A_VANILLA:
             // T from S basis to modified AKNS basis. This modification reduces the degree of the polynomial scattering matrix by 1 per step.
@@ -854,6 +1077,27 @@ INT fnft__kdv_change_of_basis_matrix_from_S(COMPLEX * const T,
                 T[13] = T[12];                            //T_42 = d/dxi T_22
             }
 
+            break;
+
+        case kdv_discretization_2SPLIT2_MODAL:
+        case kdv_discretization_2SPLIT2A:
+            // T from S basis to flipped modified AKNS basis. This modification reduces the degree of the polynomial scattering matrix by 1 per step.
+            T[0] = CEXP(-0.5*I*xi*eps_t);                      //T_11;
+            T[1] = T[0];                                       //T_12;
+
+            if(!derivative_flag){
+                T[2]  = CEXP(+0.5*I*xi*eps_t) * 2.0 * I * xi;  //T_21;
+                T[3]  = 0.0;                                   //T_22;
+            } else {
+                T[4]  = CEXP(+0.5*I*xi*eps_t) * 2.0 * I * xi;  //T_21;
+                T[5]  = 0.0;                                   //T_22;
+
+                T[12] = T[4] * (1.0/xi + 0.5*I*eps_t);         //T_41 = d/dxi T_21
+                T[13] = 0.0;                                   //T_42 = d/dxi T_22
+                T[8]  = T[0] * -0.5 * I * eps_t;               //T_31 = d/dxi T_11
+                T[9]  = T[8];                                  //T_32 = d/dxi T_12
+            }
+            // FIXME: The matrix above is not correct, cf the other non-vanilla cases
             break;
 
 //        case
@@ -913,6 +1157,89 @@ INT fnft__kdv_change_of_basis_matrix_from_S(COMPLEX * const T,
         T[15] = T[5]; // T_44 = T_22
     }
 
+    release_mem:
+        return ret_code;
+}
+
+/**
+ * This routine tells for discretizations in AKNS basis whether they use r=-1 (vanilla) or q=-1 (not vanilla).
+ */
+INT fnft__kdv_discretization_vanilla_flag(INT * const vanilla_flag,
+                                          kdv_discretization_t const kdv_discretization)
+{
+    INT ret_code = SUCCESS;
+    switch (kdv_discretization) {
+
+        case kdv_discretization_2SPLIT1A_VANILLA:
+        case kdv_discretization_2SPLIT1B_VANILLA:
+        case kdv_discretization_2SPLIT2B_VANILLA:
+        case kdv_discretization_2SPLIT2S_VANILLA:
+        case kdv_discretization_2SPLIT3A_VANILLA:
+        case kdv_discretization_2SPLIT3B_VANILLA:
+        case kdv_discretization_2SPLIT3S_VANILLA:
+        case kdv_discretization_2SPLIT4A_VANILLA:
+        case kdv_discretization_2SPLIT4B_VANILLA:
+        case kdv_discretization_2SPLIT5A_VANILLA:
+        case kdv_discretization_2SPLIT5B_VANILLA:
+        case kdv_discretization_2SPLIT6A_VANILLA:
+        case kdv_discretization_2SPLIT6B_VANILLA:
+        case kdv_discretization_2SPLIT7A_VANILLA:
+        case kdv_discretization_2SPLIT7B_VANILLA:
+        case kdv_discretization_2SPLIT8A_VANILLA:
+        case kdv_discretization_2SPLIT8B_VANILLA:
+        case kdv_discretization_4SPLIT4A_VANILLA:
+        case kdv_discretization_4SPLIT4B_VANILLA:
+        case kdv_discretization_2SPLIT2A_VANILLA:
+        case kdv_discretization_2SPLIT2_MODAL_VANILLA:
+        case kdv_discretization_BO_VANILLA: // Bofetta-Osborne scheme
+        case kdv_discretization_CF4_2_VANILLA:
+        case kdv_discretization_CF4_3_VANILLA:
+        case kdv_discretization_CF5_3_VANILLA:
+        case kdv_discretization_CF6_4_VANILLA:
+        case kdv_discretization_ES4_VANILLA:
+        case kdv_discretization_TES4_VANILLA:
+            *vanilla_flag = 1;
+            ret_code = SUCCESS;
+            CHECK_RETCODE(ret_code, release_mem);
+            break;
+
+        case kdv_discretization_2SPLIT1A:
+        case kdv_discretization_2SPLIT1B:
+        case kdv_discretization_2SPLIT2B:
+        case kdv_discretization_2SPLIT2S:
+        case kdv_discretization_2SPLIT3A:
+        case kdv_discretization_2SPLIT3B:
+        case kdv_discretization_2SPLIT3S:
+        case kdv_discretization_2SPLIT4A:
+        case kdv_discretization_2SPLIT4B:
+        case kdv_discretization_2SPLIT5A:
+        case kdv_discretization_2SPLIT5B:
+        case kdv_discretization_2SPLIT6A:
+        case kdv_discretization_2SPLIT6B:
+        case kdv_discretization_2SPLIT7A:
+        case kdv_discretization_2SPLIT7B:
+        case kdv_discretization_2SPLIT8A:
+        case kdv_discretization_2SPLIT8B:
+        case kdv_discretization_4SPLIT4A:
+        case kdv_discretization_4SPLIT4B:
+        case kdv_discretization_2SPLIT2A:
+        case kdv_discretization_2SPLIT2_MODAL:
+        case kdv_discretization_BO: // Bofetta-Osborne scheme
+        case kdv_discretization_CF4_2:
+        case kdv_discretization_CF4_3:
+        case kdv_discretization_CF5_3:
+        case kdv_discretization_CF6_4:
+        case kdv_discretization_ES4:
+        case kdv_discretization_TES4:
+            *vanilla_flag = 0;
+            ret_code = SUCCESS;
+            CHECK_RETCODE(ret_code, release_mem);
+            break;
+
+        default: // Unknown discretization, or non-AKNS discretization
+            ret_code = E_INVALID_ARGUMENT(kdv_discretization);
+            CHECK_RETCODE(ret_code, release_mem);
+    }
     release_mem:
         return ret_code;
 }

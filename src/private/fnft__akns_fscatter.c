@@ -177,7 +177,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             break;
 
         case akns_discretization_2SPLIT1B: //Intentional fallthrough
-        case akns_discretization_2SPLIT2A: //By a trick that modifies the basis, see fnft__kdv_discretization.c -> fnft__kdv_change_of_basis_matrix_from_S and fnft__kdv_change_of_basis_matrix_to_S
+        case akns_discretization_2SPLIT2A: //By a trick that modifies the basis, see fnft__kdv_discretization.c -> fnft__kdv_discretization_change_of_basis_matrix_from_S and fnft__kdv_discretization_change_of_basis_matrix_to_S
             
             e_1B = &e_Bstorage[0];
             

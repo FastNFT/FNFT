@@ -131,6 +131,7 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
         // one matrix exponential. The matrix exponential is
         // implmented by using the expansion of the 2x2 matrix
         // in terms of Pauli matrices.
+        case kdv_discretization_ES4_VANILLA:
         case kdv_discretization_ES4:
             scl_factor = 1.0;
             tmp1 = malloc(D*sizeof(COMPLEX));
@@ -156,6 +157,7 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
             // three matrix exponentials. The matrix exponential is
             // implmented by using the expansion of the 2x2 matrix
             // in terms of Pauli matrices.
+        case kdv_discretization_TES4_VANILLA:
         case kdv_discretization_TES4:
             scl_factor = 1.0;
             tmp1 = malloc(D*sizeof(COMPLEX));
@@ -186,19 +188,24 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
             }
             disc_flag = 1;
             break;
-            
+
+        case kdv_discretization_BO_VANILLA: //  bofetta-osborne scheme
         case kdv_discretization_BO: //  bofetta-osborne scheme
             M = 1; N = 1;
             break;
+        case kdv_discretization_CF4_2_VANILLA:
         case kdv_discretization_CF4_2: // commutator-free fourth-order
             M = 2; N = 2;
             break;
+        case kdv_discretization_CF4_3_VANILLA:
         case kdv_discretization_CF4_3: // commutator-free fourth-order
             M = 3; N = 3;
             break;
+        case kdv_discretization_CF5_3_VANILLA:
         case kdv_discretization_CF5_3: // commutator-free fifth-order
             M = 3; N = 3;
             break;
+        case kdv_discretization_CF6_4_VANILLA:
         case kdv_discretization_CF6_4: // commutator-free sixth-order
             M = 4; N = 3;
             break;
@@ -224,12 +231,14 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
         switch (discretization) {
             
             case kdv_discretization_BO_VANILLA: //  bofetta-osborne scheme
+            case kdv_discretization_BO: //  bofetta-osborne scheme
                 scl_factor = 1;
                 for (n = 0; n < D; n++)
                     l[n] = l_curr;
                 break;
                 
             case kdv_discretization_CF4_2_VANILLA: // commutator-free fourth-order
+            case kdv_discretization_CF4_2: // commutator-free fourth-order
                 if (D%2 != 0){
                     ret_code = E_ASSERTION_FAILED;
                     goto leave_fun;
@@ -241,6 +250,8 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 
             case kdv_discretization_CF4_3_VANILLA: // commutator-free fourth-order
             case kdv_discretization_CF5_3_VANILLA: // commutator-free fifth-order
+            case kdv_discretization_CF4_3: // commutator-free fourth-order
+            case kdv_discretization_CF5_3: // commutator-free fifth-order
 
                 if (D%3 != 0){
                     ret_code = E_ASSERTION_FAILED;
@@ -255,6 +266,7 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 break;
   
             case kdv_discretization_CF6_4_VANILLA: // commutator-free sixth-order
+            case kdv_discretization_CF6_4: // commutator-free sixth-order
                 if (D%4 != 0){
                     ret_code = E_ASSERTION_FAILED;
                     goto leave_fun;
@@ -279,6 +291,8 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
         // Scattering PHI and PHI_D from T[0] to T[1]
         // PHI is stored at intermediate values as they are needed for the
         // accurate computation of b-coefficient.
+
+        // TODO: Fetch the change of basis matrix to obtain the right phi.
         COMPLEX U[4][4] = {{0}};
         phiS1 = 1.0*CEXP(-I*l_curr*(T[0]-eps_t*boundary_coeff));
         phiS2 = 0.0;
@@ -297,6 +311,11 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
             case kdv_discretization_CF4_3_VANILLA:
             case kdv_discretization_CF5_3_VANILLA:
             case kdv_discretization_CF6_4_VANILLA:
+            case kdv_discretization_BO:
+            case kdv_discretization_CF4_2:
+            case kdv_discretization_CF4_3:
+            case kdv_discretization_CF5_3:
+            case kdv_discretization_CF6_4:
                 count = upsampling_factor - 1;
                 phi1 = PHI1[0];
                 phi2 = PHI2[0];
@@ -346,6 +365,7 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 // one matrix exponential. The matrix exponential is
                 // implmented by using the expansion of the 2x2 matrix
                 // in terms of Pauli matrices.
+            case kdv_discretization_ES4_VANILLA:
             case kdv_discretization_ES4:
                 for (n = 0; n < D; n=n+3){
                     a1 = tmp1[n]+ eps_t_3*(l_curr*I*(q[n+1]-r[n+1]))/12.0;
@@ -383,6 +403,7 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 // Fourth-order exponential method which requires
                 // three matrix exponentials. The transfer metrix
                 // needs to be built differently compared to the CF schemes.
+            case kdv_discretization_TES4_VANILLA:
             case kdv_discretization_TES4:
                 for (n = 0; n < D; n=n+3){
                     
@@ -498,6 +519,11 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 case kdv_discretization_CF4_3_VANILLA:
                 case kdv_discretization_CF5_3_VANILLA:
                 case kdv_discretization_CF6_4_VANILLA:
+                case kdv_discretization_BO:
+                case kdv_discretization_CF4_2:
+                case kdv_discretization_CF4_3:
+                case kdv_discretization_CF5_3:
+                case kdv_discretization_CF6_4:
                     n = D;
                     n_given = D_given; 
                     count = upsampling_factor-1;
@@ -537,6 +563,7 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     // one matrix exponential. The matrix exponential is
                     // implmented by using the expansion of the 2x2 matrix
                     // in terms of Pauli matrices.
+                case kdv_discretization_ES4_VANILLA:
                 case kdv_discretization_ES4:
                     n = D;
                     n_given = D_given;
@@ -569,6 +596,7 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     // Fourth-order exponential method which requires
                     // three matrix exponentials. The transfer metrix cannot
                     // needs to be built differently compared to the CF schemes.
+                case kdv_discretization_TES4_VANILLA:
                 case kdv_discretization_TES4:
                      n = D;
                     n_given = D_given;

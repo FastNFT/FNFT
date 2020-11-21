@@ -72,10 +72,17 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
 //        for (i = 0; i < D; i++)
 //            r[i] = -1.0;
     }
-    
+
+    INT vanilla_flag;
+    kdv_discretization_vanilla_flag(&vanilla_flag, discretization);
+
     // Calculate the change of state matrix in AKNS basis across the potential
-    ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result, 
+    if(vanilla_flag)
+        ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result,
             akns_discretization, derivative_flag);
+    else
+        ret_code = akns_scatter_matrix(D, r, q, eps_t, K, lambda, result,
+        akns_discretization, derivative_flag);
 
     // Change the basis of the change of state matrix to the S-basis
     UINT const N = derivative_flag ? 4 : 2; // size of the matrices: 2x2 or 4x4
@@ -110,14 +117,14 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
         }
 
         // Fetch the change of basis matrix from S to AKNS
-        ret_code = kdv_change_of_basis_matrix_from_S(&Tmx[0][0],lambda[i],derivative_flag,eps_t,discretization);
+        ret_code = kdv_discretization_change_of_basis_matrix_from_S(&Tmx[0][0],lambda[i],derivative_flag,eps_t,discretization);
         CHECK_RETCODE(ret_code, leave_fun);
 
         // Right-multiply the change of state matrix by the change of basis matrix from S to AKNS
         misc_matrix_mult(N,N,N,&H[0],&Tmx[0][0],&Mmx[0][0]);
 
         // Fetch the change of basis matrix from AKNS to S
-        ret_code = kdv_change_of_basis_matrix_to_S(&Tmx[0][0],lambda [i],derivative_flag,eps_t,discretization);
+        ret_code = kdv_discretization_change_of_basis_matrix_to_S(&Tmx[0][0],lambda [i],derivative_flag,eps_t,discretization);
         CHECK_RETCODE(ret_code, leave_fun);
 
         // Left-multiply the change of state matrix by the change of basis matrix from AKNS to S

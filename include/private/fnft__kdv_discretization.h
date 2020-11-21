@@ -295,11 +295,11 @@ FNFT_INT fnft__kdv_discretization_method_weights(FNFT_COMPLEX **weights_ptr,
  * @param[in] derivative_flag When 0, T is 2x2. When 1 T is 4x4, to include the derivatives.
  * @param[in] kdv_discretization Discretization of type \link fnft_kdv_discretization_t \endlink.
  */
-FNFT_INT fnft__kdv_change_of_basis_matrix_to_S(FNFT_COMPLEX * const T,
-                                               FNFT_COMPLEX const xi,
-                                               FNFT_UINT  const derivative_flag, // 0- > 2x2, 1->4x4
-                                               FNFT_REAL const eps_t,
-                                               fnft_kdv_discretization_t const kdv_discretization);
+FNFT_INT fnft__kdv_discretization_change_of_basis_matrix_to_S(FNFT_COMPLEX * const T,
+                                                              FNFT_COMPLEX const xi,
+                                                              FNFT_UINT  const derivative_flag, // 0- > 2x2, 1->4x4
+                                                              FNFT_REAL const eps_t,
+                                                              fnft_kdv_discretization_t const kdv_discretization);
 
 /**
  * @brief This routine returns the change of basis matrix from the Sbasis to the basis of the discretization.
@@ -308,12 +308,19 @@ FNFT_INT fnft__kdv_change_of_basis_matrix_to_S(FNFT_COMPLEX * const T,
  * @param[in] derivative_flag When 0, T is 2x2. When 1 T is 4x4, to include the derivatives.
  * @param[in] kdv_discretization Discretization of type \link fnft_kdv_discretization_t \endlink.
  */
-FNFT_INT fnft__kdv_change_of_basis_matrix_from_S(FNFT_COMPLEX * const T,
-                                               FNFT_COMPLEX const xi,
-                                               FNFT_UINT  const derivative_flag, // 0- > 2x2, 1->4x4
-                                               FNFT_REAL const eps_t,
-                                               fnft_kdv_discretization_t const kdv_discretization);
+FNFT_INT fnft__kdv_discretization_change_of_basis_matrix_from_S(FNFT_COMPLEX * const T,
+                                                                FNFT_COMPLEX const xi,
+                                                                FNFT_UINT  const derivative_flag, // 0- > 2x2, 1->4x4
+                                                                FNFT_REAL const eps_t,
+                                                                fnft_kdv_discretization_t const kdv_discretization);
 
+/**
+ * @brief This routine tells for discretizations in AKNS basis whether they use r=-1 (vanilla) or q=-1 (not vanilla).
+ * @param[out] vanilla_flag: 1 for vanilla, 0 for not vanilla.
+ * @param[in] kdv_discretization Discretization of type \link fnft_kdv_discretization_t \endlink that uses the AKNS basis.
+*/
+FNFT_INT fnft__kdv_discretization_vanilla_flag(FNFT_INT * const vanilla_flag,
+                                               fnft_kdv_discretization_t const kdv_discretization);
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define kdv_discretization_degree(...) fnft__kdv_discretization_degree(__VA_ARGS__)
 #define kdv_discretization_boundary_coeff(...) fnft__kdv_discretization_boundary_coeff(__VA_ARGS__)
@@ -327,8 +334,9 @@ FNFT_INT fnft__kdv_change_of_basis_matrix_from_S(FNFT_COMPLEX * const T,
 #define kdv_discretization_phase_factor_b(...) fnft__kdv_discretization_phase_factor_b(__VA_ARGS__)
 #define kdv_discretization_preprocess_signal(...) fnft__kdv_discretization_preprocess_signal(__VA_ARGS__)
 #define kdv_discretization_method_weights(...) fnft__kdv_discretization_method_weights(__VA_ARGS__)
-#define kdv_change_of_basis_matrix_to_S(...) fnft__kdv_change_of_basis_matrix_to_S(__VA_ARGS__)
-#define kdv_change_of_basis_matrix_from_S(...) fnft__kdv_change_of_basis_matrix_from_S(__VA_ARGS__)
+#define kdv_discretization_change_of_basis_matrix_to_S(...) fnft__kdv_discretization_change_of_basis_matrix_to_S(__VA_ARGS__)
+#define kdv_discretization_change_of_basis_matrix_from_S(...) fnft__kdv_discretization_change_of_basis_matrix_from_S(__VA_ARGS__)
+#define kdv_discretization_vanilla_flag(...) fnft__kdv_discretization_vanilla_flag(__VA_ARGS__)
 #endif
 
 #endif
