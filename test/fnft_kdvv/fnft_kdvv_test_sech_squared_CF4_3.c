@@ -27,7 +27,7 @@ INT main()
     INT ret_code;
     fnft_kdvv_opts_t opts = fnft_kdvv_default_opts();
     const kdvv_testcases_t tc = kdvv_testcases_SECH_SQUARED;
-    opts.discretization = kdv_discretization_CF4_3;
+    opts.discretization = kdv_discretization_CF4_3_VANILLA;
     UINT D = 128;
     REAL eb[6] = {  // error bounds
         5.9e-4,     // continuous spectrum

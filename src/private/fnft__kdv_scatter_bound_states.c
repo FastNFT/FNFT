@@ -223,13 +223,13 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
         
         switch (discretization) {
             
-            case kdv_discretization_BO: //  bofetta-osborne scheme
+            case kdv_discretization_BO_VANILLA: //  bofetta-osborne scheme
                 scl_factor = 1;
                 for (n = 0; n < D; n++)
                     l[n] = l_curr;
                 break;
                 
-            case kdv_discretization_CF4_2: // commutator-free fourth-order
+            case kdv_discretization_CF4_2_VANILLA: // commutator-free fourth-order
                 if (D%2 != 0){
                     ret_code = E_ASSERTION_FAILED;
                     goto leave_fun;
@@ -239,8 +239,8 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
                     l[n] = l_curr*l_weights[0];
                 break;
                 
-            case kdv_discretization_CF4_3: // commutator-free fourth-order
-            case kdv_discretization_CF5_3: // commutator-free fifth-order
+            case kdv_discretization_CF4_3_VANILLA: // commutator-free fourth-order
+            case kdv_discretization_CF5_3_VANILLA: // commutator-free fifth-order
 
                 if (D%3 != 0){
                     ret_code = E_ASSERTION_FAILED;
@@ -254,7 +254,7 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
                 }
                 break;
   
-            case kdv_discretization_CF6_4: // commutator-free sixth-order
+            case kdv_discretization_CF6_4_VANILLA: // commutator-free sixth-order
                 if (D%4 != 0){
                     ret_code = E_ASSERTION_FAILED;
                     goto leave_fun;
@@ -292,11 +292,11 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
         n_given = 0;
         switch (discretization) {
             
-            case kdv_discretization_BO:
-            case kdv_discretization_CF4_2:
-            case kdv_discretization_CF4_3:
-            case kdv_discretization_CF5_3:
-            case kdv_discretization_CF6_4:
+            case kdv_discretization_BO_VANILLA:
+            case kdv_discretization_CF4_2_VANILLA:
+            case kdv_discretization_CF4_3_VANILLA:
+            case kdv_discretization_CF5_3_VANILLA:
+            case kdv_discretization_CF6_4_VANILLA:
                 count = upsampling_factor - 1;
                 phi1 = PHI1[0];
                 phi2 = PHI2[0];
@@ -493,11 +493,11 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
             // negative step eps_t_n=-eps_t_n. Some quantities pre-calculated
             // for eps_t can be used for eps_t_n with only a sign change.
             switch (discretization) {
-                case kdv_discretization_BO:
-                case kdv_discretization_CF4_2:
-                case kdv_discretization_CF4_3:
-                case kdv_discretization_CF5_3:
-                case kdv_discretization_CF6_4:
+                case kdv_discretization_BO_VANILLA:
+                case kdv_discretization_CF4_2_VANILLA:
+                case kdv_discretization_CF4_3_VANILLA:
+                case kdv_discretization_CF5_3_VANILLA:
+                case kdv_discretization_CF6_4_VANILLA:
                     n = D;
                     n_given = D_given; 
                     count = upsampling_factor-1;

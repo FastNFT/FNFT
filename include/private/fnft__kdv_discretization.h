@@ -169,9 +169,7 @@ FNFT_INT fnft__kdv_discretization_z_to_lambda(const FNFT_UINT n, const FNFT_REAL
  * This routine computes the phase correction factor for the computation of the
  * reflection coefficient from the transfer_matrix. phase_factor_rho = -2.0*(T1 + eps_t*boundary_coeff),
  * where eps_t is the step-size, T1 is the time at the right-boundary and boundary_coeff is based on the
- * discretization of type \link fnft_kdv_discretization_t \endlink.  Only for fnft_kdv_discretization_2SPLIT2A
- * and fnft_kdv_discretization_2SPLIT2_MODAL, phase_factor_rho = -2.0*(T1 + eps_t*boundary_coeff)+eps_t/degree1step
- * where degree1step is based on the discretization of type \link fnft_kdv_discretization_t \endlink.
+ * discretization of type \link fnft_kdv_discretization_t \endlink. 
  * @param[in] eps_t Real-valued discretization step-size.
  * @param[in] T1 Real-valued time at the right-boundary.
  * @param[in,out] phase_factor_rho Pointer to real-valued variable where the computed phase factor will be stored.
@@ -214,9 +212,7 @@ FNFT_INT fnft__kdv_discretization_phase_factor_a(const FNFT_REAL eps_t, const FN
  * a coefficient from the transfer_matrix. phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff),
  * where eps_t is the step-size, D is the number of samples used to build the transfer_matrix,
  * T is the 2-element time vector defining the signal support and boundary_coeff is based on the
- * discretization of type \link fnft_kdv_discretization_t \endlink.  Only for fnft_kdv_discretization_2SPLIT2A
- * and fnft_kdv_discretization_2SPLIT2_MODAL, phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff)+ eps_t/degree1step
- * where degree1step is based on the discretization of type \link fnft_kdv_discretization_t \endlink.
+ * discretization of type \link fnft_kdv_discretization_t \endlink.
  * @param[in] eps_t Real-valued discretization step-size.
  * @param[in] D Positive interger number of samples used to build transfer_matrix.
  * @param[in] T Real-valued 2-element time vector defining the signal support.

@@ -218,7 +218,7 @@ typedef struct {
  *  discspec_type = fnft_kdvv_dstype_NORMING_CONSTANTS\n
  *  contspec_type = fnft_kdvv_cstype_REFLECTION_COEFFICIENT\n
  *  normalization_flag = 1\n
- *  discretization = fnft_kdv_discretization_2SPLIT4B\n
+ *  discretization = fnft_kdv_discretization_2SPLIT4B_VANILLA\n
  *  richardson_extrapolation_flag = 0\n
  *
   * @ingroup fnft
@@ -268,37 +268,37 @@ FNFT_UINT fnft_kdvv_max_K(const FNFT_UINT D,
  *
  * The routine supports all discretizations of type \link fnft_kdv_discretization_t \endlink. The following discretizations use fast
  * algorithms which have a computational complexity of \f$ \mathcal{O}(D\log^2 D)\f$ for \f$ D\f$ point continuous spectrum given \f$ D\f$ samples:
- *       - fnft_kdv_discretization_2SPLIT1A
- *       - fnft_kdv_discretization_2SPLIT1B
- *       - fnft_kdv_discretization_2SPLIT2A
- *       - fnft_kdv_discretization_2SPLIT2B
- *       - fnft_kdv_discretization_2SPLIT2S
- *       - fnft_kdv_discretization_2SPLIT2_MODAL
- *       - fnft_kdv_discretization_2SPLIT3A
- *       - fnft_kdv_discretization_2SPLIT3B
- *       - fnft_kdv_discretization_2SPLIT3S
- *       - fnft_kdv_discretization_2SPLIT4A
- *       - fnft_kdv_discretization_2SPLIT4B
- *       - fnft_kdv_discretization_2SPLIT5A
- *       - fnft_kdv_discretization_2SPLIT5B
- *       - fnft_kdv_discretization_2SPLIT6A
- *       - fnft_kdv_discretization_2SPLIT6B
- *       - fnft_kdv_discretization_2SPLIT7A
- *       - fnft_kdv_discretization_2SPLIT7B
- *       - fnft_kdv_discretization_2SPLIT8A
- *       - fnft_kdv_discretization_2SPLIT8B
- *       - fnft_kdv_discretization_4SPLIT4A
- *       - fnft_kdv_discretization_4SPLIT4B
+ *       - fnft_kdv_discretization_2SPLIT1A_VANILLA
+ *       - fnft_kdv_discretization_2SPLIT1B_VANILLA
+ *       - fnft_kdv_discretization_2SPLIT2A_VANILLA
+ *       - fnft_kdv_discretization_2SPLIT2B_VANILLA
+ *       - fnft_kdv_discretization_2SPLIT2S_VANILLA
+ *       - fnft_kdv_discretization_2SPLIT2_MODAL_VANILLA
+ *       - fnft_kdv_discretization_2SPLIT3A_VANILLA
+ *       - fnft_kdv_discretization_2SPLIT3B_VANILLA
+ *       - fnft_kdv_discretization_2SPLIT3S_VANILLA
+ *       - fnft_kdv_discretization_2SPLIT4A_VANILLA
+ *       - fnft_kdv_discretization_2SPLIT4B_VANILLA
+ *       - fnft_kdv_discretization_2SPLIT5A_VANILLA
+ *       - fnft_kdv_discretization_2SPLIT5B_VANILLA
+ *       - fnft_kdv_discretization_2SPLIT6A_VANILLA
+ *       - fnft_kdv_discretization_2SPLIT6B_VANILLA
+ *       - fnft_kdv_discretization_2SPLIT7A_VANILLA
+ *       - fnft_kdv_discretization_2SPLIT7B_VANILLA
+ *       - fnft_kdv_discretization_2SPLIT8A_VANILLA
+ *       - fnft_kdv_discretization_2SPLIT8B_VANILLA
+ *       - fnft_kdv_discretization_4SPLIT4A_VANILLA
+ *       - fnft_kdv_discretization_4SPLIT4B_VANILLA
  *
  * The following discretizations use classical algorithms which have a computational
  * complexity of \f$ \mathcal{O}(D^2)\f$ for \f$ D\f$ point continuous spectrum given \f$ D\f$ samples:
- *       - fnft_kdv_discretization_BO
- *       - fnft_kdv_discretization_CF4_2
- *       - fnft_kdv_discretization_CF4_3
- *       - fnft_kdv_discretization_CF5_3
- *       - fnft_kdv_discretization_CF6_4
- *       - fnft_kdv_discretization_ES4
- *       - fnft_kdv_discretization_TES4
+ *       - fnft_kdv_discretization_BO_VANILLA
+ *       - fnft_kdv_discretization_CF4_2_VANILLA
+ *       - fnft_kdv_discretization_CF4_3_VANILLA
+ *       - fnft_kdv_discretization_CF5_3_VANILLA
+ *       - fnft_kdv_discretization_CF6_4_VANILLA
+ *       - fnft_kdv_discretization_ES4_VANILLA
+ *       - fnft_kdv_discretization_TES4_VANILLA
  *
  * The accuray of the computed quantities for a given signal depends primarily on the number of samples \f$ D\f$ and the numerical method. When the exact spectrum is
  * is know, the accuracy can be quantified by defining a suitable error. The error usually decreases with increasing \f$ D\f$ assuming everthing else remains the same.

@@ -87,7 +87,7 @@ INT kdv_scatter_matrix_test_bo()
     }
 
     INT kappa=1; // unused
-    ret_code = kdv_scatter_matrix(D, q, r, eps_t, kappa, 2, lam, result, kdv_discretization_BO, 1);
+    ret_code = kdv_scatter_matrix(D, q, r, eps_t, kappa, 2, lam, result, kdv_discretization_BO_VANILLA, 1);
 
     if (ret_code != SUCCESS)
         return E_SUBROUTINE(ret_code);
