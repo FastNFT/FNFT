@@ -762,7 +762,7 @@ static inline INT kdvv_compute_contspec(
         const INT kappa,
         fnft_kdvv_opts_t * const opts)
 {
-    COMPLEX *H11_vals = NULL, *H21_vals = NULL;
+    COMPLEX * H11_vals = NULL;
     COMPLEX A, V;
     REAL scale;
     REAL phase_factor_rho, phase_factor_a, phase_factor_b;
@@ -792,11 +792,13 @@ static inline INT kdvv_compute_contspec(
         xi[i] = XI[0] + eps_xi*i;
 
     // Allocate memory for transfer matrix values
-    H11_vals = malloc(2*M * sizeof(COMPLEX));
+    H11_vals = malloc(4*M * sizeof(COMPLEX));
     if (H11_vals == NULL){
         return E_NOMEM;
         goto leave_fun;}
-    H21_vals = H11_vals + M;
+    COMPLEX * const H12_vals = H11_vals + M;
+    COMPLEX * const H21_vals = H12_vals + M;
+    COMPLEX * const H22_vals = H21_vals + M;
 
     // If the discretization is a slow method then there should be no transfer_matrix
     if (deg == 0 && transfer_matrix == NULL && W == 0){
@@ -817,7 +819,9 @@ static inline INT kdvv_compute_contspec(
         // methods and polynomial transfer matrix based methods.
         for (i = 0; i < M; i++){
             H11_vals[i] = scatter_coeffs[i*4];
+//            H12_vals[i] = scatter_coeffs[i*4+1]; // Not used
             H21_vals[i] = scatter_coeffs[i*4+2];
+//            H22_vals[i] = scatter_coeffs[i*4+3]; // Not used
         }
 
     }else{
@@ -836,11 +840,43 @@ static inline INT kdvv_compute_contspec(
         ret_code = poly_chirpz(deg, transfer_matrix, A, V, M, H11_vals);
         CHECK_RETCODE(ret_code, leave_fun);
 
-        ret_code = poly_chirpz(deg, transfer_matrix+2*(deg+1), A, V, M,
-                H21_vals);
+        ret_code = poly_chirpz(deg, transfer_matrix+1*(deg+1), A, V, M, H12_vals);
         CHECK_RETCODE(ret_code, leave_fun);
 
-        //TODO: Change basis after using poly_chirpz
+        ret_code = poly_chirpz(deg, transfer_matrix+2*(deg+1), A, V, M, H21_vals);
+        CHECK_RETCODE(ret_code, leave_fun);
+
+        ret_code = poly_chirpz(deg, transfer_matrix+3*(deg+1), A, V, M, H22_vals);
+        CHECK_RETCODE(ret_code, leave_fun);
+
+        // WARNING: At this point the matrix [Hnm_vals] is NOT the change of state matrix in AKNS basis. All its values differ by a scalar factor exp(-I*xi*D) due to dividing the Laurent polynomials by the most negative power to obtain ordinary polynomials. This will finally be corrected by the phase_factor_a and phase_factor_b below.
+        // Change the basis of the change of state matrix to the S-basis.
+        COMPLEX Tmx[2][2], Mmx[2][2], Hmx[2*2];
+        for (i=0; i<M; i++) { // Loop over lambda samples
+            // Copy the values of the change of state matrix in AKNS basis to a 2 dimensional array
+            for (UINT n=0; n<4; n++){
+                Hmx[n] = H11_vals[n*M+i]; // This exploints the adjacency of H11_vals ... H22_vals in memory.
+            }
+
+            // Fetch the change of basis matrix from S to the chosen discretization basis
+            ret_code = kdv_change_of_basis_matrix_from_S(&Tmx[0][0],xi[i],0,eps_t,opts->discretization);
+            CHECK_RETCODE(ret_code, leave_fun);
+
+            // Right-multiply the change of state matrix by the change of basis matrix from S to the chosen discretization basis
+            misc_matrix_mult(2,2,2,&Hmx[0],&Tmx[0][0],&Mmx[0][0]);
+
+            // Fetch the change of basis matrix from the chosen discretization basis to S
+            ret_code = kdv_change_of_basis_matrix_to_S(&Tmx[0][0],xi[i],0,eps_t,opts->discretization);
+            CHECK_RETCODE(ret_code, leave_fun);
+
+            // Left-multiply the change of state matrix by the change of basis matrix from the chosen discretization basis to S
+            misc_matrix_mult(2,2,2,&Tmx[0][0],&Mmx[0][0],&Hmx[0]);
+
+            // Copy to the result
+            for (UINT n=0; n<4; n++){
+                H11_vals[n*M+i] = Hmx[n]; // This exploints the adjacency of H11_vals ... H22_vals in memory.
+            }
+        }
     }
     // Compute the continuous spectrum
     switch (opts->contspec_type) {

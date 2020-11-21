@@ -41,6 +41,7 @@
  */
 typedef enum {
     fnft__kdvv_testcases_SECH_SQUARED,
+    fnft__kdvv_testcases_SECH_SQUARED_LOW_BANDWIDTH,
     fnft__kdvv_testcases_SECH,
     fnft__kdvv_testcases_RECT,
     fnft__kdvv_testcases_NEGATIVE_RECT,
@@ -70,6 +71,7 @@ FNFT_INT fnft__kdvv_testcases_test_fnft(fnft__kdvv_testcases_t tc, FNFT_UINT D,
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define kdvv_testcases_SECH_SQUARED fnft__kdvv_testcases_SECH_SQUARED
+#define kdvv_testcases_SECH_SQUARED_LOW_BANDWIDTH fnft__kdvv_testcases_SECH_SQUARED_LOW_BANDWIDTH
 #define kdvv_testcases_SECH fnft__kdvv_testcases_SECH
 #define kdvv_testcases_RECT fnft__kdvv_testcases_RECT
 #define kdvv_testcases_NEGATIVE_RECT fnft__kdvv_testcases_NEGATIVE_RECT

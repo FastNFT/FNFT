@@ -860,7 +860,7 @@ INT fnft__kdv_change_of_basis_matrix_from_S(COMPLEX * const T,
                 T[3]  = T[2];                             //T_22;
             } else {
                 T[4]  = CEXP(-0.5*I*xi*eps_t);            //T_21;
-                T[5]  = T[2];                             //T_22;
+                T[5]  = T[4];                             //T_22;
 
                 T[8]  = T[0] * (1.0/xi + 0.5*I*eps_t);    //T_31 = d/dxi T_11
                 T[9]  = 0.0;                              //T_32 = d/dxi T_12
