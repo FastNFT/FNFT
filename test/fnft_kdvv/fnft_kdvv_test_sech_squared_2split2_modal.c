@@ -32,7 +32,7 @@ INT main()
     REAL eb[6] = {  // error bounds
         3.8e-2,     // continuous spectrum
         4.6e-3,     // a(xi)
-        1.4e-2,     // b(xi)
+        9.6e-3,     // b(xi)
         FNFT_INF,   // bound states
         FNFT_INF,   // norming constants
         FNFT_INF    // residues
