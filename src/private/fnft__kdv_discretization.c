@@ -871,21 +871,22 @@ INT fnft__kdv_discretization_change_of_basis_matrix_to_S(COMPLEX * const T,
         case kdv_discretization_2SPLIT2A:
             //T from flipped modified AKNS basis to S basis. This modification reduces the degree of the polynomial scattering matrix by 1 per step.
 
-            T[1] = CEXP(-0.5*I*xi*eps_t) * -I * 0.5 / xi; //T_12;
-            T[0] = 0.0;                                   //T_11;
+            T[0] = CEXP(-0.5*I*xi*eps_t);                 //T_11;
+            T[1] = CEXP( 0.5*I*xi*eps_t) * -I * 0.5 / xi; //T_12;
             if(!derivative_flag){
+                T[2]  = 0.0;                              //T_21;
                 T[3]  = -T[1];                            //T_22;
-                T[2]  = CEXP(+0.5*I*xi*eps_t);            //T_21;
             } else {
+                T[4]  = 0.0;                              //T_21;
                 T[5]  = -T[1];                            //T_22;
-                T[4]  = CEXP(+0.5*I*xi*eps_t);            //T_21;
 
-                T[9]  = -T[1] * (1.0/xi + 0.5*I*eps_t);   //T_32 = d/dxi T_12
-                T[8]  = 0.0;                              //T_31 = d/dxi T_11
+                T[8]  = -0.5 * I * eps_t*T[0];            //T_31 = d/dxi T_11
+                T[9]  = T[1] * (-1.0/xi + 0.5*I*eps_t);   //T_32 = d/dxi T_12
+                T[12] = 0.0;                              //T_41 = d/dxi T_21
                 T[13] = -T[9];                            //T_42 = d/dxi T_22
-                T[12] = 0.5 * I * eps_t * T[4];           //T_41 = d/dxi T_21
+
             }
-            // FIXME: The matrix above is not correct, cf the other non-vanilla cases
+
             break;
 
 //        case
@@ -1082,22 +1083,22 @@ INT fnft__kdv_discretization_change_of_basis_matrix_from_S(COMPLEX * const T,
         case kdv_discretization_2SPLIT2_MODAL:
         case kdv_discretization_2SPLIT2A:
             // T from S basis to flipped modified AKNS basis. This modification reduces the degree of the polynomial scattering matrix by 1 per step.
-            T[0] = CEXP(-0.5*I*xi*eps_t);                      //T_11;
+            T[0] = CEXP(0.5*I*xi*eps_t);                       //T_11;
             T[1] = T[0];                                       //T_12;
 
             if(!derivative_flag){
-                T[2]  = CEXP(+0.5*I*xi*eps_t) * 2.0 * I * xi;  //T_21;
-                T[3]  = 0.0;                                   //T_22;
+                T[2]  = 0.0;                                   //T_21;
+                T[3]  = CEXP(-0.5*I*xi*eps_t) * -2.0 * I * xi; //T_22;
             } else {
-                T[4]  = CEXP(+0.5*I*xi*eps_t) * 2.0 * I * xi;  //T_21;
-                T[5]  = 0.0;                                   //T_22;
+                T[4]  = 0.0;                                   //T_21;
+                T[5]  = CEXP(-0.5*I*xi*eps_t) * -2.0 * I * xi; //T_22;
 
-                T[12] = T[4] * (1.0/xi + 0.5*I*eps_t);         //T_41 = d/dxi T_21
-                T[13] = 0.0;                                   //T_42 = d/dxi T_22
-                T[8]  = T[0] * -0.5 * I * eps_t;               //T_31 = d/dxi T_11
+                T[8]  = T[0] * 0.5 * I * eps_t;                //T_31 = d/dxi T_11
                 T[9]  = T[8];                                  //T_32 = d/dxi T_12
+                T[12] = 0.0;                                   //T_41 = d/dxi T_21
+                T[13] = T[5] * (1.0/xi - 0.5*I*eps_t);         //T_42 = d/dxi T_22
             }
-            // FIXME: The matrix above is not correct, cf the other non-vanilla cases
+
             break;
 
 //        case

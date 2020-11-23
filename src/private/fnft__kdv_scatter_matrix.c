@@ -77,12 +77,15 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
     kdv_discretization_vanilla_flag(&vanilla_flag, discretization);
 
     // Calculate the change of state matrix in AKNS basis across the potential
-    if(vanilla_flag)
+    if(vanilla_flag) {
         ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result,
             akns_discretization, derivative_flag);
-    else
+        CHECK_RETCODE(ret_code, leave_fun);
+    } else {
         ret_code = akns_scatter_matrix(D, r, q, eps_t, K, lambda, result,
         akns_discretization, derivative_flag);
+        CHECK_RETCODE(ret_code, leave_fun);
+    }
 
     // Change the basis of the change of state matrix to the S-basis
     UINT const N = derivative_flag ? 4 : 2; // size of the matrices: 2x2 or 4x4

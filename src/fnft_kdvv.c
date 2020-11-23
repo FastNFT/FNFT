@@ -559,6 +559,7 @@ static inline INT fnft_kdvv_base(
         // Compute the transfer matrix
         if (opts->normalization_flag)
             W_ptr = &W;
+            
         ret_code = kdv_fscatter(D, q, eps_t, kappa, transfer_matrix, &deg, W_ptr,
                 opts->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
@@ -837,7 +838,7 @@ static inline INT kdvv_compute_contspec(
             ret_code = E_NOMEM;
             goto leave_fun;
         }
-
+        
         ret_code = kdv_scatter_matrix(D, q, r, eps_t, kappa, M,
                 xi, scatter_coeffs, opts->discretization, 0);
         CHECK_RETCODE(ret_code, leave_fun);
@@ -877,7 +878,7 @@ static inline INT kdvv_compute_contspec(
         ret_code = poly_chirpz(deg, transfer_matrix+3*(deg+1), A, V, M, H22_vals);
         CHECK_RETCODE(ret_code, leave_fun);
 
-        // WARNING: At this point the matrix [Hnm_vals] is NOT the change of state matrix in AKNS basis. All its values differ by a scalar factor exp(-I*xi*D) due to dividing the Laurent polynomials by the most negative power to obtain ordinary polynomials. This will finally be corrected by the phase_factor_a and phase_factor_b below.
+        // NOTE: At this point the matrix [Hnm_vals] is NOT the change of state matrix in AKNS basis. All its values differ by a scalar factor exp(-I*xi*D) due to dividing the Laurent polynomials by the most negative power to obtain ordinary polynomials. This will finally be corrected by the phase_factor_a and phase_factor_b below.
         // Change the basis of the change of state matrix to the S-basis.
         COMPLEX Tmx[2][2], Mmx[2][2], Hmx[2*2];
         for (i=0; i<M; i++) { // Loop over lambda samples

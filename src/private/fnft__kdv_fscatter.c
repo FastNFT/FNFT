@@ -79,7 +79,15 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
     for (i = 0; i < D; i++)
         r[i] = -1.0;
 
-    ret_code = akns_fscatter(D, q, r, eps_t, result, deg_ptr, W_ptr, akns_discretization);
+    INT vanilla_flag;
+    kdv_discretization_vanilla_flag(&vanilla_flag, discretization);
+    if(vanilla_flag) {
+        ret_code = akns_fscatter(D, q, r, eps_t, result, deg_ptr, W_ptr, akns_discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
+    } else {
+        ret_code = akns_fscatter(D, r, q, eps_t, result, deg_ptr, W_ptr, akns_discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
+    }
 
 leave_fun:
     free(r);

@@ -26,13 +26,13 @@ INT main()
 {
     INT ret_code;
     fnft_kdvv_opts_t opts = fnft_kdvv_default_opts();
-    const kdvv_testcases_t tc = kdvv_testcases_SECH_SQUARED_LOW_BANDWIDTH;
-    opts.discretization = kdv_discretization_2SPLIT8A_VANILLA;
+    const kdvv_testcases_t tc = kdvv_testcases_SECH_SQUARED;
+    opts.discretization = kdv_discretization_2SPLIT8A;
     UINT D = 256;
     REAL eb[6] = {  // error bounds
-        5.1e-4,     // continuous spectrum
-        2.2e-4,     // a(xi)
-        4.5e-6,     // b(xi)
+        8.4e-4,     // continuous spectrum
+        1.6e-4,     // a(xi)
+        2.7e-6,     // b(xi)
         FNFT_INF,   // bound states
         FNFT_INF,   // norming constants
         FNFT_INF    // residues

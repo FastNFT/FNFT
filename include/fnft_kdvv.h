@@ -334,8 +334,10 @@ FNFT_UINT fnft_kdvv_max_K(const FNFT_UINT D,
  *  also possible to compute the values of \f$ a(\xi) \f$ and \f$ b(\xi) \f$
  *  instead. In that case, twice the amount of memory has to be allocated.
  * @param[in] XI Array of length 2, contains the position of the first and the last
- *  sample of the continuous spectrum. It should be \f$XI[0]<XI[1]\f$. Can also be
- *  NULL if contspec==NULL.
+ *  sample of the continuous spectrum. It should be \f$XI[0]<XI[1]\f$. The grid
+ *  that is defined by `xi =XI[0] + i*(XI[1]-XI[0])/(M-1)` for `i=0,1,...,M-1`
+ *  is not allowed to contain `xi=0`, because xi=0 is a singularity of the scattering
+ *  problem for the KdV equation. `XI` can also be NULL if `contspec==NULL`.
  * @param[in,out] K_ptr Upon entry, *K_ptr should contain the length of the array
  *  bound_states. Upon return, *K_ptr contains the number of actually detected
  *  bound states. If the length of the array bound_states was not sufficient
