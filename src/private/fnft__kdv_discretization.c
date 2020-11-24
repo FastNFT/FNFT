@@ -690,7 +690,6 @@ INT fnft__kdv_discretization_preprocess_signal(const UINT D, COMPLEX const * con
             i = 0;
             for (isub=0; isub<D_effective; isub=isub+3) {
                 q_preprocessed[isub] = q[i];
-                r_preprocessed[isub] = -1.0;
                 i += nskip_per_step;
             }
 
@@ -700,16 +699,16 @@ INT fnft__kdv_discretization_preprocess_signal(const UINT D, COMPLEX const * con
             q_preprocessed[2] = (q_preprocessed[3]-2*q_preprocessed[0]+0)/eps_t_sub_2;
             q_preprocessed[D_effective-2] = (0-q_preprocessed[D_effective-6])/(2*eps_t_sub);
             q_preprocessed[D_effective-1] = (0-2*q_preprocessed[D_effective-3]+q_preprocessed[D_effective-6])/eps_t_sub_2;
-            r_preprocessed[1] = (r_preprocessed[3]-0)/(2*eps_t_sub);
-            r_preprocessed[2] = (r_preprocessed[3]-2*r_preprocessed[0]+0)/eps_t_sub_2;
-            r_preprocessed[D_effective-2] = (0-r_preprocessed[D_effective-6])/(2*eps_t_sub);
-            r_preprocessed[D_effective-1] = (0-2*r_preprocessed[D_effective-3]+r_preprocessed[D_effective-6])/eps_t_sub_2;
 
             for (isub=3; isub<D_effective-3; isub=isub+3) {
                 q_preprocessed[isub+1] = (q_preprocessed[isub+3]-q_preprocessed[isub-3])/(2*eps_t_sub);
                 q_preprocessed[isub+2] = (q_preprocessed[isub+3]-2*q_preprocessed[isub]+q_preprocessed[isub-3])/eps_t_sub_2;
-                r_preprocessed[isub+1] = (r_preprocessed[isub+3]-r_preprocessed[isub-3])/(2*eps_t_sub);
-                r_preprocessed[isub+2] = (r_preprocessed[isub+3]-2*r_preprocessed[isub]+r_preprocessed[isub-3])/eps_t_sub_2;
+            }
+
+            for (isub=0; isub<D_effective; isub+=3){
+                r_preprocessed[isub] = -1.0;
+                r_preprocessed[isub+1] = 0.0; // first derivative of r
+                r_preprocessed[isub+2] = 0.0; // second derivative of r
             }
 
             break;

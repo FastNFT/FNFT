@@ -30,9 +30,9 @@ INT main()
     opts.discretization = kdv_discretization_ES4;
     UINT D = 256;
     REAL eb[6] = {  // error bounds
-        FNFT_INF,   // continuous spectrum
-        FNFT_INF,   // a(xi)
-        FNFT_INF,   // b(xi)
+        8.7e-5,     // continuous spectrum
+        5.2e-6,     // a(xi)
+        1.1e-4,     // b(xi)
         FNFT_INF,   // bound states
         FNFT_INF,   // norming constants
         FNFT_INF    // residues
