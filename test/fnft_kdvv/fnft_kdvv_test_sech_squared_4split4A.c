@@ -30,9 +30,9 @@ INT main()
     opts.discretization = kdv_discretization_4SPLIT4A;
     UINT D = 256;
     REAL eb[6] = {  // error bounds
-        FNFT_INF,   // 6.8e-3,     // continuous spectrum
-        FNFT_INF,   // 1.2e-3,     // a(xi)
-        FNFT_INF,   // 1.8e-3,     // b(xi)
+        3.4e-6,     // continuous spectrum
+        3.3e-4,     // a(xi)
+        3.9e-6,     // b(xi)
         FNFT_INF,   // bound states
         FNFT_INF,   // norming constants
         FNFT_INF    // residues
@@ -47,11 +47,11 @@ INT main()
     ret_code = kdvv_testcases_test_fnft(tc, D-1, eb, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    // check for quadratic error decay
-    for (UINT n=0; n<3; n++){
+    // check for 4th order error decay
+    for (UINT n=0; n<4; n++){
         D *= 2;
         for (UINT i=0; i<6; i++)
-            eb[i] /= 4.0;
+            eb[i] /= 16.0;
         ret_code = kdvv_testcases_test_fnft(tc, D, eb, &opts);
         CHECK_RETCODE(ret_code, leave_fun);
     }

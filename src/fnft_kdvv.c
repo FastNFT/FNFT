@@ -77,7 +77,7 @@ static inline INT kdvv_compute_boundstates(
 static inline INT fnft_kdvv_base(
         const UINT D,
         COMPLEX * const q,
-        COMPLEX * r,
+        COMPLEX * const r,
         REAL const * const T,
         const UINT M,
         COMPLEX * const contspec,
@@ -493,7 +493,7 @@ INT fnft_kdvv(
 static inline INT fnft_kdvv_base(
         const UINT D,
         COMPLEX * const q,
-        COMPLEX * r,
+        COMPLEX * const r,
         REAL const * const T,
         const UINT M,
         COMPLEX * const contspec,
@@ -560,7 +560,7 @@ static inline INT fnft_kdvv_base(
         if (opts->normalization_flag)
             W_ptr = &W;
             
-        ret_code = kdv_fscatter(D, q, eps_t, kappa, transfer_matrix, &deg, W_ptr,
+        ret_code = kdv_fscatter(D, q, r, eps_t, kappa, transfer_matrix, &deg, W_ptr,
                 opts->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
     }else{
@@ -935,7 +935,7 @@ static inline INT kdvv_compute_contspec(
         case kdvv_cstype_AB:
 
             scale = POW(2.0, W); // needed since the transfer matrix might
-            // have been scaled by nse_fscatter. W == 0 for slow methods.
+            // have been scaled by kdv_fscatter. W == 0 for slow methods.
 
             // Calculating the discretization specific phase factors.
             ret_code = kdv_discretization_phase_factor_a(eps_t, D_given, T, &phase_factor_a,opts->discretization);

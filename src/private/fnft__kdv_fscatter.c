@@ -42,15 +42,13 @@ UINT kdv_fscatter_numel(UINT D, kdv_discretization_t discretization)
         return poly_fmult2x2_numel(deg, D);
 }
 
-INT kdv_fscatter(const UINT D, COMPLEX const * const q,
+INT kdv_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r,
         const REAL eps_t, const INT kappa,
         COMPLEX * const result, UINT * const deg_ptr,
         INT * const W_ptr, kdv_discretization_t discretization)
 {
     INT ret_code = SUCCESS;
-    UINT i;
     akns_discretization_t akns_discretization;
-    COMPLEX *r = NULL;
 
     // Check inputs
     if (D == 0)
@@ -70,15 +68,6 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
     ret_code = kdv_discretization_to_akns_discretization(discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    r = malloc(D*sizeof(COMPLEX));
-    if (r == NULL) {
-        ret_code = E_NOMEM;
-        goto leave_fun;
-    }
-
-    for (i = 0; i < D; i++)
-        r[i] = -1.0;
-
     INT vanilla_flag;
     kdv_discretization_vanilla_flag(&vanilla_flag, discretization);
     if(vanilla_flag) {
@@ -90,6 +79,5 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
     }
 
 leave_fun:
-    free(r);
     return ret_code;
 }

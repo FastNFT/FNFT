@@ -78,10 +78,15 @@ FNFT_UINT fnft__kdv_fscatter_numel(FNFT_UINT D,
  *  defined in \link fnft_errwarn.h \endlink.
  * @ingroup kdv
  */
-FNFT_INT fnft__kdv_fscatter(const FNFT_UINT D, FNFT_COMPLEX const * const q,
-    const FNFT_REAL eps_t, const FNFT_INT kappa,
-    FNFT_COMPLEX * const result, FNFT_UINT * const deg_ptr,
-    FNFT_INT * const W_ptr, fnft_kdv_discretization_t discretization);
+FNFT_INT fnft__kdv_fscatter(const FNFT_UINT D,
+                            FNFT_COMPLEX const * const q,
+                            FNFT_COMPLEX const * const r,
+                            const FNFT_REAL eps_t,
+                            const FNFT_INT kappa,
+                            FNFT_COMPLEX * const result,
+                            FNFT_UINT * const deg_ptr,
+                            FNFT_INT * const W_ptr,
+                            fnft_kdv_discretization_t discretization);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define kdv_fscatter_numel(...) fnft__kdv_fscatter_numel(__VA_ARGS__)
