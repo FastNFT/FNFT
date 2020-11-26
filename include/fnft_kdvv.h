@@ -320,7 +320,8 @@ FNFT_UINT fnft_kdvv_max_K(const FNFT_UINT D,
  * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
  *  where \f$ t_n = T[0] + n(T[1]-T[0])/(D-1) \f$ and \f$n=0,1,\dots,D-1\f$, of
  *  the to-be-transformed signal in ascending order
- *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$)
+ *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$). The imaginary part of
+ *  every sample must be 0.
  * @param[in] T Array of length 2, contains the position in time of the first and
  *  of the last sample. It should be \f$T[0]<T[1]\f$.
  * @param[in] M Number of points at which the continuous spectrum (aka

@@ -167,6 +167,10 @@ INT fnft_kdvv(
         return E_INVALID_ARGUMENT(D);
     if (q == NULL)
         return E_INVALID_ARGUMENT(q);
+    for (i=0; i<D; i++) {
+        if (CIMAG(q[i])!=0.0)
+            return E_INVALID_ARGUMENT(q);
+    }
     if (T == NULL || T[0] >= T[1])
         return E_INVALID_ARGUMENT(T);
     if (contspec != NULL) {
