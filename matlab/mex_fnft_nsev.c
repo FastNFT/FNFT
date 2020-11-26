@@ -303,7 +303,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if (bound_states == NULL) {
             K = fnft_nsev_max_K(D, &opts);
             if (K == 0) {
-                snprintf(msg, sizeof msg, "fnft_nsev_max_K returned zero.");
+                snprintf(msg, sizeof msg, "Discretization does not support the chosen bound state localization method.");
                 goto on_error;
             }
             bound_states = mxMalloc(K * sizeof(FNFT_COMPLEX));
