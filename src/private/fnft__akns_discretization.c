@@ -492,11 +492,11 @@ INT fnft__akns_discretization_preprocess_signal(UINT const D,
             for (isub=0, i=0; isub<D_effective; isub+=2, i+= nskip_per_step) {
                 q_preprocessed[isub] = weights[0]*q_1[i] + weights[1]*q_2[i];
                 q_preprocessed[isub+1] = weights[2]*q_1[i] + weights[3]*q_2[i];
+                r_preprocessed[isub] = weights[0]*r_from_q[0](q_1[i])
+                                       + weights[1]*r_from_q[0](q_2[i]);
+                r_preprocessed[isub+1] = weights[2]*r_from_q[0](q_1[i])
+                                         + weights[3]*r_from_q[0](q_2[i]);
             }
-            for (isub = 0; isub<D_effective; isub++) {
-                r_preprocessed[isub] = r_from_q[0](q_preprocessed[isub]);
-            }
-
             break;
         case akns_discretization_CF4_3:
             q_1 = malloc(D * sizeof(COMPLEX));
@@ -518,9 +518,15 @@ INT fnft__akns_discretization_preprocess_signal(UINT const D,
                 q_preprocessed[isub] = weights[0]*q_1[i] + weights[1]*q[i] + weights[2]*q_3[i];
                 q_preprocessed[isub+1] = weights[3]*q_1[i] + weights[4]*q[i] + weights[5]*q_3[i];
                 q_preprocessed[isub+2] = weights[6]*q_1[i] + weights[7]*q[i] + weights[8]*q_3[i];
-            }
-            for (i=0; i<D_effective; i++) {
-                r_preprocessed[i] = r_from_q[0](q_preprocessed[i]);
+                r_preprocessed[isub]   = weights[0]*r_from_q[0](q_1[i])
+                                         + weights[1]*r_from_q[0](q[i])
+                                         + weights[2]*r_from_q[0](q_3[i]);
+                r_preprocessed[isub+1] = weights[3]*r_from_q[0](q_1[i])
+                                         + weights[4]*r_from_q[0](q[i])
+                                         + weights[5]*r_from_q[0](q_3[i]);
+                r_preprocessed[isub+2] = weights[6]*r_from_q[0](q_1[i])
+                                         + weights[7]*r_from_q[0](q[i])
+                                         + weights[8]*r_from_q[0](q_3[i]);
             }
             break;
         case akns_discretization_CF5_3:
@@ -554,8 +560,6 @@ INT fnft__akns_discretization_preprocess_signal(UINT const D,
                                          + weights[7]*r_from_q[0](q[i])
                                          + weights[8]*r_from_q[0](q_3[i]);
             }
-
-
             break;
         case akns_discretization_CF6_4:
             q_1 = malloc(D * sizeof(COMPLEX));
