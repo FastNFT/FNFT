@@ -79,6 +79,11 @@ INT nsev_testcases(nsev_testcases_t tc, const UINT D,
             *K_ptr = 5;
             break;
             
+        case nsev_testcases_SECH_FOCUSING_CONTSPEC:
+            *M_ptr = 16;
+            *K_ptr = 0;
+            break;
+            
         case nsev_testcases_SECH_DEFOCUSING:
             *M_ptr = 16;
             *K_ptr = 0;
@@ -460,6 +465,139 @@ INT nsev_testcases(nsev_testcases_t tc, const UINT D,
             
             break;
             
+    case nsev_testcases_SECH_FOCUSING_CONTSPEC:
+
+        // This test case can be found in J. Satsuma & N. Yajima, Prog. Theor.
+        // Phys. Suppl., No. 55, p. 284ff, 1974.
+
+        // The following MATLAB code has been used to compute the values below.
+        /*
+        A = sym(3.2);
+        hlf = sym(1)/sym(2);
+        im = sym(1j);
+        syms lam;
+        a(lam) = gamma(-im*lam + hlf).^2 ./ ( gamma(-im*lam + A + hlf) ...
+            * gamma(-im*lam - A + hlf) );
+        da = diff(a, lam);
+        b(lam) = im*sin(sym(pi)*A) ./ cosh(sym(pi) * lam);
+
+        bound_states = sym(1j)*(A - (floor(A):-1:1) + hlf)
+        normconsts = b(bound_states)
+        syms h;
+        da_vals = limit(da(bound_states + h), h, 0);
+        residues = normconsts ./ da_vals
+
+        xi = (-sym(7):sym(8))/5;
+        XI = [xi(1) xi(end)]
+        digits(40);
+        contspec = vpa(b(xi) ./ a(xi)).'
+        ab = vpa([a(xi) b(xi)]).'
+        */
+
+        // Time domain
+        T[0] = -25.0;
+        T[1] = 25.0;
+
+        // Time domain signal. Note that the signal here has an extra factor I
+        // when compared to the reference because there a different variant of
+        // the Zakharov-Shabat problem is used. By multiplying the signal with
+        // I, we get exactly the a() and b() provided there for the signal
+        // A*sech(t) without an extra I.
+        for (i=0; i<D; i++)
+            (*q_ptr)[i] = I * 3.2 * misc_sech(T[0] + i*(T[1] - T[0])/(D - 1));
+
+        // Nonlinear spectral domain
+        XI[0] = -7.0 / 5.0;
+        XI[1] = 8.0 / 5.0;
+
+        // Reflection coeffcient b(xi)/a(xi) (correct up to 40 digits)
+        (*contspec_ptr)[0] = 0.01418788668709013595992021025473684215882
+            - 0.002780494135403430187512334448840356894033*I;
+        (*contspec_ptr)[1] = 0.02241182921176242546967787829962193792932
+            - 0.01523064097337719809817988712025498134135*I;
+        (*contspec_ptr)[2] = 0.02465858976907935401910832019686315816969
+            - 0.04438144029159159323809699075974745310038*I;
+        (*contspec_ptr)[3] = -0.003769955008351912170484991343204667254443
+            - 0.09495492126539469847498823350667910603724*I;
+        (*contspec_ptr)[4] = -0.1125183095807641031140695325799053429154
+            - 0.1368780622436166383108546963189442789103*I;
+        (*contspec_ptr)[5] = -0.3233468273512117378446470596682895379774
+            - 0.03729229993634457693343890962907380139133*I;
+        (*contspec_ptr)[6] = -0.4116152074717953525393539594551519006178
+            + 0.3788164254609808107108977070302734836415*I;
+        (*contspec_ptr)[7] = 0.7265425280053608858954667574806187496161*I;
+        (*contspec_ptr)[8] = 0.4116152074717953525393539594551519006178
+            + 0.3788164254609808107108977070302734836415*I;
+        (*contspec_ptr)[9] = 0.3233468273512117378446470596682895379774
+            - 0.03729229993634457693343890962907380139133*I;
+        (*contspec_ptr)[10] = 0.1125183095807641031140695325799053429154
+            - 0.1368780622436166383108546963189442789103*I;
+        (*contspec_ptr)[11] = 0.003769955008351912170484991343204667254443
+            - 0.09495492126539469847498823350667910603724*I;
+        (*contspec_ptr)[12] = -0.02465858976907935401910832019686315816969
+            - 0.04438144029159159323809699075974745310038*I;
+        (*contspec_ptr)[13] = -0.02241182921176242546967787829962193792932
+            - 0.01523064097337719809817988712025498134135*I;
+        (*contspec_ptr)[14] = -0.01418788668709013595992021025473684215882
+            - 0.002780494135403430187512334448840356894033*I;
+        (*contspec_ptr)[15] = -0.007616495541673034905010512686300960103961
+            + 0.001218250087174144753540506062403435472519*I;
+
+        // a(xi)
+        (*ab_ptr)[0] =   0.1922981551089552207414790788104399336051
+            - 0.9812300627012406776576449201797836254391*I;
+        (*ab_ptr)[1] =   0.561866472778759866094679757854572199885
+            - 0.8267843388695356739056977390134312187561*I;
+        (*ab_ptr)[2] =   0.8730141099108177240539975329792577203606
+            - 0.4850517842024005091448564057792135627085*I;
+        (*ab_ptr)[3] =   0.99473134297967765839265519878851030091
+            + 0.03949339706100667801810586124473818981564*I;
+        (*ab_ptr)[4] =   0.7606487443184108526272926017586175655859
+            + 0.6252785106141419778427378472314923857149*I;
+        (*ab_ptr)[5] =   0.1089468485775085556086575508888526656452
+            + 0.9446351632262268082615533423570763855373*I;
+        (*ab_ptr)[6] = - 0.590997041209672540861257403754476421502
+            + 0.6421669003309714788364298184082912989208*I;
+        (*ab_ptr)[7] = - 0.8090169943749474241022934171828190588602;
+        (*ab_ptr)[8] = - 0.590997041209672540861257403754476421502
+            - 0.6421669003309714788364298184082912989208*I;
+        (*ab_ptr)[9] =   0.1089468485775085556086575508888526656452
+            - 0.9446351632262268082615533423570763855373*I;
+        (*ab_ptr)[10] =   0.7606487443184108526272926017586175655859
+            - 0.6252785106141419778427378472314923857149*I;
+        (*ab_ptr)[11] =   0.99473134297967765839265519878851030091
+            - 0.03949339706100667801810586124473818981564*I;
+        (*ab_ptr)[12] =   0.8730141099108177240539975329792577203606
+            + 0.4850517842024005091448564057792135627085*I;
+        (*ab_ptr)[13] =   0.561866472778759866094679757854572199885
+            + 0.8267843388695356739056977390134312187561*I;
+        (*ab_ptr)[14] =   0.1922981551089552207414790788104399336051
+            + 0.9812300627012406776576449201797836254391*I;
+        (*ab_ptr)[15] = - 0.1579366040628854761179976110287556423348
+            + 0.9874191295994487368292392806331584236124*I;
+
+        // b(xi)
+        (*ab_ptr)[16] = - 0.01445626483610090114054909784096292396108*I;
+        (*ab_ptr)[17] = - 0.02708733591957504791796401942967379252746*I;
+        (*ab_ptr)[18] = - 0.05070631655613093722786537802129497025788*I;
+        (*ab_ptr)[19] = - 0.09460352468290259430624658322771974638099*I;
+        (*ab_ptr)[20] = - 0.1744714072018253986997192102912036857244*I;
+        (*ab_ptr)[21] = - 0.3095076615878664435099104772640477540624*I;
+        (*ab_ptr)[22] = - 0.4882050485203166754374126644029116788666*I;
+        (*ab_ptr)[23] = - 0.5877852522924731291687059546390727685977*I;
+        (*ab_ptr)[24] = - 0.4882050485203166754374126644029116788666*I;
+        (*ab_ptr)[25] = - 0.3095076615878664435099104772640477540624*I;
+        (*ab_ptr)[26] = - 0.1744714072018253986997192102912036857244*I;
+        (*ab_ptr)[27] = - 0.09460352468290259430624658322771974638099*I;
+        (*ab_ptr)[28] = - 0.05070631655613093722786537802129497025788*I;
+        (*ab_ptr)[29] = - 0.02708733591957504791796401942967379252746*I;
+        (*ab_ptr)[30] = - 0.01445626483610090114054909784096292396108*I;
+        (*ab_ptr)[31] = - 0.007713079680024468575954854247144612396039*I;
+
+        *kappa_ptr = +1;
+
+        break;     
+        
     case nsev_testcases_SECH_DEFOCUSING:
 
     // This example (with a different Q) can be found in
@@ -739,14 +877,25 @@ const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
     // Allocate memory
     contspec = malloc(3*M * sizeof(COMPLEX));
     K = nse_discretization_degree(opts->discretization) * D;
-    if (K == 0) //slow discretization
-        K = K_exact;
-    bound_states = malloc(K * sizeof(COMPLEX));
-    normconsts_and_residues = malloc(2*D * sizeof(COMPLEX));
-    if ( q == NULL || contspec == NULL || bound_states == NULL
-            || normconsts_and_residues == NULL) {
-        ret_code = E_NOMEM;
-        goto release_mem;
+    
+    // In every case other than that of slow discretization with no bound states
+    // memory has to be alloted for the bound states
+    if (!(K == 0 && K_exact == 0)){
+        if (K == 0 && K_exact != 0)
+            K = K_exact;        
+#ifdef DEBUG
+        printf("K = %ld, K_exact = %ld\n",K,K_exact);
+#endif
+        bound_states = malloc(K * sizeof(COMPLEX));
+        normconsts_and_residues = malloc(2*D * sizeof(COMPLEX));
+        if (bound_states == NULL || normconsts_and_residues == NULL) {
+            ret_code = E_NOMEM;
+            goto release_mem;
+        }
+    }
+    if ( q == NULL || contspec == NULL) {
+            ret_code = E_NOMEM;
+            goto release_mem;
     }
     
     if (opts->bound_state_localization == nsev_bsloc_NEWTON){
