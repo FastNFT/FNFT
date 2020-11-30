@@ -247,7 +247,7 @@ INT fnft_kdvv(
         case kdv_discretization_CF6_4:
         case kdv_discretization_ES4:
         case kdv_discretization_TES4:
-            if (opts->bound_state_localization != kdvv_bsloc_NEWTON && bound_states != 0){
+            if (opts->bound_state_localization != kdvv_bsloc_NEWTON && bound_states != NULL){
                 ret_code = E_INVALID_ARGUMENT(opts->bound_state_localization);
                 goto leave_fun;
             }
