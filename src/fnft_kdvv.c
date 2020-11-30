@@ -310,45 +310,9 @@ INT fnft_kdvv(
             first_last_index, opts->discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    if (kappa == +1 && bound_states != NULL && opts->bound_state_localization == kdvv_bsloc_SUBSAMPLE_AND_REFINE) {
-        // the mixed method gets special treatment
-
-        // First step: Find initial guesses for the bound states using the
-        // fast eigenvalue method. To bound the complexity, a subsampled
-        // version of q, qsub, will be passed to the fast eigenroutine.
-        Dsub = opts->Dsub;
-        if (Dsub == 0) // The user wants us to determine Dsub
-            Dsub = (UINT) SQRT(D * LOG2(D) * LOG2(D));
-        nskip_per_step = (UINT) ROUND((REAL)D / Dsub);
-        Dsub = (UINT) ROUND((REAL)D / nskip_per_step); // actual Dsub
-
-        ret_code = kdv_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &qsub_preprocessed, &rsub_preprocessed,
-                first_last_index, opts->discretization);
-        CHECK_RETCODE(ret_code, leave_fun);
-
-        Tsub[0] = T[0] + first_last_index[0] * eps_t;
-        Tsub[1] = T[0] + first_last_index[1] * eps_t;
-
-        // Fixed bound states of qsub using the fast eigenvalue method
-        opts->bound_state_localization = kdvv_bsloc_FAST_EIGENVALUE;
-        ret_code = fnft_kdvv_base(Dsub * upsampling_factor, qsub_preprocessed, rsub_preprocessed, Tsub, 0, NULL, XI, K_ptr,
-                bound_states, NULL, kappa, opts);
-        CHECK_RETCODE(ret_code, leave_fun);
-
-        // Second step: Refine the found bound states using Newton's method
-        // on the full signal and compute continuous spectrum
-        opts->bound_state_localization = kdvv_bsloc_NEWTON;
-        ret_code = fnft_kdvv_base(D_effective, q_preprocessed, r_preprocessed, T, M, contspec, XI, K_ptr,
-                bound_states, normconsts_or_residues_reserve, kappa, opts);
-        CHECK_RETCODE(ret_code, leave_fun);
-
-        // Restore original state of opts
-        opts->bound_state_localization = kdvv_bsloc_SUBSAMPLE_AND_REFINE;
-    } else {
-        ret_code = fnft_kdvv_base(D_effective, q_preprocessed, r_preprocessed, T, M, contspec, XI, K_ptr,
-                    bound_states, normconsts_or_residues, kappa, opts);
-        CHECK_RETCODE(ret_code, leave_fun);
-    }
+    ret_code = fnft_kdvv_base(D_effective, q_preprocessed, r_preprocessed, T, M, contspec, XI, K_ptr,
+                bound_states, normconsts_or_residues, kappa, opts);
+    CHECK_RETCODE(ret_code, leave_fun);
 
     if (opts->richardson_extrapolation_flag == 1){
         // Allocating memory
@@ -700,7 +664,9 @@ static inline INT kdvv_compute_boundstates(
 
     // Localize bound states ...
     switch (opts->bound_state_localization) {
+        case kdvv_bsloc_GRIDSEARCH_AND_REFINE:
 
+            //fallthrough//
         // ... using Newton's method
         case kdvv_bsloc_NEWTON:
 
@@ -725,28 +691,6 @@ static inline INT kdvv_compute_boundstates(
             break;
 
             // ... using the fast eigenvaluebased root finding
-        case kdvv_bsloc_FAST_EIGENVALUE:
-
-            K = deg;
-            if (*K_ptr >= K) {
-                buffer = bound_states;
-            } else {
-                // Store intermediate results in unused part of transfer matrix.
-                // This buffer is large enough to store all deg roots of the
-                // polynomial, while bound_states provided by the user might be
-                // smaller. The latter only needs to store the bound states that
-                // survive the filtering.
-                buffer = transfer_matrix + (deg+1);
-            }
-
-            ret_code = poly_roots_fasteigen(deg, transfer_matrix, buffer);
-            CHECK_RETCODE(ret_code, leave_fun);
-            // Roots are returned in discrete-time domain -> coordinate
-            // transform (from discrete-time to continuous-time domain).
-            ret_code = kdv_discretization_z_to_lambda(K, eps_t, buffer, opts->discretization);
-            CHECK_RETCODE(ret_code, leave_fun);
-
-            break;
 
         default:
 

@@ -58,12 +58,6 @@ typedef enum {
  * Enum that specifies how the bound states are localized. Used in
  * \link fnft_kdvv_opts_t \endlink. \n \n
  * @ingroup data_types
- *  fnft_kdvv_bsloc_FAST_EIGENVALUE: A rooting finding routine due to Aurentz et al. (see
- *  https://arxiv.org/abs/1611.02435 and https://github.com/eiscor/eiscor)
- *  with \f$ O(D^2) \f$ complexity is used to detect the roots of
- *  \f$ a(\lambda) \f$. (Note: FNFT incorporates a development version of this
- *  routine as no release was available yet.) This method is relatively slow,
- *  but very reliable. \n \n
  *  fnft_kdvv_bsloc_NEWTON: Newton's method is used to refine a given set of initial guesses.
  *  The discretization used for the the refinement is one of the base methods \link fnft_kdv_discretization_t.h \endlink.
  *  The number of iterations is specified through the field \link fnft_kdvv_opts_t::niter
@@ -74,24 +68,11 @@ typedef enum {
  *  are of length *K_ptr in this case. This method can be very fast if good
  *  initial guesses for the bound states are available. The complexity is
  *  \f$ O(niter (*K\_ptr) D) \f$. \n \n
- *  fnft_kdvv_bsloc_SUBSAMPLE_AND_REFINE: This method offers a good compromise
- *  between the other two. The method automatically finds initial guesses for
- *  the NEWTON method by first applying the FAST_EIGENVALUE method to a
- *  subsampled version of the signal. Second these initial guesses are refined
- *  using the NEWTON method. The number of samples of the subsampled signal can
- *  be controlled using the parameter Dsub in \link fnft_kdvv_opts_t \endlink.
- *  If Dsub=0, the routine automatically chooses this number such that the
- *  complexity is \f$ O(D \log^2 D + niter K D) \f$, where \f$ K \f$ is the
- *  number of bound states that survived the filtering operation of the initial
- *  call to the fnft_kdvv_bsloc_FAST_EIGENVALUE method w.r.t. the subsampled
- *  signal. By choosing Dsub between 2 and D, the user can be request a
- *  different number of samples. Note that algorithm uses this value only as an
- *  indication.
+ *  fnft_kdvv_bsloc_GRIDSEARCH_AND_REFINE: The algorithm evaluates \f$ a(\xi) \f$ on the grid \f$ \xi = \{jh,2jh,\ldots,j(\sqrt{\max_t q(t)}-h)\}\f$, where \f$ h:= \sqrt{\max_t q(t)} / (D+1)\f$, where \f$ D\f$ is the provided number of samples in \f$ q(t) \f$. The sign changes on this grid are used as initial guesses for the bound states, which are then refined as in `fnft_kdvv_bsloc_NEWTON`.
  */
 typedef enum {
-    fnft_kdvv_bsloc_FAST_EIGENVALUE,
     fnft_kdvv_bsloc_NEWTON,
-    fnft_kdvv_bsloc_SUBSAMPLE_AND_REFINE
+    fnft_kdvv_bsloc_GRIDSEARCH_AND_REFINE
 } fnft_kdvv_bsloc_t;
 
 /**
@@ -383,9 +364,8 @@ FNFT_INT fnft_kdvv(const FNFT_UINT D, FNFT_COMPLEX * const q,
 #define kdvv_bsfilt_NONE fnft_kdvv_bsfilt_NONE
 #define kdvv_bsfilt_BASIC fnft_kdvv_bsfilt_BASIC
 #define kdvv_bsfilt_FULL fnft_kdvv_bsfilt_FULL
-#define kdvv_bsloc_FAST_EIGENVALUE fnft_kdvv_bsloc_FAST_EIGENVALUE
 #define kdvv_bsloc_NEWTON fnft_kdvv_bsloc_NEWTON
-#define kdvv_bsloc_SUBSAMPLE_AND_REFINE fnft_kdvv_bsloc_SUBSAMPLE_AND_REFINE
+#define kdvv_bsloc_GRIDSEARCH_AND_REFINE fnft_kdvv_bsloc_GRIDSEARCH_AND_REFINE
 #define kdvv_dstype_NORMING_CONSTANTS fnft_kdvv_dstype_NORMING_CONSTANTS
 #define kdvv_dstype_RESIDUES fnft_kdvv_dstype_RESIDUES
 #define kdvv_dstype_BOTH fnft_kdvv_dstype_BOTH
