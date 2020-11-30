@@ -63,6 +63,10 @@ FNFT_UINT fnft__kdv_fscatter_numel(FNFT_UINT D,
  *  where \f$ t_n = T[0] + n(T[1]-T[0])/(D-1) \f$ and \f$n=0,1,\dots,D-1\f$, of
  *  the to-be-transformed signal in ascending order
  *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$)
+ * @param[in] r Array of length D, contains samples \f$ r(t_n)=r(x_0, t_n) \f$,
+ *  where \f$ t_n = T[0] + n(T[1]-T[0])/(D-1) \f$ and \f$n=0,1,\dots,D-1\f$, of
+ *  the auxiliary potential in the AKNS framework in ascending order
+ *  (i.e., \f$ r(t_0), r(t_1), \dots, r(t_{D-1}) \f$)
  * @param[in] eps_t Step-size, eps_t \f$= (T[1]-T[0])/(D-1) \f$.
  * @param[in] kappa unused.
  * @param[out] result array of length `kdv_fscatter_numel(D,discretization)`,
