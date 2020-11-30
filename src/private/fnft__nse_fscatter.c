@@ -47,7 +47,6 @@ INT nse_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r,
         INT * const W_ptr, nse_discretization_t discretization)
 {
     INT ret_code = SUCCESS;
-    UINT i;
     akns_discretization_t akns_discretization;
     
     // Check inputs
