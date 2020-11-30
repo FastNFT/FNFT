@@ -38,23 +38,6 @@
 #include "fnft__poly_chirpz.h"
 
 /**
- * Enum that specifies how the bound states are filtered. Used in
- * \link fnft_kdvv_opts_t \endlink.\n \n
- * @ingroup data_types
- *  fnft_kdvv_bsfilt_NONE: All detected roots of \f$ a(\lambda) \f$ are returned. \n \n
- *  fnft_kdvv_bsfilt_BASIC: Only roots in the upper halfplane are returned and roots very close
- *  to each other are merged. \n \n
- *  fnft_kdvv_bsfilt_FULL: Bound states in physically implausible regions and
- *  outside the region based on the step-size of the supplied samples are
- *  rejected.
- */
-typedef enum {
-    fnft_kdvv_bsfilt_NONE,
-    fnft_kdvv_bsfilt_BASIC,
-    fnft_kdvv_bsfilt_FULL
-} fnft_kdvv_bsfilt_t;
-
-/**
  * Enum that specifies how the bound states are localized. Used in
  * \link fnft_kdvv_opts_t \endlink. \n \n
  * @ingroup data_types
@@ -177,7 +160,6 @@ typedef enum {
  *  flag is zero). To enable, set the flag to one.
  */
 typedef struct {
-    fnft_kdvv_bsfilt_t bound_state_filtering;
     fnft_kdvv_bsloc_t bound_state_localization;
     FNFT_UINT niter;
     FNFT_UINT Dsub;
@@ -361,9 +343,6 @@ FNFT_INT fnft_kdvv(const FNFT_UINT D, FNFT_COMPLEX * const q,
 
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
-#define kdvv_bsfilt_NONE fnft_kdvv_bsfilt_NONE
-#define kdvv_bsfilt_BASIC fnft_kdvv_bsfilt_BASIC
-#define kdvv_bsfilt_FULL fnft_kdvv_bsfilt_FULL
 #define kdvv_bsloc_NEWTON fnft_kdvv_bsloc_NEWTON
 #define kdvv_bsloc_GRIDSEARCH_AND_REFINE fnft_kdvv_bsloc_GRIDSEARCH_AND_REFINE
 #define kdvv_dstype_NORMING_CONSTANTS fnft_kdvv_dstype_NORMING_CONSTANTS

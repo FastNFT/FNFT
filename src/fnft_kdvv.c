@@ -25,7 +25,6 @@
 #include "fnft_kdvv.h"
 
 static fnft_kdvv_opts_t default_opts = {
-    .bound_state_filtering = kdvv_bsfilt_FULL,
     .bound_state_localization = kdvv_bsloc_NEWTON,
     .niter = 10,
     .Dsub = 0, // auto
@@ -568,33 +567,6 @@ static inline INT fnft_kdvv_base(
         return ret_code;
 }
 
-// Auxiliary function for filtering: We assume that bound states must have
-// real part in the interval [-re_bound, re_bound].
-static inline REAL re_bound(const REAL eps_t, const REAL map_coeff)
-{
-    // At least for discretizations in which the continuous-time
-    // spectral parameter lam is mapped to z=exp(map_coeff*j*lam*eps_t), we
-    // can only resolve the region
-    // -pi/(map_coeff*eps_t)<Re(lam)<pi/(map_coeff*eps_t).
-    // Numerical artefacts often occur close to the border of this
-    // region, which is why we filter such bound_states
-    return 0.9*PI/FABS(map_coeff * eps_t);
-}
-
-// Auxiliary function for filtering: We assume that bound states must have
-// imaginary part in the interval [0, im_bound].
-static inline REAL im_bound(const UINT D, COMPLEX const * const q,
-        REAL const * const T)
-{
-    // The nonlinear Parseval relation tells us that the squared L2 norm of
-    // q(t) is >= 4*(sum of the imaginary parts of the bound states). Thus,
-    // any bound state with an imaginary part greater than four times the
-    // squared L2 norm of q(t) can be removed. A factor of 1.5 has been
-    // added to account for numerical discrepancies when computing the norm
-    // numerically (e.g., truncation errors or large step sizes).
-    return 1.5 * 0.25 * misc_l2norm2(D, q, T[0], T[1]);
-}
-
 // Auxiliary function: Computes the bound states.
 static inline INT kdvv_compute_boundstates(
         const UINT D,
@@ -627,40 +599,6 @@ static inline INT kdvv_compute_boundstates(
     if (degree1step != 0)
         map_coeff = 2/(degree1step);
     D_given = D/upsampling_factor;
-
-    // Set-up bounding_box based on choice of filtering
-    if (opts->bound_state_filtering == kdvv_bsfilt_BASIC) {
-        bounding_box[0] = -INFINITY;
-        bounding_box[1] = INFINITY;
-        bounding_box[2] = 0.0;
-        bounding_box[3] = INFINITY;
-    }else if (opts->bound_state_filtering == kdvv_bsfilt_FULL) {
-        bounding_box[1] = re_bound(eps_t, map_coeff);
-        bounding_box[0] = -bounding_box[1];
-        bounding_box[2] = 0;
-        // This step is required as q contains scaled values on a
-        // non-equispaced grid
-        if (upsampling_factor == 1){
-            bounding_box[3] = im_bound(D_given, q, T);
-        } else {
-            q_tmp = malloc(D_given * sizeof(COMPLEX));
-            if (q_tmp == NULL) {
-                ret_code = E_NOMEM;
-                goto leave_fun;
-            }
-            j = 1;
-            for (i = 0; i < D_given; i++) {
-                q_tmp[i] = upsampling_factor*q[j];
-                j = j+upsampling_factor;
-            }
-            bounding_box[3] = im_bound(D_given, q_tmp, T);
-        }
-    }else{
-        bounding_box[0] = -INFINITY;
-        bounding_box[1] = INFINITY;
-        bounding_box[2] = -INFINITY;
-        bounding_box[3] = INFINITY;
-    }
 
     // Localize bound states ...
     switch (opts->bound_state_localization) {
@@ -695,16 +633,6 @@ static inline INT kdvv_compute_boundstates(
         default:
 
             return E_INVALID_ARGUMENT(opts->bound_state_localization);
-    }
-
-    // Filter bound states
-    if (opts->bound_state_filtering != kdvv_bsfilt_NONE) {
-
-        ret_code = misc_filter(&K, buffer, NULL, bounding_box);
-        CHECK_RETCODE(ret_code, leave_fun);
-
-        ret_code = misc_merge(&K, buffer, SQRT(EPSILON));
-        CHECK_RETCODE(ret_code, leave_fun);
     }
 
     // Copy result from buffer to user-supplied array (if not identical)
