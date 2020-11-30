@@ -276,7 +276,7 @@ static inline INT gridsearch(const UINT D,
     // Compute the transfer matrix
     if (opts_ptr->normalization_flag)
         W_ptr = &W;
-    ret_code = nse_fscatter(D_effective, q_preprocessed, eps_t, kappa, transfer_matrix, &deg,
+    ret_code = nse_fscatter(D_effective, q_preprocessed, r_preprocessed, eps_t, kappa, transfer_matrix, &deg,
             W_ptr, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
     
@@ -534,7 +534,7 @@ static inline INT subsample_and_refine(const UINT D,
     // Compute the transfer matrix
     if (opts_ptr->normalization_flag)
         W_ptr = &W;
-    ret_code = nse_fscatter(Dsub*upsampling_factor, qsub_preprocessed, eps_t_sub, kappa, transfer_matrix, &deg,
+    ret_code = nse_fscatter(Dsub*upsampling_factor, qsub_preprocessed, rsub_preprocessed, eps_t_sub, kappa, transfer_matrix, &deg,
             W_ptr, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
 

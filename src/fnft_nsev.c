@@ -528,7 +528,7 @@ static inline INT fnft_nsev_base(
         // Compute the transfer matrix
         if (opts->normalization_flag)
             W_ptr = &W;
-        ret_code = nse_fscatter(D, q, eps_t, kappa, transfer_matrix, &deg, W_ptr,
+        ret_code = nse_fscatter(D, q, r, eps_t, kappa, transfer_matrix, &deg, W_ptr,
                 opts->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
     }else{
