@@ -31,7 +31,7 @@ static INT nse_finvscatter_test(const INT kappa, const REAL error_bound,
     INT ret_code = SUCCESS;
 
     const UINT D = 16384;
-    COMPLEX * q, * q_exact, * result;
+    COMPLEX * q, * q_exact, * r_exact, * result;
     REAL eps_t = 0.12;
     UINT deg, i;
 
@@ -39,18 +39,20 @@ static INT nse_finvscatter_test(const INT kappa, const REAL error_bound,
 
     q = malloc(D * sizeof(COMPLEX));
     q_exact = malloc(D * sizeof(COMPLEX));
+    r_exact = malloc(D * sizeof(COMPLEX));
     result = malloc(len * sizeof(COMPLEX));
-    if (q == NULL || q_exact == NULL || result == NULL) {
+    if (q == NULL || q_exact == NULL || r_exact == NULL || result == NULL) {
         ret_code = E_NOMEM;
         goto leave_fun;
     }
 
     for (i=0; i<D; i++) {
         q_exact[i] = ((REAL)(i+1)/(D+1)/D)*CEXP(I*(REAL)i/D);
+        r_exact[i] = -kappa*CONJ(q_exact[i]);
         q[i] = 0.0;
     }
 
-    ret_code = nse_fscatter(D, q_exact, eps_t, kappa, result, &deg, NULL,
+    ret_code = nse_fscatter(D, q_exact, r_exact, eps_t, kappa, result, &deg, NULL,
         discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 

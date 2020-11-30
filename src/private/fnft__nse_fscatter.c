@@ -41,7 +41,7 @@ UINT nse_fscatter_numel(UINT D, nse_discretization_t discretization)
         return poly_fmult2x2_numel(deg, D);
 }
 
-INT nse_fscatter(const UINT D, COMPLEX const * const q,
+INT nse_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r,
         const REAL eps_t, const INT kappa,
         COMPLEX * const result, UINT * const deg_ptr,
         INT * const W_ptr, nse_discretization_t discretization)
@@ -49,7 +49,6 @@ INT nse_fscatter(const UINT D, COMPLEX const * const q,
     INT ret_code = SUCCESS;
     UINT i;
     akns_discretization_t akns_discretization;
-    COMPLEX *r = NULL;
     
     // Check inputs
     if (D == 0)
@@ -67,25 +66,9 @@ INT nse_fscatter(const UINT D, COMPLEX const * const q,
     
     ret_code = nse_discretization_to_akns_discretization(discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);   
-    
-    r = malloc(D*sizeof(COMPLEX));
-    if (r == NULL) {
-        ret_code = E_NOMEM;
-        goto leave_fun;
-    }
-    
-    if (kappa == 1){
-        for (i = 0; i < D; i++)
-            r[i] = -CONJ(q[i]);
-        }
-    else{
-        for (i = 0; i < D; i++)
-            r[i] = CONJ(q[i]);
-        }
-    
+
     ret_code = akns_fscatter(D, q, r, eps_t, result, deg_ptr, W_ptr, akns_discretization);
 
 leave_fun:
-    free(r);
     return ret_code;
 }
