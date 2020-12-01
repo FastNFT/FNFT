@@ -146,7 +146,7 @@ INT fnft_nsev_inverse(
     if (kappa != +1 && kappa != -1)
         return E_INVALID_ARGUMENT(kappa);
     if (K > 0 && kappa != +1)
-        return E_SANITY_CHECK_FAILED(Discrete spectrum is present only in the focussing case(kappa=1).);
+        return E_SANITY_CHECK_FAILED(Discrete spectrum is present only in the focusing case(kappa=1).);
     if (K > 0 && bound_states == NULL)
         return E_INVALID_ARGUMENT(bound_states);
     UINT i;

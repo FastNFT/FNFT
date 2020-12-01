@@ -383,8 +383,8 @@ INT fnft__nse_discretization_phase_factor_b(const REAL eps_t, const UINT D, REAL
  * This routine preprocess the signal by resampling and subsampling based on the discretization.
  * The preprocessing is necessary for higher-order methods.
  */
-COMPLEX fnft__nse_discretization_focussing_r_from_q(COMPLEX const q){return -CONJ(q);}
-COMPLEX fnft__nse_discretization_defocussing_r_from_q(COMPLEX const q){return CONJ(q);}
+COMPLEX fnft__nse_discretization_focusing_r_from_q(COMPLEX const q){return -CONJ(q);}
+COMPLEX fnft__nse_discretization_defocusing_r_from_q(COMPLEX const q){return CONJ(q);}
 INT fnft__nse_discretization_preprocess_signal(const UINT D, COMPLEX const * const q,
         REAL const eps_t, const INT kappa,
         UINT * const Dsub_ptr, COMPLEX **q_preprocessed_ptr, COMPLEX **r_preprocessed_ptr,
@@ -398,9 +398,9 @@ INT fnft__nse_discretization_preprocess_signal(const UINT D, COMPLEX const * con
     COMPLEX (*r_from_q[3])(COMPLEX);
     for (UINT i = 0; i < 3; i++) {
         if (kappa == 1)
-            r_from_q[i] = fnft__nse_discretization_focussing_r_from_q;
+            r_from_q[i] = fnft__nse_discretization_focusing_r_from_q;
         else
-            r_from_q[i] = fnft__nse_discretization_defocussing_r_from_q;
+            r_from_q[i] = fnft__nse_discretization_defocusing_r_from_q;
     }
 
     ret_code = akns_discretization_preprocess_signal(D, q, r_from_q, eps_t, Dsub_ptr, q_preprocessed_ptr, r_preprocessed_ptr, first_last_index, akns_discretization);
