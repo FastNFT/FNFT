@@ -14,9 +14,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2017-2018.
+ * Sander Wahls (TU Delft) 2017-2018, 2020.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Marius Brehler (TU Dortmund) 2018.
+ * Peter J Prins (TU Delft) 2020.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -64,7 +65,7 @@ UINT fnft_nsev_max_K(const UINT D, fnft_nsev_opts_t const * const opts)
 static inline INT nsev_compute_boundstates(
         UINT D,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         const UINT deg,
         COMPLEX * const transfer_matrix,
         REAL const * const T,
@@ -75,8 +76,8 @@ static inline INT nsev_compute_boundstates(
 
 static inline INT fnft_nsev_base(
         const UINT D,
-        COMPLEX * const q,
-        COMPLEX * r,
+        COMPLEX const * const q,
+        COMPLEX const * const r,
         REAL const * const T,
         const UINT M,
         COMPLEX * const contspec,
@@ -92,7 +93,7 @@ static inline INT nsev_compute_contspec(
         const INT W,
         COMPLEX * const transfer_matrix,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         REAL const * const T,
         const UINT D,
         REAL const * const XI,
@@ -104,7 +105,7 @@ static inline INT nsev_compute_contspec(
 static inline INT nsev_compute_normconsts_or_residues(
         const UINT D,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         REAL const * const T,
         const UINT K,
         COMPLEX * const bound_states,
@@ -113,7 +114,7 @@ static inline INT nsev_compute_normconsts_or_residues(
 
 static inline INT nsev_refine_bound_states_newton(const UINT D,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         REAL const * const T,
         UINT K,
         COMPLEX * bound_states,
@@ -461,8 +462,8 @@ INT fnft_nsev(
 // code doubling while being efficient.
 static inline INT fnft_nsev_base(
         const UINT D,
-        COMPLEX * const q,
-        COMPLEX * r,
+        COMPLEX const * const q,
+        COMPLEX const * const r,
         REAL const * const T,
         const UINT M,
         COMPLEX * const contspec,
@@ -528,7 +529,7 @@ static inline INT fnft_nsev_base(
         // Compute the transfer matrix
         if (opts->normalization_flag)
             W_ptr = &W;
-        ret_code = nse_fscatter(D, q, eps_t, kappa, transfer_matrix, &deg, W_ptr,
+        ret_code = nse_fscatter(D, q, r, eps_t, transfer_matrix, &deg, W_ptr,
                 opts->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
     }else{
@@ -599,7 +600,7 @@ static inline REAL im_bound(const UINT D, COMPLEX const * const q,
 static inline INT nsev_compute_boundstates(
         const UINT D,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         const UINT deg,
         COMPLEX * const transfer_matrix,
         REAL const * const T,
@@ -750,7 +751,7 @@ static inline INT nsev_compute_contspec(
         const INT W,
         COMPLEX * const transfer_matrix,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         REAL const * const T,
         const UINT D,
         REAL const * const XI,
@@ -899,7 +900,7 @@ static inline INT nsev_compute_contspec(
 static inline INT nsev_compute_normconsts_or_residues(
         const UINT D,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         REAL const * const T,
         const UINT K,
         COMPLEX * const bound_states,
@@ -977,7 +978,7 @@ static inline INT nsev_compute_normconsts_or_residues(
 static inline INT nsev_refine_bound_states_newton(
         const UINT D,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         REAL const * const T,
         const UINT K,
         COMPLEX * bound_states,

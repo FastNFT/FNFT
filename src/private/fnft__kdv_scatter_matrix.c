@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2017-2018.
+ * Sander Wahls (TU Delft) 2017-2018, 2020.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  */
 #define FNFT_ENABLE_SHORT_NAMES
@@ -24,9 +24,9 @@
 
 /**
  * If derivative_flag=0 returns [S11 S12 S21 S22] in result where
- * S = [S11, S12; S21, S22] is the scattering matrix computed using the 
+ * S = [S11, S12; S21, S22] is the scattering matrix computed using the
  * chosen scheme.
- * If derivative_flag=1 returns [S11 S12 S21 S22 S11' S12' S21' S22'] in 
+ * If derivative_flag=1 returns [S11 S12 S21 S22 S11' S12' S21' S22'] in
  * result where S11' is the derivative of S11 w.r.t to lambda.
  * Result should be preallocated with size 4*K or 8*K accordingly.
  */
@@ -36,12 +36,11 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
         COMPLEX * const result, kdv_discretization_t discretization,
         const UINT derivative_flag)
 {
-    
     INT ret_code = SUCCESS;
     UINT i;
     akns_discretization_t akns_discretization;
     COMPLEX *r = NULL;
-    
+
     // Check inputs
     if (D == 0)
         return E_INVALID_ARGUMENT(D);
@@ -55,27 +54,25 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
         return E_INVALID_ARGUMENT(lambda);
     if (result == NULL)
         return E_INVALID_ARGUMENT(result);
-    
+
     ret_code = kdv_discretization_to_akns_discretization(discretization,
             &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
-        
+
     r = malloc(D*sizeof(COMPLEX));
     if (r == NULL) {
         ret_code = E_NOMEM;
         goto leave_fun;
     }
-    
-    
-    
+
     switch (akns_discretization) {
-        
+
         case akns_discretization_BO: // Bofetta-Osborne scheme
             for (i = 0; i < D; i++)
                 r[i] = -1;
-            
+
             break;
-            
+
         case akns_discretization_CF4_2:
             // commutator-free fourth-order two exponentials
             if (D%2 != 0){
@@ -98,7 +95,7 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
             for (i = 2; i < D; i = i+3)
                 r[i] = -0.275;
             break;
-            
+
         case akns_discretization_CF5_3:
             // commutator-free fifth-order three exponentials
             if (D%3 != 0){
@@ -112,7 +109,7 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
             for (i = 2; i < D; i = i+3)
                 r[i] = -0.3+0.1*I;
             break;
-            
+
         case akns_discretization_CF6_4:
             // commutator-free sixth-order four exponentials
             if (D%4 != 0){
@@ -129,15 +126,16 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
                 r[i] = -0.210073786808785 - 0.046600721949282*I;
             break;
         default: // Unknown discretization
-            
+
             ret_code = E_INVALID_ARGUMENT(discretization);
             goto leave_fun;
     }
-    
-    
-    ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result, 
+
+    ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result,
             akns_discretization, derivative_flag);
-    
-    leave_fun:
-        return ret_code;
+    CHECK_RETCODE(ret_code, leave_fun);
+
+leave_fun:
+    free(r);
+    return ret_code;
 }
