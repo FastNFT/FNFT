@@ -212,7 +212,7 @@ INT fnft_nsev(
         case nse_discretization_ES4:
         case nse_discretization_TES4:
             if (opts->bound_state_localization != nsev_bsloc_NEWTON &&
-                    kappa == +1 && bound_states != 0){
+                    kappa == +1 && bound_states != NULL){
                 ret_code = E_INVALID_ARGUMENT(opts->bound_state_localization);
                 goto leave_fun;
             }
