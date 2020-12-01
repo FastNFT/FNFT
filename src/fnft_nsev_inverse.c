@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2018.
+ * Sander Wahls (TU Delft) 2018, 2020.
  * Shrinivas Chimmalgi (TU Delft) 2018.
  */
 
@@ -771,6 +771,13 @@ static INT add_discrete_spectrum(
             // of the potential contributes to the residues and needs to be
             // removed.
 
+            r = malloc(D*sizeof(COMPLEX));
+            if (r == NULL) {
+                ret_code = E_NOMEM;
+                goto leave_fun;
+            }
+            for (i=0; i<D; i++)
+                r[i] = -CONJ(q[i]);
             ret_code = nse_scatter_bound_states(D, q, r, T, K,
                     bnd_states, acoeff_cs, acoeff_cs+K, acoeff_cs+2*K, nse_discretization_BO, 1);
             CHECK_RETCODE(ret_code, leave_fun);
@@ -855,8 +862,6 @@ static INT add_discrete_spectrum(
             ret_code = E_NOMEM;
             goto leave_fun;
         }
-
-
 
         ret_code = compute_eigenfunctions(K, bnd_states, D, q, T, phi, psi);
         CHECK_RETCODE(ret_code, leave_fun);

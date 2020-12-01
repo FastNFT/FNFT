@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2017-2018.
+ * Sander Wahls (TU Delft) 2017-2018, 2020.
  * Shrinivas Chimmalgi (TU Delft) 2018.
  *
  */
@@ -30,10 +30,8 @@
  * Returns the length of array to be allocated based on the number
  * of samples and discretization.
  */
-
 UINT nse_fscatter_numel(UINT D, nse_discretization_t discretization)
 {
-
     const UINT deg = nse_discretization_degree(discretization);
     if (deg == 0)
         return 0; // unknown discretization
@@ -64,6 +62,7 @@ INT nse_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r,
     CHECK_RETCODE(ret_code, leave_fun);
 
     ret_code = akns_fscatter(D, q, r, eps_t, result, deg_ptr, W_ptr, akns_discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
 
 leave_fun:
     return ret_code;
