@@ -26,8 +26,8 @@
 /**
  * Returns the a, a_prime and b computed using the chosen scheme.
  */
-INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
-        COMPLEX *r, REAL const *const T, UINT K,
+INT nse_scatter_bound_states(const UINT D, COMPLEX const * const q,
+        COMPLEX const * const r, REAL const *const T, UINT K,
         COMPLEX *bound_states, COMPLEX *a_vals,
         COMPLEX *aprime_vals, COMPLEX *b,
         nse_discretization_t discretization, UINT skip_b_flag)

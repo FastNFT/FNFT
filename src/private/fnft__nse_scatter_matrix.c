@@ -16,6 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018, 2020.
 * Shrinivas Chimmalgi (TU Delft) 2017-2020.
+* Peter J Prins (TU Delft) 2020.
 */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -32,7 +33,7 @@
  * Result should be preallocated with size 4*K or 8*K accordingly.
  */
 INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
-    COMPLEX * r, const REAL eps_t, const INT kappa,
+    COMPLEX const * const r, const REAL eps_t, const INT kappa,
     const UINT K, COMPLEX const * const lambda,
     COMPLEX * const result, nse_discretization_t discretization,
     const UINT derivative_flag)
