@@ -17,6 +17,7 @@
  * Sander Wahls (TU Delft) 2017-2018, 2020.
  * Shrinivas Chimmalgi (TU Delft) 2017, 2019-2020.
  * Marius Brehler (TU Dortmund) 2018.
+ * Peter J Prins (TU Delft) 2020.
  */
 #define FNFT_ENABLE_SHORT_NAMES
 

@@ -16,6 +16,7 @@
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018, 2020.
  * Shrinivas Chimmalgi (TU Delft) 2018.
+ * Peter J Prins (TU Delft) 2020.
  *
  */
 
