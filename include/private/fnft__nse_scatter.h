@@ -16,6 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
 * Shrinivas Chimmalgi (TU Delft) 2017.
+* Peter J Prins (TU Delft) 2020.
 */
 
 /**
@@ -116,7 +117,7 @@ FNFT_INT fnft__nse_scatter_bound_states(const FNFT_UINT D, FNFT_COMPLEX const *c
  *  defined in \link fnft_errwarn.h \endlink.
  * @ingroup nse
  */
-FNFT_INT fnft__nse_scatter_matrix(const FNFT_UINT D, FNFT_COMPLEX const * const q, FNFT_COMPLEX * r,
+FNFT_INT fnft__nse_scatter_matrix(const FNFT_UINT D, FNFT_COMPLEX const * const q, FNFT_COMPLEX const * const r,
     const FNFT_REAL eps_t, const FNFT_INT kappa, const FNFT_UINT K, 
     FNFT_COMPLEX const * const lambda,
     FNFT_COMPLEX * const result, fnft_nse_discretization_t discretization,

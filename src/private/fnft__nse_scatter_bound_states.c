@@ -17,6 +17,7 @@
  * Sander Wahls (TU Delft) 2017-2018.
  * Shrinivas Chimmalgi (TU Delft) 2017, 2019-2020.
  * Marius Brehler (TU Dortmund) 2018.
+ * Peter J Prins (TU Delft) 2020.
  */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -68,17 +69,6 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const *const q,
     
     COMPLEX *weights = NULL; // must be initialized before jumping to leave_fun
 
-    if (r == NULL) {
-        r = malloc(D*sizeof(COMPLEX));
-        if (r == NULL) {
-            ret_code = E_NOMEM;
-            goto leave_fun;
-        }
-        
-        for (n = 0; n < D; n++)
-            r[n] = -CONJ(q[n]);
-        
-    }
     l = malloc(D*sizeof(COMPLEX));
     if (l == NULL) {
         ret_code = E_NOMEM;

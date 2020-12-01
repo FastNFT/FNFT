@@ -844,10 +844,8 @@ const REAL error_bounds[6], fnft_kdvv_opts_t * const opts) {
 // Compute the NFT
     opts->contspec_type = fnft_kdvv_cstype_BOTH;
     opts->discspec_type = fnft_kdvv_dstype_BOTH;
-    ret_code = fnft_kdvv(D, q, T, M, contspec, XI, &K, NULL,
-        normconsts_and_residues, opts); // FIXME: Restore bound state computation
-//    ret_code = fnft_kdvv(D, q, T, M, contspec, XI, &K, bound_states,
-//        normconsts_and_residues, opts);
+    ret_code = fnft_kdvv(D, q, T, M, contspec, XI, &K, bound_states,
+        normconsts_and_residues, opts);
     CHECK_RETCODE(ret_code, release_mem);
 
     // Compute the errors

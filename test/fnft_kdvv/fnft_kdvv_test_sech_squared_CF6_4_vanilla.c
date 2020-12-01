@@ -33,9 +33,9 @@ INT main()
         1.1e-8,     // continuous spectrum
         2.6e-9,     // a(xi)
         1.1e-8,     // b(xi)
-        FNFT_INF,   // bound states
-        FNFT_INF,   // norming constants
-        FNFT_INF    // residues
+        1.5e-9,     // bound states
+        9.4e-9,     // norming constants
+        5.6e-9      // residues
     };
 
     ret_code = kdvv_testcases_test_fnft(tc, D, eb, &opts);

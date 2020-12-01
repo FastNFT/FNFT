@@ -32,7 +32,7 @@
  * Result should be preallocated with size 4*K or 8*K accordingly.
  */
 INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
-    COMPLEX * r, const REAL eps_t, const INT kappa,
+    COMPLEX const * const r, const REAL eps_t, const INT kappa,
     const UINT K, COMPLEX const * const lambda,
     COMPLEX * const result, kdv_discretization_t discretization,
     const UINT derivative_flag)
@@ -48,6 +48,8 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
         return E_INVALID_ARGUMENT(D);
     if (q == NULL)
         return E_INVALID_ARGUMENT(q);
+    if (r == NULL)
+        return E_INVALID_ARGUMENT(r);
     if (!(eps_t > 0))
         return E_INVALID_ARGUMENT(eps_t);
     if (K <= 0.0)
@@ -60,18 +62,7 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
     ret_code = kdv_discretization_to_akns_discretization(discretization,
             &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
-        
-    if (r == NULL) {
-        return E_INVALID_ARGUMENT(r);
-//        r = malloc(D*sizeof(COMPLEX));
-//        if (r == NULL) {
-//            ret_code = E_NOMEM;
-//            goto leave_fun;
-//        }
-//
-//        for (i = 0; i < D; i++)
-//            r[i] = -1.0;
-    }
+
 
     INT vanilla_flag;
     kdv_discretization_vanilla_flag(&vanilla_flag, discretization);

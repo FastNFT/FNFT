@@ -27,8 +27,8 @@
 /**
  * Returns the a, a_prime and b computed using the chosen scheme.
  */
-INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
-        COMPLEX *r, REAL const *const T, UINT K,
+INT kdv_scatter_bound_states(const UINT D, COMPLEX const * const q,
+        COMPLEX const * const r, REAL const *const T, UINT K,
         COMPLEX *bound_states, COMPLEX *a_vals,
         COMPLEX *aprime_vals, COMPLEX *b,
         kdv_discretization_t discretization, UINT skip_b_flag)
@@ -70,17 +70,6 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
     
     COMPLEX *weights = NULL; // must be initialized before jumping to leave_fun
 
-    if (r == NULL) {
-        r = malloc(D*sizeof(COMPLEX));
-        if (r == NULL) {
-            ret_code = E_NOMEM;
-            goto leave_fun;
-        }
-        
-        for (n = 0; n < D; n++)
-            r[n] = -1.0;
-        
-    }
     l = malloc(D*sizeof(COMPLEX));
     if (l == NULL) {
         ret_code = E_NOMEM;
@@ -684,6 +673,7 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const *const q,
             // computation point
             REAL b1, b2, error_metric = INFINITY, tmp = INFINITY;
             for (n = 0; n <= D_given; n++){
+                //TODO: Fetch change of basis matrix to calculate b
                 b1 = CREAL(PHI1[n])/CREAL(PSI1[n]);
                 b2 = CREAL((0.5*I/l_curr)*PHI1[n] + PHI2[n] ) / CREAL((0.5*I/l_curr)*PSI1[n] + PSI2[n] );
                 if ( b1*b2>0.0 ) {

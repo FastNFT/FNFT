@@ -74,8 +74,8 @@
  *  defined in \link fnft_errwarn.h \endlink.
  * @ingroup kdv
  */
-FNFT_INT fnft__kdv_scatter_bound_states(const FNFT_UINT D, FNFT_COMPLEX const *const q,
-    FNFT_COMPLEX * r, FNFT_REAL const *const T, FNFT_UINT K,
+FNFT_INT fnft__kdv_scatter_bound_states(const FNFT_UINT D, FNFT_COMPLEX const * const q,
+    FNFT_COMPLEX const * const r, FNFT_REAL const * const T, FNFT_UINT K,
     FNFT_COMPLEX *bound_states, FNFT_COMPLEX *a_vals,
     FNFT_COMPLEX *aprime_vals, FNFT_COMPLEX *b,
     fnft_kdv_discretization_t discretization, FNFT_UINT skip_b_flag);
@@ -116,7 +116,7 @@ FNFT_INT fnft__kdv_scatter_bound_states(const FNFT_UINT D, FNFT_COMPLEX const *c
  *  defined in \link fnft_errwarn.h \endlink.
  * @ingroup kdv
  */
-FNFT_INT fnft__kdv_scatter_matrix(const FNFT_UINT D, FNFT_COMPLEX const * const q, FNFT_COMPLEX * r,
+FNFT_INT fnft__kdv_scatter_matrix(const FNFT_UINT D, FNFT_COMPLEX const * const q, FNFT_COMPLEX const * const r,
     const FNFT_REAL eps_t, const FNFT_INT kappa, const FNFT_UINT K,
     FNFT_COMPLEX const * const lambda,
     FNFT_COMPLEX * const result, fnft_kdv_discretization_t discretization,

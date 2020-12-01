@@ -17,6 +17,7 @@
  * Sander Wahls (TU Delft) 2017-2018.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Marius Brehler (TU Dortmund) 2018.
+ * Peter J Prins (TU Delft) 2020.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -64,7 +65,7 @@ UINT fnft_nsev_max_K(const UINT D, fnft_nsev_opts_t const * const opts)
 static inline INT nsev_compute_boundstates(
         UINT D,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         const UINT deg,
         COMPLEX * const transfer_matrix,
         REAL const * const T,
@@ -104,7 +105,7 @@ static inline INT nsev_compute_contspec(
 static inline INT nsev_compute_normconsts_or_residues(
         const UINT D,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         REAL const * const T,
         const UINT K,
         COMPLEX * const bound_states,
@@ -113,7 +114,7 @@ static inline INT nsev_compute_normconsts_or_residues(
 
 static inline INT nsev_refine_bound_states_newton(const UINT D,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         REAL const * const T,
         UINT K,
         COMPLEX * bound_states,
@@ -599,7 +600,7 @@ static inline REAL im_bound(const UINT D, COMPLEX const * const q,
 static inline INT nsev_compute_boundstates(
         const UINT D,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         const UINT deg,
         COMPLEX * const transfer_matrix,
         REAL const * const T,
@@ -899,7 +900,7 @@ static inline INT nsev_compute_contspec(
 static inline INT nsev_compute_normconsts_or_residues(
         const UINT D,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         REAL const * const T,
         const UINT K,
         COMPLEX * const bound_states,
@@ -977,7 +978,7 @@ static inline INT nsev_compute_normconsts_or_residues(
 static inline INT nsev_refine_bound_states_newton(
         const UINT D,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         REAL const * const T,
         const UINT K,
         COMPLEX * bound_states,

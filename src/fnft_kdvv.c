@@ -25,7 +25,7 @@
 #include "fnft_kdvv.h"
 
 static fnft_kdvv_opts_t default_opts = {
-    .bound_state_localization = kdvv_bsloc_NEWTON,
+    .bound_state_localization = kdvv_bsloc_GRIDSEARCH_AND_REFINE,
     .niter = 10,
     .Dsub = 0, // auto
     .discspec_type = kdvv_dstype_NORMING_CONSTANTS,
@@ -64,9 +64,8 @@ UINT fnft_kdvv_max_K(const UINT D, fnft_kdvv_opts_t const * const opts)
 static inline INT kdvv_compute_boundstates(
         UINT D,
         COMPLEX const * const q,
-        COMPLEX * r,
-        const UINT deg,
-        COMPLEX * const transfer_matrix,
+        COMPLEX const * const r,
+        REAL const bounding_box[4],
         REAL const * const T,
         const REAL eps_t,
         UINT * const K_ptr,
@@ -85,6 +84,7 @@ static inline INT fnft_kdvv_base(
         COMPLEX * const bound_states,
         COMPLEX * const normconsts_or_residues,
         const INT kappa,
+        REAL const bounding_box[4],
         fnft_kdvv_opts_t *opts);
 
 static inline INT kdvv_compute_contspec(
@@ -113,7 +113,7 @@ static inline INT kdvv_compute_normconsts_or_residues(
 
 static inline INT kdvv_refine_bound_states_newton(const UINT D,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         REAL const * const T,
         UINT K,
         COMPLEX * bound_states,
@@ -159,7 +159,7 @@ INT fnft_kdvv(
     fnft_kdvv_bsloc_t bs_loc_opt = 0;
     fnft_kdvv_dstype_t ds_type_opt = 0;
     INT ret_code = SUCCESS;
-    UINT i, j, upsampling_factor, D_effective, nskip_per_step;
+    UINT i, j, upsampling_factor, D_effective;
 
     // Check inputs
     if (D < 2)
@@ -246,10 +246,10 @@ INT fnft_kdvv(
         case kdv_discretization_CF6_4:
         case kdv_discretization_ES4:
         case kdv_discretization_TES4:
-            if (opts->bound_state_localization != kdvv_bsloc_NEWTON && bound_states != NULL){
-                ret_code = E_INVALID_ARGUMENT(opts->bound_state_localization);
-                goto leave_fun;
-            }
+//            if (opts->bound_state_localization != kdvv_bsloc_NEWTON && bound_states != NULL){
+//                ret_code = E_INVALID_ARGUMENT(opts->bound_state_localization);
+//                goto leave_fun;
+//            }
             break;
         default: // Unknown discretization
             return E_INVALID_ARGUMENT(opts->discretization);
@@ -309,8 +309,22 @@ INT fnft_kdvv(
             first_last_index, opts->discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 
+    // Calculate the bounding box for the bound states. This must be done with the non-preprocessed potential.
+    REAL maxq = 0;
+    if (bound_states != NULL) {
+        // Find the maximum of q(t). Realness should have been checked earlier.
+        for (i = 0; i < D; i++)
+            maxq = maxq > (REAL)q[i] ? maxq : (REAL)q[i];
+
+        if (maxq==0){
+            // Non-positive potentials have no eigenvalues
+            *K_ptr=0;
+        }
+    }
+    REAL const bounding_box[4] = {0,0,0,CSQRT(maxq)};
+
     ret_code = fnft_kdvv_base(D_effective, q_preprocessed, r_preprocessed, T, M, contspec, XI, K_ptr,
-                bound_states, normconsts_or_residues, kappa, opts);
+                bound_states, normconsts_or_residues, kappa, bounding_box, opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
     if (opts->richardson_extrapolation_flag == 1){
@@ -387,7 +401,7 @@ INT fnft_kdvv(
         opts->bound_state_localization = kdvv_bsloc_NEWTON;
 
         ret_code = fnft_kdvv_base(Dsub * upsampling_factor, qsub_preprocessed, rsub_preprocessed, Tsub, M, contspec_sub, XI, &K_sub,
-                bound_states_sub, normconsts_or_residues_sub, kappa, opts);
+                bound_states_sub, normconsts_or_residues_sub, kappa, bounding_box, opts);
         CHECK_RETCODE(ret_code, leave_fun);
         opts->bound_state_localization = bs_loc_opt;
         opts->discspec_type = ds_type_opt;
@@ -469,6 +483,7 @@ static inline INT fnft_kdvv_base(
         COMPLEX * const bound_states,
         COMPLEX * const normconsts_or_residues,
         const INT kappa,
+        REAL const bounding_box[4],
         fnft_kdvv_opts_t *opts)
 {
     COMPLEX *transfer_matrix = NULL;
@@ -545,10 +560,9 @@ static inline INT fnft_kdvv_base(
     }
 
     // Compute the discrete spectrum
-    if (kappa == +1 && bound_states != NULL) {
-
+    if (bound_states != NULL && *K_ptr!=0) {
         // Compute the bound states
-        ret_code = kdvv_compute_boundstates(D, q, r, deg, transfer_matrix, T,
+        ret_code = kdvv_compute_boundstates(D, q, r, bounding_box, T,
                 eps_t, K_ptr, bound_states, opts);
         CHECK_RETCODE(ret_code, leave_fun);
 
@@ -571,24 +585,23 @@ static inline INT fnft_kdvv_base(
 static inline INT kdvv_compute_boundstates(
         const UINT D,
         COMPLEX const * const q,
-        COMPLEX * r,
-        const UINT deg,
-        COMPLEX * const transfer_matrix,
+        COMPLEX const * const r,
+        REAL const bounding_box[4],
         REAL const * const T,
         const REAL eps_t,
         UINT * const K_ptr,
         COMPLEX * const bound_states,
         fnft_kdvv_opts_t * const opts)
 {
-    REAL degree1step = 0.0 , map_coeff = 2.0;
-    UINT K, upsampling_factor, i, j, D_given;
-    REAL bounding_box[4] = { NAN };
-    COMPLEX * buffer = NULL;
     INT ret_code = SUCCESS;
-    COMPLEX * q_tmp = NULL;
+    UINT K=*K_ptr;
+    UINT upsampling_factor, i;
     kdv_discretization_t discretization;
+    COMPLEX * xi = NULL;
+    COMPLEX * scatter_coeffs = NULL;
+    REAL const kappa = 1;
 
-    degree1step = kdv_discretization_degree(opts->discretization);
+    REAL const degree1step = kdv_discretization_degree(opts->discretization);
     // degree1step == 0 here indicates a valid slow method. Incorrect
     // discretizations should have been caught earlier.
     upsampling_factor = kdv_discretization_upsampling_factor(opts->discretization);
@@ -596,20 +609,66 @@ static inline INT kdvv_compute_boundstates(
         ret_code = E_INVALID_ARGUMENT(opts->discretization);
         goto leave_fun;
     }
-    if (degree1step != 0)
-        map_coeff = 2/(degree1step);
-    D_given = D/upsampling_factor;
+    if (degree1step != 0) {
+        ret_code = E_INVALID_ARGUMENT(opts);
+        CHECK_RETCODE(ret_code, leave_fun);
+    }
 
     // Localize bound states ...
     switch (opts->bound_state_localization) {
         case kdvv_bsloc_GRIDSEARCH_AND_REFINE:
+            {} // Stop the compiler from complaining about starting a case with a declaration rather than a statement
 
-            //fallthrough//
-        // ... using Newton's method
-        case kdvv_bsloc_NEWTON:
+            // Set the search grid
+            UINT const M = D;
+            COMPLEX const eps_xi = I*(bounding_box[3]-bounding_box[2])/(M - 1);
+            xi = malloc(D * sizeof(COMPLEX));
+            if (xi == NULL) {
+                ret_code = E_NOMEM;
+                goto leave_fun;
+            }
 
-            K = *K_ptr;
-            buffer = bound_states; // Store intermediate results directly
+            xi[0] = I*nexttoward(bounding_box[3],bounding_box[4]);
+            for (i = 1; i < M-1; i++)
+                xi[i] = I * CIMAG(eps_xi*i);
+            xi[M-1] = I*nexttoward(bounding_box[4],bounding_box[3]);
+
+            // Allocate memory for call to kdv_scatter_matrix
+            scatter_coeffs = malloc(4 * M * sizeof(COMPLEX));
+            if (scatter_coeffs == NULL) {
+                ret_code = E_NOMEM;
+                goto leave_fun;
+            }
+
+            // Compute a(xi) on the grid on the imaginary axis
+            UINT const derivative_flag = 0;
+            ret_code = kdv_scatter_matrix(D, q, r, eps_t, kappa,
+                                          M, xi, scatter_coeffs ,opts->discretization,derivative_flag);
+            CHECK_RETCODE(ret_code, leave_fun);
+
+            // Search for zerocrossings of a(xi)
+            K=0;
+            for (i = 0; i < M; i++) {
+                if ( scatter_coeffs[4*i]==0) {
+                    if (K>*K_ptr) { // Lucky us: Exact bound state found
+                        ret_code = E_OTHER("More than *K_ptr initial guesses for bound states found. Increase *K_ptr and try again.")
+                        CHECK_RETCODE(ret_code, leave_fun);
+                    }
+                    bound_states[K]=xi[i];
+                    K++;
+                } else if ( i>0 && CREAL(scatter_coeffs[4*i])*CREAL(scatter_coeffs[4*(i-1)])<0) {
+                    if (K>*K_ptr) { // Bound state between this sample and the previous
+                        ret_code = E_OTHER("More than *K_ptr initial guesses for bound states found. Increase *K_ptr and try again.")
+                        CHECK_RETCODE(ret_code, leave_fun);
+                    }
+                    // Zero crossing estimate with regula falsi:
+                    bound_states[K] = (xi[i-1] * CREAL(scatter_coeffs[4*i]) - xi[i] * CREAL(scatter_coeffs[4*(i-1)])) / CREAL( scatter_coeffs[4*i] - scatter_coeffs[4*(i-1)]);
+                    K++;
+                }
+            }
+
+            // fall through
+        case kdvv_bsloc_NEWTON: // Refine using Newton's method
 
             // Perform Newton iterations. Initial guesses of bound-states
             // should be in the continuous-time domain.
@@ -623,33 +682,24 @@ static inline INT kdvv_compute_boundstates(
             }else
                 discretization = opts->discretization;
 
-            ret_code = kdvv_refine_bound_states_newton(D, q, r, T, K, buffer,
+            ret_code = kdvv_refine_bound_states_newton(D, q, r, T, K, bound_states,
                     discretization, opts->niter, bounding_box);
             CHECK_RETCODE(ret_code, leave_fun);
-            break;
 
-            // ... using the fast eigenvaluebased root finding
+            break;
 
         default:
 
             return E_INVALID_ARGUMENT(opts->bound_state_localization);
     }
 
-    // Copy result from buffer to user-supplied array (if not identical)
-    if (buffer != bound_states) {
-        if (*K_ptr < K) {
-            WARN("Found more than *K_ptr bound states. Returning as many as possible.");
-            K = *K_ptr;
-        }
-        memcpy(bound_states, buffer, K * sizeof(COMPLEX));
-    }
-
     // Update number of bound states
     *K_ptr = K;
 
-    leave_fun:
-        free(q_tmp);
-        return ret_code;
+leave_fun:
+    free(xi);
+    free(scatter_coeffs);
+    return ret_code;
 }
 
 // Auxiliary function: Computes continuous spectrum on a frequency grid
@@ -852,6 +902,7 @@ static inline INT kdvv_compute_normconsts_or_residues(
         COMPLEX * const normconsts_or_residues,
         fnft_kdvv_opts_t * const opts)
 {
+    // TODO: Implement compute_normconsts_or_residues for KdV
     COMPLEX *a_vals = NULL, *aprime_vals = NULL;
     UINT i, offset = 0;
     INT ret_code = SUCCESS;
@@ -923,7 +974,7 @@ static inline INT kdvv_compute_normconsts_or_residues(
 static inline INT kdvv_refine_bound_states_newton(
         const UINT D,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         REAL const * const T,
         const UINT K,
         COMPLEX * bound_states,
@@ -971,7 +1022,7 @@ static inline INT kdvv_refine_bound_states_newton(
                 return E_DIV_BY_ZERO;
 
             // Perform Newton updates: lam[i] <- lam[i] - a(lam[i])/a'(lam[i])
-            error = a_val / aprime_val;
+            error = CREAL(a_val) / (I * CIMAG(aprime_val));
             bound_states[i] -= error;
             iter++;
             if (CIMAG(bound_states[i]) > bounding_box[3]

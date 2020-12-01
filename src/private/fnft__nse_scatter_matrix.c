@@ -16,6 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
 * Shrinivas Chimmalgi (TU Delft) 2017-2020.
+* Peter J Prins (TU Delft) 2020.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -31,7 +32,7 @@
  * Result should be preallocated with size 4*K or 8*K accordingly.
  */
 INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
-    COMPLEX * r, const REAL eps_t, const INT kappa, 
+    COMPLEX const * const r, const REAL eps_t, const INT kappa,
     const UINT K, COMPLEX const * const lambda,
     COMPLEX * const result, nse_discretization_t discretization,
     const UINT derivative_flag)
@@ -62,23 +63,6 @@ INT nse_scatter_matrix(const UINT D, COMPLEX const * const q,
             &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
     
-    if (r == NULL) {
-        r = malloc(D*sizeof(COMPLEX));
-        if (r == NULL) {
-            ret_code = E_NOMEM;
-            goto leave_fun;
-        }
-        
-        
-        if (kappa == 1){
-            for (i = 0; i < D; i++)
-                r[i] = -CONJ(q[i]);
-        }
-        else{
-            for (i = 0; i < D; i++)
-                r[i] = CONJ(q[i]);
-        }
-    }
     ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result, 
             akns_discretization, derivative_flag);
 
