@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2017-2018.
+ * Sander Wahls (TU Delft) 2017-2018, 2020.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Peter J Prins (TU Delft) 2020.
  */
@@ -25,9 +25,9 @@
 
 /**
  * If derivative_flag=0 returns [S11 S12 S21 S22] in result where
- * S = [S11, S12; S21, S22] is the scattering matrix computed using the 
+ * S = [S11, S12; S21, S22] is the scattering matrix computed using the
  * chosen scheme.
- * If derivative_flag=1 returns [S11 S12 S21 S22 S11' S12' S21' S22'] in 
+ * If derivative_flag=1 returns [S11 S12 S21 S22 S11' S12' S21' S22'] in
  * result where S11' is the derivative of S11 w.r.t to lambda.
  * Result should be preallocated with size 4*K or 8*K accordingly.
  */
@@ -58,7 +58,7 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
         return E_INVALID_ARGUMENT(lambda);
     if (result == NULL)
         return E_INVALID_ARGUMENT(result);
-    
+
     ret_code = kdv_discretization_to_akns_discretization(discretization,
             &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);

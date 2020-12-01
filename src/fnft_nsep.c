@@ -17,17 +17,17 @@
  * Sander Wahls (TU Delft) 2017-2018, 2020.
  * Marius Brehler (TU Dortmund) 2018.
  * Shrinivas Chimmalgi (TU Delft) 2019-2020.
+ * Peter J Prins (TU Delft) 2020.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
-
 
 #include "fnft_nsep.h"
 
 static fnft_nsep_opts_t default_opts = {
     .localization = fnft_nsep_loc_MIXED,
     .filtering = fnft_nsep_filt_AUTO,
-    .max_evals = 20, 
+    .max_evals = 20,
     .bounding_box[0] = -FNFT_INF,
     .bounding_box[1] = FNFT_INF,
     .bounding_box[2] = -FNFT_INF,
@@ -90,12 +90,12 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
     INT warn_flags[2] = { 0, 0 }; // 0 = no warning about too many points so
     // far, 1st val is for main spec, 2nd for aux
     COMPLEX *q_preprocessed = NULL;
-    
+
     // Check inputs
-    // D (and Dsub in line 493) only need to be even to ensure that deg in line 279 and 537 are also even for all discretizations. 
-    // deg is required to be even so that its use in lines 321, 355 and 587 make sense. 
+    // D (and Dsub in line 493) only need to be even to ensure that deg in line 279 and 537 are also even for all discretizations.
+    // deg is required to be even so that its use in lines 321, 355 and 587 make sense.
     // Due to the periodic boundary conditions, Dsub has to be an even factor of D. For some choices like D=514, this means Dsub can only be 514 as D=514=2*257.
-    // This makes the idea of subsampling unintuitive. Hence at this stage D is restricted to powers of two for which subsampling still makes sense. 
+    // This makes the idea of subsampling unintuitive. Hence at this stage D is restricted to powers of two for which subsampling still makes sense.
     if (D < 2 || (D & (D-1)) != 0 )
         return E_INVALID_ARGUMENT(D);
     if (q == NULL)
@@ -114,7 +114,7 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
         opts_ptr = &default_opts;
     if (opts_ptr->filtering != fnft_nsep_filt_NONE && main_spec == NULL && aux_spec != NULL)
         return E_INVALID_ARGUMENT(main_spec. Filtering of the auxiliary spectrum is not possible if the main spectrum is not computed.);
-      
+
         REAL Lam_shift = phase_shift/(-2*(T[1] - T[0]));
         const REAL eps_t = (T[1] - T[0])/D;
         q_preprocessed = malloc(D * sizeof(COMPLEX));
@@ -122,29 +122,29 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
             ret_code = E_NOMEM;
             goto leave_fun;
         }
-        
+
         // Removing phase rotation along q
         for (i=0; i < D; i++)
             q_preprocessed[i] = q[i]*CEXP(2*I*Lam_shift*(T[0]+eps_t*i));
-        
-    
+
+
     // Bounding box needs to be shifted to ensure it works properly for
-    // quasi-periodic signals    
+    // quasi-periodic signals
     if (opts_ptr->filtering == fnft_nsep_filt_MANUAL){
         opts_ptr->bounding_box[0] -= Lam_shift;
         opts_ptr->bounding_box[1] -= Lam_shift;
     }
         switch (opts_ptr->localization) {
-            
+
             case fnft_nsep_loc_MIXED:
-                
+
                 // Store lengths of user-provided arrays in temp variables
-                
+
                 K1 = *K_ptr;
                 M1 = *M_ptr;
-                
+
                 // Compute non-real points in the spectra via subsample & refine
-                
+
                 if (kappa == +1) {
                     ret_code = subsample_and_refine(D, q_preprocessed, T, &K1, main_spec,
                             &M1, aux_spec, sheet_indices, kappa, opts_ptr,
@@ -157,56 +157,56 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
                             1 /*skip_real_flag*/, warn_flags);
                     CHECK_RETCODE(ret_code, leave_fun);
                 }
-                
+
                 // Store lengths of still unused parts of user-provided arrays in temp
                 // variables
                 if (K1 > *K_ptr || M1 > *M_ptr)
                     return E_ASSERTION_FAILED;
                 K2 = *K_ptr - K1;
                 M2 = *M_ptr - M1;
-                
+
                 // Compute real points in the spectra via gridsearch
-                
+
                 ret_code = gridsearch(D, q_preprocessed, T, &K2, main_spec+K1,
                         &M2, aux_spec+M1, sheet_indices, kappa, opts_ptr, warn_flags);
                 CHECK_RETCODE(ret_code, leave_fun);
-                
+
                 // Signal numbers of found main and aux spec points to the user
-                
+
                 *K_ptr = K1 + K2;
                 *M_ptr = M1 + M2;
-                
+
                 break;
-                
+
             case fnft_nsep_loc_SUBSAMPLE_AND_REFINE:
-                
+
                 ret_code = subsample_and_refine(D, q_preprocessed, T, K_ptr, main_spec,
                         M_ptr, aux_spec, sheet_indices, kappa, opts_ptr,
                         0/*skip_real_flag*/, warn_flags);
                 CHECK_RETCODE(ret_code, leave_fun);
                 break;
-                
+
             case fnft_nsep_loc_GRIDSEARCH:
-                
+
                 ret_code = gridsearch(D, q_preprocessed, T, K_ptr, main_spec,
                         M_ptr, aux_spec, sheet_indices, kappa, opts_ptr, warn_flags);
                 CHECK_RETCODE(ret_code, leave_fun);
                 break;
-                
+
             default:
-                
+
                 return E_INVALID_ARGUMENT(opts_ptr->discretization);
         }
-        if (main_spec != NULL) { 
+        if (main_spec != NULL) {
         for (i=0; i < *K_ptr; i++)
             main_spec[i] += Lam_shift;
         }
-        if (aux_spec != NULL) { 
+        if (aux_spec != NULL) {
         for (i=0; i < *M_ptr; i++)
             aux_spec[i] += Lam_shift;
         }
-        
-    // Restoring changed limits    
+
+    // Restoring changed limits
     if (opts_ptr->filtering == fnft_nsep_filt_MANUAL){
         opts_ptr->bounding_box[0] += Lam_shift;
         opts_ptr->bounding_box[1] += Lam_shift;
@@ -214,7 +214,7 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
         leave_fun:
             free(q_preprocessed);
             return ret_code;
-            
+
 }
 
 // Auxiliary function: Uses grid-search to find main and auxiliary spectrum
@@ -244,14 +244,14 @@ static inline INT gridsearch(const UINT D,
     // Check inputs
     if (sheet_indices != NULL)
         return E_NOT_YET_IMPLEMENTED(sheet_indices, "Pass NULL");
-    
+
     upsampling_factor = nse_discretization_upsampling_factor(opts_ptr->discretization);
     if (upsampling_factor == 0) {
         ret_code = E_INVALID_ARGUMENT(opts->discretization);
         goto release_mem;
     }
     D_effective = D * upsampling_factor;
-    
+
     // Determine step size
     const REAL eps_t = (T[1] - T[0])/D;
 
@@ -259,7 +259,7 @@ static inline INT gridsearch(const UINT D,
     ret_code = nse_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &q_preprocessed, &r_preprocessed,
             first_last_index, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
-    
+
 
     // Allocate memory for the transfer matrix
     i = nse_fscatter_numel(D_effective, opts_ptr->discretization);
@@ -272,14 +272,14 @@ static inline INT gridsearch(const UINT D,
         ret_code = E_NOMEM;
         goto release_mem;
     }
-    
+
     // Compute the transfer matrix
     if (opts_ptr->normalization_flag)
         W_ptr = &W;
-    ret_code = nse_fscatter(D_effective, q_preprocessed, r_preprocessed, eps_t, kappa, transfer_matrix, &deg,
+    ret_code = nse_fscatter(D_effective, q_preprocessed, r_preprocessed, eps_t, transfer_matrix, &deg,
             W_ptr, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
-    
+
     // Will be required later for coordinate transforms
     degree1step = nse_discretization_degree(opts_ptr->discretization);
     if (degree1step == NAN)
@@ -293,20 +293,20 @@ static inline INT gridsearch(const UINT D,
         PHI[0] = PHI[1];
         PHI[1] = tmp;
     }
-    
+
     roots = malloc(oversampling_factor*deg*sizeof(COMPLEX));
     if (roots == NULL) {
         ret_code = E_NOMEM;
         goto release_mem;
     }
-    
-    
+
+
     // Compute main spectrum if desired
     if (main_spec != NULL) {
-        
+
         // The main spectrum is given by the z that solve Delta(z)=+/-2,
         // where Delta(z)=trace{monodromy matrix(z)}is the Floquet discriminant
-        
+
         // Allocate memory for the polynomial p(z) approx z^{D/2} Delta(z)+/-2
         // and its roots
         p = malloc((deg + 1)*sizeof(COMPLEX));
@@ -314,13 +314,13 @@ static inline INT gridsearch(const UINT D,
             ret_code = E_NOMEM;
             goto release_mem;
         }
-     
+
         // First, determine p(z) for the positive sign (+)
         for (i=0; i<=deg; i++)
             p[i] = transfer_matrix[i] + CONJ(transfer_matrix[deg-i]);
         p[deg/2] += 2.0 * POW(2.0, -W); // the pow arises because
         // nse_fscatter rescales
-        
+
         // Find the roots of p(z)
         K = oversampling_factor*deg;
         ret_code = poly_roots_fftgridsearch(deg, p, &K, PHI, roots);
@@ -330,7 +330,7 @@ static inline INT gridsearch(const UINT D,
             ret_code = E_OTHER("Found more roots than memory is available.");
             goto release_mem;
         }
-        
+
         // Coordinate transform (from discrete-time to continuous-time domain)
         ret_code = nse_discretization_z_to_lambda(K, eps_t, roots, opts_ptr->discretization);
         CHECK_RETCODE(ret_code, release_mem);
@@ -340,7 +340,7 @@ static inline INT gridsearch(const UINT D,
             ret_code = misc_filter(&K, roots, NULL, opts_ptr->bounding_box);
             CHECK_RETCODE(ret_code, release_mem);
         }
-        
+
         // Copy to user-provided array
         if (K > *K_ptr) {
             if (warn_flags[0] == 0) {
@@ -350,11 +350,11 @@ static inline INT gridsearch(const UINT D,
             K = *K_ptr;
         }
         memcpy(main_spec, roots, K * sizeof(COMPLEX));
-        
+
         // Second, determine p(z) for the negative sign (-)
         p[deg/2] -= 4.0 * POW(2.0, -W);
-        
-        
+
+
         // Find the roots of the new p(z)
         K_filtered = oversampling_factor*deg;
         ret_code = poly_roots_fftgridsearch(deg, p, &K_filtered, PHI,
@@ -365,7 +365,7 @@ static inline INT gridsearch(const UINT D,
             ret_code = E_OTHER("Found more roots than memory is available.");
             goto release_mem;
         }
-        
+
         // Coordinate transform of the new roots
         ret_code = nse_discretization_z_to_lambda(K_filtered, eps_t, roots, opts_ptr->discretization);
         CHECK_RETCODE(ret_code, release_mem);
@@ -376,7 +376,7 @@ static inline INT gridsearch(const UINT D,
                     opts_ptr->bounding_box);
             CHECK_RETCODE(ret_code, release_mem);
         }
-        
+
         // Copy to user-provided array
         if (K + K_filtered > *K_ptr) {
             if (warn_flags[0] == 0) {
@@ -389,13 +389,13 @@ static inline INT gridsearch(const UINT D,
                 K_filtered = 0;
         }
         memcpy(main_spec + K, roots, K_filtered * sizeof(COMPLEX));
-        
+
         // Set number of points in the main spectrum
         K += K_filtered;
     }
     // Compute auxiliary spectrum (real line only)
     if (aux_spec != NULL) {
-        
+
         M = oversampling_factor*deg;
         ret_code = poly_roots_fftgridsearch(deg, transfer_matrix+(deg+1), &M,
                 PHI, roots);
@@ -410,7 +410,7 @@ static inline INT gridsearch(const UINT D,
             ret_code = misc_filter(&M, roots, NULL, opts_ptr->bounding_box);
             CHECK_RETCODE(ret_code, release_mem);
         }
-        
+
         // Copy to user-provided array
         if (M > *M_ptr) {
             if (warn_flags[1] == 0) {
@@ -424,14 +424,14 @@ static inline INT gridsearch(const UINT D,
     // Update number of main spectrum points and auxiliary spectrum points
     *K_ptr = K;
     *M_ptr = M;
-    
+
     release_mem:
         free(transfer_matrix);
         free(p);
         free(roots);
         free(q_preprocessed);
         free(r_preprocessed);
-        
+
         return ret_code;
 }
 
@@ -470,30 +470,30 @@ static inline INT subsample_and_refine(const UINT D,
     // To suppress unused parameter warnings.
     if (sheet_indices != NULL)
         return E_NOT_YET_IMPLEMENTED(sheet_indices, "Pass NULL");
-    
+
     upsampling_factor = nse_discretization_upsampling_factor(opts_ptr->discretization);
     if (upsampling_factor == 0) {
         ret_code = E_INVALID_ARGUMENT(opts->discretization);
         goto release_mem;
     }
     D_effective = D * upsampling_factor;
-    
+
     // Determine step size
     const REAL eps_t = (T[1] - T[0])/D;
-    
+
     // Create the signal required for refinement of the initial guesses.
     Dsub = D;
     ret_code = nse_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &q_preprocessed, &r_preprocessed,
             first_last_index, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
-    
+
     // Create a subsampled/resampled version of q for computing initial guesses.
     Dsub = opts_ptr->Dsub;
     if (Dsub == 0) // users wants Dsub to be chosen automatically
         Dsub = (UINT) POW(2.0, CEIL( 0.5 * LOG2(D * LOG2(D) * LOG2(D)) ));
     else
-        Dsub = (UINT) POW(2.0, ROUND(LOG2(Dsub))); 
-    
+        Dsub = (UINT) POW(2.0, ROUND(LOG2(Dsub)));
+
     ret_code = nse_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &qsub_preprocessed, &rsub_preprocessed,
             first_last_index, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
@@ -503,19 +503,19 @@ static inline INT subsample_and_refine(const UINT D,
         return E_ASSERTION_FAILED; // Correct update of T for general
                                    // downsampling still needs to be
                                  // implemented
-    
-    if (upsampling_factor == 2) {        
+
+    if (upsampling_factor == 2) {
         nse_discretization = nse_discretization_CF4_2;
     } else if (upsampling_factor == 1) {
         nse_discretization = nse_discretization_BO;
     }
-    
+
     // Determine the tolerance for the refinement steps
     if (opts_ptr->tol < 0)
-        refine_tol = SQRT(EPSILON); 
+        refine_tol = SQRT(EPSILON);
     else
         refine_tol = opts_ptr->tol;
-    
+
     // Allocate memory for the transfer matrix
     i = nse_fscatter_numel(Dsub*upsampling_factor, opts_ptr->discretization);
     if (i == 0) { // since Dsub>=2, this means unknown discretization
@@ -527,14 +527,14 @@ static inline INT subsample_and_refine(const UINT D,
         ret_code = E_NOMEM;
         goto release_mem;
     }
-    
+
     // Determine step size
     const REAL eps_t_sub = nskip_per_step*eps_t;
-    
+
     // Compute the transfer matrix
     if (opts_ptr->normalization_flag)
         W_ptr = &W;
-    ret_code = nse_fscatter(Dsub*upsampling_factor, qsub_preprocessed, rsub_preprocessed, eps_t_sub, kappa, transfer_matrix, &deg,
+    ret_code = nse_fscatter(Dsub*upsampling_factor, qsub_preprocessed, rsub_preprocessed, eps_t_sub, transfer_matrix, &deg,
             W_ptr, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
 
@@ -546,23 +546,23 @@ static inline INT subsample_and_refine(const UINT D,
     update_bounding_box_if_auto(eps_t_sub, map_coeff, opts_ptr);
     tol_im = opts_ptr->bounding_box[1] - opts_ptr->bounding_box[0];
     tol_im /= oversampling_factor*(D - 1);
-    
+
     // Use unused part of transfer matrix as buffer for the roots
     roots = transfer_matrix + 3*(deg+1);
-    
+
     // Compute main spectrum if desired
     if (main_spec != NULL) {
-        
+
         // The main spectrum is given by the z that solve Delta(z)=+/-2,
         // where Delta(z)=trace{monodromy matrix(z)}is the Floquet discriminant
-        
+
         // Allocate memory for the polynomial p(z) approx z^{D/2} Delta(z)+/-2
         p = malloc((deg + 1)*sizeof(COMPLEX));
         if (p == NULL) {
             ret_code = E_NOMEM;
             goto release_mem;
         }
-        
+
         // First, determine p(z) for the positive sign (+)
         for (i=0; i<=deg; i++)
             p[i] = transfer_matrix[i] + CONJ(transfer_matrix[deg-i]);
@@ -579,23 +579,23 @@ static inline INT subsample_and_refine(const UINT D,
         if (nvals>1)
             rhs_step /= nvals - 1;
         const COMPLEX p_center_coeff = p[deg/2];
-        
+
         for (UINT nval=0; nval<nvals; nval++) {
-            
+
             const REAL rhs = 2.0*(rhs_0 + nval*rhs_step);
-            
+
             p[deg/2] = p_center_coeff - rhs * POW(2.0, -W); // the pow arises
             // because nse_fscatter rescales
-            
+
             // Find the roots of p(z)-rhs
             ret_code = poly_roots_fasteigen(deg, p, roots);
             CHECK_RETCODE(ret_code, release_mem);
-            
+
             // Coordinate transform (from discrete-time to continuous-time domain)
             ret_code = nse_discretization_z_to_lambda(deg, eps_t_sub, roots,
                     opts_ptr->discretization);
             CHECK_RETCODE(ret_code, release_mem);
-            
+
             // Filter the roots
             K_new = deg;
             if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
@@ -613,7 +613,7 @@ static inline INT subsample_and_refine(const UINT D,
             ret_code = refine_mainspec(D_effective, q_preprocessed, r_preprocessed, eps_t, K_new, roots,
                     opts_ptr->max_evals, -rhs, refine_tol, kappa, nse_discretization);
             CHECK_RETCODE(ret_code, release_mem);
-            
+
             // Filter the refined roots
             if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
                 ret_code = misc_filter(&K_new, roots, NULL,
@@ -624,7 +624,7 @@ static inline INT subsample_and_refine(const UINT D,
                 ret_code = misc_filter_nonreal(&K_new, roots, tol_im);
                 CHECK_RETCODE(ret_code, release_mem);
             }
-            
+
 
             // Copy to user-provided array
             if (K+K_new > *K_ptr) {
@@ -648,10 +648,10 @@ static inline INT subsample_and_refine(const UINT D,
         ret_code = poly_roots_fasteigen(deg, transfer_matrix + (deg + 1),
                 roots);
 
-        
+
         // Set number of points in the aux spectrum
         M = deg;
-        
+
         // Coordinate transform (from discrete-time to continuous-time domain)
         ret_code = nse_discretization_z_to_lambda(M, eps_t_sub, roots, opts_ptr->discretization);
         CHECK_RETCODE(ret_code, release_mem);
@@ -661,12 +661,12 @@ static inline INT subsample_and_refine(const UINT D,
             ret_code = misc_filter(&M, roots, NULL, opts_ptr->bounding_box);
             CHECK_RETCODE(ret_code, release_mem);
         }
-        
+
         // Refine the roots
         ret_code = refine_auxspec(D_effective, q_preprocessed, r_preprocessed, eps_t, M, roots,
                 opts_ptr->max_evals, refine_tol, kappa, nse_discretization);
         CHECK_RETCODE(ret_code, release_mem);
-        
+
 
         // Filter the refined roots
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
@@ -677,7 +677,7 @@ static inline INT subsample_and_refine(const UINT D,
             ret_code = misc_filter_nonreal(&M, roots, tol_im);
             CHECK_RETCODE(ret_code, release_mem);
         }
-        
+
         // Copy to user-provided array
         if (M > *M_ptr) {
             if (warn_flags[1] == 0) {
@@ -687,13 +687,13 @@ static inline INT subsample_and_refine(const UINT D,
             M = *M_ptr;
         }
         memcpy(aux_spec, roots, M * sizeof(COMPLEX));
-        
+
     }
-       
+
     // Update number of main spectrum points and auxiliary spectrum points
     *K_ptr = K;
     *M_ptr = M;
-    
+
     release_mem:
         free(transfer_matrix);
         free(p);
@@ -720,24 +720,24 @@ static inline INT refine_mainspec(
     INT ret_code;
     UINT m, best_m;
     const UINT max_m = 2; // roots might be single or double
-    
+
     if (max_evals == 0)
         return SUCCESS;
 
     for (k=0; k<K; k++) { // Iterate over the provided main spectrum estimates.
-        
+
         // Initilization. Computes the monodromy matrix at the current main
         // spectrum estimate lam and determines the value of
         // f=a(lam)+a~(lam)+rhs as well as of f' = df/dlam. (The main spectrum
         // consists of the roots of f for rhs=+/- 2.0.)
-        
+
         ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, 1,
                 &mainspec[k], M, discretization, 1);
         if (ret_code != SUCCESS)
             return E_SUBROUTINE(ret_code);
         next_f = M[0] + M[3] + rhs; // f = a(lam) + atil(lam) + rhs
         next_f_prime = M[4] + M[7] ; // f' = a'(lam) + atil'(lam)
-        
+
         // Iteratively refine the current main spectrum point by applying
 
         // Newton's method for higher order roots: next_x=x-m*f/f', where
@@ -774,7 +774,7 @@ static inline INT refine_mainspec(
                     if ( cur_abs < tol )
                         break;
                 }
-            }            
+            }
             mainspec[k] -= best_m*incr; // Newton step
             //printf("MAIN k=%zu, nevals=%zu: lam=%e+%ej, |f|=%e, |f_prime|=%e, |incr|=%e, best_m=%d\n", k, nevals, CREAL(mainspec[k]), CIMAG(mainspec[k]), CABS(f), CABS(f_prime),CABS(incr),best_m);
 
@@ -803,14 +803,14 @@ static inline INT refine_auxspec(
     COMPLEX M[8];
     COMPLEX f, f_prime;
     INT ret_code;
-    
+
     if (max_evals == 0)
         return SUCCESS;
-    
+
     for (k=0; k<K; k++) {
-        
+
         for (nevals=0; nevals<max_evals;) {
-            
+
             ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, 1,
                     &auxspec[k], M, discretization, 1);
             if (ret_code != SUCCESS)
@@ -820,9 +820,9 @@ static inline INT refine_auxspec(
             f_prime = M[5]; // f' = b'(lam)
             if (f_prime == 0.0)
                 return E_DIV_BY_ZERO;
-            
+
             //printf("AUX k=%zu, iter=%zu: lam=%g+%gj, |f|=%g, |f_prime|=%g\n", k, iter, CREAL(auxspec[k]), CIMAG(auxspec[k]), CABS(f), CABS(f_prime));
-            
+
 
             auxspec[k] -= f / f_prime;
             if ( CABS(f) < tol ) // Intentionally put after the previous line
@@ -854,7 +854,7 @@ static inline void update_bounding_box_if_auto(const REAL eps_t,
     //  -pi/|map_coeff|/eps_t <= Re(lam) <= pi/|map_coeff|/eps_t.
     //
     // We enforce |Re(lam)|<=0.9*pi/|map_coeff|/eps_t.
-    
+
     if (opts_ptr->filtering == fnft_nsep_filt_AUTO) {
         opts_ptr->bounding_box[1] = 0.9*PI / (FABS(map_coeff) * eps_t);
         opts_ptr->bounding_box[0] = -opts_ptr->bounding_box[1];

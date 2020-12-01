@@ -1,6 +1,6 @@
 /*
- * This file is part of FNFT.  
- *                                                                  
+ * This file is part of FNFT.
+ *
  * FNFT is free software; you can redistribute it and/or
  * modify it under the terms of the version 2 of the GNU General
  * Public License as published by the Free Software Foundation.
@@ -9,12 +9,13 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *                                                                      
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
  * Sander Wahls (TU Delft) 2018.
+ * Peter J Prins (TU Delft) 2020.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -52,7 +53,7 @@ static INT nse_finvscatter_test(const INT kappa, const REAL error_bound,
         q[i] = 0.0;
     }
 
-    ret_code = nse_fscatter(D, q_exact, r_exact, eps_t, kappa, result, &deg, NULL,
+    ret_code = nse_fscatter(D, q_exact, r_exact, eps_t, result, &deg, NULL,
         discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 
@@ -75,4 +76,3 @@ leave_fun:
     free(result);
     return ret_code;
 }
-

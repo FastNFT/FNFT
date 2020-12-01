@@ -14,8 +14,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2017-2018.
+ * Sander Wahls (TU Delft) 2017-2018, 2020.
  * Shrinivas Chimmalgi (TU Delft) 2018.
+ * Peter J Prins (TU Delft) 2020.
  *
  */
 
@@ -30,10 +31,8 @@
  * Returns the length of array to be allocated based on the number
  * of samples and discretization.
  */
-
 UINT nse_fscatter_numel(UINT D, nse_discretization_t discretization)
 {
-
     const UINT deg = nse_discretization_degree(discretization);
     if (deg == 0)
         return 0; // unknown discretization
@@ -42,13 +41,12 @@ UINT nse_fscatter_numel(UINT D, nse_discretization_t discretization)
 }
 
 INT nse_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r,
-        const REAL eps_t, const INT kappa,
-        COMPLEX * const result, UINT * const deg_ptr,
+        const REAL eps_t, COMPLEX * const result, UINT * const deg_ptr,
         INT * const W_ptr, nse_discretization_t discretization)
 {
     INT ret_code = SUCCESS;
     akns_discretization_t akns_discretization;
-    
+
     // Check inputs
     if (D == 0)
         return E_INVALID_ARGUMENT(D);
@@ -56,17 +54,16 @@ INT nse_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r,
         return E_INVALID_ARGUMENT(q);
     if (eps_t <= 0.0)
         return E_INVALID_ARGUMENT(eps_t);
-    if (abs(kappa) != 1)
-        return E_INVALID_ARGUMENT(kappa);
     if (result == NULL)
         return E_INVALID_ARGUMENT(result);
     if (deg_ptr == NULL)
         return E_INVALID_ARGUMENT(deg_ptr);
-    
+
     ret_code = nse_discretization_to_akns_discretization(discretization, &akns_discretization);
-    CHECK_RETCODE(ret_code, leave_fun);   
+    CHECK_RETCODE(ret_code, leave_fun);
 
     ret_code = akns_fscatter(D, q, r, eps_t, result, deg_ptr, W_ptr, akns_discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
 
 leave_fun:
     return ret_code;
