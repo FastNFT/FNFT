@@ -880,18 +880,18 @@ const REAL error_bounds[6], fnft_kdvv_opts_t * const opts) {
         ret_code = E_TEST_FAILED;
         goto release_mem;
     }
-//    if (!(errs[3] <= error_bounds[3])) {
-//        ret_code = E_TEST_FAILED;
-//        goto release_mem;
-//    }
-//    if (!(errs[4] <= error_bounds[4])) {
-//        ret_code = E_TEST_FAILED;
-//        goto release_mem;
-//    }
-//    if (!(errs[5] <= error_bounds[5])) {
-//        ret_code = E_TEST_FAILED;
-//        goto release_mem;
-//    }
+    if (!(errs[3] <= error_bounds[3])) {
+        ret_code = E_TEST_FAILED;
+        goto release_mem;
+    }
+    if (!(errs[4] <= error_bounds[4])) {
+        ret_code = E_TEST_FAILED;
+        goto release_mem;
+    }
+    if (!(errs[5] <= error_bounds[5])) {
+        ret_code = E_TEST_FAILED;
+        goto release_mem;
+    }
 
     ///// Clean up /////
 
