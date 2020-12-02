@@ -617,9 +617,9 @@ static inline INT kdvv_compute_boundstates(
             {} // Stop the compiler from complaining about starting a case with a declaration rather than a statement
 
             // Set the search grid
-            UINT const M = D;
+            UINT const M = 1000;
             COMPLEX const eps_xi = I*(bounding_box[3]-bounding_box[2])/(M - 1);
-            xi = malloc(D * sizeof(COMPLEX));
+            xi = malloc(M * sizeof(COMPLEX));
             if (xi == NULL) {
                 ret_code = E_NOMEM;
                 goto leave_fun;
