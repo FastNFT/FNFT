@@ -33,7 +33,7 @@ INT main()
         2.8e-7,     // continuous spectrum
         3.0e-9,     // a(xi)
         2.2e-7,     // b(xi)
-        FNFT_INF,   // bound states
+        2.2e-10,    // bound states
         FNFT_INF,   // norming constants
         FNFT_INF    // residues
     };
@@ -53,6 +53,36 @@ INT main()
         for (UINT i=0; i<6; i++)
             eb[i] /= 32.0;
         ret_code = kdvv_testcases_test_fnft(tc, D, eb, &opts);
+        CHECK_RETCODE(ret_code, leave_fun);
+    }
+
+    // Test Richardson extrapolation
+    opts.richardson_extrapolation_flag = 1;
+    D = 256;
+    REAL eb_RE[6] = {  // error bounds
+        4.6e-9,     // continuous spectrum
+        3.6e-10,    // a(xi)
+        3.1e-9,     // b(xi)
+        2.2e-10,    // bound states
+        FNFT_INF,     // norming constants
+        FNFT_INF      // residues
+    };
+
+    ret_code = kdvv_testcases_test_fnft(tc, D, eb_RE, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    ret_code = kdvv_testcases_test_fnft(tc, D+1, eb_RE, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    ret_code = kdvv_testcases_test_fnft(tc, D-1, eb_RE, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    // check for 6th order error decay
+    for (UINT n=0; n<2; n++){
+        D *= 2;
+        for (UINT i=0; i<6; i++)
+            eb_RE[i] /= 64.0;
+        ret_code = kdvv_testcases_test_fnft(tc, D, eb_RE, &opts);
         CHECK_RETCODE(ret_code, leave_fun);
     }
 

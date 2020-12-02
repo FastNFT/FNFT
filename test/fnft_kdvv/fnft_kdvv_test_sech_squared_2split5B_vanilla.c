@@ -33,7 +33,7 @@ INT main()
         1.1e-3,     // continuous spectrum
         3.4e-4,     // a(xi)
         2.1e-3,     // b(xi)
-        FNFT_INF,     // bound states
+        1.3e-3,     // bound states
         FNFT_INF,     // norming constants
         FNFT_INF,     // residues
     };
