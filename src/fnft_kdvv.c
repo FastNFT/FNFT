@@ -70,7 +70,7 @@ static inline INT kdvv_compute_boundstates(
         const REAL eps_t,
         UINT * const K_ptr,
         COMPLEX * const bound_states,
-        fnft_kdvv_opts_t * const opts);
+        fnft_kdvv_opts_t const * const opts);
 
 static inline INT fnft_kdvv_base(
         const UINT D,
@@ -591,28 +591,25 @@ static inline INT kdvv_compute_boundstates(
         const REAL eps_t,
         UINT * const K_ptr,
         COMPLEX * const bound_states,
-        fnft_kdvv_opts_t * const opts)
+        fnft_kdvv_opts_t const * const opts)
 {
     INT ret_code = SUCCESS;
     UINT K=*K_ptr;
     UINT upsampling_factor, i;
-    kdv_discretization_t discretization;
     COMPLEX * xi = NULL;
     COMPLEX * scatter_coeffs = NULL;
     REAL const kappa = 1;
 
-    REAL const degree1step = kdv_discretization_degree(opts->discretization);
-    // degree1step == 0 here indicates a valid slow method. Incorrect
-    // discretizations should have been caught earlier.
     upsampling_factor = kdv_discretization_upsampling_factor(opts->discretization);
     if (upsampling_factor == 0) {
         ret_code = E_INVALID_ARGUMENT(opts->discretization);
         goto leave_fun;
     }
-    if (degree1step != 0) {
-        ret_code = E_INVALID_ARGUMENT(opts);
-        CHECK_RETCODE(ret_code, leave_fun);
-    }
+
+    // Copy the values of opts and modify it from fast to slow discretization if needed.
+    fnft_kdvv_opts_t opts_slow = *opts;
+    ret_code=fnft__kdv_slow_discretization(&(opts_slow.discretization));
+    CHECK_RETCODE(ret_code, leave_fun);
 
     // Localize bound states ...
     switch (opts->bound_state_localization) {
@@ -643,7 +640,7 @@ static inline INT kdvv_compute_boundstates(
             // Compute a(xi) on the grid on the imaginary axis
             UINT const derivative_flag = 0;
             ret_code = kdv_scatter_matrix(D, q, r, eps_t, kappa,
-                                          M, xi, scatter_coeffs ,opts->discretization,derivative_flag);
+                                          M, xi, scatter_coeffs ,opts_slow.discretization,derivative_flag);
             CHECK_RETCODE(ret_code, leave_fun);
 
             // Search for zerocrossings of a(xi)
@@ -673,17 +670,8 @@ static inline INT kdvv_compute_boundstates(
             // Perform Newton iterations. Initial guesses of bound-states
             // should be in the continuous-time domain.
 
-            // Setting 'discretization' as the base method for discretizations based on
-            // splitting schemes.
-            if (upsampling_factor == 1 && degree1step != 0){
-                discretization = kdv_discretization_BO;
-            }else if(upsampling_factor == 2 && degree1step != 0){
-                discretization = kdv_discretization_CF4_2;
-            }else
-                discretization = opts->discretization;
-
             ret_code = kdvv_refine_bound_states_newton(D, q, r, T, K, bound_states,
-                    discretization, opts->niter, bounding_box);
+                    opts_slow.discretization, opts_slow.niter, bounding_box);
             CHECK_RETCODE(ret_code, leave_fun);
 
             break;

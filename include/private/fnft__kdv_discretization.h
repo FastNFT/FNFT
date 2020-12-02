@@ -321,6 +321,13 @@ FNFT_INT fnft__kdv_discretization_change_of_basis_matrix_from_S(FNFT_COMPLEX * c
 */
 FNFT_INT fnft__kdv_discretization_vanilla_flag(FNFT_INT * const vanilla_flag,
                                                fnft_kdv_discretization_t const kdv_discretization);
+
+/**
+ * @brief This routine returns the slow discretization to use for the calculation of the discrete spectrum. The returned discritization has the same error order and shares the same preprocessing of the potential.
+ * @param[in,out] kdv_discretization_ptr Pointer to a discretization of type \link fnft_kdv_discretization_t \endlink.
+ */
+FNFT_INT fnft__kdv_slow_discretization(fnft_kdv_discretization_t * const kdv_discretization_ptr);
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define kdv_discretization_degree(...) fnft__kdv_discretization_degree(__VA_ARGS__)
 #define kdv_discretization_boundary_coeff(...) fnft__kdv_discretization_boundary_coeff(__VA_ARGS__)
@@ -337,6 +344,7 @@ FNFT_INT fnft__kdv_discretization_vanilla_flag(FNFT_INT * const vanilla_flag,
 #define kdv_discretization_change_of_basis_matrix_to_S(...) fnft__kdv_discretization_change_of_basis_matrix_to_S(__VA_ARGS__)
 #define kdv_discretization_change_of_basis_matrix_from_S(...) fnft__kdv_discretization_change_of_basis_matrix_from_S(__VA_ARGS__)
 #define kdv_discretization_vanilla_flag(...) fnft__kdv_discretization_vanilla_flag(__VA_ARGS__)
+#define kdv_slow_discretization(...) fnft__kdv_slow_discretization (__VA_ARGS__))
 #endif
 
 #endif

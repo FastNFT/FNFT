@@ -987,3 +987,94 @@ INT fnft__kdv_discretization_vanilla_flag(INT * const vanilla_flag,
     release_mem:
         return ret_code;
 }
+
+/**
+ * This routine returns the slow discretization to use for the calculation of the discrete spectrum. The returned discritization has the same error order and shares the same preprocessing of the potential.
+ */
+INT fnft__kdv_slow_discretization(kdv_discretization_t * const kdv_discretization_ptr) {
+    INT ret_code = SUCCESS;
+
+    switch (*kdv_discretization_ptr) {
+        case kdv_discretization_2SPLIT1A_VANILLA:
+        case kdv_discretization_2SPLIT1B_VANILLA:
+        case kdv_discretization_2SPLIT2B_VANILLA:
+        case kdv_discretization_2SPLIT2S_VANILLA:
+        case kdv_discretization_2SPLIT3A_VANILLA:
+        case kdv_discretization_2SPLIT3B_VANILLA:
+        case kdv_discretization_2SPLIT3S_VANILLA:
+        case kdv_discretization_2SPLIT4A_VANILLA:
+        case kdv_discretization_2SPLIT4B_VANILLA:
+        case kdv_discretization_2SPLIT5A_VANILLA:
+        case kdv_discretization_2SPLIT5B_VANILLA:
+        case kdv_discretization_2SPLIT6A_VANILLA:
+        case kdv_discretization_2SPLIT6B_VANILLA:
+        case kdv_discretization_2SPLIT7A_VANILLA:
+        case kdv_discretization_2SPLIT7B_VANILLA:
+        case kdv_discretization_2SPLIT8A_VANILLA:
+        case kdv_discretization_2SPLIT8B_VANILLA:
+        case kdv_discretization_2SPLIT2A_VANILLA:
+        case kdv_discretization_2SPLIT2_MODAL_VANILLA:
+            // Second order fast vanilla method
+            *kdv_discretization_ptr = kdv_discretization_BO_VANILLA;
+            break;
+
+        case kdv_discretization_2SPLIT1A:
+        case kdv_discretization_2SPLIT1B:
+        case kdv_discretization_2SPLIT2B:
+        case kdv_discretization_2SPLIT2S:
+        case kdv_discretization_2SPLIT3A:
+        case kdv_discretization_2SPLIT3B:
+        case kdv_discretization_2SPLIT3S:
+        case kdv_discretization_2SPLIT4A:
+        case kdv_discretization_2SPLIT4B:
+        case kdv_discretization_2SPLIT5A:
+        case kdv_discretization_2SPLIT5B:
+        case kdv_discretization_2SPLIT6A:
+        case kdv_discretization_2SPLIT6B:
+        case kdv_discretization_2SPLIT7A:
+        case kdv_discretization_2SPLIT7B:
+        case kdv_discretization_2SPLIT8A:
+        case kdv_discretization_2SPLIT8B:
+        case kdv_discretization_2SPLIT2A:
+        case kdv_discretization_2SPLIT2_MODAL:
+            // Second order fast non-vanilla method
+            *kdv_discretization_ptr = kdv_discretization_BO;
+            break;
+
+        case kdv_discretization_4SPLIT4A_VANILLA:
+        case kdv_discretization_4SPLIT4B_VANILLA:
+            // Fourth order fast vanilla method
+            *kdv_discretization_ptr = kdv_discretization_CF4_2_VANILLA;
+            break;
+
+        case kdv_discretization_4SPLIT4A:
+        case kdv_discretization_4SPLIT4B:
+            // Fourth order fast non-vanilla method
+            *kdv_discretization_ptr = kdv_discretization_CF4_2;
+            break;
+
+        case kdv_discretization_BO_VANILLA: // Bofetta-Osborne scheme
+        case kdv_discretization_CF4_2_VANILLA:
+        case kdv_discretization_CF4_3_VANILLA:
+        case kdv_discretization_CF5_3_VANILLA:
+        case kdv_discretization_CF6_4_VANILLA:
+        case kdv_discretization_ES4_VANILLA:
+        case kdv_discretization_TES4_VANILLA:
+        case kdv_discretization_BO: // Bofetta-Osborne scheme
+        case kdv_discretization_CF4_2:
+        case kdv_discretization_CF4_3:
+        case kdv_discretization_CF5_3:
+        case kdv_discretization_CF6_4:
+        case kdv_discretization_ES4:
+        case kdv_discretization_TES4:
+            // Allready a slow discretization, leave discretization as is.
+            break;
+
+        default: // Unknown discretization
+            ret_code = E_INVALID_ARGUMENT(kdv_discretization_ptr);
+            CHECK_RETCODE(ret_code, leave_fun);
+    }
+
+leave_fun:
+    return ret_code;
+}

@@ -33,29 +33,29 @@ INT main()
         8.3e-4,     // continuous spectrum
         1.8e-4,     // a(xi)
         2.7e-6,     // b(xi)
-        FNFT_INF,   // bound states
-        FNFT_INF,   // norming constants
-        FNFT_INF    // residues
+        1.3e-3,     // bound states
+        2.1e-2,     // norming constants
+        2.0e-2      // residues
     };
 
     ret_code = kdvv_testcases_test_fnft(tc, D, eb, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
     //  Limited test, because it takes long
-//    ret_code = kdvv_testcases_test_fnft(tc, D+1, eb, &opts);
-//    CHECK_RETCODE(ret_code, leave_fun);
-//
-//    ret_code = kdvv_testcases_test_fnft(tc, D-1, eb, &opts);
-//    CHECK_RETCODE(ret_code, leave_fun);
-//
-//    // check for quadratic error decay
-//    for (UINT n=0; n<1; n++){
-//    D *= 2;
-//        for (UINT i=0; i<6; i++)
-//             eb[i] /= 4.0;
-//        ret_code = kdvv_testcases_test_fnft(tc, D, eb, &opts);
-//        CHECK_RETCODE(ret_code, leave_fun);
-//    }
+    ret_code = kdvv_testcases_test_fnft(tc, D+1, eb, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    ret_code = kdvv_testcases_test_fnft(tc, D-1, eb, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    // check for quadratic error decay
+    for (UINT n=0; n<1; n++){
+    D *= 2;
+        for (UINT i=0; i<6; i++)
+             eb[i] /= 4.0;
+        ret_code = kdvv_testcases_test_fnft(tc, D, eb, &opts);
+        CHECK_RETCODE(ret_code, leave_fun);
+    }
 
 leave_fun:
     if (ret_code != SUCCESS)
