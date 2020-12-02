@@ -29,9 +29,9 @@
  */
 INT kdv_scatter_bound_states(const UINT D, COMPLEX const * const q,
         COMPLEX const * const r, REAL const *const T, UINT K,
-        COMPLEX *bound_states, COMPLEX *a_vals,
-        COMPLEX *aprime_vals, COMPLEX *b,
-        kdv_discretization_t discretization, UINT skip_b_flag)
+        COMPLEX * const bound_states, COMPLEX * const a_vals,
+        COMPLEX * const aprime_vals, COMPLEX * const b,
+        kdv_discretization_t const discretization, UINT const skip_b_flag)
 {
     
     INT ret_code = SUCCESS;
@@ -55,8 +55,10 @@ INT kdv_scatter_bound_states(const UINT D, COMPLEX const * const q,
         return E_INVALID_ARGUMENT(D);
     if (q == NULL)
         return E_INVALID_ARGUMENT(q);
+    if (r == NULL)
+    return E_INVALID_ARGUMENT(r);
     if (T == NULL)
-        return E_INVALID_ARGUMENT(eps_t);
+        return E_INVALID_ARGUMENT(T);
     if (K <= 0.0)
         return E_INVALID_ARGUMENT(K);
     if (bound_states == NULL)

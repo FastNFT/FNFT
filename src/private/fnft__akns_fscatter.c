@@ -64,7 +64,7 @@ static inline void akns_fscatter_zero_freq_scatter_matrix(COMPLEX * const M,
  */
 INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r,
                  const REAL eps_t, COMPLEX * const result, UINT * const deg_ptr,
-                 INT * const W_ptr, akns_discretization_t discretization)
+                 INT * const W_ptr, akns_discretization_t const discretization)
 {
     
     INT ret_code;

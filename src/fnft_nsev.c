@@ -63,7 +63,7 @@ UINT fnft_nsev_max_K(const UINT D, fnft_nsev_opts_t const * const opts)
  */
 
 static inline INT nsev_compute_boundstates(
-        UINT D,
+        UINT const D,
         COMPLEX const * const q,
         COMPLEX const * const r,
         const UINT deg,
@@ -100,7 +100,7 @@ static inline INT nsev_compute_contspec(
         const UINT M,
         COMPLEX * const result,
         const INT kappa,
-        fnft_nsev_opts_t * const opts);
+        fnft_nsev_opts_t const * const opts);
 
 static inline INT nsev_compute_normconsts_or_residues(
         const UINT D,
@@ -110,16 +110,16 @@ static inline INT nsev_compute_normconsts_or_residues(
         const UINT K,
         COMPLEX * const bound_states,
         COMPLEX * const normconsts_or_residues,
-        fnft_nsev_opts_t * const opts);
+        fnft_nsev_opts_t const * const opts);
 
 static inline INT nsev_refine_bound_states_newton(const UINT D,
         COMPLEX const * const q,
         COMPLEX const * const r,
         REAL const * const T,
         UINT K,
-        COMPLEX * bound_states,
-        nse_discretization_t discretization,
-        UINT niter,
+        COMPLEX * const bound_states,
+        nse_discretization_t const discretization,
+        UINT const niter,
         REAL const * const bounding_box);
 
 /**
@@ -133,7 +133,7 @@ static inline INT nsev_refine_bound_states_newton(const UINT D,
  */
 INT fnft_nsev(
         const UINT D,
-        COMPLEX * const q,
+        COMPLEX const * const q,
         REAL const * const T,
         const UINT M,
         COMPLEX * const contspec,
@@ -758,7 +758,7 @@ static inline INT nsev_compute_contspec(
         const UINT M,
         COMPLEX * const result,
         const INT kappa,
-        fnft_nsev_opts_t * const opts)
+        fnft_nsev_opts_t const * const opts)
 {
     COMPLEX *H11_vals = NULL, *H21_vals = NULL;
     COMPLEX A, V;
@@ -905,7 +905,7 @@ static inline INT nsev_compute_normconsts_or_residues(
         const UINT K,
         COMPLEX * const bound_states,
         COMPLEX * const normconsts_or_residues,
-        fnft_nsev_opts_t * const opts)
+        fnft_nsev_opts_t const * const opts)
 {
     COMPLEX *a_vals = NULL, *aprime_vals = NULL;
     UINT i, offset = 0;
@@ -981,8 +981,8 @@ static inline INT nsev_refine_bound_states_newton(
         COMPLEX const * const r,
         REAL const * const T,
         const UINT K,
-        COMPLEX * bound_states,
-        nse_discretization_t discretization,
+        COMPLEX * const bound_states,
+        nse_discretization_t const discretization,
         const UINT niter,
         REAL const * const bounding_box)
 {

@@ -34,7 +34,7 @@
 INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
     COMPLEX const * const r, const REAL eps_t, const INT kappa,
     const UINT K, COMPLEX const * const lambda,
-    COMPLEX * const result, kdv_discretization_t discretization,
+    COMPLEX * const result, kdv_discretization_t const discretization,
     const UINT derivative_flag)
 {
     (void) &kappa; // Suppress compiler warning

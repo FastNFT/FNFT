@@ -73,7 +73,7 @@ FNFT_UINT fnft__nse_fscatter_numel(FNFT_UINT D,
  * with `malloc(nse_fscatter_numel(D,discretization)*sizeof(COMPLEX))`.
  * @param[out] deg_ptr Pointer to variable containing degree of the discretization.
  * Determined based on discretization by \link fnft__nse_discretization_degree \endlink.
- * @param[in] W_ptr Pointer to normalization flag \link fnft_nsev_opts_t::normalization_flag \endlink.
+ * @param[out] W_ptr Pointer to normalization flag \link fnft_nsev_opts_t::normalization_flag \endlink.
  * @param[in] discretization The type of discretization to be used. Should be of type
  * \link fnft_nse_discretization_t \endlink. Not all fnft_nse_discretization_t discretizations are supported.
  * Check \link fnft_nse_discretization_t \endlink for list of supported types.
@@ -88,7 +88,7 @@ FNFT_INT fnft__nse_fscatter(const FNFT_UINT D,
                             FNFT_COMPLEX * const result,
                             FNFT_UINT * const deg_ptr,
                             FNFT_INT * const W_ptr,
-                            fnft_nse_discretization_t discretization);
+                            fnft_nse_discretization_t const discretization);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define nse_fscatter_numel(...) fnft__nse_fscatter_numel(__VA_ARGS__)

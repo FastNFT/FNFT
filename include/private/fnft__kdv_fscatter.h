@@ -74,7 +74,7 @@ FNFT_UINT fnft__kdv_fscatter_numel(FNFT_UINT D,
  * with `malloc(kdv_fscatter_numel(D,discretization)*sizeof(COMPLEX))`.
  * @param[out] deg_ptr Pointer to variable containing degree of the discretization.
  * Determined based on discretization by \link fnft__kdv_discretization_degree \endlink.
- * @param[in] W_ptr Pointer to normalization flag \link fnft_kdvv_opts_t::normalization_flag \endlink.
+ * @param[out] W_ptr Pointer to normalization flag \link fnft_kdvv_opts_t::normalization_flag \endlink.
  * @param[in] discretization The type of discretization to be used. Should be of type
  * \link fnft_kdv_discretization_t \endlink. Not all fnft_kdv_discretization_t discretizations are supported.
  * Check \link fnft_kdv_discretization_t \endlink for list of supported types.
@@ -90,7 +90,7 @@ FNFT_INT fnft__kdv_fscatter(const FNFT_UINT D,
                             FNFT_COMPLEX * const result,
                             FNFT_UINT * const deg_ptr,
                             FNFT_INT * const W_ptr,
-                            fnft_kdv_discretization_t discretization);
+                            fnft_kdv_discretization_t const discretization);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define kdv_fscatter_numel(...) fnft__kdv_fscatter_numel(__VA_ARGS__)

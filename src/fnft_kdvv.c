@@ -62,7 +62,7 @@ UINT fnft_kdvv_max_K(const UINT D, fnft_kdvv_opts_t const * const opts)
  */
 
 static inline INT kdvv_compute_boundstates(
-        UINT D,
+        UINT const D,
         COMPLEX const * const q,
         COMPLEX const * const r,
         REAL const bounding_box[4],
@@ -74,8 +74,8 @@ static inline INT kdvv_compute_boundstates(
 
 static inline INT fnft_kdvv_base(
         const UINT D,
-        COMPLEX * const q,
-        COMPLEX * const r,
+        COMPLEX const * const q,
+        COMPLEX const * const r,
         REAL const * const T,
         const UINT M,
         COMPLEX * const contspec,
@@ -92,33 +92,33 @@ static inline INT kdvv_compute_contspec(
         const INT W,
         COMPLEX * const transfer_matrix,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         REAL const * const T,
         const UINT D,
         REAL const * const XI,
         const UINT M,
         COMPLEX * const result,
         const INT kappa,
-        fnft_kdvv_opts_t * const opts);
+        fnft_kdvv_opts_t const * const opts);
 
 static inline INT kdvv_compute_normconsts_or_residues(
         const UINT D,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         REAL const * const T,
         const UINT K,
         COMPLEX * const bound_states,
         COMPLEX * const normconsts_or_residues,
-        fnft_kdvv_opts_t * const opts);
+        fnft_kdvv_opts_t const * const opts);
 
 static inline INT kdvv_refine_bound_states_newton(const UINT D,
         COMPLEX const * const q,
         COMPLEX const * const r,
         REAL const * const T,
         UINT K,
-        COMPLEX * bound_states,
-        kdv_discretization_t discretization,
-        UINT niter,
+        COMPLEX * const bound_states,
+        kdv_discretization_t const discretization,
+        UINT const niter,
         REAL const * const bounding_box);
 
 /**
@@ -132,7 +132,7 @@ static inline INT kdvv_refine_bound_states_newton(const UINT D,
  */
 INT fnft_kdvv(
         const UINT D,
-        COMPLEX * const q,
+        COMPLEX const * const q,
         REAL const * const T,
         const UINT M,
         COMPLEX * const contspec,
@@ -321,7 +321,7 @@ INT fnft_kdvv(
             *K_ptr=0;
         }
     }
-    REAL const bounding_box[4] = {0,0,0,CSQRT(maxq)};
+    REAL const bounding_box[4] = {0,0,0,(REAL)CSQRT(maxq)};
 
     ret_code = fnft_kdvv_base(D_effective, q_preprocessed, r_preprocessed, T, M, contspec, XI, K_ptr,
                 bound_states, normconsts_or_residues, kappa, bounding_box, opts);
@@ -473,8 +473,8 @@ INT fnft_kdvv(
 // code doubling while being efficient.
 static inline INT fnft_kdvv_base(
         const UINT D,
-        COMPLEX * const q,
-        COMPLEX * const r,
+        COMPLEX const * const q,
+        COMPLEX const * const r,
         REAL const * const T,
         const UINT M,
         COMPLEX * const contspec,
@@ -598,7 +598,7 @@ static inline INT kdvv_compute_boundstates(
     UINT upsampling_factor, i;
     COMPLEX * xi = NULL;
     COMPLEX * scatter_coeffs = NULL;
-    REAL const kappa = 1;
+    INT const kappa = 1;
 
     upsampling_factor = kdv_discretization_upsampling_factor(opts->discretization);
     if (upsampling_factor == 0) {
@@ -696,14 +696,14 @@ static inline INT kdvv_compute_contspec(
         const INT W,
         COMPLEX * const transfer_matrix,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         REAL const * const T,
         const UINT D,
         REAL const * const XI,
         const UINT M,
         COMPLEX * const result,
         const INT kappa,
-        fnft_kdvv_opts_t * const opts)
+        fnft_kdvv_opts_t const * const opts)
 {
     COMPLEX * H11_vals = NULL;
     COMPLEX A, V;
@@ -883,12 +883,12 @@ static inline INT kdvv_compute_contspec(
 static inline INT kdvv_compute_normconsts_or_residues(
         const UINT D,
         COMPLEX const * const q,
-        COMPLEX * r,
+        COMPLEX const * const r,
         REAL const * const T,
         const UINT K,
         COMPLEX * const bound_states,
         COMPLEX * const normconsts_or_residues,
-        fnft_kdvv_opts_t * const opts)
+        fnft_kdvv_opts_t const * const opts)
 {
     // TODO: Implement compute_normconsts_or_residues for KdV
     COMPLEX *a_vals = NULL, *aprime_vals = NULL;
@@ -965,8 +965,8 @@ static inline INT kdvv_refine_bound_states_newton(
         COMPLEX const * const r,
         REAL const * const T,
         const UINT K,
-        COMPLEX * bound_states,
-        kdv_discretization_t discretization,
+        COMPLEX * const bound_states,
+        kdv_discretization_t const discretization,
         const UINT niter,
         REAL const * const bounding_box)
 {

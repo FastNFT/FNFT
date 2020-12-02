@@ -34,7 +34,7 @@
 INT akns_scatter_matrix(const UINT D, COMPLEX const * const q,
         COMPLEX const * const r, const REAL eps_t,
         const UINT K, COMPLEX const * const lambda,
-        COMPLEX * const result, akns_discretization_t discretization,
+        COMPLEX * const result, akns_discretization_t const discretization,
         const UINT derivative_flag)
 {
     

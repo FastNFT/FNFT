@@ -44,7 +44,7 @@ UINT kdv_fscatter_numel(UINT D, kdv_discretization_t discretization)
 INT kdv_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r,
         const REAL eps_t, const INT kappa,
         COMPLEX * const result, UINT * const deg_ptr,
-        INT * const W_ptr, kdv_discretization_t discretization)
+        INT * const W_ptr, kdv_discretization_t const discretization)
 {
     INT ret_code = SUCCESS;
     akns_discretization_t akns_discretization;
