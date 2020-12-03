@@ -34,9 +34,9 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const * const q,
 {
     INT ret_code = SUCCESS;
     UINT neig;
-    UINT n, upsampling_factor, D_given, n_given, count;
+    UINT n, n_given, count;
     COMPLEX * l = NULL, qn, rn, ks, k,ch,chi,sh,u1,ud1,ud2, l_curr;
-    REAL eps_t_n = 0, eps_t = 0, scl_factor = 0;
+    REAL scl_factor = 0;
     COMPLEX * PHI1 = NULL, * PHI2 = NULL;
     COMPLEX * PSI1 = NULL, * PSI2 = NULL;
     COMPLEX PHI1_D = 0, PHI2_D = 0;
@@ -77,12 +77,12 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const * const q,
         goto leave_fun;
     }
 
-    upsampling_factor = nse_discretization_upsampling_factor(discretization);
+    UINT const upsampling_factor = nse_discretization_upsampling_factor(discretization);
     if (upsampling_factor == 0){
         ret_code =  E_INVALID_ARGUMENT(discretization);
         goto leave_fun;
     }
-    D_given = D/upsampling_factor;
+    UINT const D_given = D/upsampling_factor;
 
     // Allocating memory for storing PHI and PSI at all D_given points as
     // there are required to find the right value of b.
@@ -95,13 +95,12 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const * const q,
         goto leave_fun;
     }
 
-    eps_t = (T[1] - T[0])/(D_given - 1);
-    eps_t_n = -eps_t;
-    REAL eps_t_3 = eps_t*eps_t*eps_t;
-    REAL eps_t_2 = eps_t*eps_t;
+    REAL const eps_t = (T[1] - T[0])/(D_given - 1);
+    REAL const eps_t_n = -eps_t;
+    REAL const eps_t_3 = eps_t*eps_t*eps_t;
+    REAL const eps_t_2 = eps_t*eps_t;
 
-    REAL boundary_coeff;
-    boundary_coeff = nse_discretization_boundary_coeff(discretization);
+    REAL const boundary_coeff = nse_discretization_boundary_coeff(discretization);
     if (boundary_coeff == NAN){
         ret_code = E_INVALID_ARGUMENT(>discretization);
         goto leave_fun;
