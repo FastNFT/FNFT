@@ -373,11 +373,12 @@ INT fnft__akns_discretization_method_weights(COMPLEX **weights_ptr,
             goto  leave_fun;
     }
     
-    
-    *weights_ptr = weights;
-    
     leave_fun:
-        return ret_code;
+    if (ret_code!=SUCCESS)
+        free(weights);
+    else
+        *weights_ptr = weights;
+    return ret_code;
 }
 
 /**
