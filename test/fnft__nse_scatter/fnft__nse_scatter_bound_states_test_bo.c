@@ -1,6 +1,6 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
+* This file is part of FNFT.
+*
 * FNFT is free software; you can redistribute it and/or
 * modify it under the terms of the version 2 of the GNU General
 * Public License as published by the Free Software Foundation.
@@ -9,12 +9,12 @@
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-*                                                                      
+*
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018, 2020.
 * Shrinivas Chimmalgi (TU Delft) 2017-2018.
 */
 #define FNFT_ENABLE_SHORT_NAMES
@@ -32,8 +32,7 @@ INT nse_scatter_bound_states_test_bo()
     INT ret_code;
     REAL eps_t, T[2] = {-16,16};
     REAL errs[3], error_bounds[3];
-    COMPLEX q[256];
-    COMPLEX *r = NULL;
+    COMPLEX q[256], r[256];
     COMPLEX a_vals[3], aprime_vals[3], b_vals[3];
     COMPLEX bound_states[3] = {0.5*I, 1.5*I, 2.5*I};
     eps_t = (T[1] - T[0])/(D - 1);
@@ -68,7 +67,7 @@ INT nse_scatter_bound_states_test_bo()
     	    else
         	i1=i1-1;
         	norm_right=norm_right+ eps_t*abs(q(i0));
-    	    end	
+    	    end
 	end
 	split_point=i0;
 
@@ -99,18 +98,20 @@ INT nse_scatter_bound_states_test_bo()
            		 -1i*eps_t*l^2*cosh(k*eps_t)/ks-(l*eps_t-1i-1i*l^2/ks)*sinh(k*eps_t)/k];
         		T=[U,zeros(2);Udash,U];
         		SL=SL*T;
-    		end   
+    		end
     		TM = SR*SL;
     		a(j)=(TM(1,1))*exp(1i*l*Tend)*exp(-1i*l*T1);
     		aprime(j)= (TM(3,1)+1i*Tend*(TM(1,1)+TM(3,3)))*exp(1i*l*Tend)*exp(-1i*l*T1);
     		b(j)=(SL(2,1)/SR(1,1))*exp(-1i*l*T1)*exp(-1i*l*Tend);
 	end
-	format long g; a_vals_exact = a.' 
+	format long g; a_vals_exact = a.'
 	aprime_vals_exact = aprime.'
 	bvals_exact = b.'
     */
-    for (i=0; i<D; i++)
+    for (i=0; i<D; i++) {
         q[i] = 3.0*misc_sech(T[0] + i*eps_t);
+        r[i] = -CONJ(q[i]);
+    }
     ret_code = nse_scatter_bound_states(D, q, r, T, 3,
         bound_states, a_vals, aprime_vals, b_vals, nse_discretization_BO, 0);
     if (ret_code != SUCCESS)
