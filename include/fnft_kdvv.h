@@ -205,14 +205,17 @@ FNFT_UINT fnft_kdvv_max_K(const FNFT_UINT D,
     fnft_kdvv_opts_t const * const opts);
 
 /**
- * @brief Nonlinear Fourier transform for the nonlinear Schroedinger equation
- * with vanishing boundary conditions. Fast algorithms are used if the discretization supports it.
+ * @brief Nonlinear Fourier transform for the Korteweg-de Vries
+ * equation with vanishing boundary conditions.
  *
- * This routine computes the nonlinear Fourier transform for the nonlinear
- * Schroedinger equation \f[ iq_x + q_{tt} \pm 2q|q|^2=0, \quad  q=q(x,t), \f]
- * of Zakharov and Shabat (<a href="http://jetp.ac.ru/cgi-bin/e/index/e/34/1/p62?a=list">Soviet. Phys. JTEP 31(1), 1972</a>)
+ * This routine computes the nonlinear Fourier transform for the
+ * Korteweg-de Vries equation
+ * \f[ q_x + 6qq_{t} + q_{ttt}=0, \quad  q=q(x,t), \f]
+ * of Gardner et al. (<a href="https://doi.org/10.1103/PhysRevLett.19.1095">
+ * Phys. Rev. Lett., 1967</a>)
  * for initial conditions with vanishing boundaries
  * \f[ \lim_{t\to \pm \infty }q(x_0,t) = 0 \text{ sufficiently rapidly.} \f]
+ * Fast algorithms are used if the discretization supports it.
  * \n
  * The main references are:
  *      - Wahls and Poor,<a href="http://dx.doi.org/10.1109/ICASSP.2013.6638772">&quot;Introducing the fast nonlinear Fourier transform,&quot;</a> Proc. ICASSP 2013.

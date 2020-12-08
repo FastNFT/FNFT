@@ -64,8 +64,8 @@ INT main()
         4.3e-6,     // a(xi)
         1.2e-5,     // b(xi)
         9.4e-6,     // bound states
-        FNFT_INF,     // norming constants
-        FNFT_INF      // residues
+        2.1e-2,     // norming constants
+        2.1e-2      // residues
     };
 
     ret_code = kdvv_testcases_test_fnft(tc, D, eb_RE, &opts);
@@ -80,8 +80,10 @@ INT main()
     // check for 3rd order error decay
     for (UINT n=0; n<5; n++){
         D *= 2;
-        for (UINT i=0; i<6; i++)
+        for (UINT i=0; i<4; i++)
             eb_RE[i] /= 8.0;
+        for (UINT i=4; i<6; i++)
+            eb_RE[i] /= 4.0; // Only 2nd order error decay for norming constants and residues
         ret_code = kdvv_testcases_test_fnft(tc, D, eb_RE, &opts);
         CHECK_RETCODE(ret_code, leave_fun);
     }

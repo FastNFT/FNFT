@@ -59,8 +59,6 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const * const q,
         return E_INVALID_ARGUMENT(q);
     if (r == NULL)
         return E_INVALID_ARGUMENT(r);
-    if (q == NULL)
-        return E_INVALID_ARGUMENT(q);
     if (T == NULL)
         return E_INVALID_ARGUMENT(T);
     if (K <= 0.0)
@@ -345,7 +343,7 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const * const q,
                 case nse_discretization_CF5_3:
                 case nse_discretization_CF6_4:
                     {} // Stop the compiler from complaining about starting a case with a declaration rather than a statement.
-                    COMPLEX psi_temp[4];
+                    COMPLEX psi_temp[2];
                     memcpy(psi_temp, &PSI[4*D_given], 2 * sizeof(COMPLEX));
                     for (UINT n_given=D_given; n_given-->0; ) {
                         for (UINT count=upsampling_factor; count-->0; ) {
@@ -417,9 +415,12 @@ INT nse_scatter_bound_states(const UINT D, COMPLEX const * const q,
             // computation point
             REAL error_metric = INFINITY, tmp = INFINITY;
             for (UINT n = 0; n <= D_given; n++){
-                tmp = FABS((0.5*LOG(CABS((PHI[4*n+1]/PSI[4*n+1])/(PHI[4*n+0]/PSI[4*n+0])))));
+                COMPLEX  * psi_S = &PSI[4*n], * phi_S = &PHI[4*n], b_temp[2];
+                for (UINT i=0; i<2; i++)
+                    b_temp[i] = phi_S[i]/psi_S[i];
+                tmp = FABS( 0.5* LOG( (REAL)CABS( b_temp[1]/b_temp[0] ) ) );
                 if (tmp < error_metric){
-                    b[neig] = PHI[4*n+0]/PSI[4*n+0];
+                    b[neig] = b_temp[0];
                     error_metric = tmp;
                 }
             }

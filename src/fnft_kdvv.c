@@ -890,11 +890,10 @@ static inline INT kdvv_compute_normconsts_or_residues(
         COMPLEX * const normconsts_or_residues,
         fnft_kdvv_opts_t const * const opts)
 {
-    // TODO: Implement compute_normconsts_or_residues for KdV
     COMPLEX *a_vals = NULL, *aprime_vals = NULL;
     UINT i, offset = 0;
     INT ret_code = SUCCESS;
-    kdv_discretization_t discretization;
+
     // Check inputs
     if (K == 0) // no bound states
         return SUCCESS;
@@ -915,28 +914,31 @@ static inline INT kdvv_compute_normconsts_or_residues(
         ret_code = E_INVALID_ARGUMENT(opts->discretization);
         goto leave_fun;
     }
-    // Setting discretization as the base method for discretizations based on
-    // splitting schemes.
-    REAL degree1step = kdv_discretization_degree(opts->discretization);
-    // degree1step == 0 here implies method not based on polynomial
-    // transfer matrix.
-    if (upsampling_factor == 1 && degree1step != 0)
-        discretization  = kdv_discretization_BO;
-    else if (upsampling_factor == 2 && degree1step != 0)
-        discretization  = kdv_discretization_CF4_2;
-    else
-        discretization = opts->discretization;
 
-    ret_code = kdv_scatter_bound_states(D, q, r, T, K,
-            bound_states, a_vals, aprime_vals, normconsts_or_residues, discretization, 0);
+    // Copy the values of opts and modify it from fast to slow discretization if needed.
+    fnft_kdvv_opts_t opts_slow = *opts;
+    ret_code=fnft__kdv_slow_discretization(&(opts_slow.discretization));
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    // Fetch the vanilla flag
+    INT vanilla_flag;
+    ret_code = kdv_discretization_vanilla_flag(&vanilla_flag,opts_slow.discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    if (vanilla_flag)
+        ret_code = kdv_scatter_bound_states(D, q, r, T, K,
+                bound_states, a_vals, aprime_vals, normconsts_or_residues, opts_slow.discretization, 0);
+    else
+        ret_code = kdv_scatter_bound_states(D, r, q, T, K,
+                bound_states, a_vals, aprime_vals, normconsts_or_residues, opts_slow.discretization, 0);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Update to or add residues if requested
-    if (opts->discspec_type != kdvv_dstype_NORMING_CONSTANTS) {
+    if (opts_slow.discspec_type != kdvv_dstype_NORMING_CONSTANTS) {
 
-        if (opts->discspec_type == kdvv_dstype_RESIDUES) {
+        if (opts_slow.discspec_type == kdvv_dstype_RESIDUES) {
             offset = 0;
-        } else if (opts->discspec_type == kdvv_dstype_BOTH) {
+        } else if (opts_slow.discspec_type == kdvv_dstype_BOTH) {
             offset = K;
             memcpy(normconsts_or_residues + offset,
                     normconsts_or_residues,
@@ -992,17 +994,27 @@ static inline INT kdvv_refine_bound_states_newton(
     || !(bounding_box[2] <= bounding_box[3]) )
         return E_INVALID_ARGUMENT(bounding_box);
 
+    // Fetch the vanilla flag
+    INT vanilla_flag;
+    ret_code = kdv_discretization_vanilla_flag(&vanilla_flag,discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
+
     // Perform iterations of Newton's method
     for (i = 0; i < K; i++) {
         iter = 0;
         do {
             // Compute a(lam) and a'(lam) at the current root
-            ret_code = kdv_scatter_bound_states(D, q, r, T, 1,
+            if (vanilla_flag)
+                ret_code = kdv_scatter_bound_states(D, q, r, T, 1,
                     bound_states + i, &a_val, &aprime_val, &b_val, discretization, 1);
+            else
+                ret_code = kdv_scatter_bound_states(D, r, q, T, 1,
+                bound_states + i, &a_val, &aprime_val, &b_val, discretization, 1);
             if (ret_code != SUCCESS){
                 ret_code = E_SUBROUTINE(ret_code);
                 CHECK_RETCODE(ret_code, leave_fun);
             }
+
             // Perform some checks
             if (a_val == 0.0) // we found a zero, stop here because otherwise the
                 break; // next line will cause an error if it is of higher order

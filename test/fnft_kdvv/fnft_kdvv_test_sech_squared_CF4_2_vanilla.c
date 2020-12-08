@@ -34,8 +34,8 @@ INT main()
         2.4e-4,     // a(xi)
         4.2e-6,     // b(xi)
         1.5e-6,     // bound states
-        FNFT_INF,//6.5e-6,     // norming constants
-        FNFT_INF,//5.9e-6      // residues
+        6.5e-6,     // norming constants
+        5.9e-6      // residues
     };
 
     ret_code = kdvv_testcases_test_fnft(tc, D, eb, &opts);

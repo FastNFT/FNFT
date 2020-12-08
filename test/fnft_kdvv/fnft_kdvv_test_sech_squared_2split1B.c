@@ -32,7 +32,7 @@ INT main()
     REAL eb[6] = {  // error bounds
         4.3e-2,     // continuous spectrum
         1.3e-1,     // a(xi)
-        4.e-2,      // b(xi)
+        4.0e-2,     // b(xi)
         1.3e-3,     // bound states
         2.1e-2,     // norming constants
         2.0e-2      // residues
