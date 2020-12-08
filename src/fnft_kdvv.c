@@ -920,17 +920,7 @@ static inline INT kdvv_compute_normconsts_or_residues(
     ret_code=fnft__kdv_slow_discretization(&(opts_slow.discretization));
     CHECK_RETCODE(ret_code, leave_fun);
 
-    // Fetch the vanilla flag
-    INT vanilla_flag;
-    ret_code = kdv_discretization_vanilla_flag(&vanilla_flag,opts_slow.discretization);
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    if (vanilla_flag)
-        ret_code = kdv_scatter_bound_states(D, q, r, T, K,
-                bound_states, a_vals, aprime_vals, normconsts_or_residues, opts_slow.discretization, 0);
-    else
-        ret_code = kdv_scatter_bound_states(D, r, q, T, K,
-                bound_states, a_vals, aprime_vals, normconsts_or_residues, opts_slow.discretization, 0);
+    ret_code = kdv_scatter_bound_states(D, q, r, T, K, bound_states, a_vals, aprime_vals, normconsts_or_residues, opts_slow.discretization, 0);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Update to or add residues if requested
@@ -994,22 +984,13 @@ static inline INT kdvv_refine_bound_states_newton(
     || !(bounding_box[2] <= bounding_box[3]) )
         return E_INVALID_ARGUMENT(bounding_box);
 
-    // Fetch the vanilla flag
-    INT vanilla_flag;
-    ret_code = kdv_discretization_vanilla_flag(&vanilla_flag,discretization);
-    CHECK_RETCODE(ret_code, leave_fun);
-
     // Perform iterations of Newton's method
     for (i = 0; i < K; i++) {
         iter = 0;
         do {
             // Compute a(lam) and a'(lam) at the current root
-            if (vanilla_flag)
-                ret_code = kdv_scatter_bound_states(D, q, r, T, 1,
+            ret_code = kdv_scatter_bound_states(D, q, r, T, 1,
                     bound_states + i, &a_val, &aprime_val, &b_val, discretization, 1);
-            else
-                ret_code = kdv_scatter_bound_states(D, r, q, T, 1,
-                bound_states + i, &a_val, &aprime_val, &b_val, discretization, 1);
             if (ret_code != SUCCESS){
                 ret_code = E_SUBROUTINE(ret_code);
                 CHECK_RETCODE(ret_code, leave_fun);

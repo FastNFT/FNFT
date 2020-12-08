@@ -75,7 +75,7 @@
  * @ingroup kdv
  */
 FNFT_INT fnft__kdv_scatter_bound_states(const FNFT_UINT D, FNFT_COMPLEX const * const q,
-    FNFT_COMPLEX const * const r, FNFT_REAL const * const T, FNFT_UINT K,
+    FNFT_COMPLEX const * const r, FNFT_REAL const * const T, FNFT_UINT const K,
     FNFT_COMPLEX * const bound_states, FNFT_COMPLEX * const a_vals,
     FNFT_COMPLEX * const aprime_vals, FNFT_COMPLEX * const b,
     fnft_kdv_discretization_t const discretization, FNFT_UINT const skip_b_flag);

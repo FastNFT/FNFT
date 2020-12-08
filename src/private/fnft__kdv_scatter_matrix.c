@@ -64,8 +64,9 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
     CHECK_RETCODE(ret_code, leave_fun);
 
 
-    INT vanilla_flag;
-    kdv_discretization_vanilla_flag(&vanilla_flag, discretization);
+    UINT vanilla_flag;
+    ret_code = kdv_discretization_vanilla_flag(&vanilla_flag, discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
 
     // Calculate the change of state matrix in AKNS basis across the potential
     if(vanilla_flag) {

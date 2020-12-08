@@ -302,7 +302,7 @@ FNFT_INT fnft__kdv_discretization_change_of_basis_matrix_to_S(FNFT_COMPLEX * con
                                                               fnft_kdv_discretization_t const kdv_discretization);
 
 /**
- * @brief This routine returns the change of basis matrix from the Sbasis to the basis of the discretization.
+ * @brief This routine returns the change of basis matrix from the S basis to the basis of the discretization.
  * @param[out] T 2x2 or 4x4 matrix. Left multiplication of a vector in the S basis of the discretization by T changes it to the equivalent vector in the basis of the discretization.
  * @param[in] xi spectral parameter \f$ \xi \f$.
  * @param[in] derivative_flag When 0, T is 2x2. When 1 T is 4x4, to include the derivatives.
@@ -319,7 +319,7 @@ FNFT_INT fnft__kdv_discretization_change_of_basis_matrix_from_S(FNFT_COMPLEX * c
  * @param[out] vanilla_flag: 1 for vanilla, 0 for not vanilla.
  * @param[in] kdv_discretization Discretization of type \link fnft_kdv_discretization_t \endlink that uses the AKNS basis.
 */
-FNFT_INT fnft__kdv_discretization_vanilla_flag(FNFT_INT * const vanilla_flag,
+FNFT_INT fnft__kdv_discretization_vanilla_flag(FNFT_UINT * const vanilla_flag,
                                                fnft_kdv_discretization_t const kdv_discretization);
 
 /**

@@ -131,6 +131,19 @@ typedef enum {
     fnft__akns_discretization_TES4
 } fnft__akns_discretization_t;
 
+/**
+ * @brief Enum that specifies partial differential equations for which the
+ * nonlinear Fourier transform can be calculated with the AKNS framework.
+ * M. J. Ablowitz, D. J. Kaup, A. C. Newell, and H. Segur, “The inverse
+ * scattering transform - Fourier analysis for nonlinear problems,” Studies in
+ * Applied Mathematics, vol. 53, pp. 249–315, 12 1974.
+ * `fnft__akns_pde_KdV` -- Korteweg-de Vries equation: \f[ q_x + 6qq_{t} + q_{ttt}=0, \quad  q=q(x,t). \f]
+ *`fnft__akns_pde_NSE` -- Nonlinear Schrödinger equation: \f[ iq_x + q_{tt} \pm 2q|q|^2=0, \quad  q=q(x,t), \f]
+ */
+typedef enum {
+    fnft__akns_pde_KdV,
+    fnft__akns_pde_NSE
+} fnft__akns_pde_t;
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define akns_discretization_2SPLIT2_MODAL fnft__akns_discretization_2SPLIT2_MODAL
@@ -162,6 +175,9 @@ typedef enum {
 #define akns_discretization_ES4 fnft__akns_discretization_ES4
 #define akns_discretization_TES4 fnft__akns_discretization_TES4
 #define akns_discretization_t fnft__akns_discretization_t
+#define akns_pde_KdV fnft__akns_pde_KdV
+#define akns_pde_NSE fnft__akns_pde_NSE
+#define akns_pde_t fnft__akns_pde_t
 #endif
 
 #endif

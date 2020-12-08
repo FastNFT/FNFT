@@ -67,7 +67,7 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r,
     ret_code = kdv_discretization_to_akns_discretization(discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    INT vanilla_flag;
+    UINT vanilla_flag;
     kdv_discretization_vanilla_flag(&vanilla_flag, discretization);
     if(vanilla_flag) {
         ret_code = akns_fscatter(D, q, r, eps_t, result, deg_ptr, W_ptr, akns_discretization);
