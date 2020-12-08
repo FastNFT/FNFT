@@ -32,7 +32,7 @@ int main(void) {
 #ifdef HAVE_FFTW3
         428699*FNFT_EPSILON;
 #else
-        8.6e6*FNFT_EPSILON;
+        9.1e6*FNFT_EPSILON;
 #endif
     if (kdv_finvscatter_test(D, error_bound, discretization) != SUCCESS)
         return EXIT_FAILURE;
