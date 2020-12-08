@@ -36,7 +36,6 @@ UINT fnft__akns_discretization_degree(akns_discretization_t
         case akns_discretization_2SPLIT2B:
         case akns_discretization_2SPLIT2S:
         case akns_discretization_2SPLIT2_MODAL:
-        case akns_discretization_2SPLIT2_MODAL2:
             return 1;
         case akns_discretization_2SPLIT3S:
         case akns_discretization_2SPLIT4B:
@@ -95,7 +94,6 @@ REAL fnft__akns_discretization_boundary_coeff(akns_discretization_t discretizati
         case akns_discretization_2SPLIT8A:
         case akns_discretization_2SPLIT8B:
         case akns_discretization_2SPLIT2_MODAL:
-        case akns_discretization_2SPLIT2_MODAL2:
         case akns_discretization_BO:
         case akns_discretization_CF4_2:
         case akns_discretization_CF4_3:
@@ -136,7 +134,6 @@ UINT fnft__akns_discretization_upsampling_factor(akns_discretization_t discretiz
         case akns_discretization_2SPLIT8A:
         case akns_discretization_2SPLIT8B:
         case akns_discretization_2SPLIT2_MODAL:
-        case akns_discretization_2SPLIT2_MODAL2:
         case akns_discretization_BO:
             return 1;
         case akns_discretization_4SPLIT4A:
@@ -181,7 +178,6 @@ UINT fnft__akns_discretization_method_order(akns_discretization_t discretization
         case akns_discretization_2SPLIT8A:
         case akns_discretization_2SPLIT8B:
         case akns_discretization_2SPLIT2_MODAL:
-        case akns_discretization_2SPLIT2_MODAL2:
         case akns_discretization_BO:
             return 2;
         case akns_discretization_4SPLIT4A:
@@ -276,7 +272,6 @@ INT fnft__akns_discretization_method_weights(COMPLEX **weights_ptr,
         case akns_discretization_2SPLIT8A:
         case akns_discretization_2SPLIT8B:
         case akns_discretization_2SPLIT2_MODAL:
-        case akns_discretization_2SPLIT2_MODAL2:
             weights = malloc(1 * sizeof(COMPLEX));
             if (weights == NULL) {
                 ret_code = E_NOMEM;

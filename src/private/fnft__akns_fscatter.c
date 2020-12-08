@@ -17,7 +17,6 @@
 * Sander Wahls (TU Delft) 2017-2018.
 * Peter J Prins (TU Delft) 2017-2020.
 * Shrinivas Chimmalgi (TU Delft) 2018.
-
 */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -116,36 +115,6 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             for (i=D; i-->0;) {
                 Q = eps_t * q[i];
                 R = eps_t * r[i];
-
-                scl_den = CSQRT(1 - Q*R);
-                if (scl_den == 0.0) {
-                    ret_code = E_DIV_BY_ZERO;
-                    goto release_mem;
-                }
-                scl = 1.0/scl_den;
-
-                // construct the scattering matrix for the i-th sample
-                p11[0] = 0.0;
-                p11[1] = scl;
-                p12[0] = scl*Q;
-                p12[1] = 0.0;
-                p21[0] = 0.0;
-                p21[1] = scl*R;
-                p22[0] = scl;
-                p22[1] = 0.0;
-
-                p11 += deg + 1;
-                p21 += deg + 1;
-                p12 += deg + 1;
-                p22 += deg + 1;
-            }
-            break;
-
-        case akns_discretization_2SPLIT2_MODAL2: // 2nd modified Ablowitz-Ladik discretization
-
-            for (i=D; i-->0;) {
-                Q = TANH(eps_t*CABS(q[i])) * CEXP(I*CARG(q[i]));
-                R = TANH(eps_t*CABS(r[i])) * CEXP(I*CARG(r[i]));
 
                 scl_den = CSQRT(1 - Q*R);
                 if (scl_den == 0.0) {

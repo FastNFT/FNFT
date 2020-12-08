@@ -95,7 +95,6 @@
  */
 typedef enum {
     fnft_kdv_discretization_2SPLIT2_MODAL,
-    fnft_kdv_discretization_2SPLIT2_MODAL2,
     fnft_kdv_discretization_2SPLIT1A,
     fnft_kdv_discretization_2SPLIT1B,
     fnft_kdv_discretization_2SPLIT2A,
@@ -126,7 +125,6 @@ typedef enum {
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define kdv_discretization_2SPLIT2_MODAL fnft_kdv_discretization_2SPLIT2_MODAL
-#define kdv_discretization_2SPLIT2_MODAL2 fnft_kdv_discretization_2SPLIT2_MODAL2
 #define kdv_discretization_2SPLIT1A fnft_kdv_discretization_2SPLIT1A
 #define kdv_discretization_2SPLIT1B fnft_kdv_discretization_2SPLIT1B
 #define kdv_discretization_2SPLIT2A fnft_kdv_discretization_2SPLIT2A

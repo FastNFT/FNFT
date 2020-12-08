@@ -159,8 +159,7 @@ INT fnft_nsev_inverse(
     if (opts_ptr == NULL)
         opts_ptr = &default_opts;
     if (opts_ptr->discretization != nse_discretization_2SPLIT2A
-            && opts_ptr->discretization != nse_discretization_2SPLIT2_MODAL
-	    && opts_ptr->discretization != nse_discretization_2SPLIT2_MODAL2)
+            && opts_ptr->discretization != nse_discretization_2SPLIT2_MODAL)
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
     if (contspec == NULL && K == 0)
         return E_SANITY_CHECK_FAILED(Neither contspec nor discspec provided.);

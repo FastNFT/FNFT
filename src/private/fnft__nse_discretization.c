@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017, 2020.
+* Sander Wahls (TU Delft) 2017.
 * Shrinivas Chimmalgi (TU Delft) 2017-2020.
 */
 #define FNFT_ENABLE_SHORT_NAMES
@@ -113,9 +113,6 @@ INT fnft__nse_discretization_to_akns_discretization(nse_discretization_t nse_dis
     switch (nse_discretization) {
         case nse_discretization_2SPLIT2_MODAL:
             *akns_discretization = akns_discretization_2SPLIT2_MODAL;
-            break;
-        case nse_discretization_2SPLIT2_MODAL2:
-            *akns_discretization = akns_discretization_2SPLIT2_MODAL2;
             break;
         case nse_discretization_2SPLIT1A:
             *akns_discretization = akns_discretization_2SPLIT1A;
@@ -248,8 +245,7 @@ INT fnft__nse_discretization_phase_factor_rho(const REAL eps_t, const REAL T1,
     if (boundary_coeff == NAN)
         return E_INVALID_ARGUMENT(nse_discretization);
     if (nse_discretization == nse_discretization_2SPLIT2A ||
-        nse_discretization == nse_discretization_2SPLIT2_MODAL ||
-        nse_discretization == nse_discretization_2SPLIT2_MODAL2) {
+        nse_discretization == nse_discretization_2SPLIT2_MODAL) {
         UINT degree1step = nse_discretization_degree(nse_discretization);
         if (degree1step == 0)
             return E_INVALID_ARGUMENT(nse_discretization);
@@ -296,7 +292,6 @@ INT fnft__nse_discretization_phase_factor_a(const REAL eps_t, const UINT D, REAL
         case nse_discretization_4SPLIT4B:
         case nse_discretization_2SPLIT2A:
         case nse_discretization_2SPLIT2_MODAL:
-        case nse_discretization_2SPLIT2_MODAL2:
             *phase_factor_a = -eps_t*D + (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
             break;
@@ -359,7 +354,6 @@ INT fnft__nse_discretization_phase_factor_b(const REAL eps_t, const UINT D, REAL
 
         case nse_discretization_2SPLIT2A:
         case nse_discretization_2SPLIT2_MODAL:
-        case nse_discretization_2SPLIT2_MODAL2:
             degree1step = nse_discretization_degree(nse_discretization);
             if (degree1step == 0)
                 return E_INVALID_ARGUMENT(nse_discretization);
@@ -471,7 +465,6 @@ INT fnft__nse_discretization_preprocess_signal(const UINT D, COMPLEX const * con
         case nse_discretization_2SPLIT8A:
         case nse_discretization_2SPLIT8B:
         case nse_discretization_2SPLIT2_MODAL:
-        case nse_discretization_2SPLIT2_MODAL2:
             i = 0;
             for (isub=0; isub<D_effective; isub++) {
                 q_preprocessed[isub] = q[i];

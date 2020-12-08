@@ -20,8 +20,7 @@
 #define FNFT_ENABLE_SHORT_NAMES
 #include "fnft__kdv_finvscatter.h"
 
-#define FNFT__AKNS_FINVSCATTER_Q_FROM_R(R) \
-    (discretization == kdv_discretization_2SPLIT2_MODAL2 ? TANH(-eps_t) : -eps_t)
+#define FNFT__AKNS_FINVSCATTER_Q_FROM_R(R) (-eps_t)
 #define FNFT__AKNS_FINVSCATTER_Q_FROM_R_PREFIX(s) fnft_kdv_##s
 #define FNFT__AKNS_FINVSCATTER_Q_FROM_R__PREFIX(s) fnft__kdv_##s
 #define FNFT__AKNS_FINVSCATTER_Q_FROM_R_RETURN_R_INSTEAD_OF_Q

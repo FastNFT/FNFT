@@ -207,9 +207,6 @@ start_pos_2:
             case FNFT__AKNS_FINVSCATTER_Q_FROM_R_PREFIX(discretization_2SPLIT2_MODAL):
                 *s[i].q = X/eps_t;
                 break;
-            case FNFT__AKNS_FINVSCATTER_Q_FROM_R_PREFIX(discretization_2SPLIT2_MODAL2):
-                *s[i].q = ATANH(CABS(X))*CEXP(I*CARG(X))/eps_t;
-                break;
             case FNFT__AKNS_FINVSCATTER_Q_FROM_R_PREFIX(discretization_2SPLIT2A):
                 *s[i].q = ATAN(CABS(X))*CEXP(I*CARG(X))/eps_t;
                 break;
