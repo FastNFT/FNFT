@@ -263,6 +263,39 @@ INT FNFT__AKNS_FINVSCATTER_Q_FROM_R__PREFIX(finvscatter)(
     INT ret_code = SUCCESS;
     UINT i = 0;
 
+    #ifdef FNFT__AKNS_FINVSCATTER_Q_FROM_R_TRANSPOSE_TF_MATRIX
+    // The standard discrete-time AKNS transfer matrix is
+    //
+    //   T(z) = C(z; D-1) x Z(z) x ... x C(z; 0) x Z(z), where
+    //   C(z;n) = [1 Q[n] ; R[n] 1] and Z(z) = [1 0 ; 0 1/z].
+    //
+    // The standard representation of the KdV uses R[n] = -1, so that
+    // Q cannot be recovered from R as required by this routine.
+    //
+    // To fix that, we switch Q and R are switched and reverse the order
+    // of the samples. The corresponding transfer matrix is
+    //
+    //   S(z) = C(z; 0)' x Z(z) x ... x C(z; D-1)' x Z(z),
+    //
+    //  where the ' indicates a transpose. We have
+    //
+    //    S(z) = inv(Z(z)) x T(z)' x Z(z) = [T11(z) T21(z)/z ; zT12(z) T22(z)].
+    //
+    // The next lines transform the first column of T(z) into the first
+    // column of S(z), for which Q now can be recovered from R.
+    transfer_matrix[2*(deg+1)] = 0;
+    for (i=0; i<deg; i++)
+        transfer_matrix[2*(deg+1) + 1 + i] = transfer_matrix[deg+1 + i];
+    // Remarks:
+    //   - The second column of S(z) is not used by the algorithm.
+    //   - The order of the recovered samples has to be reversed below.
+    //   - The numerical error of this approach seems higher than directly
+    //     performing forward scattering with Q[n]=-1 and R[n]=signal sample.
+    //     This should probably be adapted in the future.
+    //   - Instead of explicitly transforming the transfer matrix here, we
+    //     could instead directly how the elements are accessed above.
+    #endif
+
     // This routine implements a recursive algorithm in an iterative manner
     // using a custom call stack.
 
@@ -340,6 +373,16 @@ INT FNFT__AKNS_FINVSCATTER_Q_FROM_R__PREFIX(finvscatter)(
                                    #endif
                                    discretization, buf0, buf1, buf2);
     CHECK_RETCODE(ret_code, leave_fun_2);
+
+    #ifdef FNFT__AKNS_FINVSCATTER_Q_FROM_R_TRANSPOSE_TF_MATRIX
+    // If the transfer matrix had to be transformed from T(z) to S(z),
+    // then the order of the samples is reversed. The next lines fix that.
+    for (i=0; i<D/2; i++) {
+        const COMPLEX tmp = q[i];
+        q[i] = q[D-1 - i];
+        q[D-1 - i] = tmp;
+    }
+    #endif
 
 leave_fun_2:
 

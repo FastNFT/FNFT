@@ -31,19 +31,17 @@
 /**
  * @brief Recovers the samples that corresponding to a transfer matrix fast.
  *
- * TODO
- *
  * @ingroup kdv
  * @param deg Degree of the polynomials in the transfer matrix.
- * @param [in] transfer_matrix TODO: THIS IS CURRENT NOT TRUE! A transfer matrix in the same format as used by
+ * @param [in] transfer_matrix A transfer matrix in the same format as used by
  *   \link fnft__kdv_fscatter \endlink.
  * @param [out] q Array with D=deg/base_deg entries in which the samples are
  *   stored, where base_deg is the output of
- *   \link fnft__nse_discretization_degree \endlink.
- * @param[in] eps_t See \link fnft__nse_fscatter \endlink.
- * @param[in] kappa See \link fnft__nse_fscatter \endlink.
- * @param[in] discretization See \link fnft__nse_fscatter \endlink. Currently,
- *   only the 2SPLIT2A discretization is supported.
+ *   \link fnft__kdv_discretization_degree \endlink.
+ * @param[in] eps_t See \link fnft__kdv_fscatter \endlink.
+ * @param[in] kappa See \link fnft__kdv_fscatter \endlink.
+ * @param[in] discretization See \link fnft__kdv_fscatter \endlink. Currently,
+ *   only the 2SPLIT2_MODAL and 2SPLIT2A discretizations are supported.
  */
 FNFT_INT fnft__kdv_finvscatter(
     const FNFT_UINT deg,

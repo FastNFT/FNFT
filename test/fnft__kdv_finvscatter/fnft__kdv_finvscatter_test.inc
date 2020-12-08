@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include "fnft__errwarn.h"
 #include "fnft__akns_fscatter.h"
+#include "fnft__kdv_fscatter.h"
 #include "fnft__kdv_finvscatter.h"
 #include "fnft__misc.h"
 
@@ -31,38 +32,33 @@ static INT kdv_finvscatter_test(const UINT D,
 {
     INT ret_code = SUCCESS;
 
-    COMPLEX *r = NULL, *r_exact = NULL, *q_exact = NULL, *result = NULL;
+    COMPLEX *q_exact = NULL, *q = NULL, *transfer_matrix = NULL;
     REAL eps_t = 0.12;
     UINT deg, i;
 
-    akns_discretization_t akns_discretization;
-    ret_code = kdv_discretization_to_akns_discretization(kdv_discretization,
-                                                         &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
-    const UINT len = akns_fscatter_numel(D, akns_discretization);
+    const UINT len = kdv_fscatter_numel(D, kdv_discretization);
 
-    r = malloc(D * sizeof(COMPLEX));
-    r_exact = malloc(D * sizeof(COMPLEX));
     q_exact = malloc(D * sizeof(COMPLEX));
-    result = malloc(len * sizeof(COMPLEX));
-    if (r == NULL || r_exact == NULL || q_exact == NULL || result == NULL) {
+    q = malloc(D * sizeof(COMPLEX));
+    transfer_matrix = malloc(len * sizeof(COMPLEX));
+    if (q_exact == NULL || q == NULL || transfer_matrix == NULL) {
         ret_code = E_NOMEM;
         goto leave_fun;
     }
 
-    for (i=0; i<D; i++) {
-        r_exact[i] = ((REAL)(i+1)/(D+1)/D)*CEXP(I*(REAL)i/D);
-        q_exact[i] = -1.0;
-        r[i] = 0.0;
-    }
+    for (i=0; i<D; i++)
+        q_exact[i] = ((REAL)(i+1)/(D+1)/D)*CEXP(I*(REAL)i/D);
 
-    ret_code = akns_fscatter(D, q_exact, r_exact, eps_t, result, &deg, NULL,
-        akns_discretization);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = kdv_finvscatter(deg, result, r, eps_t, kdv_discretization);
+    ret_code = kdv_fscatter(D, q_exact, eps_t, transfer_matrix, &deg, NULL,
+                            kdv_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    REAL error = misc_rel_err(D, r, r_exact);
+    ret_code = kdv_finvscatter(deg, transfer_matrix, q, eps_t,
+                               kdv_discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    REAL error = misc_rel_err(D, q, q_exact);
 #ifdef DEBUG
     printf("error = %g\n", error);
 #endif
@@ -72,9 +68,8 @@ static INT kdv_finvscatter_test(const UINT D,
     }
 
 leave_fun:
-    free(r);
-    free(r_exact);
     free(q_exact);
-    free(result);
+    free(q);
+    free(transfer_matrix);
     return ret_code;
 }
