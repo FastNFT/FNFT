@@ -959,8 +959,12 @@ INT akns_scatter_bound_states(UINT const D,
         misc_matrix_mult(4,4,1,&Tmx[0][0],&PHI[4*D_given + 0],&f_S[0]);
 
         // Calculate the final state for PHI in E basis
-        a_vals[neig] = CREAL(f_S[0] * CEXP(I*l_curr*(T[1]+eps_t*boundary_coeff)));
-        aprime_vals[neig] = I*CIMAG( scl_factor*(f_S[2]*CEXP(I*l_curr*(T[1]+eps_t*boundary_coeff))+(I*(T[1]+eps_t*boundary_coeff))* a_vals[neig]));
+        a_vals[neig] = f_S[0] * CEXP(I*l_curr*(T[1]+eps_t*boundary_coeff));
+        if (PDE==akns_pde_KdV)
+            a_vals[neig] = CREAL(a_vals[neig]);
+        aprime_vals[neig] = scl_factor*(f_S[2]*CEXP(I*l_curr*(T[1]+eps_t*boundary_coeff))+(I*(T[1]+eps_t*boundary_coeff))* a_vals[neig]);
+        if (PDE==akns_pde_KdV)
+            aprime_vals[neig] = I * CIMAG(aprime_vals[neig]);
 
         if (skip_b_flag == 0){
             // Calculation of b assuming a=0
@@ -978,9 +982,13 @@ INT akns_scatter_bound_states(UINT const D,
                 // Calculate phi and psi for this sample in S basis
                 misc_matrix_mult(2,2,1,&Tmx[0][0],&PHI[4*n + 0], phi_S);
                 misc_matrix_mult(2,2,1,&Tmx[0][0],&PSI[4*n + 0], psi_S);
+                if (PDE==akns_pde_KdV) {
+                    for (UINT i=0; i<4; i++)
+                        f_S[i] = CREAL(f_S[i]);
+                }
                 for (UINT i=0; i<2; i++)
-                    b_temp[i] = CREAL(phi_S[i])/CREAL(psi_S[i]);
-                if (CREAL(b_temp[0]*b_temp[1])>0) {
+                    b_temp[i] = phi_S[i]/psi_S[i];
+                if (PDE!=akns_pde_KdV || CREAL(b_temp[0]*b_temp[1])>0) {
                     tmp = FABS( 0.5* LOG( (REAL)CABS( b_temp[1]/b_temp[0] ) ) );
                     if (tmp < error_metric){
                         b[neig] = b_temp[0];
