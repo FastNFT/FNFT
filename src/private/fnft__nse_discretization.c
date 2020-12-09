@@ -1,6 +1,6 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
+* This file is part of FNFT.
+*
 * FNFT is free software; you can redistribute it and/or
 * modify it under the terms of the version 2 of the GNU General
 * Public License as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-*                                                                      
+*
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
@@ -35,9 +35,9 @@ UINT fnft__nse_discretization_degree(nse_discretization_t
     UINT degree1step = 0;
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
-    degree1step = akns_discretization_degree(akns_discretization); 
-    leave_fun:    
-        return degree1step; 
+    degree1step = akns_discretization_degree(akns_discretization);
+    leave_fun:
+        return degree1step;
 }
 
 
@@ -50,9 +50,9 @@ REAL fnft__nse_discretization_boundary_coeff(nse_discretization_t nse_discretiza
     REAL bnd_coeff = NAN;
     INT ret_code;
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
-    CHECK_RETCODE(ret_code, leave_fun);    
+    CHECK_RETCODE(ret_code, leave_fun);
     bnd_coeff = akns_discretization_boundary_coeff(akns_discretization);
-    leave_fun:    
+    leave_fun:
         return bnd_coeff;
 }
 
@@ -65,9 +65,9 @@ UINT fnft__nse_discretization_upsampling_factor(nse_discretization_t nse_discret
     UINT upsampling_factor = 0;
     INT ret_code;
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
-    CHECK_RETCODE(ret_code, leave_fun);    
+    CHECK_RETCODE(ret_code, leave_fun);
     upsampling_factor = akns_discretization_upsampling_factor(akns_discretization);
-    leave_fun:    
+    leave_fun:
         return upsampling_factor;
 }
 
@@ -80,9 +80,9 @@ UINT fnft__nse_discretization_method_order(nse_discretization_t nse_discretizati
     UINT order = 0;
     INT ret_code;
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
-    CHECK_RETCODE(ret_code, leave_fun);    
+    CHECK_RETCODE(ret_code, leave_fun);
     order = akns_discretization_method_order(akns_discretization);
-    leave_fun:    
+    leave_fun:
         return order;
 }
 
@@ -107,7 +107,7 @@ INT fnft__nse_discretization_method_weights(COMPLEX **weights_ptr,
 /**
  * This akns_discretization related to the given nse_discretization
  */
-INT fnft__nse_discretization_to_akns_discretization(nse_discretization_t nse_discretization, 
+INT fnft__nse_discretization_to_akns_discretization(nse_discretization_t nse_discretization,
         akns_discretization_t * const akns_discretization)
 {
 
@@ -171,41 +171,41 @@ INT fnft__nse_discretization_to_akns_discretization(nse_discretization_t nse_dis
             break;
         case nse_discretization_BO:
             *akns_discretization = akns_discretization_BO;
-            break;   
+            break;
         case nse_discretization_4SPLIT4A:
             *akns_discretization = akns_discretization_4SPLIT4A;
             break;
         case nse_discretization_4SPLIT4B:
             *akns_discretization = akns_discretization_4SPLIT4B;
-            break;        
+            break;
         case nse_discretization_CF4_2:
             *akns_discretization = akns_discretization_CF4_2;
-            break; 
+            break;
         case nse_discretization_CF4_3:
             *akns_discretization = akns_discretization_CF4_3;
-            break; 
+            break;
         case nse_discretization_CF5_3:
             *akns_discretization = akns_discretization_CF5_3;
-            break; 
+            break;
         case nse_discretization_CF6_4:
             *akns_discretization = akns_discretization_CF6_4;
-            break; 
+            break;
         case nse_discretization_ES4:
             *akns_discretization = akns_discretization_ES4;
             break;
         case nse_discretization_TES4:
             *akns_discretization = akns_discretization_TES4;
-            break;   
+            break;
         default: // Unknown discretization
             return E_INVALID_ARGUMENT(nse_discretization);
     }
-    return SUCCESS;    
+    return SUCCESS;
 }
 /**
  * This routine maps lambda from continuous-time domain to
- * z in the discrete-time domain based on the discretization. 
+ * z in the discrete-time domain based on the discretization.
  */
-INT fnft__nse_discretization_lambda_to_z(const UINT n, const REAL eps_t, 
+INT fnft__nse_discretization_lambda_to_z(const UINT n, const REAL eps_t,
         COMPLEX * const vals, nse_discretization_t nse_discretization)
 {
     akns_discretization_t akns_discretization = 0;
@@ -213,15 +213,15 @@ INT fnft__nse_discretization_lambda_to_z(const UINT n, const REAL eps_t,
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = fnft__akns_discretization_lambda_to_z(n, eps_t, vals, akns_discretization);
-    leave_fun:    
+    leave_fun:
         return ret_code;
 }
 
 /**
  * This routine maps z from the discrete-time domain to
- * lambda in the continuous-time domain based on the discretization. 
+ * lambda in the continuous-time domain based on the discretization.
  */
-INT fnft__nse_discretization_z_to_lambda(const UINT n, const REAL eps_t, 
+INT fnft__nse_discretization_z_to_lambda(const UINT n, const REAL eps_t,
         COMPLEX * const vals, nse_discretization_t nse_discretization)
 {
     akns_discretization_t akns_discretization = 0;
@@ -229,14 +229,14 @@ INT fnft__nse_discretization_z_to_lambda(const UINT n, const REAL eps_t,
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = fnft__akns_discretization_z_to_lambda(n, eps_t, vals, akns_discretization);
-    leave_fun:    
-        return ret_code;   
+    leave_fun:
+        return ret_code;
 }
 
 /**
  * This routine returns the phase factor for reflection coefficient (rho).
  * It is required for applying boundary conditions to the transfer matrix values
- * based on the discretization. 
+ * based on the discretization.
  */
 INT fnft__nse_discretization_phase_factor_rho(const REAL eps_t, const REAL T1,
         REAL * const phase_factor_rho, nse_discretization_t nse_discretization)
@@ -245,7 +245,8 @@ INT fnft__nse_discretization_phase_factor_rho(const REAL eps_t, const REAL T1,
     boundary_coeff = nse_discretization_boundary_coeff(nse_discretization);
     if (boundary_coeff == NAN)
         return E_INVALID_ARGUMENT(nse_discretization);
-    if (nse_discretization == nse_discretization_2SPLIT2A || nse_discretization == nse_discretization_2SPLIT2_MODAL){
+    if (nse_discretization == nse_discretization_2SPLIT2A ||
+        nse_discretization == nse_discretization_2SPLIT2_MODAL) {
         UINT degree1step = nse_discretization_degree(nse_discretization);
         if (degree1step == 0)
             return E_INVALID_ARGUMENT(nse_discretization);
@@ -268,9 +269,9 @@ INT fnft__nse_discretization_phase_factor_a(const REAL eps_t, const UINT D, REAL
     boundary_coeff = nse_discretization_boundary_coeff(nse_discretization);
     if (boundary_coeff == NAN)
         return E_INVALID_ARGUMENT(nse_discretization);
-    
+
     switch (nse_discretization) {
-        
+
         case nse_discretization_2SPLIT1A:
         case nse_discretization_2SPLIT1B:
         case nse_discretization_2SPLIT2B:
@@ -295,7 +296,7 @@ INT fnft__nse_discretization_phase_factor_a(const REAL eps_t, const UINT D, REAL
             *phase_factor_a = -eps_t*D + (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
             break;
-            
+
         case nse_discretization_BO: // Bofetta-Osborne scheme
         case nse_discretization_CF4_2:
         case nse_discretization_CF4_3:
@@ -306,9 +307,9 @@ INT fnft__nse_discretization_phase_factor_a(const REAL eps_t, const UINT D, REAL
             *phase_factor_a = (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
             break;
-            
+
         default: // Unknown discretization
-            
+
             return E_INVALID_ARGUMENT(nse_discretization);
     }
 }
@@ -328,7 +329,7 @@ INT fnft__nse_discretization_phase_factor_b(const REAL eps_t, const UINT D, REAL
 
     UINT degree1step = 0;
     switch (nse_discretization) {
-        
+
         case nse_discretization_2SPLIT1A:
         case nse_discretization_2SPLIT1B:
         case nse_discretization_2SPLIT2B:
@@ -351,7 +352,7 @@ INT fnft__nse_discretization_phase_factor_b(const REAL eps_t, const UINT D, REAL
             *phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
             break;
-            
+
         case nse_discretization_2SPLIT2A:
         case nse_discretization_2SPLIT2_MODAL:
             degree1step = nse_discretization_degree(nse_discretization);
@@ -360,7 +361,7 @@ INT fnft__nse_discretization_phase_factor_b(const REAL eps_t, const UINT D, REAL
             *phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff) + eps_t/degree1step;
             return SUCCESS;
             break;
-            
+
         case nse_discretization_BO: // Bofetta-Osborne scheme
         case nse_discretization_CF4_2:
         case nse_discretization_CF4_3:
@@ -371,12 +372,12 @@ INT fnft__nse_discretization_phase_factor_b(const REAL eps_t, const UINT D, REAL
             *phase_factor_b =  - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
             break;
-            
+
         default: // Unknown discretization
-            
+
             return E_INVALID_ARGUMENT(nse_discretization);
     }
-    
+
 }
 
 

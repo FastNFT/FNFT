@@ -1,6 +1,6 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
+* This file is part of FNFT.
+*
 * FNFT is free software; you can redistribute it and/or
 * modify it under the terms of the version 2 of the GNU General
 * Public License as published by the Free Software Foundation.
@@ -9,7 +9,7 @@
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-*                                                                      
+*
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
@@ -32,33 +32,33 @@
 /**
  * @brief Enum that specifies discretizations used to compute nonlinear Fourier
  * transforms for the Korteweg-de Vries equation.
- * 
+ *
  * These discretizations are based on exponential spliting schemes, defined in
  * Prins and Wahls, <a href="https://doi.org/10.1109/ICASSP.2018.8461708">&quot;
  * Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot;
  * </a>Proc. ICASSP 2018, pp. 4524-4528.\n
- * All discretizations have the notation `xSPLITyz`, where `x` is the error order 
+ * All discretizations have the notation `xSPLITyz`, where `x` is the error order
  * of unsplit scheme and `y` is the order of accuracy of splitting scheme. `z` is type of splitting and
- * can be `A`, `B` or `S`, with `A` standing for schemes implemented as defined in Prins and Wahls, 
+ * can be `A`, `B` or `S`, with `A` standing for schemes implemented as defined in Prins and Wahls,
  * <a href="https://doi.org/10.1109/ICASSP.2018.8461708">&quot;
  * Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot;
- * </a>Proc. ICASSP 2018, pp. 4524-4528. `B` type of splitting are the same as 'A' with the positions of the 
+ * </a>Proc. ICASSP 2018, pp. 4524-4528. `B` type of splitting are the same as 'A' with the positions of the
  * two terms in the splitting interchanged. 'S' is for splittings not mentioned in above reference.\n
  * `-2S` is from G. Strang,<a href="https://link.springer.com/content/pdf/10.1007/BF00281235.pdf">&quot;
- * Accurate partial difference methods I: Linear Cauchy problems,&quot;</a> 
+ * Accurate partial difference methods I: Linear Cauchy problems,&quot;</a>
  * in Archive for Rational Mechanics and Analysis, 12(1), 392-402, Jan 1963. It is also
  * known as the Symmetric Weighted Sequential Splitting scheme (SWSS).\n
  *`-3S` is from Eq. 14.4 in S. Brustein and A. Mirin,<a href="https://doi.org/10.1016/0021-9991(70)90080-X">&quot;
- * Third Order Difference Methods for Hyperbolic Equations,&quot;</a> 
+ * Third Order Difference Methods for Hyperbolic Equations,&quot;</a>
  * J. Comput. Phys., 5, 547-571, 1970.\n
  * `fnft_kdv_discretization_BO` has been taken from Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot;
- * Computation of the direct scattering transform for the nonlinear Schroedinger  equation,&quot;</a> J. Comput. Phys. 102(2), 1992. 
- * It is supported by \link fnft__kdv_scatter.h \endlink.\n 
+ * Computation of the direct scattering transform for the nonlinear Schroedinger  equation,&quot;</a> J. Comput. Phys. 102(2), 1992.
+ * It is supported by \link fnft__kdv_scatter.h \endlink.\n
  * `fnft_kdv_discretization_CFx_y` are from Chimmalgi, Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2945480">&quot;
- * Fast Nonlinear Fourier Transform Algorithms Using Higher Order Exponential Integrators,&quot;</a> IEEE Access 7, 2019. 
+ * Fast Nonlinear Fourier Transform Algorithms Using Higher Order Exponential Integrators,&quot;</a> IEEE Access 7, 2019.
  * They are higher-order commutator-free exponential integrators with `x` denoting the order of the method
- * and `y` the number of matrix exponentials required per signal sample. 
- * They are supported by \link fnft__kdv_scatter.h \endlink.\n 
+ * and `y` the number of matrix exponentials required per signal sample.
+ * They are supported by \link fnft__kdv_scatter.h \endlink.\n
  * In general, discretizations with a lower degree are faster, while those with
  * a highter order of accuracy are more accurate. Therefore, the best choice is
  * normally among `-2A`, `-2B`, `-2S` `-4B`, `-6B` and `-8B`.
@@ -94,6 +94,7 @@
  * @ingroup data_types
  */
 typedef enum {
+    fnft_kdv_discretization_2SPLIT2_MODAL,
     fnft_kdv_discretization_2SPLIT1A,
     fnft_kdv_discretization_2SPLIT1B,
     fnft_kdv_discretization_2SPLIT2A,
@@ -119,9 +120,11 @@ typedef enum {
     fnft_kdv_discretization_CF4_3,
     fnft_kdv_discretization_CF5_3,
     fnft_kdv_discretization_CF6_4
+
 } fnft_kdv_discretization_t;
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
+#define kdv_discretization_2SPLIT2_MODAL fnft_kdv_discretization_2SPLIT2_MODAL
 #define kdv_discretization_2SPLIT1A fnft_kdv_discretization_2SPLIT1A
 #define kdv_discretization_2SPLIT1B fnft_kdv_discretization_2SPLIT1B
 #define kdv_discretization_2SPLIT2A fnft_kdv_discretization_2SPLIT2A

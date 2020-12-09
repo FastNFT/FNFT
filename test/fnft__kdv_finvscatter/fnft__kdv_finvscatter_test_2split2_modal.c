@@ -17,27 +17,24 @@
  * Sander Wahls (TU Delft) 2018, 2020.
  */
 
-#include "fnft__nse_finvscatter_test.inc"
+#include "fnft__kdv_finvscatter_test.inc"
 
-int main()
-{
-    const INT kappa = -1;
-    const nse_discretization_t discretization
-        = fnft_nse_discretization_2SPLIT2_MODAL;
+int main(void) {
+    const kdv_discretization_t discretization = kdv_discretization_2SPLIT2_MODAL;
 
     UINT D = 8;
     REAL error_bound = 5.0*FNFT_EPSILON;
-    if (nse_finvscatter_test(D, kappa, error_bound, discretization) != SUCCESS)
+    if (kdv_finvscatter_test(D, error_bound, discretization) != SUCCESS)
         return EXIT_FAILURE;
 
     D = 16384;
-    error_bound
+    error_bound =
 #ifdef HAVE_FFTW3
-        = 483.0*FNFT_EPSILON;
+        5.6e5*FNFT_EPSILON;
 #else
-        = 1253.0*FNFT_EPSILON;
+        9.1e6*FNFT_EPSILON;
 #endif
-    if (nse_finvscatter_test(D, kappa, error_bound, discretization) != SUCCESS)
+    if (kdv_finvscatter_test(D, error_bound, discretization) != SUCCESS)
         return EXIT_FAILURE;
 
     return EXIT_SUCCESS;
