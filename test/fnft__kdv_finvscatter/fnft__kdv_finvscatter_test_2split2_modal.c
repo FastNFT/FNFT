@@ -23,14 +23,14 @@ int main(void) {
     const kdv_discretization_t discretization = kdv_discretization_2SPLIT2_MODAL;
 
     UINT D = 8;
-    REAL error_bound = 3.0*FNFT_EPSILON;
+    REAL error_bound = 5.0*FNFT_EPSILON;
     if (kdv_finvscatter_test(D, error_bound, discretization) != SUCCESS)
         return EXIT_FAILURE;
 
     D = 16384;
     error_bound =
 #ifdef HAVE_FFTW3
-        428699*FNFT_EPSILON;
+        5.6e5*FNFT_EPSILON;
 #else
         9.1e6*FNFT_EPSILON;
 #endif

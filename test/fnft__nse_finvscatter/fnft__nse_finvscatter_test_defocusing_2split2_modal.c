@@ -26,7 +26,7 @@ int main()
         = fnft_nse_discretization_2SPLIT2_MODAL;
 
     UINT D = 8;
-    REAL error_bound = 2.0*FNFT_EPSILON;
+    REAL error_bound = 5.0*FNFT_EPSILON;
     if (nse_finvscatter_test(D, kappa, error_bound, discretization) != SUCCESS)
         return EXIT_FAILURE;
 
