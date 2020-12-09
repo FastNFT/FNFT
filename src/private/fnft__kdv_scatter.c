@@ -16,8 +16,10 @@
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018, 2020.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
+ * Marius Brehler (TU Dortmund) 2018.
  * Peter J Prins (TU Delft) 2020.
  */
+
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft__errwarn.h"
@@ -31,11 +33,16 @@
  * result where S11' is the derivative of S11 w.r.t to lambda.
  * Result should be preallocated with size 4*K or 8*K accordingly.
  */
-INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
-    COMPLEX const * const r, const REAL eps_t, const INT kappa,
-    const UINT K, COMPLEX const * const lambda,
-    COMPLEX * const result, kdv_discretization_t const discretization,
-    const UINT derivative_flag)
+INT kdv_scatter_matrix(UINT const D,
+                       COMPLEX const * const q,
+                       COMPLEX const * const r,
+                       REAL const eps_t,
+                       INT const kappa,
+                       UINT const K,
+                       COMPLEX const * const lambda,
+                       COMPLEX * const result,
+                       kdv_discretization_t const discretization,
+                       UINT const derivative_flag)
 {
     (void) &kappa; // Suppress compiler warning
     INT ret_code = SUCCESS;
@@ -140,4 +147,42 @@ INT kdv_scatter_matrix(const UINT D, COMPLEX const * const q,
     
     leave_fun:
         return ret_code;
+}
+
+/**
+ * Returns the a, a_prime and b computed using the chosen scheme.
+ */
+INT kdv_scatter_bound_states(UINT const D,
+                             COMPLEX const * const q,
+                             COMPLEX const * const r,
+                             REAL const * const T,
+                             UINT const K,
+                             COMPLEX * const bound_states,
+                             COMPLEX * const a_vals,
+                             COMPLEX * const aprime_vals,
+                             COMPLEX * const b,
+                             kdv_discretization_t const discretization,
+                             UINT const skip_b_flag)
+{
+    INT ret_code = SUCCESS;
+
+    // Fetch the vanilla flag
+    UINT vanilla_flag;
+    ret_code = kdv_discretization_vanilla_flag(&vanilla_flag, discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    // Fetch the AKNS discretizations corresponding to the KdV discretization
+    akns_discretization_t akns_discretization;
+    ret_code = kdv_discretization_to_akns_discretization(discretization, &akns_discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    // Call akns_scatter_bound_states
+    if (vanilla_flag)
+        ret_code = akns_scatter_bound_states(D, q, r, T, K,bound_states, a_vals, aprime_vals, b, akns_discretization, akns_pde_KdV, vanilla_flag, skip_b_flag);
+    else
+        ret_code = akns_scatter_bound_states(D, r, q, T, K,bound_states, a_vals, aprime_vals, b, akns_discretization, akns_pde_KdV, vanilla_flag, skip_b_flag);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+leave_fun:
+    return ret_code;
 }
