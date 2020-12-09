@@ -33,8 +33,8 @@ INT main()
         3.8e-3,     // a
         1.2e-3,     // b
         1.2e-3,     // bound states
-        3.2e-11,      // norming constants
-        4.8e-2      // residues
+        2.2e-14,    // norming constants
+        3.3e-2      // residues
     };
     opts = fnft_nsev_default_opts();
     opts.bound_state_localization = nsev_bsloc_NEWTON;
@@ -69,7 +69,7 @@ INT main()
         1.6e-4,     // a
         5.6e-5,     // b
         5.5e-5,     // bound states
-        5e-14,      // norming constants
+        2.2e-14,    // norming constants
         3.9e-2      // residues
     };
     opts.richardson_extrapolation_flag = 1;

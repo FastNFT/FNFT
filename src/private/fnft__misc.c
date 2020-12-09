@@ -313,6 +313,31 @@ COMPLEX misc_CSINC(COMPLEX x)
         return CCOS(x/CSQRT(3));
 }
 
+// Computes the first derivate of sinc(x):= 1 if x=0 and sin(x)/x otherwise.
+// This derivative can be expressed analytically as
+// d/dx sinc(x) = 0 if x=0, and (cos(x) - sinc(x)) / x otherwise.
+// However, if x is close to 0, a numerical implementation like that results in
+// catastrophic cancellation. Therefore we use its Taylor approximation instead:
+// d/dx sinc(x) = \sum_{n=0}^\infty x^(2*n+1) * (-1)^(n+1) / ( (2*n+3) * (2*n+1)! )
+// of which we use the first 9 terms, i.e. a 18-th order Taylor approximation.
+// This polynomial is computed with Horner's method.
+COMPLEX misc_CSINC_derivative(COMPLEX x)
+{
+    const REAL sinc_derivative_th=1.0;
+    COMPLEX returnvalue;
+
+    if (CABS(x)>=sinc_derivative_th)
+        returnvalue = (CCOS(x)-misc_CSINC(x))/x;
+    else {
+        returnvalue = 0.0;
+        COMPLEX x2 = x * x;
+        for (UINT n=9; n-->0; )
+            returnvalue = (( n%2 ? 1.0 : -1.0) + x2/(2*n+2) * returnvalue ) / (2*n+3);
+        returnvalue *= x;
+    }
+    return returnvalue;
+}
+
 UINT misc_nextpowerof2(const UINT number)
 {
     if (number == 0)

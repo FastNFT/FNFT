@@ -203,11 +203,21 @@ FNFT_INT fnft__misc_downsample(const FNFT_UINT D, FNFT_COMPLEX const * const q,
  * @brief Sinc function for complex arguments.
  *
  * @ingroup misc
- * Function computes the Sinc function sin(x)/x for \link FNFT_COMPLEX \endlink argument.
+ * Function computes the sinc function sin(x)/x for \link FNFT_COMPLEX \endlink argument.
  * @param[in] x \link FNFT_COMPLEX \endlink argument.
- * @return Sinc(x).
+ * @return sinc(x).
  */
 FNFT_COMPLEX fnft__misc_CSINC(FNFT_COMPLEX x);
+
+/**
+ * @brief Derivative of sinc function for complex arguments.
+ *
+ * @ingroup misc
+ * Function computes the derivative of the sinc function sin(x)/x for \link FNFT_COMPLEX \endlink argument.
+ * @param[in] x \link FNFT_COMPLEX \endlink argument.
+ * @return d/dx sinc(x).
+ */
+FNFT_COMPLEX misc_CSINC_derivative(FNFT_COMPLEX x);
 
 /**
  * @brief Closest larger or equal number that is a power of two.
