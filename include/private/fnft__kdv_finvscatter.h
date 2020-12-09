@@ -39,7 +39,6 @@
  *   stored, where base_deg is the output of
  *   \link fnft__kdv_discretization_degree \endlink.
  * @param[in] eps_t See \link fnft__kdv_fscatter \endlink.
- * @param[in] kappa See \link fnft__kdv_fscatter \endlink.
  * @param[in] discretization See \link fnft__kdv_fscatter \endlink. Currently,
  *   only the 2SPLIT2_MODAL and 2SPLIT2A discretizations are supported.
  */
