@@ -647,14 +647,14 @@ static inline INT kdvv_compute_boundstates(
             K=0;
             for (i = 0; i < M; i++) {
                 if ( scatter_coeffs[4*i]==0) {
-                    if (K>*K_ptr) { // Lucky us: Exact bound state found
+                    if (K>=*K_ptr) { // Lucky us: Exact bound state found
                         ret_code = E_OTHER("More than *K_ptr initial guesses for bound states found. Increase *K_ptr and try again.")
                         CHECK_RETCODE(ret_code, leave_fun);
                     }
                     bound_states[K]=xi[i];
                     K++;
                 } else if ( i>0 && CREAL(scatter_coeffs[4*i])*CREAL(scatter_coeffs[4*(i-1)])<0) {
-                    if (K>*K_ptr) { // Bound state between this sample and the previous
+                    if (K>=*K_ptr) { // Bound state between this sample and the previous
                         ret_code = E_OTHER("More than *K_ptr initial guesses for bound states found. Increase *K_ptr and try again.")
                         CHECK_RETCODE(ret_code, leave_fun);
                     }
