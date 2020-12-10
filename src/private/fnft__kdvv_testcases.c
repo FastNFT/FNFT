@@ -81,7 +81,7 @@ INT kdvv_testcases(kdvv_testcases_t tc, const UINT D,
 
         case kdvv_testcases_SECH:
             *M_ptr = 16;
-            *K_ptr = 5;
+            *K_ptr = 2;
             break;
 
         case kdvv_testcases_RECT:
@@ -589,6 +589,16 @@ case kdvv_testcases_SECH:
         (*contspec_ptr)[13]  = - 0.07209443935525737929778535768652561998093 + 0.2086253871411293640983513028978855291533*I;
         (*contspec_ptr)[14]  = - 0.06007786636867152838650839313456544782936 + 0.1857236627095771710417966137341333503595*I;
         (*contspec_ptr)[15]  = - 0.05013091571056271949743226122945714631744 + 0.1647668721023619467965349247926784741708*I;
+            // Dummy values to prevent this abolished testcase from causing undefined behavior
+            for (UINT j=0; j<(*M_ptr)*2; j++)
+                (*ab_ptr)[j]=0.0; // Not correct
+
+            // Discrete spectrum
+            for (UINT j=0; j<(*K_ptr); j++) {
+                (*bound_states_ptr)[j] = 0; // Not correct
+                (*normconsts_ptr)[j] = 0; // Not correct
+                (*residues_ptr)[j] = 0; // Not correct
+            }
 
             break;
         case kdvv_testcases_NEGATIVE_RECT:
