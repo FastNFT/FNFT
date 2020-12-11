@@ -277,7 +277,7 @@ FNFT_INT fnft__nse_discretization_preprocess_signal(const FNFT_UINT D, FNFT_COMP
  * This routing computes the special weights required for the 
  * higher-order methods CF\f$^{[4]}_2\f$, CF\f$^{[4]}_3\f$, CF\f$^{[5]}_3\f$ 
  * and CF\f$^{[6]}_4\f$. The weights are used in \link fnft__nse_discretization_preprocess_signal \endlink,
- * \link fnft__akns_scatter_matrix \endlink and \link fnft__nse_scatter_bound_states\endlink.
+ * \link fnft__akns_scatter_matrix \endlink and \link fnft__nse_scatter_bound_states \endlink.
  * The weights for CF\f$^{[4]}_3\f$ are taken from Alvermann and Fehske (<a href="https://doi.org/10.1016/j.jcp.2011.04.006">Journal of Computational Phys. 230, 2011</a>)
  * and the weights for the others are from Blanes, Casas and Thalhammer(<a href="https://doi.org/10.1016/j.cpc.2017.07.016">Computer Phys. Comm. 220, 2017</a>).
  * The weights are mentioned as matrices in the references. This routine returns 

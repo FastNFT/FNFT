@@ -26,12 +26,11 @@
 #include "fnft__nse_finvscatter.h"
 #include "fnft__misc.h"
 
-static INT nse_finvscatter_test(const INT kappa, const REAL error_bound,
-    nse_discretization_t discretization)
+static INT nse_finvscatter_test(const UINT D, const INT kappa,
+    const REAL error_bound, nse_discretization_t discretization)
 {
     INT ret_code = SUCCESS;
 
-    const UINT D = 16384;
     COMPLEX * q, * q_exact, * r_exact, * result;
     REAL eps_t = 0.12;
     UINT deg, i;

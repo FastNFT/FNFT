@@ -110,7 +110,6 @@ INT fnft__kdv_discretization_method_weights(COMPLEX **weights_ptr,
 INT fnft__kdv_discretization_to_akns_discretization(kdv_discretization_t kdv_discretization,
         akns_discretization_t * const akns_discretization)
 {
-
     switch (kdv_discretization) {
         case kdv_discretization_2SPLIT2_MODAL_VANILLA:
         case kdv_discretization_2SPLIT2_MODAL:
@@ -493,12 +492,12 @@ INT fnft__kdv_discretization_change_of_basis_matrix_to_S(COMPLEX * const T,
     // Note: Currently all discretizations are AKNS-based, so this routine is only a wrapper
 
     // Fetch the vanilla flag
-    UINT vanilla_flag;
+    UINT vanilla_flag = 0;
     ret_code = kdv_discretization_vanilla_flag(&vanilla_flag, kdv_discretization);
     CHECK_RETCODE(ret_code, release_mem);
 
     // Fetch the AKNS discretizations corresponding to the KdV discretization
-    akns_discretization_t akns_discretization;
+    akns_discretization_t akns_discretization = 0;
     ret_code = kdv_discretization_to_akns_discretization(kdv_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, release_mem);
 
@@ -561,12 +560,12 @@ INT fnft__kdv_discretization_change_of_basis_matrix_from_S(COMPLEX * const T,
     // Note: Currently all discretizations are AKNS-based, so this routine is only a wrapper
 
     // Fetch the vanilla flag
-    UINT vanilla_flag;
+    UINT vanilla_flag = 0;
     ret_code = kdv_discretization_vanilla_flag(&vanilla_flag, kdv_discretization);
     CHECK_RETCODE(ret_code, release_mem);
 
     // Fetch the AKNS discretizations corresponding to the KdV discretization
-    akns_discretization_t akns_discretization;
+    akns_discretization_t akns_discretization = 0;
     ret_code = kdv_discretization_to_akns_discretization(kdv_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, release_mem);
 
