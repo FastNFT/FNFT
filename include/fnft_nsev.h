@@ -368,12 +368,12 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *
  * @ingroup fnft
  */
-FNFT_INT fnft_nsev(const FNFT_UINT D, FNFT_COMPLEX * const q,
+FNFT_INT fnft_nsev(const FNFT_UINT D, FNFT_COMPLEX const * const q,
     FNFT_REAL const * const T, const FNFT_UINT M,
     FNFT_COMPLEX * const contspec, FNFT_REAL const * const XI,
     FNFT_UINT * const K_ptr, FNFT_COMPLEX * const bound_states,
     FNFT_COMPLEX * const normconsts_or_residues, const FNFT_INT kappa,
-    fnft_nsev_opts_t *opts);
+    fnft_nsev_opts_t * opts);
 
 
 #ifdef FNFT_ENABLE_SHORT_NAMES

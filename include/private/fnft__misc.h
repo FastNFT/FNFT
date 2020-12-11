@@ -203,11 +203,21 @@ FNFT_INT fnft__misc_downsample(const FNFT_UINT D, FNFT_COMPLEX const * const q,
  * @brief Sinc function for complex arguments.
  *
  * @ingroup misc
- * Function computes the Sinc function sin(x)/x for \link FNFT_COMPLEX \endlink argument.
+ * Function computes the sinc function sin(x)/x for \link FNFT_COMPLEX \endlink argument.
  * @param[in] x \link FNFT_COMPLEX \endlink argument.
- * @return Sinc(x).
+ * @return sinc(x).
  */
 FNFT_COMPLEX fnft__misc_CSINC(FNFT_COMPLEX x);
+
+/**
+ * @brief Derivative of sinc function for complex arguments.
+ *
+ * @ingroup misc
+ * Function computes the derivative of the sinc function sin(x)/x for \link FNFT_COMPLEX \endlink argument.
+ * @param[in] x \link FNFT_COMPLEX \endlink argument.
+ * @return d/dx sinc(x).
+ */
+FNFT_COMPLEX misc_CSINC_derivative(FNFT_COMPLEX x);
 
 /**
  * @brief Closest larger or equal number that is a power of two.
@@ -242,29 +252,34 @@ FNFT_INT fnft__misc_resample(const FNFT_UINT D, const FNFT_REAL eps_t, FNFT_COMP
     const FNFT_REAL delta, FNFT_COMPLEX *const q_new);
 
 /**
- * @brief Multiples two square matrices of size N.
+ * @brief Multiples two complex valued matrices of any compatible size.
  *
  * @ingroup  misc
  *
- * Multiples two square matrices U and T of size N. T is replaced by the
- * result U*T.
- * @param[in] N Positive integer that is the size of the two matrices.
- * @param[in] U Pointer to the first element of complex valued NxN matrix U.
- * @param[in] T Pointer to the first element of complex valued NxN matrix T.
- * @param[out] TM Pointer to the first element of complex valued NxN matrix TM 
- * which will contain the result TM=U*T on return.
+ * Right-multiples an nxm matrix A by an mxp matrix B. The resulting nxp matrix
+ * is stored in C.
+ * @param[in] n Positive integer that is the number of rows of A and C.
+ * @param[in] m Positive integer that is the number of columns of A and the
+ * number of rows of B.
+ * @param[in] p Positive integer that is the number of columns of B and C.
+ * @param[in] A Pointer to the first element of complex valued nxm matrix A.
+ * @param[in] B Pointer to the first element of complex valued mxp matrix B.
+ * @param[out] C Pointer to the first element of complex valued nxp matrix C
+ * which will contain the result C=AB on return. The user should allocate
+ * memory for C, different from the memory that contains A and B.
+ *
  */
-static inline void fnft__misc_mat_mult_proto(const FNFT_UINT N, FNFT_COMPLEX * const U,
-        FNFT_COMPLEX *const T, FNFT_COMPLEX *const TM){
-    FNFT_UINT  c1, c2, c3;
-    FNFT_COMPLEX sum = 0;
-    for (c1 = 0; c1 < N; c1++) {
-        for (c2 = 0; c2 < N; c2++) {
-            for (c3 = 0; c3 < N; c3++) {
-                sum = sum + U[c1*N+c3]*T[c3*N+c2];
-            }
-            TM[c1*N+c2] = sum;
-            sum = 0;
+static inline void fnft__misc_matrix_mult(const FNFT_UINT n,
+                                          const FNFT_UINT m,
+                                          const FNFT_UINT p,
+                                          FNFT_COMPLEX const * const A,
+                                          FNFT_COMPLEX const * const B,
+                                          FNFT_COMPLEX * const C){
+    for (FNFT_UINT cn = 0; cn < n; cn++) {
+        for (FNFT_UINT cp = 0; cp < p; cp++) {
+            C[ cn*p + cp] = 0.0;
+            for (FNFT_UINT cm = 0; cm < m; cm++)
+                C[ cn*p + cp ] += A[ cn*m + cm ] * B[ cm*p + cp ];
         }
     }
     
@@ -286,7 +301,7 @@ static inline void fnft__misc_mat_mult_2x2(FNFT_COMPLEX * const U,
         FNFT_COMPLEX *const T){
 
     FNFT_COMPLEX TM[4] = { 0 };
-    fnft__misc_mat_mult_proto(2, U, T, &TM[0]);
+    fnft__misc_matrix_mult(2, 2, 2, U, T, &TM[0]);
     memcpy(T,TM,4*sizeof(FNFT_COMPLEX));
     
     return;
@@ -307,7 +322,7 @@ static inline void fnft__misc_mat_mult_4x4(FNFT_COMPLEX * const U,
         FNFT_COMPLEX *const T){
 
     FNFT_COMPLEX TM[16] = { 0 };
-    fnft__misc_mat_mult_proto(4, U, T, &TM[0]);
+    fnft__misc_matrix_mult(4, 4, 4, U, T, &TM[0]);
     memcpy(T,TM,16*sizeof(FNFT_COMPLEX));
     
     return;
@@ -343,6 +358,7 @@ static inline FNFT_REAL fnft__misc_legendre_poly(const FNFT_UINT n, const FNFT_R
     return P;
 }
 
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define misc_print_buf(...) fnft__misc_print_buf(__VA_ARGS__)
 #define misc_rel_err(...) fnft__misc_rel_err(__VA_ARGS__)
@@ -357,7 +373,7 @@ static inline FNFT_REAL fnft__misc_legendre_poly(const FNFT_UINT n, const FNFT_R
 #define misc_CSINC(...) fnft__misc_CSINC(__VA_ARGS__)
 #define misc_nextpowerof2(...) fnft__misc_nextpowerof2(__VA_ARGS__)
 #define misc_resample(...) fnft__misc_resample(__VA_ARGS__)
-#define misc_mat_mult_proto(...) fnft__misc_mat_mult_proto(__VA_ARGS__)
+#define misc_matrix_mult(...) fnft__misc_matrix_mult(__VA_ARGS__)
 #define misc_mat_mult_2x2(...) fnft__misc_mat_mult_2x2(__VA_ARGS__)
 #define misc_mat_mult_4x4(...) fnft__misc_mat_mult_4x4(__VA_ARGS__)
 #define misc_legendre_poly(...) fnft__misc_legendre_poly(__VA_ARGS__)

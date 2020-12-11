@@ -64,7 +64,7 @@ static inline void akns_fscatter_zero_freq_scatter_matrix(COMPLEX * const M,
  */
 INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r,
                  const REAL eps_t, COMPLEX * const result, UINT * const deg_ptr,
-                 INT * const W_ptr, akns_discretization_t discretization)
+                 INT * const W_ptr, akns_discretization_t const discretization)
 {
     
     INT ret_code;
@@ -120,7 +120,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
 
             for (i=D; i-->0;) {
                 scl = eps_t*CABS(q[i]);
-		if (CREAL(q[i]) == CREAL(r[i])) {
+                if (CREAL(q[i]) == CREAL(r[i])) {
                     if ((double)scl >= 1.0) {
                         ret_code = E_OTHER("kappa == -1 but eps_t*|q[i]|>=1 ... decrease step size");
                         goto release_mem;
@@ -175,9 +175,9 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             }
             
             break;
-        
+
         case akns_discretization_2SPLIT1B: //Intentional fallthrough
-        case akns_discretization_2SPLIT2A: //Differs by correction in fnft_kdvv.c
+        case akns_discretization_2SPLIT2A: //By a trick that modifies the basis, see fnft__kdv_discretization.c -> fnft__kdv_discretization_change_of_basis_matrix_from_S and fnft__kdv_discretization_change_of_basis_matrix_to_S
             
             e_1B = &e_Bstorage[0];
             

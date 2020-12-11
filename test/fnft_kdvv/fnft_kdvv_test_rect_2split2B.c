@@ -25,7 +25,7 @@
 INT main()
 {
     INT ret_code;
-    kdvv_opts_t opts = fnft_kdvv_default_opts();
+    fnft_kdvv_opts_t opts = fnft_kdvv_default_opts();
     const kdvv_testcases_t tc = kdvv_testcases_RECT;
     opts.discretization = kdv_discretization_2SPLIT2B;
     UINT D = 4;

@@ -16,7 +16,7 @@
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
- * Peter J. Prins (TU Delft) 2018.
+ * Peter J. Prins (TU Delft) 2018, 2020.
  */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -373,9 +373,709 @@ INT fnft__akns_discretization_method_weights(COMPLEX **weights_ptr,
             goto  leave_fun;
     }
     
-    
-    *weights_ptr = weights;
-    
     leave_fun:
+    if (ret_code!=SUCCESS)
+        free(weights);
+    else
+        *weights_ptr = weights;
+    return ret_code;
+}
+
+/**
+ * This routine preprocess the signal by resampling and subsampling based on the discretization.
+ * The preprocessing is necessary for higher-order methods.
+ */
+INT fnft__akns_discretization_preprocess_signal(UINT const D,
+                                                COMPLEX const * const q,
+                                                COMPLEX (*r_from_q[3])(COMPLEX const),
+                                                REAL const eps_t,
+                                                UINT * const Dsub_ptr,
+                                                COMPLEX **q_preprocessed_ptr,
+                                                COMPLEX **r_preprocessed_ptr,
+                                                UINT * const first_last_index,
+                                                akns_discretization_t discretization)
+{
+
+    UINT i, D_effective, isub;
+    INT ret_code = SUCCESS;
+    COMPLEX *q_1 = NULL;
+    COMPLEX *q_2 = NULL;
+    COMPLEX *q_3 = NULL;
+
+    COMPLEX *weights = NULL;
+
+    // Check inputs
+    if (D < 2)
+        return E_INVALID_ARGUMENT(D);
+    if (q == NULL)
+        return E_INVALID_ARGUMENT(q);
+    if (Dsub_ptr == NULL)
+        return E_INVALID_ARGUMENT(Dsub_ptr);
+    if (q_preprocessed_ptr == NULL)
+        return E_INVALID_ARGUMENT(q_preprocessed_ptr);
+    if (r_preprocessed_ptr == NULL)
+        return E_INVALID_ARGUMENT(r_preprocessed_ptr);
+    if (eps_t <= 0.0)
+        return E_INVALID_ARGUMENT(esp_t);
+    if (first_last_index == NULL)
+        return E_INVALID_ARGUMENT(first_last_index);
+
+
+
+    // Determine number of samples after downsampling, Dsub
+    UINT Dsub = *Dsub_ptr; // desired Dsub
+    if (Dsub < 2)
+        Dsub = 2;
+    if (Dsub > D)
+        Dsub = D;
+    const UINT nskip_per_step = (UINT) ROUND((REAL)D / Dsub);
+    Dsub = (UINT) ROUND((REAL)D / nskip_per_step); // actual Dsub
+
+    UINT upsampling_factor = akns_discretization_upsampling_factor(discretization);
+    if (upsampling_factor == 0){
+        ret_code =  E_INVALID_ARGUMENT(discretization);
+        goto release_mem;
+    }
+    D_effective = Dsub * upsampling_factor;
+    COMPLEX * const q_preprocessed = malloc(D_effective * sizeof(COMPLEX));
+    COMPLEX * const r_preprocessed = malloc(D_effective * sizeof(COMPLEX));
+    if (q_preprocessed == NULL || r_preprocessed == NULL) {
+        ret_code = E_NOMEM;
+        goto release_mem;
+    }
+
+    switch (discretization) {
+
+        case akns_discretization_BO: // Bofetta-Osborne scheme
+        case akns_discretization_2SPLIT1A:
+        case akns_discretization_2SPLIT1B:
+        case akns_discretization_2SPLIT2A:
+        case akns_discretization_2SPLIT2B:
+        case akns_discretization_2SPLIT2S:
+        case akns_discretization_2SPLIT3A:
+        case akns_discretization_2SPLIT3B:
+        case akns_discretization_2SPLIT3S:
+        case akns_discretization_2SPLIT4A:
+        case akns_discretization_2SPLIT4B:
+        case akns_discretization_2SPLIT5A:
+        case akns_discretization_2SPLIT5B:
+        case akns_discretization_2SPLIT6A:
+        case akns_discretization_2SPLIT6B:
+        case akns_discretization_2SPLIT7A:
+        case akns_discretization_2SPLIT7B:
+        case akns_discretization_2SPLIT8A:
+        case akns_discretization_2SPLIT8B:
+        case akns_discretization_2SPLIT2_MODAL:
+            for (isub=0, i=0; isub<D_effective; isub++, i += nskip_per_step) {
+                q_preprocessed[isub] = q[i];
+                r_preprocessed[isub] = r_from_q[0](q[i]);
+            }
+            break;
+        case akns_discretization_CF4_2:
+        case akns_discretization_4SPLIT4A:
+        case akns_discretization_4SPLIT4B:
+            q_1 = malloc(D * sizeof(COMPLEX));
+            q_2 = malloc(D * sizeof(COMPLEX));
+            if (q_1 == NULL || q_2 == NULL) {
+                ret_code = E_NOMEM;
+                goto release_mem;
+            }
+            REAL scl_factor = SQRT(3.0)/6.0;
+            ret_code = misc_resample(D, eps_t, q, -eps_t*scl_factor*nskip_per_step, q_1);
+            CHECK_RETCODE(ret_code, release_mem);
+            ret_code = misc_resample(D, eps_t, q, eps_t*scl_factor*nskip_per_step, q_2);
+            CHECK_RETCODE(ret_code, release_mem);
+
+
+            ret_code = akns_discretization_method_weights(&weights,discretization);
+            CHECK_RETCODE(ret_code, release_mem);
+
+            for (isub=0, i=0; isub<D_effective; isub+=2, i+= nskip_per_step) {
+                q_preprocessed[isub] = weights[0]*q_1[i] + weights[1]*q_2[i];
+                q_preprocessed[isub+1] = weights[2]*q_1[i] + weights[3]*q_2[i];
+                r_preprocessed[isub] = weights[0]*r_from_q[0](q_1[i])
+                                       + weights[1]*r_from_q[0](q_2[i]);
+                r_preprocessed[isub+1] = weights[2]*r_from_q[0](q_1[i])
+                                         + weights[3]*r_from_q[0](q_2[i]);
+            }
+            break;
+        case akns_discretization_CF4_3:
+            q_1 = malloc(D * sizeof(COMPLEX));
+            q_3 = malloc(D * sizeof(COMPLEX));
+            if (q_1 == NULL || q_3 == NULL) {
+                ret_code = E_NOMEM;
+                goto release_mem;
+            }
+
+            ret_code = misc_resample(D, eps_t, q, -eps_t*SQRT(3.0/20.0)*nskip_per_step, q_1);
+            CHECK_RETCODE(ret_code, release_mem);
+            ret_code = misc_resample(D, eps_t, q, eps_t*SQRT(3.0/20.0)*nskip_per_step, q_3);
+            CHECK_RETCODE(ret_code, release_mem);
+
+            ret_code = akns_discretization_method_weights(&weights,discretization);
+            CHECK_RETCODE(ret_code, release_mem);
+
+            for (isub=0, i=0; isub<D_effective; isub+=3, i+=nskip_per_step) {
+                q_preprocessed[isub] = weights[0]*q_1[i] + weights[1]*q[i] + weights[2]*q_3[i];
+                q_preprocessed[isub+1] = weights[3]*q_1[i] + weights[4]*q[i] + weights[5]*q_3[i];
+                q_preprocessed[isub+2] = weights[6]*q_1[i] + weights[7]*q[i] + weights[8]*q_3[i];
+                r_preprocessed[isub]   = weights[0]*r_from_q[0](q_1[i])
+                                         + weights[1]*r_from_q[0](q[i])
+                                         + weights[2]*r_from_q[0](q_3[i]);
+                r_preprocessed[isub+1] = weights[3]*r_from_q[0](q_1[i])
+                                         + weights[4]*r_from_q[0](q[i])
+                                         + weights[5]*r_from_q[0](q_3[i]);
+                r_preprocessed[isub+2] = weights[6]*r_from_q[0](q_1[i])
+                                         + weights[7]*r_from_q[0](q[i])
+                                         + weights[8]*r_from_q[0](q_3[i]);
+            }
+            break;
+        case akns_discretization_CF5_3:
+            q_1 = malloc(D * sizeof(COMPLEX));
+            q_3 = malloc(D * sizeof(COMPLEX));
+            if (q_1 == NULL || q_3 == NULL) {
+                ret_code = E_NOMEM;
+                goto release_mem;
+            }
+
+            ret_code = misc_resample(D, eps_t, q, -eps_t*SQRT(15.0)/10.0*nskip_per_step, q_1);
+            CHECK_RETCODE(ret_code, release_mem);
+            ret_code = misc_resample(D, eps_t, q, eps_t*SQRT(15.0)/10.0*nskip_per_step, q_3);
+            CHECK_RETCODE(ret_code, release_mem);
+
+            ret_code = akns_discretization_method_weights(&weights,discretization);
+            CHECK_RETCODE(ret_code, release_mem);
+
+
+            for (isub=0, i=0; isub<D_effective; isub+=3, i+=nskip_per_step) {
+                q_preprocessed[isub]   = weights[0]*q_1[i] + weights[1]*q[i] + weights[2]*q_3[i];
+                q_preprocessed[isub+1] = weights[3]*q_1[i] + weights[4]*q[i] + weights[5]*q_3[i];
+                q_preprocessed[isub+2] = weights[6]*q_1[i] + weights[7]*q[i] + weights[8]*q_3[i];
+                r_preprocessed[isub]   = weights[0]*r_from_q[0](q_1[i])
+                                         + weights[1]*r_from_q[0](q[i])
+                                         + weights[2]*r_from_q[0](q_3[i]);
+                r_preprocessed[isub+1] = weights[3]*r_from_q[0](q_1[i])
+                                         + weights[4]*r_from_q[0](q[i])
+                                         + weights[5]*r_from_q[0](q_3[i]);
+                r_preprocessed[isub+2] = weights[6]*r_from_q[0](q_1[i])
+                                         + weights[7]*r_from_q[0](q[i])
+                                         + weights[8]*r_from_q[0](q_3[i]);
+            }
+            break;
+        case akns_discretization_CF6_4:
+            q_1 = malloc(D * sizeof(COMPLEX));
+            q_3 = malloc(D * sizeof(COMPLEX));
+            if (q_1 == NULL || q_3 == NULL) {
+                ret_code = E_NOMEM;
+                goto release_mem;
+            }
+
+            ret_code = misc_resample(D, eps_t, q, -eps_t*nskip_per_step*SQRT(15.0)/10.0, q_1);
+            CHECK_RETCODE(ret_code, release_mem);
+            ret_code = misc_resample(D, eps_t, q, eps_t*nskip_per_step*SQRT(15.0)/10.0, q_3);
+            CHECK_RETCODE(ret_code, release_mem);
+
+            ret_code = akns_discretization_method_weights(&weights,discretization);
+            CHECK_RETCODE(ret_code, release_mem);
+
+            for (isub=0, i=0; isub<D_effective; isub+=4, i+=nskip_per_step) {
+                q_preprocessed[isub]   = weights[0]*q_1[i] + weights[1]*q[i]  + weights[2]*q_3[i];
+                q_preprocessed[isub+1] = weights[3]*q_1[i] + weights[4]*q[i]  + weights[5]*q_3[i];
+                q_preprocessed[isub+2] = weights[6]*q_1[i] + weights[7]*q[i]  + weights[8]*q_3[i];
+                q_preprocessed[isub+3] = weights[9]*q_1[i] + weights[10]*q[i] + weights[11]*q_3[i];
+                r_preprocessed[isub]   = weights[0]*r_from_q[0](q_1[i])
+                                         + weights[1]*r_from_q[0](q[i])
+                                         + weights[2]*r_from_q[0](q_3[i]);
+                r_preprocessed[isub+1] = weights[3]*r_from_q[0](q_1[i])
+                                         + weights[4]*r_from_q[0](q[i])
+                                         + weights[5]*r_from_q[0](q_3[i]);
+                r_preprocessed[isub+2] = weights[6]*r_from_q[0](q_1[i])
+                                         + weights[7]*r_from_q[0](q[i])
+                                         + weights[8]*r_from_q[0](q_3[i]);
+                r_preprocessed[isub+3] = weights[9]*r_from_q[0](q_1[i])
+                                         + weights[10]*r_from_q[0](q[i])
+                                         + weights[11]*r_from_q[0](q_3[i]);
+            }
+            break;
+        case akns_discretization_ES4:
+        case akns_discretization_TES4:
+            for (isub=0, i=0; isub<D_effective; isub+=3, i+=nskip_per_step) {
+                q_preprocessed[isub] = q[i];
+            }
+
+            REAL eps_t_sub = eps_t*nskip_per_step;
+            REAL eps_t_sub_2 = POW(eps_t_sub,2);
+            q_preprocessed[1] = (q_preprocessed[3]-0)/(2*eps_t_sub);
+            q_preprocessed[2] = (q_preprocessed[3]-2*q_preprocessed[0]+0)/eps_t_sub_2;
+            q_preprocessed[D_effective-2] = (0-q_preprocessed[D_effective-6])/(2*eps_t_sub);
+            q_preprocessed[D_effective-1] = (0-2*q_preprocessed[D_effective-3]+q_preprocessed[D_effective-6])/eps_t_sub_2;
+
+            for (isub=3; isub<D_effective-3; isub+=3) {
+                q_preprocessed[isub+1] = (q_preprocessed[isub+3]-q_preprocessed[isub-3])/(2*eps_t_sub);
+                q_preprocessed[isub+2] = (q_preprocessed[isub+3]-2*q_preprocessed[isub]+q_preprocessed[isub-3])/eps_t_sub_2;
+            }
+            for (isub=0; isub<D_effective; isub+=3) {
+                for (i=0; i<3; i++) {
+                    r_preprocessed[isub+i] = r_from_q[i](q_preprocessed[isub+i]);
+                }
+            }
+            break;
+        default: // Unknown discretization
+
+            ret_code = E_INVALID_ARGUMENT(discretization);
+            goto  release_mem;
+    }
+
+    // Original index of the first and last sample in qsub
+    first_last_index[0] = 0;
+    first_last_index[1] = (Dsub-1)*nskip_per_step;
+    *q_preprocessed_ptr = q_preprocessed;
+    *r_preprocessed_ptr = r_preprocessed;
+    *Dsub_ptr = Dsub;
+
+    release_mem:
+        free(q_1);
+        free(q_2);
+        free(q_3);
+        free(weights);
+        return ret_code;
+}
+
+/**
+ * This routine returns the change of basis matrix from the S basis to the basis of the discretization.
+ */
+INT fnft__akns_discretization_change_of_basis_matrix_to_S(COMPLEX * const T,
+                                                          COMPLEX const xi,
+                                                          UINT const  derivative_flag, // 0- > 2x2, 1->4x4
+                                                          REAL const eps_t,
+                                                          akns_discretization_t const akns_discretization,
+                                                          UINT vanilla_flag,
+                                                          akns_pde_t const PDE)
+{
+    INT ret_code = SUCCESS;
+
+    switch (PDE) {
+        case akns_pde_KdV:
+            if(xi==0){
+                ret_code = E_DIV_BY_ZERO;
+                CHECK_RETCODE(ret_code, release_mem);
+            }
+            switch (akns_discretization) {
+                // Fill the first two columns of T for the discretization basis
+                case akns_discretization_2SPLIT1A:
+                case akns_discretization_2SPLIT1B:
+                case akns_discretization_2SPLIT2B:
+                case akns_discretization_2SPLIT2S:
+                case akns_discretization_2SPLIT3A:
+                case akns_discretization_2SPLIT3B:
+                case akns_discretization_2SPLIT3S:
+                case akns_discretization_2SPLIT4A:
+                case akns_discretization_2SPLIT4B:
+                case akns_discretization_2SPLIT5A:
+                case akns_discretization_2SPLIT5B:
+                case akns_discretization_2SPLIT6A:
+                case akns_discretization_2SPLIT6B:
+                case akns_discretization_2SPLIT7A:
+                case akns_discretization_2SPLIT7B:
+                case akns_discretization_2SPLIT8A:
+                case akns_discretization_2SPLIT8B:
+                case akns_discretization_4SPLIT4A:
+                case akns_discretization_4SPLIT4B:
+                case akns_discretization_BO:
+                case akns_discretization_CF4_2:
+                case akns_discretization_CF4_3:
+                case akns_discretization_CF5_3:
+                case akns_discretization_CF6_4:
+                case akns_discretization_ES4:
+                case akns_discretization_TES4:
+                    if (vanilla_flag) {
+                        // T from AKNS basis to S basis for KdV:
+
+                        T[0] = -I * 0.5 / xi;   //T_11;
+                        T[1] = 0.0;             //T_12;
+                        if(!derivative_flag){
+                            T[2]  = -T[0];      //T_21;
+                            T[3]  = 1.0;        //T_22;
+                        } else {
+                            T[4]  = -T[0];      //T_21;
+                            T[5]  = 1.0;        //T_22;
+
+                            T[8]  = -T[0] / xi; //T_31 = d/dxi T_11
+                            T[9]  = 0.0;        //T_32 = d/dxi T_12
+                            T[12] = -T[8];      //T_41 = d/dxi T_21
+                            T[13] = 0.0;        //T_42 = d/dxi T_22
+                        }
+                    } else {
+                        // T from flipped AKNS basis to S basis for KdV:
+
+                        T[0] = 1.0;             //T_11;
+                        T[1] = -I * 0.5 / xi;   //T_12;
+                        if(!derivative_flag){
+                            T[2]  = 0.0;        //T_21;
+                            T[3]  = -T[1];      //T_22;
+                        } else {
+                            T[4]  = 0.0;        //T_21;
+                            T[5]  = -T[1];      //T_22;
+
+                            T[8]  = 0.0;        //T_31 = d/dxi T_11
+                            T[9]  = -T[1] / xi; //T_32 = d/dxi T_12
+                            T[12] = 0.0;        //T_41 = d/dxi T_21
+                            T[13] = -T[9];      //T_42 = d/dxi T_22
+                        }
+                    }
+                    break;
+
+                case akns_discretization_2SPLIT2_MODAL:
+                case akns_discretization_2SPLIT2A:
+                    if (vanilla_flag) {
+                        //T from modified AKNS basis to S basis for KdV. This modification reduces the degree of the polynomial scattering matrix by 1 per step.
+
+                        T[0] = CEXP(-0.5*I*xi*eps_t) * -I * 0.5 / xi; //T_11;
+                        T[1] = 0.0;                                   //T_12;
+                        if(!derivative_flag){
+                            T[2]  = -T[0];                            //T_21;
+                            T[3]  = CEXP(+0.5*I*xi*eps_t);            //T_22;
+                        } else {
+                            T[4]  = -T[0];                            //T_21;
+                            T[5]  = CEXP(+0.5*I*xi*eps_t);            //T_22;
+
+                            T[8]  = -T[0] * (1.0/xi + 0.5*I*eps_t);   //T_31 = d/dxi T_11
+                            T[9]  = 0.0;                              //T_32 = d/dxi T_12
+                            T[12] = -T[8];                            //T_41 = d/dxi T_21
+                            T[13] = 0.5 * I * eps_t * T[5];           //T_42 = d/dxi T_22
+                        }
+                    } else {
+                        //T from flipped modified AKNS basis to S basis for KdV. This modification reduces the degree of the polynomial scattering matrix by 1 per step.
+
+                        T[0] = CEXP(-0.5*I*xi*eps_t);                 //T_11;
+                        T[1] = CEXP( 0.5*I*xi*eps_t) * -I * 0.5 / xi; //T_12;
+                        if(!derivative_flag){
+                            T[2]  = 0.0;                              //T_21;
+                            T[3]  = -T[1];                            //T_22;
+                        } else {
+                            T[4]  = 0.0;                              //T_21;
+                            T[5]  = -T[1];                            //T_22;
+
+                            T[8]  = -0.5 * I * eps_t*T[0];            //T_31 = d/dxi T_11
+                            T[9]  = T[1] * (-1.0/xi + 0.5*I*eps_t);   //T_32 = d/dxi T_12
+                            T[12] = 0.0;                              //T_41 = d/dxi T_21
+                            T[13] = -T[9];                            //T_42 = d/dxi T_22
+
+                        }
+                    }
+                    break;
+                default:
+                    ret_code =  E_INVALID_ARGUMENT(akns_discretization);
+                    CHECK_RETCODE(ret_code, release_mem);
+            }
+            break;
+            
+        case akns_pde_NSE:
+            switch (akns_discretization) {
+                case akns_discretization_2SPLIT1A:
+                case akns_discretization_2SPLIT1B:
+                case akns_discretization_2SPLIT2B:
+                case akns_discretization_2SPLIT2S:
+                case akns_discretization_2SPLIT3A:
+                case akns_discretization_2SPLIT3B:
+                case akns_discretization_2SPLIT3S:
+                case akns_discretization_2SPLIT4A:
+                case akns_discretization_2SPLIT4B:
+                case akns_discretization_2SPLIT5A:
+                case akns_discretization_2SPLIT5B:
+                case akns_discretization_2SPLIT6A:
+                case akns_discretization_2SPLIT6B:
+                case akns_discretization_2SPLIT7A:
+                case akns_discretization_2SPLIT7B:
+                case akns_discretization_2SPLIT8A:
+                case akns_discretization_2SPLIT8B:
+                case akns_discretization_4SPLIT4A:
+                case akns_discretization_4SPLIT4B:
+                case akns_discretization_BO:
+                case akns_discretization_CF4_2:
+                case akns_discretization_CF4_3:
+                case akns_discretization_CF5_3:
+                case akns_discretization_CF6_4:
+                case akns_discretization_ES4:
+                case akns_discretization_TES4:
+                    // The AKNS basis is already the S-basis for these discretizations, return an identity matrix
+                    T[0] = 1.0;            //T_11;
+                    T[1] = 0.0;            //T_12;
+                    if(!derivative_flag){
+                        T[2]  = 0.0;       //T_21;
+                        T[3]  = 1.0;       //T_22;
+                    } else {
+                        T[4]  = 0.0;       //T_21;
+                        T[5]  = 1.0;       //T_22;
+
+                        T[8]  = 0.0;       //T_31 = d/dxi T_11
+                        T[9]  = 0.0;       //T_32 = d/dxi T_12
+                        T[12] = 0.0;       //T_41 = d/dxi T_21
+                        T[13] = 0.0;       //T_42 = d/dxi T_22
+                    }
+                    break;
+
+                case akns_discretization_2SPLIT2_MODAL:
+                case akns_discretization_2SPLIT2A:
+                    // T from the modified AKNS basis to the S basis for NSE . This modification reduces the degree of the polynomial scattering matrix by 1 per step.
+                    // TODO: These discretizations require a modification that is currently contracted in the 'boundary coefficionts'
+                    T[0] = 1.0;            //T_11;
+                    T[1] = 0.0;            //T_12;
+                    if(!derivative_flag){
+                        T[2]  = 0.0;       //T_21;
+                        T[3]  = 1.0;       //T_22;
+                    } else {
+                        T[4]  = 0.0;       //T_21;
+                        T[5]  = 1.0;       //T_22;
+
+                        T[8]  = 0.0;       //T_31 = d/dxi T_11
+                        T[9]  = 0.0;       //T_32 = d/dxi T_12
+                        T[12] = 0.0;       //T_41 = d/dxi T_21
+                        T[13] = 0.0;       //T_42 = d/dxi T_22
+                    }
+                    break;
+                default:
+                    ret_code =  E_INVALID_ARGUMENT(akns_discretization);
+                    CHECK_RETCODE(ret_code, release_mem);
+            }
+            break;
+
+        default:
+            ret_code =  E_INVALID_ARGUMENT(PDE);
+            CHECK_RETCODE(ret_code, release_mem);
+    }
+
+    if (derivative_flag) {
+        // Fill the last two columns of T from the first two
+        T[2]  = 0.0;  // T_13 = 0
+        T[3]  = 0.0;  // T_14 = 0
+        T[6]  = 0.0;  // T_23 = 0
+        T[7]  = 0.0;  // T_24 = 0
+        T[10] = T[0]; // T_33 = T_11
+        T[11] = T[1]; // T_34 = T_12
+        T[14] = T[4]; // T_43 = T_21
+        T[15] = T[5]; // T_44 = T_22
+    }
+
+    release_mem:
+        return ret_code;
+}
+
+/**
+ * This routine returns the change of basis matrix from the S basis to the basis of the discretization.
+ */
+INT fnft__akns_discretization_change_of_basis_matrix_from_S(COMPLEX * const T,
+                                                            COMPLEX const xi,
+                                                            UINT const  derivative_flag, // 0- > 2x2, 1->4x4
+                                                            REAL const eps_t,
+                                                            akns_discretization_t const akns_discretization,
+                                                            UINT vanilla_flag,
+                                                            akns_pde_t const PDE)
+{
+    INT ret_code = SUCCESS;
+
+    switch (PDE) {
+        case akns_pde_KdV:
+            if(xi==0){
+                ret_code = E_DIV_BY_ZERO;
+                CHECK_RETCODE(ret_code, release_mem);
+            }
+            switch (akns_discretization) {
+                // Fill the first two columns of T for the discretization basis
+                case akns_discretization_2SPLIT1A:
+                case akns_discretization_2SPLIT1B:
+                case akns_discretization_2SPLIT2B:
+                case akns_discretization_2SPLIT2S:
+                case akns_discretization_2SPLIT3A:
+                case akns_discretization_2SPLIT3B:
+                case akns_discretization_2SPLIT3S:
+                case akns_discretization_2SPLIT4A:
+                case akns_discretization_2SPLIT4B:
+                case akns_discretization_2SPLIT5A:
+                case akns_discretization_2SPLIT5B:
+                case akns_discretization_2SPLIT6A:
+                case akns_discretization_2SPLIT6B:
+                case akns_discretization_2SPLIT7A:
+                case akns_discretization_2SPLIT7B:
+                case akns_discretization_2SPLIT8A:
+                case akns_discretization_2SPLIT8B:
+                case akns_discretization_4SPLIT4A:
+                case akns_discretization_4SPLIT4B:
+                case akns_discretization_BO:
+                case akns_discretization_CF4_2:
+                case akns_discretization_CF4_3:
+                case akns_discretization_CF5_3:
+                case akns_discretization_CF6_4:
+                case akns_discretization_ES4:
+                case akns_discretization_TES4:
+                    if (vanilla_flag) {
+                        // T from S basis for KdV to AKNS basis:
+
+                        T[0] = 2.0 * I * xi;   //T_11;
+                        T[1] = 0.0;            //T_12;
+                        if(!derivative_flag){
+                            T[2]  = 1.0;       //T_21;
+                            T[3]  = 1.0;       //T_22;
+                        } else {
+                            T[4]  = 1.0;       //T_21;
+                            T[5]  = 1.0;       //T_22;
+
+                            T[8]  = 2.0 * I;   //T_31 = d/dxi T_11
+                            T[9]  = 0.0;       //T_32 = d/dxi T_12
+                            T[12] = 0.0;       //T_41 = d/dxi T_21
+                            T[13] = 0.0;       //T_42 = d/dxi T_22
+                        }
+                    } else {
+                        // T from S basis for KdV to flipped AKNS basis:
+
+                        T[0] = 1.0;                //T_11;
+                        T[1] = 1.0;                //T_12;
+                        if(!derivative_flag){
+                            T[2]  = 0.0;           //T_21;
+                            T[3]  = -2.0 * I * xi; //T_22;
+                        } else {
+                            T[4]  = 0.0;           //T_21;
+                            T[5]  = -2.0 * I * xi; //T_22;
+
+                            T[8]  = 0.0;           //T_31 = d/dxi T_11
+                            T[9]  = 0.0;           //T_32 = d/dxi T_12
+                            T[12] = 0.0;           //T_41 = d/dxi T_21
+                            T[13] = -2.0 * I;      //T_42 = d/dxi T_22
+                        }
+                    }
+                    break;
+
+                case akns_discretization_2SPLIT2_MODAL:
+                case akns_discretization_2SPLIT2A:
+                    if (vanilla_flag) {
+                        // T from S basis for KdV to modified AKNS basis. This modification reduces the degree of the polynomial scattering matrix by 1 per step.
+
+                        T[0] = CEXP(+0.5*I*xi*eps_t) * 2.0 * I * xi;  //T_11;
+                        T[1] = 0.0;                                   //T_12;
+                        if(!derivative_flag){
+                            T[2]  = CEXP(-0.5*I*xi*eps_t);            //T_21;
+                            T[3]  = T[2];                             //T_22;
+                        } else {
+                            T[4]  = CEXP(-0.5*I*xi*eps_t);            //T_21;
+                            T[5]  = T[4];                             //T_22;
+
+                            T[8]  = T[0] * (1.0/xi + 0.5*I*eps_t);    //T_31 = d/dxi T_11
+                            T[9]  = 0.0;                              //T_32 = d/dxi T_12
+                            T[12] = T[4] * -0.5 * I * eps_t;          //T_41 = d/dxi T_21
+                            T[13] = T[12];                            //T_42 = d/dxi T_22
+                        }
+                    } else {
+                        // T from S basis for KdV to flipped modified AKNS basis. This modification reduces the degree of the polynomial scattering matrix by 1 per step.
+                        T[0] = CEXP(0.5*I*xi*eps_t);                       //T_11;
+                        T[1] = T[0];                                       //T_12;
+
+                        if(!derivative_flag){
+                            T[2]  = 0.0;                                   //T_21;
+                            T[3]  = CEXP(-0.5*I*xi*eps_t) * -2.0 * I * xi; //T_22;
+                        } else {
+                            T[4]  = 0.0;                                   //T_21;
+                            T[5]  = CEXP(-0.5*I*xi*eps_t) * -2.0 * I * xi; //T_22;
+
+                            T[8]  = T[0] * 0.5 * I * eps_t;                //T_31 = d/dxi T_11
+                            T[9]  = T[8];                                  //T_32 = d/dxi T_12
+                            T[12] = 0.0;                                   //T_41 = d/dxi T_21
+                            T[13] = T[5] * (1.0/xi - 0.5*I*eps_t);         //T_42 = d/dxi T_22
+                        }
+                    }
+                    break;
+                default:
+                    ret_code =  E_INVALID_ARGUMENT(akns_discretization);
+                    CHECK_RETCODE(ret_code, release_mem);
+            }
+            break;
+
+        case akns_pde_NSE:
+            switch (akns_discretization) {
+                case akns_discretization_2SPLIT1A:
+                case akns_discretization_2SPLIT1B:
+                case akns_discretization_2SPLIT2B:
+                case akns_discretization_2SPLIT2S:
+                case akns_discretization_2SPLIT3A:
+                case akns_discretization_2SPLIT3B:
+                case akns_discretization_2SPLIT3S:
+                case akns_discretization_2SPLIT4A:
+                case akns_discretization_2SPLIT4B:
+                case akns_discretization_2SPLIT5A:
+                case akns_discretization_2SPLIT5B:
+                case akns_discretization_2SPLIT6A:
+                case akns_discretization_2SPLIT6B:
+                case akns_discretization_2SPLIT7A:
+                case akns_discretization_2SPLIT7B:
+                case akns_discretization_2SPLIT8A:
+                case akns_discretization_2SPLIT8B:
+                case akns_discretization_4SPLIT4A:
+                case akns_discretization_4SPLIT4B:
+                case akns_discretization_BO:
+                case akns_discretization_CF4_2:
+                case akns_discretization_CF4_3:
+                case akns_discretization_CF5_3:
+                case akns_discretization_CF6_4:
+                case akns_discretization_ES4:
+                case akns_discretization_TES4:
+                    // The AKNS basis is already the S-basis for these discretizations, return an identity matrix
+                    T[0] = 1.0;            //T_11;
+                    T[1] = 0.0;            //T_12;
+                    if(!derivative_flag){
+                        T[2]  = 0.0;       //T_21;
+                        T[3]  = 1.0;       //T_22;
+                    } else {
+                        T[4]  = 0.0;       //T_21;
+                        T[5]  = 1.0;       //T_22;
+
+                        T[8]  = 0.0;       //T_31 = d/dxi T_11
+                        T[9]  = 0.0;       //T_32 = d/dxi T_12
+                        T[12] = 0.0;       //T_41 = d/dxi T_21
+                        T[13] = 0.0;       //T_42 = d/dxi T_22
+                    }
+                    break;
+
+                case akns_discretization_2SPLIT2_MODAL:
+                case akns_discretization_2SPLIT2A:
+                    // T from S basis for NSE to modified AKNS basis. This modification reduces the degree of the polynomial scattering matrix by 1 per step.
+                    // TODO: These discretizations require a modification that is currently contracted in the 'boundary coefficionts'
+                    T[0] = 1.0;            //T_11;
+                    T[1] = 0.0;            //T_12;
+                    if(!derivative_flag){
+                        T[2]  = 0.0;       //T_21;
+                        T[3]  = 1.0;       //T_22;
+                    } else {
+                        T[4]  = 0.0;       //T_21;
+                        T[5]  = 1.0;       //T_22;
+
+                        T[8]  = 0.0;       //T_31 = d/dxi T_11
+                        T[9]  = 0.0;       //T_32 = d/dxi T_12
+                        T[12] = 0.0;       //T_41 = d/dxi T_21
+                        T[13] = 0.0;       //T_42 = d/dxi T_22
+                    }
+                    break;
+                default:
+                    ret_code =  E_INVALID_ARGUMENT(akns_discretization);
+                    CHECK_RETCODE(ret_code, release_mem);
+            }
+            break;
+
+        default:
+            ret_code =  E_INVALID_ARGUMENT(PDE);
+            CHECK_RETCODE(ret_code, release_mem);
+    }
+
+    if (derivative_flag) {
+        // Fill the last two columns of T from the first two
+        T[2]  = 0.0;  // T_13 = 0
+        T[3]  = 0.0;  // T_14 = 0
+        T[6]  = 0.0;  // T_23 = 0
+        T[7]  = 0.0;  // T_24 = 0
+        T[10] = T[0]; // T_33 = T_11
+        T[11] = T[1]; // T_34 = T_12
+        T[14] = T[4]; // T_43 = T_21
+        T[15] = T[5]; // T_44 = T_22
+    }
+
+    release_mem:
         return ret_code;
 }

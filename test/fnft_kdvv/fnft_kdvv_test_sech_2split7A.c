@@ -23,8 +23,8 @@
 
 INT main()
 {
-    INT ret_code, i;
-    kdvv_opts_t opts = fnft_kdvv_default_opts();
+    INT ret_code=EXIT_FAILURE, i;
+    fnft_kdvv_opts_t opts = fnft_kdvv_default_opts();
     const kdvv_testcases_t tc = kdvv_testcases_SECH;
     opts.discretization = kdv_discretization_2SPLIT7A;
     UINT D = 1024;
@@ -42,7 +42,7 @@ INT main()
 
     ret_code = kdvv_testcases_test_fnft(tc, D+1, eb, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-   
+
     ret_code = kdvv_testcases_test_fnft(tc, D-1, eb, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 

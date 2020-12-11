@@ -24,7 +24,7 @@
 INT main()
 {
     INT ret_code;
-    kdvv_opts_t opts = fnft_kdvv_default_opts();
+    fnft_kdvv_opts_t opts = fnft_kdvv_default_opts();
     const kdvv_testcases_t tc = kdvv_testcases_RECT;
     opts.discretization = kdv_discretization_2SPLIT1A;
     UINT D = 4;
@@ -39,6 +39,8 @@ INT main()
     
     ret_code = kdvv_testcases_test_fnft(tc, D, eb, &opts);
     //CHECK_RETCODE(ret_code, leave_fun); // Uncomment if more tests are added
+
+    
     
 //leave_fun:
     if (ret_code != SUCCESS)

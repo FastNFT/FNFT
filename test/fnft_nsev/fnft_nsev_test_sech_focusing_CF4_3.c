@@ -33,7 +33,7 @@ INT main()
         1.5e-4,     // a
         4.1e-5,     // b
         1.6e-4,     // bound states
-        4.0e-14,      // norming constants
+        3.0e-14,      // norming constants
         6.2e-4      // residues
     };
     opts = fnft_nsev_default_opts();
@@ -67,7 +67,7 @@ INT main()
         3.8e-5,     // a
         1.2e-5,     // b
         1.2e-5,     // bound states
-        5e-14,      // norming constants
+        2.2e-14,    // norming constants
         3.1e-4      // residues
     };
     opts.richardson_extrapolation_flag = 1;

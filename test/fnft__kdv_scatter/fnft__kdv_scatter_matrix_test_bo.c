@@ -16,6 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
 * Shrinivas Chimmalgi (TU Delft) 2017-2018,2020.
+* Peter J Prins (TU Delft) 2020.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -28,43 +29,51 @@ INT kdv_scatter_matrix_test_bo()
     UINT i, D = 8;
     INT ret_code;
     const REAL eps_t = 0.13;
-    COMPLEX q[8];
+    COMPLEX q[8], r[8];
     COMPLEX result[2*8];
     COMPLEX lam[2] = {2, 1+0.5*I};
     COMPLEX result_exact[16] = { \
+         -0.544605303960817 -     0.958647947076152*I, \
+         0.0794721386915349 +    0.0134467976453307*I, \
+        -0.0246337974340963 +    0.0123132398678595*I, \
+         -0.447572503318363 +      0.78665621605389*I, \
+         -0.966803401931833 +     0.607395950461071*I, \
+        -0.0639071462390028 +   0.00196680566143484*I, \
+         0.0622976106588603 -    0.0146064121524493*I, \
+         -0.836459620311112 -     0.421161672558673*I, \
+          0.844221235130024 -      1.75354130915637*I, \
+          0.147492933060637 -    0.0819705993458431*I, \
+        -0.0881078629988439 +     0.119509172610443*I, \
+          0.210672525960293 +     0.467024487542091*I, \
+          -1.69348275358045 -     0.643630324529962*I, \
+          -0.10214305870232 +     0.141516722852452*I, \
+          0.106220590826741 -     0.150214497063317*I, \
+         -0.391717762925894 +     0.218025257136358*I };
 
-         -0.624077442652352 -     0.972094744721483*I, \
-        -0.0537871905813229 +      0.31788855476614*I, \
-         -0.436609430226878 +    0.0502846841920214*I, \
-         -0.368100364626828 +     0.800103013699221*I, \
-         -0.902896255692831 +     0.605429144799636*I, \
-        -0.0347608179364008 -    0.0966843075729412*I, \
-          0.471300816414904 -    0.0241075859152959*I, \
-         -0.900366766550114 -     0.419194866897238*I, \
-          0.696728302069386 -      1.67157070981052*I, \
-          0.016448265631049 +     0.376956465467117*I, \
-         -0.887223992518918 +     0.244638039704334*I, \
-           0.35816545902093 +     0.385053888196248*I, \
-          -1.59133969487813 -     0.785147047382414*I, \
-        -0.0169491883108973 -    0.0508169741358181*I, \
-          0.369249525725664 +     0.117437867995581*I, \
-         -0.493860821628215 +      0.35954197998881*I };
-            
     /* Matlab code to generate result_exact:
     eps_t = 0.13;
     D=8; q = 0.4*cos(1:D)+0.5j*sin(0.3*(1:D)); r = -ones(1,D);
-    result_exact = []; lam = [2 , 1+0.5i];
+    result_exact = []; lam = [2 , 1+0.5i]; U=nan(2); Udash=nan(2);
+    sincdash = @(x) (cos(x)-sinc(x./pi))./x;
     for l = lam
         S=eye(4);
         for n=D:-1:1
-            ks=(q(n)*r(n)-l^2);
-            k=sqrt(ks);        
-            U=[cosh(k*eps_t)-1i*l*sinh(k*eps_t)/k,q(n)*sinh(k*eps_t)/k;...
-                r(n)*sinh(k*eps_t)/k,cosh(k*eps_t)+1i*l*sinh(k*eps_t)/k];
-            Udash=[1i*eps_t*l^2*cosh(k*eps_t)/ks-(l*eps_t+1i+1i*l^2/ks)*sinh(k*eps_t)/k,...
-                -q(n)*l*(eps_t*cosh(k*eps_t)-sinh(k*eps_t)/k)/ks;...
-                -r(n)*l*(eps_t*cosh(k*eps_t)-sinh(k*eps_t)/k)/ks,...
-                -1i*eps_t*l^2*cosh(k*eps_t)/ks-(l*eps_t-1i-1i*l^2/ks)*sinh(k*eps_t)/k];
+            Delta = eps_t * sqrt(l^2+q(n));
+
+            U(1,1) =  (q(n) * eps_t / (2i*l) - 1i * l * eps_t) * sinc(Delta/pi) + cos(Delta);
+            U(1,2) =   q(n) * eps_t / (2i*l) * sinc(Delta/pi);
+            U(2,1) =  -U(1,2);
+            U(2,2) = -(q(n) * eps_t / (2i*l) - 1i * l * eps_t) * sinc(Delta/pi) + cos(Delta);
+
+            Udash(1,1) = -1i * eps_t * (1+q(n)/(-2*l^2)) * sinc(Delta/pi) ...
+                         + -1i * (eps_t.^3/Delta) * (l.^2 + q(n)/2) * sincdash(Delta) ...
+                         - eps_t.^2 * l * sinc(Delta/pi);
+            Udash(1,2) = q(n).*eps_t.^3./(2i*Delta^2) * ...
+                                           ( cos(Delta) - (2+q(n)./l.^2) .* sinc(Delta/pi) );
+            Udash(2,1) = - Udash(1,2);
+            Udash(2,2) =  1i * eps_t * (1+q(n)/(-2*l^2)) * sinc(Delta/pi) ...
+                         +  1i * (eps_t.^3/Delta) * (l.^2 + q(n)/2) * sincdash(Delta) ...
+                         - eps_t.^2 * l * sinc(Delta/pi);
             T=[U,zeros(2);Udash,U];
             S=S*T;
         end
@@ -72,12 +81,22 @@ INT kdv_scatter_matrix_test_bo()
     end
     format long g; result_exact.'
     */
-    for (i=0; i<D; i++)
+    for (i=0; i<D; i++) {
         q[i] = 0.4*cos(i+1) + 0.5*I*sin(0.3*(i+1));
+        r[i] = -1.0;
+    }
 
-    ret_code = kdv_scatter_matrix(D, q, eps_t, 2, lam, result, kdv_discretization_BO, 1);
+    INT kappa=1; // unused
+    ret_code = kdv_scatter_matrix(D, q, r, eps_t, kappa, 2, lam, result, kdv_discretization_BO_VANILLA, 1);
+
     if (ret_code != SUCCESS)
         return E_SUBROUTINE(ret_code);
+
+    #ifdef DEBUG
+        misc_print_buf(16, result, "result");
+        misc_print_buf(16, result_exact, "resxct");
+    #endif
+
     if (misc_rel_err(16, result, result_exact) > 10*EPSILON)
         return E_TEST_FAILED;
     
