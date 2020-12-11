@@ -30,7 +30,7 @@ INT main()
     opts.discretization = kdv_discretization_CF4_2_VANILLA;
     UINT D = 256;
     REAL eb[6] = {  // error bounds
-        3.5e-6,     // continuous spectrum
+        3.6e-6,     // continuous spectrum
         2.4e-4,     // a(xi)
         4.2e-6,     // b(xi)
         1.5e-6,     // bound states

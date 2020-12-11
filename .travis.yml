@@ -43,6 +43,6 @@ before_script:
     - cd build
  
 script:
-    - if dpkg -s libfftw3-dev; then cmake .. -DENABLE_FFTW=ON; else cmake ..; fi
+    - if dpkg -s libfftw3-dev; then cmake .. -DENABLE_FFTW=ON -DDEBUG=ON; else cmake .. -DDEBUG=ON; fi
     - make 
     - make test CTEST_OUTPUT_ON_FAILURE=1
