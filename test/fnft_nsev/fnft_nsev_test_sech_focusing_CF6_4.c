@@ -16,6 +16,7 @@
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
+ * Peter J Prins (TU Delft) 2020.
  */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -33,8 +34,8 @@ INT main()
         7.9e-5,     // a
         2.4e-5,     // b
         4.3e-5,     // bound states
-        5.0e-14,      // norming constants
-        7.7e-5      // residues
+        5.0e-14,    // norming constants
+        5.3e-5      // residues
     };
     
     opts = fnft_nsev_default_opts();
@@ -58,7 +59,6 @@ INT main()
     for (i=0; i<6; i++)
         error_bounds[i] /= 64.0;
     error_bounds[4] *= 64.0;
-    error_bounds[5] *= 8.0;// Residue has lower order.
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
@@ -69,19 +69,17 @@ INT main()
         9.9e-8,     // b
         4.6e-7,     // bound states
         5e-14,      // norming constants
-        2.7e-5      // residues
+        6.1e-7      // residues
     };
     opts.richardson_extrapolation_flag = 1;
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     // Check for at least 7th-order error decay (error_bounds_RE[4] corresponding
-    // to the norming constants stays as it is already close to machine precision, 
-    // error_bounds_RE[5] corresponding to the residues only decays with 4th-order)
+    // to the norming constants stays as it is already close to machine precision)
     D *= 2;
     for (i=0; i<6; i++)
         error_bounds_RE[i] /= 128.0;
     error_bounds_RE[4] *= 128.0;
-    error_bounds_RE[5] *= 8.0;// Residue has lower order.
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun)
     

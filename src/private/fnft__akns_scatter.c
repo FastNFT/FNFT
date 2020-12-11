@@ -132,7 +132,6 @@ INT akns_scatter_matrix(UINT const D,
     // In the case of ES4 and TES4 computing values that are functions of
     // q and r but not l.
 
-    REAL scl_factor = 1.0;
     COMPLEX l_weights[4] = {0};
     UINT N = 0;
     switch (discretization) {
@@ -154,7 +153,6 @@ INT akns_scatter_matrix(UINT const D,
                     tmp2[n+1] = -eps_t_3*(q[n+1]+r[n+1])/12.0;
                     tmp2[n+2] = -I*eps_t;
                 }
-
             }
             break;
 
@@ -183,7 +181,6 @@ INT akns_scatter_matrix(UINT const D,
             // fall through
         case akns_discretization_BO:            // bofetta-osborne scheme
             N++;                                // The previous discretization requires N=1
-            scl_factor /= upsampling_factor;
             COMPLEX *weights = NULL;
             ret_code = akns_discretization_method_weights(&weights,discretization);
             CHECK_RETCODE(ret_code, leave_fun); // if ret_code != SUCCESS, akns_discretization_method_weights frees weights if needed
@@ -193,6 +190,9 @@ INT akns_scatter_matrix(UINT const D,
                     l_weights[i] += weights[i*N+j];
             }
             free(weights);
+#ifdef DEBUG
+            misc_print_buf(upsampling_factor,l_weights,"l_weights");
+#endif
 
             // Allocating memory for the array l, which will be used to store xi-samples
             // with the appropriate weight for the discretization.
@@ -229,6 +229,10 @@ INT akns_scatter_matrix(UINT const D,
                     }
                     for (UINT n = 0; n < D; n++){
                         akns_scatter_bound_states_U_BO(q[n],r[n],l[n],eps_t,1,*U);
+                        U[2][0] *= l_weights[n%upsampling_factor];
+                        U[2][1] *= l_weights[n%upsampling_factor];
+                        U[3][0] *= l_weights[n%upsampling_factor];
+                        U[3][1] *= l_weights[n%upsampling_factor];
                         misc_matrix_mult(4,4,4,&U[0][0],&H[current][0][0],&H[!current][0][0]);
                         current = !current;
                     }
@@ -296,10 +300,10 @@ INT akns_scatter_matrix(UINT const D,
             result[i*8 + 1] = H[current][0][1];
             result[i*8 + 2] = H[current][1][0];
             result[i*8 + 3] = H[current][1][1];
-            result[i*8 + 4] = H[current][2][0]*scl_factor;
-            result[i*8 + 5] = H[current][2][1]*scl_factor;
-            result[i*8 + 6] = H[current][3][0]*scl_factor;
-            result[i*8 + 7] = H[current][3][1]*scl_factor;
+            result[i*8 + 4] = H[current][2][0];
+            result[i*8 + 5] = H[current][2][1];
+            result[i*8 + 6] = H[current][3][0];
+            result[i*8 + 7] = H[current][3][1];
         }
     } else {
         // Colculate the scattering matrix without lambda-derivative
@@ -599,6 +603,10 @@ INT akns_scatter_bound_states(UINT const D,
                     for (UINT count=0; count<upsampling_factor; count++) {
                         UINT n = n_given * upsampling_factor + count;
                         akns_scatter_bound_states_U_BO(q[n],r[n],l[n],eps_t,1,*U);
+                        U[2][0] *= l_weights[count];
+                        U[2][1] *= l_weights[count];
+                        U[3][0] *= l_weights[count];
+                        U[3][1] *= l_weights[count];
                         misc_matrix_mult(4,4,1,&U[0][0],&phi_temp[current][0],&phi_temp[!current][0]);
                         current = !current;
                     }
@@ -758,7 +766,7 @@ INT akns_scatter_bound_states(UINT const D,
         a_vals[neig] = f_S[0] * CEXP(I*l_curr*(T[1]+eps_t*boundary_coeff));
         if (PDE==akns_pde_KdV)
             a_vals[neig] = CREAL(a_vals[neig]);
-        aprime_vals[neig] = scl_factor*(f_S[2]*CEXP(I*l_curr*(T[1]+eps_t*boundary_coeff))+(I*(T[1]+eps_t*boundary_coeff))* a_vals[neig]);
+        aprime_vals[neig] = f_S[2]*CEXP(I*l_curr*(T[1]+eps_t*boundary_coeff))+(I*(T[1]+eps_t*boundary_coeff))* a_vals[neig];
         if (PDE==akns_pde_KdV)
             aprime_vals[neig] = I * CIMAG(aprime_vals[neig]);
 
