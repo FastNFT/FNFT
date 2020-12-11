@@ -89,19 +89,21 @@ UINT fnft__nse_discretization_method_order(nse_discretization_t nse_discretizati
 /**
  * This routine returns weights required by some methods based on the discretization.
  */
-INT fnft__nse_discretization_method_weights(COMPLEX **weights_ptr,
-        nse_discretization_t nse_discretization)
+INT fnft__nse_discretization_method_weights(COMPLEX **qr_weights_ptr,
+                                            COMPLEX **eps_t_weights_ptr,
+                                            nse_discretization_t const nse_discretization)
 {
     akns_discretization_t akns_discretization = 0;
-    COMPLEX *weights = NULL;
+    COMPLEX *qr_weights = NULL, *eps_t_weights = NULL;
     INT ret_code;
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = akns_discretization_method_weights(&weights, akns_discretization);
+    ret_code = akns_discretization_method_weights(&qr_weights, &eps_t_weights, akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
-    *weights_ptr = weights;
-    leave_fun:
-        return ret_code;
+    *qr_weights_ptr = qr_weights;
+    *eps_t_weights_ptr = eps_t_weights;
+leave_fun:
+    return ret_code;
 }
 
 /**

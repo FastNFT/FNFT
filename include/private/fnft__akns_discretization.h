@@ -150,15 +150,17 @@ FNFT_INT fnft__akns_discretization_z_to_lambda(const FNFT_UINT n, const FNFT_REA
  * and the weights for the others are from Blanes, Casas and Thalhammer(<a href="https://doi.org/10.1016/j.cpc.2017.07.016">Computer Phys. Comm. 220, 2017</a>).
  * The weights are mentioned as matrices in the references. This routine returns 
  * them in row-major order.
- * @param[in,out] weights_ptr Pointer to the starting location of weights.
+ * @param[in,out] qr_weights_ptr Pointer to the starting location of potential weights.
+ * @param[in,out] eps_t_weights_ptr Pointer to the starting location of step size weights.
  * @param[in] akns_discretization Discretization of type \link fnft__akns_discretization_t \endlink.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  *
  * @ingroup akns
  */
-FNFT_INT fnft__akns_discretization_method_weights(FNFT_COMPLEX **weights_ptr,
-        fnft__akns_discretization_t akns_discretization);
+FNFT_INT fnft__akns_discretization_method_weights(FNFT_COMPLEX **qr_weights_ptr,
+                                                  FNFT_COMPLEX **eps_t_weights_ptr,
+                                                  fnft__akns_discretization_t const akns_discretization);
 
 /**
  * @brief  This routine preprocesses the signal by resampling and subsampling based on the discretization.

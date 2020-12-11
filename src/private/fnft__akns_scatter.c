@@ -121,7 +121,7 @@ INT akns_scatter_matrix(UINT const D,
 
     // Declare pointers that may or may not be used, depending on the discretization.
     // We must do so before possibly jumping to leave_fun.
-    COMPLEX *tmp1 = NULL, *tmp2 = NULL, *l = NULL;
+    COMPLEX *tmp1 = NULL, *tmp2 = NULL, *eps_t_scaled = NULL;
 
     // Define stepsize constants that are often needed
     REAL const eps_t_2 = eps_t * eps_t;
@@ -132,7 +132,6 @@ INT akns_scatter_matrix(UINT const D,
     // In the case of ES4 and TES4 computing values that are functions of
     // q and r but not l.
 
-    COMPLEX l_weights[4] = {0};
     UINT N = 0;
     switch (discretization) {
         case akns_discretization_ES4:
@@ -181,26 +180,12 @@ INT akns_scatter_matrix(UINT const D,
             // fall through
         case akns_discretization_BO:            // bofetta-osborne scheme
             N++;                                // The previous discretization requires N=1
-            COMPLEX *weights = NULL;
-            ret_code = akns_discretization_method_weights(&weights,discretization);
-            CHECK_RETCODE(ret_code, leave_fun); // if ret_code != SUCCESS, akns_discretization_method_weights frees weights if needed
-
-            for (UINT i = 0; i < upsampling_factor; i++){
-                for (UINT j = 0; j < N; j++)
-                    l_weights[i] += weights[i*N+j];
-            }
-            free(weights);
-#ifdef DEBUG
-            misc_print_buf(upsampling_factor,l_weights,"l_weights");
-#endif
-
-            // Allocating memory for the array l, which will be used to store xi-samples
-            // with the appropriate weight for the discretization.
-            l = malloc(D*sizeof(COMPLEX));
-            if (l == NULL) {
-                ret_code = E_NOMEM;
-                CHECK_RETCODE(ret_code, leave_fun);
-            }
+            COMPLEX *qr_weights = NULL;
+            ret_code = akns_discretization_method_weights(&qr_weights,&eps_t_scaled,discretization);
+            CHECK_RETCODE(ret_code, leave_fun_no_eps_t_scaled); // if ret_code != SUCCESS, akns_discretization_method_weights frees qr_weights and eps_t_scaled if needed
+            free(qr_weights);
+            for (UINT n=0; n<upsampling_factor; n++ )
+                eps_t_scaled[n] *= eps_t;
             break;
             
         default: // Unknown discretization
@@ -223,16 +208,9 @@ INT akns_scatter_matrix(UINT const D,
                 case akns_discretization_CF4_3:
                 case akns_discretization_CF5_3:
                 case akns_discretization_CF6_4:
-                    for (UINT n = 0; n < D; n +=upsampling_factor ) {
-                        for (UINT j = 0; j < upsampling_factor; j++ )
-                            l[n+j] = l_curr*l_weights[j];
-                    }
                     for (UINT n = 0; n < D; n++){
-                        akns_scatter_bound_states_U_BO(q[n],r[n],l[n],eps_t,1,*U);
-                        U[2][0] *= l_weights[n%upsampling_factor];
-                        U[2][1] *= l_weights[n%upsampling_factor];
-                        U[3][0] *= l_weights[n%upsampling_factor];
-                        U[3][1] *= l_weights[n%upsampling_factor];
+                        COMPLEX h = eps_t_scaled[n%upsampling_factor];
+                        akns_scatter_bound_states_U_BO(q[n],r[n],l_curr,h,1,*U);
                         misc_matrix_mult(4,4,4,&U[0][0],&H[current][0][0],&H[!current][0][0]);
                         current = !current;
                     }
@@ -319,13 +297,10 @@ INT akns_scatter_matrix(UINT const D,
                 case akns_discretization_CF4_3:
                 case akns_discretization_CF5_3:
                 case akns_discretization_CF6_4:
-                    for (UINT n = 0; n < D; n +=upsampling_factor ) {
-                        for (UINT j = 0; j < upsampling_factor; j++ )
-                            l[n+j] = l_curr*l_weights[j];
-                    }
                     for (UINT n = 0; n < D; n++){
                         COMPLEX U[2][2];
-                        akns_scatter_bound_states_U_BO(q[n],r[n],l[n],eps_t,0,*U);
+                        COMPLEX h = eps_t_scaled[n%upsampling_factor];
+                        akns_scatter_bound_states_U_BO(q[n],r[n],l_curr,h,0,*U);
                         misc_matrix_mult(2,2,2,&U[0][0],&H[current][0][0],&H[!current][0][0]);
                         current = !current;
                     }
@@ -380,7 +355,8 @@ INT akns_scatter_matrix(UINT const D,
     }
     
 leave_fun:
-    free(l);
+    free(eps_t_scaled);
+leave_fun_no_eps_t_scaled:
     free(tmp1);
     return ret_code;
 }
@@ -437,7 +413,7 @@ INT akns_scatter_bound_states(UINT const D,
 
     // Declare pointers that may or may not be used, depending on the discretization.
     // We must do so before possibly jumping to leave_fun.
-    COMPLEX *tmp1 = NULL, *tmp2 = NULL, *tmp3 = NULL, *tmp4 = NULL, *l = NULL;
+    COMPLEX *tmp1 = NULL, *tmp2 = NULL, *tmp3 = NULL, *tmp4 = NULL, *eps_t_scaled = NULL;
 
     // Allocating memory for storing PHI and PSI at all D_given points as
     // there are required to find the right value of b.
@@ -466,8 +442,6 @@ INT akns_scatter_bound_states(UINT const D,
     // In the case of ES4 and TES4 computing values that are functions of
     // q and r but not l.
 
-    REAL scl_factor = 1.0;
-    COMPLEX l_weights[4] = {0};
     UINT N = 0;
     switch (discretization) {
         //  Fourth-order exponential method which requires
@@ -535,24 +509,12 @@ INT akns_scatter_bound_states(UINT const D,
             // fall through
         case akns_discretization_BO:            // bofetta-osborne scheme
             N++;                                // The previous discretization requires N=1
-            scl_factor /= upsampling_factor;
-            COMPLEX *weights = NULL;
-            ret_code = akns_discretization_method_weights(&weights,discretization);
-            CHECK_RETCODE(ret_code, leave_fun); // if ret_code != SUCCESS, akns_discretization_method_weights frees weights if needed
-
-            for (UINT i = 0; i < upsampling_factor; i++){
-                for (UINT j = 0; j < N; j++)
-                    l_weights[i] += weights[i*N+j];
-            }
-            free(weights);
-
-            // Allocating memory for the array l, which will be used to store xi-samples
-            // with the appropriate weight for the discretization.
-            l = malloc(D*sizeof(COMPLEX));
-            if (l == NULL) {
-                ret_code = E_NOMEM;
-                CHECK_RETCODE(ret_code, leave_fun);
-            }
+            COMPLEX *qr_weights = NULL;
+            ret_code = akns_discretization_method_weights(&qr_weights,&eps_t_scaled,discretization);
+            CHECK_RETCODE(ret_code, leave_fun_no_eps_t_scaled); // if ret_code != SUCCESS, akns_discretization_method_weights frees qr_weights and eps_t_scaled if needed
+            free(qr_weights);
+            for (UINT n=0; n<upsampling_factor; n++ )
+                eps_t_scaled[n] *= eps_t;
             break;
 
         default: // Unknown discretization
@@ -592,26 +554,20 @@ INT akns_scatter_bound_states(UINT const D,
             case akns_discretization_CF4_3:
             case akns_discretization_CF5_3:
             case akns_discretization_CF6_4:
-                for (UINT n=0; n<D; n+=upsampling_factor){
-                    for (UINT i=0; i<upsampling_factor; i++)
-                        l[n+i] = l_curr*l_weights[i];
-                }
+            {
                 COMPLEX phi_temp[2][4];
                 UINT current = 0;
                 memcpy(&phi_temp[current][0], PHI, 4 * sizeof(COMPLEX));
                 for (UINT n_given=0; n_given<D_given; n_given++) {
                     for (UINT count=0; count<upsampling_factor; count++) {
                         UINT n = n_given * upsampling_factor + count;
-                        akns_scatter_bound_states_U_BO(q[n],r[n],l[n],eps_t,1,*U);
-                        U[2][0] *= l_weights[count];
-                        U[2][1] *= l_weights[count];
-                        U[3][0] *= l_weights[count];
-                        U[3][1] *= l_weights[count];
+                        akns_scatter_bound_states_U_BO(q[n],r[n],l_curr,eps_t_scaled[count],1,*U);
                         misc_matrix_mult(4,4,1,&U[0][0],&phi_temp[current][0],&phi_temp[!current][0]);
                         current = !current;
                     }
                     memcpy(&PHI[4*(n_given+1)], &phi_temp[current][0], 4 * sizeof(COMPLEX));
                 }
+            }
                 break;
                 //  Fourth-order exponential method which requires
                 // one matrix exponential. The matrix exponential is
@@ -697,7 +653,7 @@ INT akns_scatter_bound_states(UINT const D,
                 case akns_discretization_CF4_3:
                 case akns_discretization_CF5_3:
                 case akns_discretization_CF6_4:
-                    {} // Stop the compiler from complaining about starting a case with a declaration rather than a statement.
+                {
                     COMPLEX psi_temp[2][2];
                     UINT current = 0;
                     memcpy(&psi_temp[current][0], &PSI[4*D_given], 2 * sizeof(COMPLEX));
@@ -705,12 +661,13 @@ INT akns_scatter_bound_states(UINT const D,
                         for (UINT count=upsampling_factor; count-->0; ) {
                             COMPLEX U[2][2];
                             UINT n = n_given * upsampling_factor + count;
-                            akns_scatter_bound_states_U_BO(q[n],r[n],l[n],-eps_t,0,*U);
+                            akns_scatter_bound_states_U_BO(q[n],r[n],l_curr,-eps_t_scaled[count],0,*U);
                             misc_matrix_mult(2,2,1,&U[0][0],&psi_temp[current][0],&psi_temp[!current][0]);
                             current = !current;
                         }
                         memcpy(&PSI[4*n_given], psi_temp, 2 * sizeof(COMPLEX));
                     }
+                }
                     break;
 
                     //  Fourth-order exponential method which requires
@@ -804,8 +761,9 @@ INT akns_scatter_bound_states(UINT const D,
 
     }
 leave_fun:
+    free(eps_t_scaled);
+leave_fun_no_eps_t_scaled:
     free(tmp1);
-    free(l);
     free(PSIPHI);
     return ret_code;
 }

@@ -289,8 +289,9 @@ FNFT_INT fnft__nse_discretization_preprocess_signal(const FNFT_UINT D, FNFT_COMP
  *
  * @ingroup nse
  */
-FNFT_INT fnft__nse_discretization_method_weights(FNFT_COMPLEX **weights_ptr,
-        fnft_nse_discretization_t nse_discretization);
+FNFT_INT fnft__nse_discretization_method_weights(FNFT_COMPLEX **qr_weights_ptr,
+                                                 FNFT_COMPLEX **eps_t_weights_ptr,
+                                                 fnft_nse_discretization_t const nse_discretization);
         
         
 
