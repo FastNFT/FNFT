@@ -204,20 +204,53 @@ FNFT_INT fnft__misc_downsample(const FNFT_UINT D, FNFT_COMPLEX const * const q,
  *
  * @ingroup misc
  * Function computes the sinc function sin(x)/x for \link FNFT_COMPLEX \endlink argument.
+ * If x is close to 0, the calculation is approximated with
+ * sinc(x) = cos(x/sqrt(3)) + O(x^4)
  * @param[in] x \link FNFT_COMPLEX \endlink argument.
  * @return sinc(x).
  */
-FNFT_COMPLEX fnft__misc_CSINC(FNFT_COMPLEX x);
+static inline FNFT_COMPLEX fnft__misc_CSINC(FNFT_COMPLEX x)
+{
+    const FNFT_REAL sinc_th=1.0E-8;
+
+    if (FNFT_CABS(x)>=sinc_th)
+        return FNFT_CSIN(x)/x;
+    else
+        return FNFT_CCOS(x/FNFT_CSQRT(3));
+}
 
 /**
  * @brief Derivative of sinc function for complex arguments.
  *
  * @ingroup misc
- * Function computes the derivative of the sinc function sin(x)/x for \link FNFT_COMPLEX \endlink argument.
+ * Function computes the derivative of the sinc function sin(x)/x for
+ * \link FNFT_COMPLEX \endlink argument.
+ * This derivative can be expressed analytically as
+ * d/dx sinc(x) = 0 if x=0, and (cos(x) - sinc(x)) / x otherwise.
+ * However, if x is close to 0, a numerical implementation like that results in
+ * catastrophic cancellation. Therefore we use its Taylor approximation instead:
+ * d/dx sinc(x) = \sum_{n=0}^\infty x^(2*n+1) * (-1)^(n+1) / ( (2*n+3) * (2*n+1)! )
+ * of which we use the first 9 terms, i.e. a 18-th order Taylor approximation.
+ * This polynomial is computed with Horner's method.
  * @param[in] x \link FNFT_COMPLEX \endlink argument.
  * @return d/dx sinc(x).
  */
-FNFT_COMPLEX misc_CSINC_derivative(FNFT_COMPLEX x);
+static inline FNFT_COMPLEX fnft__misc_CSINC_derivative(FNFT_COMPLEX x)
+{
+    const FNFT_REAL sinc_derivative_th=1.0;
+    FNFT_COMPLEX returnvalue;
+
+    if (FNFT_CABS(x)>=sinc_derivative_th)
+        returnvalue = (FNFT_CCOS(x)-fnft__misc_CSINC(x))/x;
+    else {
+        returnvalue = 0.0;
+        FNFT_COMPLEX x2 = x * x;
+        for (FNFT_UINT n=9; n-->0; )
+            returnvalue = (( n%2 ? 1.0 : -1.0) + x2/(2*n+2) * returnvalue ) / (2*n+3);
+        returnvalue *= x;
+    }
+    return returnvalue;
+}
 
 /**
  * @brief Closest larger or equal number that is a power of two.
@@ -371,6 +404,7 @@ static inline FNFT_REAL fnft__misc_legendre_poly(const FNFT_UINT n, const FNFT_R
 #define misc_merge(...) fnft__misc_merge(__VA_ARGS__)
 #define misc_downsample(...) fnft__misc_downsample(__VA_ARGS__)
 #define misc_CSINC(...) fnft__misc_CSINC(__VA_ARGS__)
+#define misc_CSINC_derivative(...) fnft__misc_CSINC_derivative(__VA_ARGS__)
 #define misc_nextpowerof2(...) fnft__misc_nextpowerof2(__VA_ARGS__)
 #define misc_resample(...) fnft__misc_resample(__VA_ARGS__)
 #define misc_matrix_mult(...) fnft__misc_matrix_mult(__VA_ARGS__)
