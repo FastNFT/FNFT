@@ -31,7 +31,7 @@ INT main()
     UINT D = 256;
     REAL eb[6] = {  // error bounds
         2.8e-7,     // continuous spectrum
-        3.0e-9,     // a(xi)
+        3.1e-9,     // a(xi)
         2.2e-7,     // b(xi)
         2.2e-10,    // bound states
         3.4e-9,     // norming constants

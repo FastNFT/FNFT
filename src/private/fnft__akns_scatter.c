@@ -20,10 +20,63 @@
  */
 #define FNFT_ENABLE_SHORT_NAMES
 
-
 #include "fnft__akns_scatter.h"
-#include "fnft__kdv_scatter.h"
-#include "fnft__nse_scatter.h"
+
+/**
+ * Auxiliary routines, used by the main routines below
+ */
+static inline void akns_scatter_bound_states_U_BO(COMPLEX const qn,
+                                                  COMPLEX const rn,
+                                                  COMPLEX const ln,
+                                                  COMPLEX const eps_t,
+                                                  UINT const derivative_flag,
+                                                  COMPLEX * const U)
+{
+    COMPLEX const ln2 = ln * ln;
+    COMPLEX const ks = ((qn*rn)-ln2);
+    COMPLEX const k = CSQRT(ks);
+    COMPLEX const ch = CCOSH(k*eps_t);
+    COMPLEX const sh = eps_t * misc_CSINC(I*k*eps_t);
+    COMPLEX const u1 = ln*sh*I;
+
+    U[0] = ch - u1;
+    U[1] = qn*sh;
+    if (derivative_flag) {
+        U[4] = rn*sh;
+        U[5] = ch + u1;
+        memcpy(&U[10],&U[0],6 * sizeof(COMPLEX)); // lower right block
+
+        COMPLEX const chi = ch/ks;
+        COMPLEX const ud1 = eps_t*ln2*chi*I;
+        COMPLEX const ud2 = misc_CSINC_derivative(I*eps_t*k)*I*ln*eps_t*eps_t/k;
+
+        U[8]  = ud1 - ( ln*eps_t + I + (ln2*I)/ks )*sh;
+        U[9]  = -qn*ud2;
+        U[12] = -rn*ud2;
+        U[13] = -ud1 - ( ln*eps_t - I - (ln2*I)/ks )*sh;
+    } else {
+        U[2] = rn*sh;
+        U[3] = ch + u1;
+    }
+}
+
+static inline void akns_scatter_bound_states_U_ES4(COMPLEX const a1,
+                                                   COMPLEX const a2,
+                                                   COMPLEX const a3,
+                                                   UINT const derivative_flag,
+                                                   COMPLEX * const U,
+                                                   COMPLEX * const w,
+                                                   COMPLEX * const s,
+                                                   COMPLEX * const c)
+{
+    *w = CSQRT(-(a1*a1)-(a2*a2)-(a3*a3));
+    *s = misc_CSINC(*w);
+    *c = CCOS(*w);
+    U[0]                   = *c + *s*a3;
+    U[1]                   = *s*(a1 - I*a2);
+    U[derivative_flag?4:2] = *s*(a1 + I*a2);
+    U[derivative_flag?5:3] = *c - *s*a3;
+}
 
 /**
  * If derivative_flag=0 returns [S11 S12 S21 S22] in result where
@@ -157,11 +210,12 @@ INT akns_scatter_matrix(UINT const D,
 
     if (derivative_flag){
         // Colculate the scattering matrix with lamda-derivative as in G. Boffetta an A.R. Osborne, 'Computation of the direct scattering transform for the nonlinear Schroedinger equation', www.doi.org/10.1016/0021-9991(92)90370-e .
+        COMPLEX U[4][4] = {{ 0 }};
         for (UINT i = 0; i < K; i++) { // iterate over lambda
             // Initialize scattering matrix
             COMPLEX l_curr = lambda[i];
-            COMPLEX T[4][4] = { {1,0,0,0}, {0,1,0,0}, {0,0,1,0}, {0,0,0,1} };
-            COMPLEX U[4][4] = {{ 0 }};
+            COMPLEX H[2][4][4] = { { {1,0,0,0}, {0,1,0,0}, {0,0,1,0}, {0,0,0,1} } }; // Init only first sixteen values
+            UINT current = 0;
 
             switch (discretization) {
                 case akns_discretization_BO:
@@ -174,152 +228,60 @@ INT akns_scatter_matrix(UINT const D,
                             l[n+j] = l_curr*l_weights[j];
                     }
                     for (UINT n = 0; n < D; n++){
-                        COMPLEX qn = q[n];
-                        COMPLEX rn = r[n];
-                        COMPLEX ks = ((q[n]*r[n])-(l[n]*l[n]));
-                        COMPLEX k = CSQRT(ks);
-                        COMPLEX ch = CCOSH(k*eps_t);
-                        COMPLEX chi = ch/ks;
-                        COMPLEX sh;
-                        if (ks != 0)
-                            sh = CSINH(k*eps_t)/k;
-                        else
-                            sh = eps_t;
-                        COMPLEX u1 = l[n]*sh*I;
-                        COMPLEX ud1 = eps_t*l[n]*l[n]*chi*I;
-                        COMPLEX ud2 = l[n]*(eps_t*ch-sh)/ks;
-
-                        U[0][0] = ch-u1;
-                        U[0][1] = qn*sh;
-                        U[1][0] = rn*sh;
-                        U[1][1] = ch + u1;
-                        U[2][0] = ud1-(l[n]*eps_t+I+(l[n]*l[n]*I)/ks)*sh;
-                        U[2][1] = -qn*ud2;
-                        U[3][0] = -rn*ud2;
-                        U[3][1] = -ud1-(l[n]*eps_t-I-(l[n]*l[n]*I)/ks)*sh;
-                        U[2][2] = ch-u1;
-                        U[2][3] = qn*sh;
-                        U[3][2] = rn*sh;
-                        U[3][3] = ch+u1;
-
-                        misc_mat_mult_4x4(&U[0][0], &T[0][0]);
+                        akns_scatter_bound_states_U_BO(q[n],r[n],l[n],eps_t,1,*U);
+                        misc_matrix_mult(4,4,4,&U[0][0],&H[current][0][0],&H[!current][0][0]);
+                        current = !current;
                     }
                     break;
 
                 case akns_discretization_ES4:
-                    for (UINT n = 0; n < D; n=n+3){
+                    for (UINT n = 0; n < D; n+=3){
+                        COMPLEX w, s, c;
                         COMPLEX a1 = tmp1[n]+ eps_t_3*(l_curr*I*(q[n+1]-r[n+1]))/12.0;
                         COMPLEX a2 = tmp1[n+1] - eps_t_3*l_curr*(q[n+1]+r[n+1])/12.0;
                         COMPLEX a3 = - eps_t*I*l_curr +tmp1[n+2];
-                        COMPLEX w = CSQRT(-(a1*a1)-(a2*a2)-(a3*a3));
-                        COMPLEX s;
-                        if (w != 0)
-                            s = CSIN(w)/w;
-                        else
-                            s = 1;
-                        COMPLEX c = CCOS(w);
-                        COMPLEX w_d = -(1/w)*(a1*tmp2[n]+a2*tmp2[n+1]+a3*tmp2[n+2]);
-                        COMPLEX c_d = -CSIN(w)*w_d;
-                        COMPLEX s_d = w_d*(c-s)/w;
-                        U[0][0] = (c+s*a3);
-                        U[0][1] = s*(a1-I*a2);
-                        U[1][0] = s*(a1+I*a2);
-                        U[1][1] = (c-s*a3);
+                        akns_scatter_bound_states_U_ES4(a1,a2,a3,1,*U,&w,&s,&c);
+                        memcpy(&U[2][2],&U[0][0],6 * sizeof(COMPLEX)); // lower right block
+                        COMPLEX w_d = -(a1*tmp2[n]+a2*tmp2[n+1]+a3*tmp2[n+2]);
+                        COMPLEX c_d = -misc_CSINC(w)*w_d;
+                        w_d /= w;
+                        COMPLEX s_d = w_d * misc_CSINC_derivative(w);
                         U[2][0] = c_d+s_d*a3+s*tmp2[n+2];
                         U[2][1] = s_d*a1+s*tmp2[n]-I*s_d*a2-I*s*tmp2[n+1];
                         U[3][0] = s_d*a1+s*tmp2[n]+I*s_d*a2+I*s*tmp2[n+1];
                         U[3][1] = c_d-s_d*a3-s*tmp2[n+2];
-                        U[2][2] = U[0][0];
-                        U[2][3] = U[0][1];
-                        U[3][2] = U[1][0];
-                        U[3][3] = U[1][1];
-                        misc_mat_mult_4x4(&U[0][0], &T[0][0]);
+
+                        misc_matrix_mult(4,4,4,&U[0][0],&H[current][0][0],&H[!current][0][0]);
+                        current = !current;
                     }
                     break;
                 case akns_discretization_TES4:
-                {}
-                    COMPLEX  TM[2][2] = {{0}}, TMD[2][2] = {{0}}, UD[2][2] = {{0}}, UN[2][2] = {{0}};
-                    for (UINT n = 0; n < D; n=n+3){
+                    for (UINT n = 0; n < D; n+=3){
+                        COMPLEX M[2][2], w, s, c;
 
-                        COMPLEX a1 = tmp1[n];
-                        COMPLEX a2 = tmp1[n+1];
-                        //                             a3 = 0;
+                        akns_scatter_bound_states_U_ES4(tmp1[n],tmp1[n+1],0.0,0,*M,&w,&s,&c);
+                        misc_matrix_mult(2,2,4,&M[0][0],&H[current][0][0],&H[!current][0][0]);
+                        misc_matrix_mult(2,2,4,&M[0][0],&H[current][2][0],&H[!current][2][0]);
+                        current = !current;
 
-                        COMPLEX w = CSQRT(-(a1*a1)-(a2*a2));
-                        COMPLEX s;
-                        if (w != 0)
-                            s = CSIN(w)/w;
-                        else
-                            s = 1;
-                        COMPLEX c = CCOS(w);
-                        TM[0][0] = c;
-                        TM[0][1] = s*(a1-I*a2);
-                        TM[1][0] = s*(a1+I*a2);
-                        TM[1][1] = c;
-                        TMD[0][0] = TM[0][0];
-                        TMD[0][1] = TM[0][1];
-                        TMD[1][0] = TM[1][0];
-                        TMD[1][1] = TM[1][1];
-
-                        a1 = (eps_t*(q[n] + r[n]))*0.5;
-                        a2 = (eps_t*(q[n]*I - r[n]*I))*0.5;
-                        COMPLEX a3 = -eps_t*l_curr*I;
-                        w = CSQRT(-(a1*a1)-(a2*a2)-(a3*a3));
-                        if (w != 0)
-                            s = CSIN(w)/w;
-                        else
-                            s = 1;
-                        c = CCOS(w);
-                        UN[0][0] = (c+s*a3);
-                        UN[0][1] = s*(a1-I*a2);
-                        UN[1][0] = s*(a1+I*a2);
-                        UN[1][1] = (c-s*a3);
+                        akns_scatter_bound_states_U_ES4(0.5*eps_t*(q[n]+r[n]),
+                                                        0.5*eps_t*(q[n]-r[n])*I,
+                                                        -eps_t*l_curr*I, 1,*U,&w,&s,&c);
+                        memcpy(&U[2][2],&U[0][0],6 * sizeof(COMPLEX)); // lower right block
                         COMPLEX s_d = CSIN(w*eps_t)/w;
                         COMPLEX c_d = -eps_t*l_curr*s_d;
                         COMPLEX w_d = l_curr*(eps_t*w*CCOS(w*eps_t)-CSIN(w*eps_t))/(w*w*w);
-                        UD[0][0] = c_d-I*s_d;
-                        UD[0][1] = w_d*q[n];
-                        UD[1][0] = w_d*r[n];
-                        UD[1][1] = c_d+I*s_d;
+                        U[2][0] = c_d-I*s_d;
+                        U[2][1] = w_d*q[n];
+                        U[3][0] = w_d*r[n];
+                        U[3][1] = c_d+I*s_d;
+                        misc_matrix_mult(4,4,4,&U[0][0],&H[current][2][0],&H[!current][2][0]);
+                        current = !current;
 
-                        misc_mat_mult_2x2(&UN[0][0], &TM[0][0]);
-                        misc_mat_mult_2x2(&UD[0][0], &TMD[0][0]);
-
-                        a1 = tmp2[n];
-                        a2 = tmp2[n+1];
-                        //                             a3 = 0;
-                        w = CSQRT(-(a1*a1)-(a2*a2));
-                        if (w != 0)
-                            s = CSIN(w)/w;
-                        else
-                            s = 1;
-                        c = CCOS(w);
-                        UN[0][0] = c;
-                        UN[0][1] = s*(a1-I*a2);
-                        UN[1][0] = s*(a1+I*a2);
-                        UN[1][1] = c;
-                        UD[0][0] = UN[0][0];
-                        UD[0][1] = UN[0][1];
-                        UD[1][0] = UN[1][0];
-                        UD[1][1] = UN[1][1];
-
-                        misc_mat_mult_2x2(&UN[0][0], &TM[0][0]);
-                        misc_mat_mult_2x2(&UD[0][0], &TMD[0][0]);
-
-                        U[0][0] = TM[0][0];
-                        U[0][1] = TM[0][1];
-                        U[1][0] = TM[1][0];
-                        U[1][1] = TM[1][1];
-                        U[2][0] = TMD[0][0];
-                        U[2][1] = TMD[0][1];
-                        U[3][0] = TMD[1][0];
-                        U[3][1] = TMD[1][1];
-                        U[2][2] = U[0][0];
-                        U[2][3] = U[0][1];
-                        U[3][2] = U[1][0];
-                        U[3][3] = U[1][1];
-
-                        misc_mat_mult_4x4(&U[0][0], &T[0][0]);
+                        akns_scatter_bound_states_U_ES4(tmp2[n],tmp2[n+1],0.0,0,*M,&w,&s,&c);
+                        misc_matrix_mult(2,2,4,&M[0][0],&H[current][0][0],&H[!current][0][0]);
+                        misc_matrix_mult(2,2,4,&M[0][0],&H[current][2][0],&H[!current][2][0]);
+                        current = !current;
                     }
                     break;
 
@@ -330,22 +292,22 @@ INT akns_scatter_matrix(UINT const D,
             // TODO: Change of basis
 
             // Copy result
-            result[i*8] = T[0][0];
-            result[i*8 + 1] = T[0][1];
-            result[i*8 + 2] = T[1][0];
-            result[i*8 + 3] = T[1][1];
-            result[i*8 + 4] = T[2][0]*scl_factor;
-            result[i*8 + 5] = T[2][1]*scl_factor;
-            result[i*8 + 6] = T[3][0]*scl_factor;
-            result[i*8 + 7] = T[3][1]*scl_factor;
+            result[i*8] = H[current][0][0];
+            result[i*8 + 1] = H[current][0][1];
+            result[i*8 + 2] = H[current][1][0];
+            result[i*8 + 3] = H[current][1][1];
+            result[i*8 + 4] = H[current][2][0]*scl_factor;
+            result[i*8 + 5] = H[current][2][1]*scl_factor;
+            result[i*8 + 6] = H[current][3][0]*scl_factor;
+            result[i*8 + 7] = H[current][3][1]*scl_factor;
         }
     } else {
         // Colculate the scattering matrix without lambda-derivative
         for (UINT i = 0; i < K; i++) { // iterate over lambda
             // Initialize scattering matrix
             COMPLEX l_curr = lambda[i];
-            COMPLEX T[2][2] = { {1,0}, {0,1} };
-            COMPLEX U[2][2] = {{ 0 }};
+            COMPLEX H[2][2][2] = { { {1,0}, {0,1} } }; // Init only first four values
+            UINT current = 0;
 
             switch (discretization) {
                 case akns_discretization_BO:
@@ -358,80 +320,44 @@ INT akns_scatter_matrix(UINT const D,
                             l[n+j] = l_curr*l_weights[j];
                     }
                     for (UINT n = 0; n < D; n++){
-
-                        COMPLEX qn = q[n];
-                        COMPLEX rn = r[n];
-                        COMPLEX ks = ((q[n]*r[n])-(l[n]*l[n]));
-                        COMPLEX k = CSQRT(ks);
-                        COMPLEX ch = CCOSH(k*eps_t);
-                        COMPLEX sh;
-                        if (ks != 0)
-                            sh = CSINH(k*eps_t)/k;
-                        else
-                            sh = eps_t;
-
-                        COMPLEX u1 = l[n]*sh*I;
-                        U[0][0] = ch-u1;
-                        U[0][1] = qn*sh;
-                        U[1][0] = rn*sh;
-                        U[1][1] = ch + u1;
-                        misc_mat_mult_2x2(&U[0][0], &T[0][0]);
+                        COMPLEX U[2][2];
+                        akns_scatter_bound_states_U_BO(q[n],r[n],l[n],eps_t,0,*U);
+                        misc_matrix_mult(2,2,2,&U[0][0],&H[current][0][0],&H[!current][0][0]);
+                        current = !current;
                     }
                     break;
 
                 case akns_discretization_ES4:
-                    for (UINT n = 0; n < D; n=n+3){
-                         COMPLEX a1 = tmp1[n]+ eps_t_3*(l_curr*I*(q[n+1]-r[n+1]))/12.0;
-                         COMPLEX a2 = tmp1[n+1] - eps_t_3*l_curr*(q[n+1]+r[n+1])/12.0;
-                         COMPLEX a3 = - eps_t*I*l_curr +tmp1[n+2];
-                         COMPLEX w = CSQRT(-(a1*a1)-(a2*a2)-(a3*a3));
-                         COMPLEX s;
-                         if (w != 0)
-                             s = CSIN(w)/w;
-                         else
-                             s = 1;
-                         COMPLEX c = CCOS(w);
-                         U[0][0] = (c+s*a3);
-                         U[0][1] = s*(a1-I*a2);
-                         U[1][0] = s*(a1+I*a2);
-                         U[1][1] = (c-s*a3);
-                         misc_mat_mult_2x2(&U[0][0], &T[0][0]);
+                    for (UINT n = 0; n < D; n+=3){
+                        COMPLEX U[2][2], w, s, c;
+
+                        COMPLEX a1 = tmp1[n]+ eps_t_3*(l_curr*I*(q[n+1]-r[n+1]))/12.0;
+                        COMPLEX a2 = tmp1[n+1] - eps_t_3*l_curr*(q[n+1]+r[n+1])/12.0;
+                        COMPLEX a3 = - eps_t*I*l_curr +tmp1[n+2];
+
+                        akns_scatter_bound_states_U_ES4(a1,a2,a3,0,*U,&w,&s,&c);
+                        misc_matrix_mult(2,2,2,&U[0][0],&H[current][0][0],&H[!current][0][0]);
+                        current = !current;
                     }
                     break;
 
                 case akns_discretization_TES4:
-                {}
-                    UINT j = 0;
-                    for (UINT n = 0; n < D; n++){
-                        COMPLEX a1,a2,a3;
-                        if (j == 0){
-                            a1 = tmp1[n];
-                            a2 = tmp1[n+1];
-                            a3 = 0;
-                            j++;
-                        }else if (j == 1){
-                            a1 = (eps_t*(q[n-1] + r[n-1]))*0.5;
-                            a2 = (eps_t*(q[n-1]*I - r[n-1]*I))*0.5;
-                            a3 = -eps_t*l_curr*I;
-                            j++;
-                        }else{
-                            a1 = tmp2[n-2];
-                            a2 = tmp2[n-1];
-                            a3 = 0;
-                            j = 0;
-                        }
-                        COMPLEX w = CSQRT(-(a1*a1)-(a2*a2)-(a3*a3));
-                        COMPLEX s;
-                        if (w != 0)
-                            s = CSIN(w)/w;
-                        else
-                            s = 1;
-                        COMPLEX c = CCOS(w);
-                        U[0][0] = (c+s*a3);
-                        U[0][1] = s*(a1-I*a2);
-                        U[1][0] = s*(a1+I*a2);
-                        U[1][1] = (c-s*a3);
-                        misc_mat_mult_2x2(&U[0][0], &T[0][0]);
+                    for (UINT n = 0; n < D; n+=3){
+                        COMPLEX U[2][2], w, s, c;
+
+                        akns_scatter_bound_states_U_ES4(tmp1[n],tmp1[n+1],0.0,0,*U,&w,&s,&c);
+                        misc_matrix_mult(2,2,2,&U[0][0],&H[current][0][0],&H[!current][0][0]);
+                        current = !current;
+
+                        akns_scatter_bound_states_U_ES4(0.5*eps_t*(q[n]+r[n]),
+                                                        0.5*eps_t*(q[n]-r[n])*I,
+                                                        -eps_t*l_curr*I, 0,*U,&w,&s,&c);
+                        misc_matrix_mult(2,2,2,&U[0][0],&H[current][0][0],&H[!current][0][0]);
+                        current = !current;
+
+                        akns_scatter_bound_states_U_ES4(tmp2[n],tmp2[n+1],0.0,0,*U,&w,&s,&c);
+                        misc_matrix_mult(2,2,2,&U[0][0],&H[current][0][0],&H[!current][0][0]);
+                        current = !current;
                     }
                     break;
 
@@ -442,10 +368,10 @@ INT akns_scatter_matrix(UINT const D,
             // TODO: Change of basis
 
             // Copy result
-            result[i*4] = T[0][0];
-            result[i*4 + 1] = T[0][1];
-            result[i*4 + 2] = T[1][0];
-            result[i*4 + 3] = T[1][1];
+            result[i*4] = H[current][0][0];
+            result[i*4 + 1] = H[current][0][1];
+            result[i*4 + 2] = H[current][1][0];
+            result[i*4 + 3] = H[current][1][1];
         }
     }
     
@@ -453,24 +379,6 @@ leave_fun:
     free(l);
     free(tmp1);
     return ret_code;
-}
-
-static inline void akns_scatter_bound_states_U_ES4(COMPLEX const a1,
-                                                  COMPLEX const a2,
-                                                  COMPLEX const a3,
-                                                  UINT const derivative_flag,
-                                                  COMPLEX * const U,
-                                                  COMPLEX * const w,
-                                                  COMPLEX * const s,
-                                                  COMPLEX * const c)
-{
-    *w = CSQRT(-(a1*a1)-(a2*a2)-(a3*a3));
-    *s = misc_CSINC(*w);
-    *c = CCOS(*w);
-    U[0]                   = *c + *s*a3;
-    U[1]                   = *s*(a1 - I*a2);
-    U[derivative_flag?4:2] = *s*(a1 + I*a2);
-    U[derivative_flag?5:3] = *c - *s*a3;
 }
 
 /**
@@ -670,9 +578,9 @@ INT akns_scatter_bound_states(UINT const D,
         // Calculate the initial condition for PHI in the basis of the discretization
         misc_matrix_mult(4,4,1,&Tmx[0][0],&f_S[0],&PHI[4*0 + 0]);
 
-        // Declaring chonge of state matrices here, to avoid letting them be
+        // Declaring chonge of state matrix here, to avoid letting them be
         // overwritten with zeros in every loop iteration.
-        COMPLEX U[4][4] = {{0}}, UN[4][4] = {{0}};
+        COMPLEX U[4][4] = {{0}};
         switch (discretization) {
 
             case akns_discretization_BO:
@@ -684,37 +592,17 @@ INT akns_scatter_bound_states(UINT const D,
                     for (UINT i=0; i<upsampling_factor; i++)
                         l[n+i] = l_curr*l_weights[i];
                 }
-                COMPLEX phi_temp[4];
-                memcpy(phi_temp, PHI, 4 * sizeof(COMPLEX));
+                COMPLEX phi_temp[2][4];
+                UINT current = 0;
+                memcpy(&phi_temp[current][0], PHI, 4 * sizeof(COMPLEX));
                 for (UINT n_given=0; n_given<D_given; n_given++) {
                     for (UINT count=0; count<upsampling_factor; count++) {
                         UINT n = n_given * upsampling_factor + count;
-                        COMPLEX ks = ((q[n]*r[n])-(l[n]*l[n]));
-                        COMPLEX k = CSQRT(ks);
-                        COMPLEX ch = CCOSH(k*eps_t);
-                        COMPLEX chi = ch/ks;
-                        COMPLEX sh = eps_t * misc_CSINC(I*k*eps_t);
-                        COMPLEX u1 = l[n]*sh*I;
-                        COMPLEX ud1 = eps_t*l[n]*l[n]*chi*I;
-                        COMPLEX ud2 = misc_CSINC_derivative(I*eps_t*k)*I*l[n]*eps_t_2/k;
-                        U[0][0] = ch-u1;
-                        U[0][1] = q[n]*sh;
-                        U[1][0] = r[n]*sh;
-                        U[1][1] = ch + u1;
-                        U[2][0] = ud1-(l[n]*eps_t+I+(l[n]*l[n]*I)/ks)*sh;
-                        U[2][1] = -q[n]*ud2;
-                        U[3][0] = -r[n]*ud2;
-                        U[3][1] = -ud1-(l[n]*eps_t-I-(l[n]*l[n]*I)/ks)*sh;
-
-                        COMPLEX c = U[2][0]*phi_temp[0] + U[2][1]*phi_temp[1] + U[0][0]*phi_temp[2] + U[0][1]*phi_temp[3];
-                        phi_temp[3] = U[3][0]*phi_temp[0] + U[3][1]*phi_temp[1] + U[1][0]*phi_temp[2] + U[1][1]*phi_temp[3];
-                        phi_temp[2] = c;
-
-                        c = U[1][0]*phi_temp[0] + U[1][1]*phi_temp[1];
-                        phi_temp[0] = U[0][0]*phi_temp[0] + U[0][1]*phi_temp[1];
-                        phi_temp[1] = c;
+                        akns_scatter_bound_states_U_BO(q[n],r[n],l[n],eps_t,1,*U);
+                        misc_matrix_mult(4,4,1,&U[0][0],&phi_temp[current][0],&phi_temp[!current][0]);
+                        current = !current;
                     }
-                    memcpy(&PHI[4*(n_given+1)], phi_temp, 4 * sizeof(COMPLEX));
+                    memcpy(&PHI[4*(n_given+1)], &phi_temp[current][0], 4 * sizeof(COMPLEX));
                 }
                 break;
                 //  Fourth-order exponential method which requires
@@ -745,29 +633,28 @@ INT akns_scatter_bound_states(UINT const D,
                 // needs to be built differently compared to the CF schemes.
             case akns_discretization_TES4:
                 for (UINT n=0, n_given=0; n<D; n+=3, n_given++) {
-                    COMPLEX phi_temp[4], w, s, c;
+                    COMPLEX phi_temp[4], M[2][2], w, s, c;
 
-                    akns_scatter_bound_states_U_ES4(tmp1[n],tmp1[n+1],0.0,1,*U,&w,&s,&c);
+                    akns_scatter_bound_states_U_ES4(tmp1[n],tmp1[n+1],0.0,0,*M,&w,&s,&c);
+                    misc_matrix_mult(2,2,1,*M,&PHI[4*n_given],&PHI[4*(n_given+1)]);
+                    misc_matrix_mult(2,2,1,*M,&PHI[4*n_given+2],&PHI[4*(n_given+1)+2]);
+
+                    akns_scatter_bound_states_U_ES4(0.5*eps_t*(q[n]+r[n]),
+                                                    0.5*eps_t*(q[n]-r[n])*I,
+                                                    -eps_t*l_curr*I, 1,*U,&w,&s,&c);
                     memcpy(&U[2][2],&U[0][0],6 * sizeof(COMPLEX)); // lower right block
-                    misc_matrix_mult(4,4,1,*U,&PHI[4*n_given],&PHI[4*(n_given+1)]);
-
-                    COMPLEX a1 = (eps_t*(q[n] + r[n]))*0.5;
-                    COMPLEX a2 = (eps_t*(q[n]*I - r[n]*I))*0.5;
-                    COMPLEX a3 = -eps_t*l_curr*I;
-                    akns_scatter_bound_states_U_ES4(a1,a2,a3,1,*UN,&w,&s,&c);
-                    memcpy(&UN[2][2],&UN[0][0],6 * sizeof(COMPLEX)); // lower right block
                     COMPLEX s_d = eps_t * misc_CSINC(w);
                     COMPLEX c_d = -eps_t*l_curr*s_d;
                     COMPLEX w_d = l_curr*eps_t_2/w * misc_CSINC_derivative(eps_t*w);
-                    UN[2][0] = c_d-I*s_d;
-                    UN[2][1] = w_d*q[n];
-                    UN[3][0] = w_d*r[n];
-                    UN[3][1] = c_d+I*s_d;
-                    misc_matrix_mult(4,4,1,*UN,&PHI[4*(n_given+1)],phi_temp);
+                    U[2][0] = c_d-I*s_d;
+                    U[2][1] = w_d*q[n];
+                    U[3][0] = w_d*r[n];
+                    U[3][1] = c_d+I*s_d;
+                    misc_matrix_mult(4,4,1,*U,&PHI[4*(n_given+1)],phi_temp);
 
-                    akns_scatter_bound_states_U_ES4(tmp2[n],tmp2[n+1],0.0,1,*U,&w,&s,&c);
-                    memcpy(&U[2][2],&U[0][0],6 * sizeof(COMPLEX)); // lower right block
-                    misc_matrix_mult(4,4,1,*U,phi_temp,&PHI[4*(n_given+1)]);
+                    akns_scatter_bound_states_U_ES4(tmp2[n],tmp2[n+1],0.0,0,*M,&w,&s,&c);
+                    misc_matrix_mult(2,2,1,*M,&phi_temp[0],&PHI[4*(n_given+1)]);
+                    misc_matrix_mult(2,2,1,*M,&phi_temp[2],&PHI[4*(n_given+1)+2]);
                 }
                 break;
 
@@ -803,26 +690,16 @@ INT akns_scatter_bound_states(UINT const D,
                 case akns_discretization_CF5_3:
                 case akns_discretization_CF6_4:
                     {} // Stop the compiler from complaining about starting a case with a declaration rather than a statement.
-                    COMPLEX psi_temp[2];
-                    memcpy(psi_temp, &PSI[4*D_given], 2 * sizeof(COMPLEX));
+                    COMPLEX psi_temp[2][2];
+                    UINT current = 0;
+                    memcpy(&psi_temp[current][0], &PSI[4*D_given], 2 * sizeof(COMPLEX));
                     for (UINT n_given=D_given; n_given-->0; ) {
                         for (UINT count=upsampling_factor; count-->0; ) {
                             COMPLEX U[2][2];
                             UINT n = n_given * upsampling_factor + count;
-                            COMPLEX ks = ((q[n]*r[n])-(l[n]*l[n]));
-                            COMPLEX k = CSQRT(ks);
-                            COMPLEX ch = CCOSH(k*eps_t);
-                            COMPLEX sh = -eps_t * misc_CSINC(I*k*eps_t);
-                            COMPLEX u1 = l[n]*sh*I;
-
-                            U[0][0] = ch - u1;
-                            U[0][1] = q[n]*sh;
-                            U[1][0] = r[n]*sh;
-                            U[1][1] = ch + u1;
-
-                            COMPLEX c = U[1][0]*psi_temp[0] + U[1][1]*psi_temp[1];
-                            psi_temp[0] = U[0][0]*psi_temp[0] + U[0][1]*psi_temp[1];
-                            psi_temp[1] = c;
+                            akns_scatter_bound_states_U_BO(q[n],r[n],l[n],-eps_t,0,*U);
+                            misc_matrix_mult(2,2,1,&U[0][0],&psi_temp[current][0],&psi_temp[!current][0]);
+                            current = !current;
                         }
                         memcpy(&PSI[4*n_given], psi_temp, 2 * sizeof(COMPLEX));
                     }
@@ -852,7 +729,9 @@ INT akns_scatter_bound_states(UINT const D,
                         akns_scatter_bound_states_U_ES4(tmp3[n],tmp3[n+1],0.0,0,*U,&w,&s,&c);
                         misc_matrix_mult(2,2,1,*U,&PSI[4*(n_given+1)],&PSI[4*n_given]);
 
-                        akns_scatter_bound_states_U_ES4(-0.5*eps_t*(q[n]+r[n]), -0.5*I*eps_t*(q[n]-r[n]),eps_t*l_curr*I,0,*U,&w,&s,&c);
+                        akns_scatter_bound_states_U_ES4(-0.5*eps_t*(q[n]+r[n]),
+                                                        -0.5*eps_t*(q[n]-r[n])*I,
+                                                        eps_t*l_curr*I,0,*U,&w,&s,&c);
                         misc_matrix_mult(2,2,1,*U,&PSI[4*n_given],psi_temp);
 
                         akns_scatter_bound_states_U_ES4(tmp4[n],tmp4[n+1],0.0,0,*U,&w,&s,&c);
