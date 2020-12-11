@@ -50,7 +50,7 @@
  * Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot;
  * </a>Proc. ICASSP 2018, pp. 4524-4528 have been applied to the second-order method by Boffetta and Osborne
  * and to the fourth-order CF4_2 method to obtain other discretizations.\n
- * The `fnft__akns_discretization_2SPLIT2_MODAL` discretization is an exception. It is the normalized Ablowitz-Ladik 
+ * The `fnft__akns_discretization_2SPLIT2_MODAL` discretization is an exception. It is the normalized Ablowitz-Ladik
  * discretization Eq. 25 in Wahls and Vaibhav<a href="https://arxiv.org/pdf/1607.01305v2.pdf">&quot;
  * Fast Inverse Nonlinear Fourier Transforms for Continuous Spectra of Zakharov-Shabat Type
  * ,&quot;</a> Unpublished.\n 

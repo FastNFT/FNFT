@@ -33,7 +33,7 @@
  * @brief Enum that specifies discretizations and methods used to compute nonlinear Fourier
  * transforms for the Korteweg-de Vries Equation.
  *
- * Discritizations that exist with and without the addition `_VANILLA` are all in AKNS basis.
+ * Discretizations that exist with and without the addition `_VANILLA` are all in AKNS basis.
  * The ones with the addition '_VANILLA' put the potential in `q` and set `r` to -1, like proposed in the AKNS Paper: M. J. Ablowitz, D. J. Kaup, A. C. Newell, and H. Segur, <a href="https://doi.org/10.1002/sapm1974534249">&quot;The inverse scattering transform - Fourier analysis for nonlinear problems&quot;, Studies in Applied Mathematics, vol. 53, pp. 249–315, 12 1974.
  </a>.
  * The ones without the addition '_VANILLA' put the potential in `r` and set `q` to -1, which appears to be more suitable for numerical calculations.\n
@@ -74,6 +74,14 @@
  *`-3S` is from Eq. 14.4 in S. Brustein and A. Mirin,<a href="https://doi.org/10.1016/0021-9991(70)90080-X">&quot;
  * Third Order Difference Methods for Hyperbolic Equations,&quot;</a>
  * J. Comput. Phys., 5, 547-571, 1970.\n
+ * `fnft_kdv_discretization_BO` has been taken from Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot;
+ * Computation of the direct scattering transform for the nonlinear Schroedinger  equation,&quot;</a> J. Comput. Phys. 102(2), 1992.
+ * It is supported by \link fnft__kdv_scatter.h \endlink.\n
+ * `fnft_kdv_discretization_CFx_y` are from Chimmalgi, Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2945480">&quot;
+ * Fast Nonlinear Fourier Transform Algorithms Using Higher Order Exponential Integrators,&quot;</a> IEEE Access 7, 2019.
+ * They are higher-order commutator-free exponential integrators with `x` denoting the order of the method
+ * and `y` the number of matrix exponentials required per signal sample.
+ * They are supported by \link fnft__kdv_scatter.h \endlink.\n
  * In general, discretizations with a lower degree are faster, while those with
  * a highter order of accuracy are more accurate. Therefore, the best choice is
  * normally among `-2A`, `-2B`, `-2S` `-4B`, `-6B` and `-8B`.

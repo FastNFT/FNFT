@@ -145,7 +145,7 @@ FNFT_INT fnft__akns_discretization_z_to_lambda(const FNFT_UINT n, const FNFT_REA
  * This routing computes the special weights required for the 
  * higher-order methods CF\f$^{[4]}_2\f$, CF\f$^{[4]}_3\f$, CF\f$^{[5]}_3\f$ 
  * and CF\f$^{[6]}_4\f$. The weights are used in \link fnft__nse_discretization_preprocess_signal \endlink,
- * \link fnft__akns_scatter_matrix \endlink and \link fnft__nse_scatter_bound_states\endlink.
+ * \link fnft__akns_scatter_matrix \endlink and \link fnft__nse_scatter_bound_states \endlink.
  * The weights for CF\f$^{[4]}_3\f$ are taken from Alvermann and Fehske (<a href="https://doi.org/10.1016/j.jcp.2011.04.006">Journal of Computational Phys. 230, 2011</a>)
  * and the weights for the others are from Blanes, Casas and Thalhammer(<a href="https://doi.org/10.1016/j.cpc.2017.07.016">Computer Phys. Comm. 220, 2017</a>).
  * The weights are mentioned as matrices in the references. This routine returns 
@@ -187,7 +187,7 @@ FNFT_INT fnft__akns_discretization_method_weights(FNFT_COMPLEX **weights_ptr,
  * @param[out] first_last_index Vector of length two. Upon exit, it contains
  *             the original index of the first and the last sample used to build
  *             q_preprocessed.
- * @param[in] discretization Discretization of type \link fnft_akns_discretization_t \endlink.
+ * @param[in] discretization Discretization of type \link fnft__akns_discretization_t \endlink.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  *
