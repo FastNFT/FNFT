@@ -106,23 +106,13 @@ typedef enum {
  * Use the \link fnft_kdvv_default_opts \endlink routine in order to generate
  * a new variable of this type with default options and modify as needed.
  *
- * @var fnft_kdvv_opts_t::bound_state_filtering
- *  Controls how \link fnft_kdvv \endlink decide whether a numerically found
- *  root of \f$ a(\lambda) \f$ is an actual bound state or not. \n
- *  Should be of type \link fnft_kdvv_bsfilt_t \endlink.
- *
  * @var fnft_kdvv_opts_t::bound_state_localization
  *  Controls how \link fnft_kdvv \endlink localizes bound states. \n
  * Should be of type \link fnft_kdvv_bsloc_t \endlink.
  *
- * @var fnft_kdvv_opts_t::Dsub
- *   Controls how many samples are used after subsampling when bound states are
- *   localized using the fnft_kdvv_bsloc_SUBSAMPLE_AND_REFINE method. See
- *   \link fnft_kdvv_bsloc_t \endlink for details.
- *
  * @var fnft_kdvv_opts_t::niter
  *  Number of Newton iterations to be carried out when either the
- *  fnft_kdvv_bsloc_NEWTON or the fnft_kdvv_bsloc_SUBSAMPLE_AND_REFINE method
+ *  fnft_kdvv_bsloc_NEWTON, or the fnft_kdvv_bsloc_GRIDSEARCH_AND_REFINE method
  *  is used.
  *
  * @var fnft_kdvv_opts_t::discspec_type
