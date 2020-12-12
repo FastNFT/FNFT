@@ -72,10 +72,18 @@ static inline void akns_scatter_bound_states_U_ES4(COMPLEX const a1,
     *w = CSQRT(-(a1*a1)-(a2*a2)-(a3*a3));
     *s = misc_CSINC(*w);
     *c = CCOS(*w);
-    U[0]                   = *c + *s*a3;
-    U[1]                   = *s*(a1 - I*a2);
-    U[derivative_flag?4:2] = *s*(a1 + I*a2);
-    U[derivative_flag?5:3] = *c - *s*a3;
+    U[0] = *c + *s*a3;
+    U[1] = *s*(a1 - I*a2);
+    if (derivative_flag) {
+        U[4] = *s*(a1 + I*a2);
+        U[5] = *c - *s*a3;
+        memcpy(&U[10],&U[0],6 * sizeof(COMPLEX)); // lower right block
+        // Note: The lower left block still needs to be set,
+        // depending on the xi-derivatives of a1, a2 and a3.
+    } else {
+        U[2] = *s*(a1 + I*a2);
+        U[3] = *c - *s*a3;
+    }
 }
 
 /**
@@ -223,7 +231,6 @@ INT akns_scatter_matrix(UINT const D,
                         COMPLEX a2 = tmp1[n+1] - eps_t_3*l_curr*(q[n+1]+r[n+1])/12.0;
                         COMPLEX a3 = - eps_t*I*l_curr +tmp1[n+2];
                         akns_scatter_bound_states_U_ES4(a1,a2,a3,1,*U,&w,&s,&c);
-                        memcpy(&U[2][2],&U[0][0],6 * sizeof(COMPLEX)); // lower right block
                         COMPLEX w_d = -(a1*tmp2[n]+a2*tmp2[n+1]+a3*tmp2[n+2]);
                         COMPLEX c_d = -misc_CSINC(w)*w_d;
                         w_d /= w;
@@ -249,7 +256,6 @@ INT akns_scatter_matrix(UINT const D,
                         akns_scatter_bound_states_U_ES4(0.5*eps_t*(q[n]+r[n]),
                                                         0.5*eps_t*(q[n]-r[n])*I,
                                                         -eps_t*l_curr*I, 1,*U,&w,&s,&c);
-                        memcpy(&U[2][2],&U[0][0],6 * sizeof(COMPLEX)); // lower right block
                         COMPLEX s_d = CSIN(w*eps_t)/w;
                         COMPLEX c_d = -eps_t*l_curr*s_d;
                         COMPLEX w_d = l_curr*(eps_t*w*CCOS(w*eps_t)-CSIN(w*eps_t))/(w*w*w);
@@ -580,7 +586,6 @@ INT akns_scatter_bound_states(UINT const D,
                     COMPLEX a2 = tmp1[n+1] - eps_t_3*l_curr*(q[n+1]+r[n+1])/12.0;
                     COMPLEX a3 = - eps_t*I*l_curr +tmp1[n+2];
                     akns_scatter_bound_states_U_ES4(a1,a2,a3,1,*U,&w,&s,&c);
-                    memcpy(&U[2][2],&U[0][0],6 * sizeof(COMPLEX)); // lower right block
                     COMPLEX w_d = -(a1*tmp2[n]+a2*tmp2[n+1]+a3*tmp2[n+2]);
                     COMPLEX c_d = -misc_CSINC(w)*w_d;
                     w_d /= w;
@@ -606,7 +611,6 @@ INT akns_scatter_bound_states(UINT const D,
                     akns_scatter_bound_states_U_ES4(0.5*eps_t*(q[n]+r[n]),
                                                     0.5*eps_t*(q[n]-r[n])*I,
                                                     -eps_t*l_curr*I, 1,*U,&w,&s,&c);
-                    memcpy(&U[2][2],&U[0][0],6 * sizeof(COMPLEX)); // lower right block
                     COMPLEX s_d = eps_t * misc_CSINC(w);
                     COMPLEX c_d = -eps_t*l_curr*s_d;
                     COMPLEX w_d = l_curr*eps_t_2/w * misc_CSINC_derivative(eps_t*w);
