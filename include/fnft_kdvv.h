@@ -16,6 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
+* Peter J Prins (TU Delft) 2020.
 */
 
 /**
@@ -260,12 +261,10 @@ FNFT_UINT fnft_kdvv_max_K(const FNFT_UINT D,
  * is know, the accuracy can be quantified by defining a suitable error. The error usually decreases with increasing \f$ D\f$ assuming everthing else remains the same.
  * The rate at which the error decreases with increase in \f$ D\f$ is known as the order of the method. The orders of the various discretizations can be found at \link fnft_kdv_discretization_t \endlink.
  * The orders of the discretizations which use exponential splitting schemes should be the same as their base methods but can deviate when accuracy of the splitting scheme is low.
- * In the following case the orders of the methods has been observed to be less than expected:
- *       - TES4, residues have order two instead of four.
  *
  * Application of one step Richardson extrapolation should in theory increase the order by one. However, it can deviate both ways. In case of some smooth signals the order
  * may increase by two instead of one. On the other hand for discontinuous signals it maybe deterimental to apply Richardson extrapolation. It is observed that Richardson extrapolation has no effect on the order of the residues and norming constants, except for the following case:
- *       - CF5_3, residues have order six instead of five.
+ *       - CF5_3, residues and norming constants have order six instead of five.
  *
  * @param[in] D Number of samples
  * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,

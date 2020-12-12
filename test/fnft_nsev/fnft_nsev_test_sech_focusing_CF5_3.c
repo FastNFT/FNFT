@@ -71,8 +71,9 @@ INT main()
     opts.richardson_extrapolation_flag = 1;
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    // Check for at least 6th-order error decay (error_bounds_RE[4] corresponding
-    // to the norming constants decays with only 5th-order)
+    // Check for at least 6th-order error decay (error_bounds_RE[4] and
+    // error_bounds_RE[5] corresponding to the norming constants and
+    // residues decay with only 5th-order)
     D *= 2;
     for (i=0; i<6; i++)
         error_bounds_RE[i] /= 64.0;

@@ -253,17 +253,8 @@ INT akns_scatter_matrix(UINT const D,
                         misc_matrix_mult(2,2,4,&M[0][0],&H[current][2][0],&H[!current][2][0]);
                         current = !current;
 
-                        akns_scatter_bound_states_U_ES4(0.5*eps_t*(q[n]+r[n]),
-                                                        0.5*eps_t*(q[n]-r[n])*I,
-                                                        -eps_t*l_curr*I, 1,*U,&w,&s,&c);
-                        COMPLEX s_d = CSIN(w*eps_t)/w;
-                        COMPLEX c_d = -eps_t*l_curr*s_d;
-                        COMPLEX w_d = l_curr*(eps_t*w*CCOS(w*eps_t)-CSIN(w*eps_t))/(w*w*w);
-                        U[2][0] = c_d-I*s_d;
-                        U[2][1] = w_d*q[n];
-                        U[3][0] = w_d*r[n];
-                        U[3][1] = c_d+I*s_d;
-                        misc_matrix_mult(4,4,4,&U[0][0],&H[current][2][0],&H[!current][2][0]);
+                        akns_scatter_bound_states_U_BO(q[n],r[n],l_curr,eps_t,1,*U);
+                        misc_matrix_mult(4,4,4,&U[0][0],&H[current][0][0],&H[!current][0][0]);
                         current = !current;
 
                         akns_scatter_bound_states_U_ES4(tmp2[n],tmp2[n+1],0.0,0,*M,&w,&s,&c);
@@ -334,9 +325,7 @@ INT akns_scatter_matrix(UINT const D,
                         misc_matrix_mult(2,2,2,&U[0][0],&H[current][0][0],&H[!current][0][0]);
                         current = !current;
 
-                        akns_scatter_bound_states_U_ES4(0.5*eps_t*(q[n]+r[n]),
-                                                        0.5*eps_t*(q[n]-r[n])*I,
-                                                        -eps_t*l_curr*I, 0,*U,&w,&s,&c);
+                        akns_scatter_bound_states_U_BO(q[n],r[n],l_curr,eps_t,0,*U);
                         misc_matrix_mult(2,2,2,&U[0][0],&H[current][0][0],&H[!current][0][0]);
                         current = !current;
 
@@ -598,8 +587,8 @@ INT akns_scatter_bound_states(UINT const D,
                 }
                 break;
                 // Fourth-order exponential method which requires
-                // three matrix exponentials. The transfer metrix
-                // needs to be built differently compared to the CF schemes.
+                // three matrix exponentials. The outer two transfer metrices
+                // need to be built differently compared to the CF schemes.
             case akns_discretization_TES4:
                 for (UINT n=0, n_given=0; n<D; n+=3, n_given++) {
                     COMPLEX phi_temp[4], M[2][2], w, s, c;
@@ -608,16 +597,7 @@ INT akns_scatter_bound_states(UINT const D,
                     misc_matrix_mult(2,2,1,*M,&PHI[4*n_given],&PHI[4*(n_given+1)]);
                     misc_matrix_mult(2,2,1,*M,&PHI[4*n_given+2],&PHI[4*(n_given+1)+2]);
 
-                    akns_scatter_bound_states_U_ES4(0.5*eps_t*(q[n]+r[n]),
-                                                    0.5*eps_t*(q[n]-r[n])*I,
-                                                    -eps_t*l_curr*I, 1,*U,&w,&s,&c);
-                    COMPLEX s_d = eps_t * misc_CSINC(w);
-                    COMPLEX c_d = -eps_t*l_curr*s_d;
-                    COMPLEX w_d = l_curr*eps_t_2/w * misc_CSINC_derivative(eps_t*w);
-                    U[2][0] = c_d-I*s_d;
-                    U[2][1] = w_d*q[n];
-                    U[3][0] = w_d*r[n];
-                    U[3][1] = c_d+I*s_d;
+                    akns_scatter_bound_states_U_BO(q[n],r[n],l_curr,eps_t,1,*U);
                     misc_matrix_mult(4,4,1,*U,&PHI[4*(n_given+1)],phi_temp);
 
                     akns_scatter_bound_states_U_ES4(tmp2[n],tmp2[n+1],0.0,0,*M,&w,&s,&c);
@@ -698,9 +678,7 @@ INT akns_scatter_bound_states(UINT const D,
                         akns_scatter_bound_states_U_ES4(tmp3[n],tmp3[n+1],0.0,0,*U,&w,&s,&c);
                         misc_matrix_mult(2,2,1,*U,&PSI[4*(n_given+1)],&PSI[4*n_given]);
 
-                        akns_scatter_bound_states_U_ES4(-0.5*eps_t*(q[n]+r[n]),
-                                                        -0.5*eps_t*(q[n]-r[n])*I,
-                                                        eps_t*l_curr*I,0,*U,&w,&s,&c);
+                        akns_scatter_bound_states_U_BO(q[n],r[n],l_curr,-eps_t,0,*U);
                         misc_matrix_mult(2,2,1,*U,&PSI[4*n_given],psi_temp);
 
                         akns_scatter_bound_states_U_ES4(tmp4[n],tmp4[n+1],0.0,0,*U,&w,&s,&c);

@@ -53,8 +53,7 @@ INT main()
     CHECK_RETCODE(ret_code, leave_fun);
     
     // Check for 6th-order error decay (error_bounds[4] corresponding
-    // to the norming constants stays as it is already close to machine precision,
-    // error_bounds[5] corresponding to the residues only decays with 3rd-order)
+    // to the norming constants stays as it is already close to machine precision.
     D *= 2;
     for (i=0; i<6; i++)
         error_bounds[i] /= 64.0;
