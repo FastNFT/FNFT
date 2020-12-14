@@ -247,6 +247,8 @@ FNFT_UINT fnft_kdvv_max_K(const FNFT_UINT D,
  *       - fnft_kdv_discretization_4SPLIT4A(_VANILLA)
  *       - fnft_kdv_discretization_4SPLIT4B(_VANILLA)
  *
+ * The discretizations nft_kdv_discretization_2SPLIT2_MODAL(_VANILLA) require that q[i] * eps_t^2 is unequal to -1 for all samples i.
+ *
  * The following discretizations use classical algorithms which have a computational
  * complexity of \f$ \mathcal{O}(D^2)\f$ for \f$ D\f$ point continuous spectrum given \f$ D\f$ samples:
  *       - fnft_kdv_discretization_BO(_VANILLA)
