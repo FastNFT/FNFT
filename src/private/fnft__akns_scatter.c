@@ -245,15 +245,18 @@ INT akns_scatter_matrix(UINT const D,
                     for (UINT n = 0; n < D; n+=3){
                         COMPLEX M[2][2];
 
+                        // First substep, block diagonal matrix
                         akns_scatter_U_ES4(tmp1[n],tmp1[n+1],0.0,0,*M,NULL);
                         misc_matrix_mult(2,2,4,&M[0][0],&H[current][0][0],&H[!current][0][0]);
                         misc_matrix_mult(2,2,4,&M[0][0],&H[current][2][0],&H[!current][2][0]);
                         current = !current;
 
+                        // Second substep
                         akns_scatter_U_BO(q[n],r[n],l_curr,eps_t,1,*U);
                         misc_matrix_mult(4,4,4,&U[0][0],&H[current][0][0],&H[!current][0][0]);
                         current = !current;
 
+                        // Third substep, block diagonal matrix
                         akns_scatter_U_ES4(tmp2[n],tmp2[n+1],0.0,0,*M,NULL);
                         misc_matrix_mult(2,2,4,&M[0][0],&H[current][0][0],&H[!current][0][0]);
                         misc_matrix_mult(2,2,4,&M[0][0],&H[current][2][0],&H[!current][2][0]);
@@ -333,14 +336,17 @@ INT akns_scatter_matrix(UINT const D,
                     for (UINT n = 0; n < D; n+=3){
                         COMPLEX U[2][2];
 
+                        // First substep
                         akns_scatter_U_ES4(tmp1[n],tmp1[n+1],0.0,0,*U,NULL);
                         misc_matrix_mult(2,2,2,&U[0][0],&H[current][0][0],&H[!current][0][0]);
                         current = !current;
 
+                        // Second substep
                         akns_scatter_U_BO(q[n],r[n],l_curr,eps_t,0,*U);
                         misc_matrix_mult(2,2,2,&U[0][0],&H[current][0][0],&H[!current][0][0]);
                         current = !current;
 
+                        // Third substep
                         akns_scatter_U_ES4(tmp2[n],tmp2[n+1],0.0,0,*U,NULL);
                         misc_matrix_mult(2,2,2,&U[0][0],&H[current][0][0],&H[!current][0][0]);
                         current = !current;
@@ -609,13 +615,16 @@ INT akns_scatter_bound_states(UINT const D,
                 for (UINT n=0, n_given=0; n<D; n+=3, n_given++) {
                     COMPLEX phi_temp[4], M[2][2];
 
+                    // First substep, block diagonal matrix
                     akns_scatter_U_ES4(tmp1[n],tmp1[n+1],0.0,0,*M,NULL);
                     misc_matrix_mult(2,2,1,*M,&PHI[4*n_given],&PHI[4*(n_given+1)]);
                     misc_matrix_mult(2,2,1,*M,&PHI[4*n_given+2],&PHI[4*(n_given+1)+2]);
 
+                    // Second substep
                     akns_scatter_U_BO(q[n],r[n],l_curr,eps_t,1,*U);
                     misc_matrix_mult(4,4,1,*U,&PHI[4*(n_given+1)],phi_temp);
 
+                    // Third substep, block diagonal matrix
                     akns_scatter_U_ES4(tmp2[n],tmp2[n+1],0.0,0,*M,NULL);
                     misc_matrix_mult(2,2,1,*M,&phi_temp[0],&PHI[4*(n_given+1)]);
                     misc_matrix_mult(2,2,1,*M,&phi_temp[2],&PHI[4*(n_given+1)+2]);
@@ -691,12 +700,15 @@ INT akns_scatter_bound_states(UINT const D,
                     for (UINT n_given=D_given, n=D-3; n_given-->0; n-=3) {
                         COMPLEX U[2][2], psi_temp[2];
 
+                        // First substep
                         akns_scatter_U_ES4(tmp3[n],tmp3[n+1],0.0,0,*U,NULL);
                         misc_matrix_mult(2,2,1,*U,&PSI[4*(n_given+1)],&PSI[4*n_given]);
 
+                        // Second substep
                         akns_scatter_U_BO(q[n],r[n],l_curr,-eps_t,0,*U);
                         misc_matrix_mult(2,2,1,*U,&PSI[4*n_given],psi_temp);
 
+                        // Third substep
                         akns_scatter_U_ES4(tmp4[n],tmp4[n+1],0.0,0,*U,NULL);
                         misc_matrix_mult(2,2,1,*U,psi_temp,&PSI[4*n_given]);
                     }
