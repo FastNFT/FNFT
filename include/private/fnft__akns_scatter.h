@@ -69,11 +69,17 @@
  *  defined in \link fnft_errwarn.h \endlink.
  * @ingroup akns
  */
-FNFT_INT fnft__akns_scatter_matrix(const FNFT_UINT D, FNFT_COMPLEX const * const q, 
-    FNFT_COMPLEX const * const r, const FNFT_REAL eps_t,
-    const FNFT_UINT K, FNFT_COMPLEX const * const lambda,
-    FNFT_COMPLEX * const result, fnft__akns_discretization_t discretization,
-    const FNFT_UINT derivative_flag);
+FNFT_INT fnft__akns_scatter_matrix(FNFT_UINT const D,
+                                   FNFT_COMPLEX const * const q,
+                                   FNFT_COMPLEX const * const r,
+                                   FNFT_REAL const eps_t,
+                                   FNFT_UINT const K,
+                                   FNFT_COMPLEX const * const lambda,
+                                   FNFT_COMPLEX * const result,
+                                   fnft__akns_discretization_t discretization,
+                                   fnft__akns_pde_t const PDE,
+                                   FNFT_UINT const vanilla_flag,
+                                   FNFT_UINT const derivative_flag);
 
 
 /**

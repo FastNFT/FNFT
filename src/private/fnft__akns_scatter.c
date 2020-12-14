@@ -107,6 +107,8 @@ INT akns_scatter_matrix(UINT const D,
                         COMPLEX const * const lambda,
                         COMPLEX * const result,
                         akns_discretization_t const discretization,
+                        akns_pde_t const PDE,
+                        UINT const vanilla_flag,
                         UINT const derivative_flag)
 {
     INT ret_code = SUCCESS;
@@ -263,17 +265,33 @@ INT akns_scatter_matrix(UINT const D,
                     ret_code = E_INVALID_ARGUMENT(discretization);
                     CHECK_RETCODE(ret_code, leave_fun);
             }
-            // TODO: Change of basis
+            COMPLEX Tmx[4][4];
+
+            // Fetch the change of basis matrix from the basis of the discretization to S.
+            ret_code = akns_discretization_change_of_basis_matrix_to_S(&Tmx[0][0],l_curr,derivative_flag,eps_t,discretization,vanilla_flag,PDE);
+            CHECK_RETCODE(ret_code, leave_fun);
+
+            // Left-multiply the change of state matrix by this state of basis matrix.
+            misc_matrix_mult(4,4,4,&Tmx[0][0],&H[current][0][0],&H[!current][0][0]);
+            current = !current;
+
+            // Fetch the change of basis matrix from the basis of the discretization to S.
+            ret_code = akns_discretization_change_of_basis_matrix_from_S(&Tmx[0][0],l_curr,derivative_flag,eps_t,discretization,vanilla_flag,PDE);
+            CHECK_RETCODE(ret_code, leave_fun);
+
+            // Right-multiply the change of state matrix by this state of basis matrix to obtain the scattering matrix in S basis.
+            misc_matrix_mult(4,4,4,&H[current][0][0],&Tmx[0][0],&H[!current][0][0]);
+            current = !current;
 
             // Copy result
-            result[i*8] = H[current][0][0];
-            result[i*8 + 1] = H[current][0][1];
-            result[i*8 + 2] = H[current][1][0];
-            result[i*8 + 3] = H[current][1][1];
-            result[i*8 + 4] = H[current][2][0];
-            result[i*8 + 5] = H[current][2][1];
-            result[i*8 + 6] = H[current][3][0];
-            result[i*8 + 7] = H[current][3][1];
+            result[8*i + 0] = 0.5*H[current][0][0] + 0.5*H[current][2][2];
+            result[8*i + 1] = 0.5*H[current][0][1] + 0.5*H[current][2][3];
+            result[8*i + 2] = 0.5*H[current][1][0] + 0.5*H[current][3][2];
+            result[8*i + 3] = 0.5*H[current][1][1] + 0.5*H[current][3][3];
+            result[8*i + 4] = H[current][2][0];
+            result[8*i + 5] = H[current][2][1];
+            result[8*i + 6] = H[current][3][0];
+            result[8*i + 7] = H[current][3][1];
         }
     } else {
         // Colculate the scattering matrix without lambda-derivative
@@ -333,13 +351,26 @@ INT akns_scatter_matrix(UINT const D,
                     ret_code = E_INVALID_ARGUMENT(discretization);
                     CHECK_RETCODE(ret_code, leave_fun);
             }
-            // TODO: Change of basis
+            COMPLEX Tmx[2][2];
+
+            // Fetch the change of basis matrix from the basis of the discretization to S.
+            ret_code = akns_discretization_change_of_basis_matrix_to_S(&Tmx[0][0],l_curr,derivative_flag,eps_t,discretization,vanilla_flag,PDE);
+            CHECK_RETCODE(ret_code, leave_fun);
+
+            // Left-multiply the change of state matrix by this state of basis matrix.
+            misc_matrix_mult(2,2,2,&Tmx[0][0],&H[current][0][0],&H[!current][0][0]);
+            current = !current;
+
+            // Fetch the change of basis matrix from the basis of the discretization to S.
+            ret_code = akns_discretization_change_of_basis_matrix_from_S(&Tmx[0][0],l_curr,derivative_flag,eps_t,discretization,vanilla_flag,PDE);
+            CHECK_RETCODE(ret_code, leave_fun);
+
+            // Right-multiply the change of state matrix by this state of basis matrix to obtain the scattering matrix in S basis.
+            misc_matrix_mult(2,2,2,&H[current][0][0],&Tmx[0][0],&H[!current][0][0]);
+            current = !current;
 
             // Copy result
-            result[i*4] = H[current][0][0];
-            result[i*4 + 1] = H[current][0][1];
-            result[i*4 + 2] = H[current][1][0];
-            result[i*4 + 3] = H[current][1][1];
+            memcpy(&result[4*i],&H[current][0][0],4 * sizeof(COMPLEX));
         }
     }
     
