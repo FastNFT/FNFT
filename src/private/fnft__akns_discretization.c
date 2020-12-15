@@ -1015,6 +1015,16 @@ INT fnft__akns_discretization_change_of_basis_matrix_from_S(COMPLEX * const T,
 
         case akns_pde_NSE:
             switch (akns_discretization) {
+                case akns_discretization_2SPLIT2_MODAL:
+                case akns_discretization_2SPLIT2A:
+                    // These two discretizations make use of a modification of
+                    // the AKNS basis (cf. akns_pde_KdV), which reduces the order
+                    // of the required polynomials. However, they must be kept
+                    // in this basis to use polynomial rootfinding for the bound
+                    // states. In the end this is corrected using
+                    // fnft__nse_discretization_phase_factor_rho() and /or
+                    // fnft__nse_discretization_phase_factor_b(), which in essence
+                    // calculalate the change of basis to E basis.
                 case akns_discretization_2SPLIT1A:
                 case akns_discretization_2SPLIT1B:
                 case akns_discretization_2SPLIT2B:
@@ -1058,25 +1068,6 @@ INT fnft__akns_discretization_change_of_basis_matrix_from_S(COMPLEX * const T,
                     }
                     break;
 
-                case akns_discretization_2SPLIT2_MODAL:
-                case akns_discretization_2SPLIT2A:
-                    // T from S basis for NSE to modified AKNS basis. This modification reduces the degree of the polynomial scattering matrix by 1 per step.
-                    // TODO: These discretizations require a modification that is currently contracted in the 'boundary coefficionts'
-                    T[0] = 1.0;            //T_11;
-                    T[1] = 0.0;            //T_12;
-                    if(!derivative_flag){
-                        T[2]  = 0.0;       //T_21;
-                        T[3]  = 1.0;       //T_22;
-                    } else {
-                        T[4]  = 0.0;       //T_21;
-                        T[5]  = 1.0;       //T_22;
-
-                        T[8]  = 0.0;       //T_31 = d/dxi T_11
-                        T[9]  = 0.0;       //T_32 = d/dxi T_12
-                        T[12] = 0.0;       //T_41 = d/dxi T_21
-                        T[13] = 0.0;       //T_42 = d/dxi T_22
-                    }
-                    break;
                 default:
                     ret_code =  E_INVALID_ARGUMENT(akns_discretization);
                     CHECK_RETCODE(ret_code, release_mem);
