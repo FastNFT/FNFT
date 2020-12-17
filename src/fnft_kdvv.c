@@ -65,7 +65,6 @@ static inline INT kdvv_compute_boundstates(
         UINT const D,
         COMPLEX const * const q,
         COMPLEX const * const r,
-        REAL const bounding_box[4],
         REAL const * const T,
         const REAL eps_t,
         UINT * const K_ptr,
@@ -84,7 +83,6 @@ static inline INT fnft_kdvv_base(
         COMPLEX * const bound_states,
         COMPLEX * const normconsts_or_residues,
         const INT kappa,
-        REAL const bounding_box[4],
         fnft_kdvv_opts_t *opts);
 
 static inline INT kdvv_compute_contspec(
@@ -309,22 +307,8 @@ INT fnft_kdvv(
             first_last_index, opts->discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    // Calculate the bounding box for the bound states. This must be done with the non-preprocessed potential.
-    REAL maxq = 0;
-    if (bound_states != NULL) {
-        // Find the maximum of q(t). Realness should have been checked earlier.
-        for (i = 0; i < D; i++)
-            maxq = maxq > (REAL)q[i] ? maxq : (REAL)q[i];
-
-        if (maxq==0){
-            // Non-positive potentials have no eigenvalues
-            *K_ptr=0;
-        }
-    }
-    REAL const bounding_box[4] = {0,0,0,(REAL)CSQRT(maxq)};
-
     ret_code = fnft_kdvv_base(D_effective, q_preprocessed, r_preprocessed, T, M, contspec, XI, K_ptr,
-                bound_states, normconsts_or_residues, kappa, bounding_box, opts);
+                bound_states, normconsts_or_residues, kappa, opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
     if (opts->richardson_extrapolation_flag == 1){
@@ -401,7 +385,7 @@ INT fnft_kdvv(
         opts->bound_state_localization = kdvv_bsloc_NEWTON;
 
         ret_code = fnft_kdvv_base(Dsub * upsampling_factor, qsub_preprocessed, rsub_preprocessed, Tsub, M, contspec_sub, XI, &K_sub,
-                bound_states_sub, normconsts_or_residues_sub, kappa, bounding_box, opts);
+                bound_states_sub, normconsts_or_residues_sub, kappa, opts);
         CHECK_RETCODE(ret_code, leave_fun);
         opts->bound_state_localization = bs_loc_opt;
         opts->discspec_type = ds_type_opt;
@@ -483,7 +467,6 @@ static inline INT fnft_kdvv_base(
         COMPLEX * const bound_states,
         COMPLEX * const normconsts_or_residues,
         const INT kappa,
-        REAL const bounding_box[4],
         fnft_kdvv_opts_t *opts)
 {
     COMPLEX *transfer_matrix = NULL;
@@ -562,7 +545,7 @@ static inline INT fnft_kdvv_base(
     // Compute the discrete spectrum
     if (bound_states != NULL && *K_ptr!=0) {
         // Compute the bound states
-        ret_code = kdvv_compute_boundstates(D, q, r, bounding_box, T,
+        ret_code = kdvv_compute_boundstates(D, q, r, T,
                 eps_t, K_ptr, bound_states, opts);
         CHECK_RETCODE(ret_code, leave_fun);
 
@@ -586,7 +569,6 @@ static inline INT kdvv_compute_boundstates(
         const UINT D,
         COMPLEX const * const q,
         COMPLEX const * const r,
-        REAL const bounding_box[4],
         REAL const * const T,
         const REAL eps_t,
         UINT * const K_ptr,
@@ -611,11 +593,58 @@ static inline INT kdvv_compute_boundstates(
     ret_code=fnft__kdv_slow_discretization(&(opts_slow.discretization));
     CHECK_RETCODE(ret_code, leave_fun);
 
+    // Calculate the bounding box for the bound states. Therefore we need to find the maximum of the real part of q(t), skipping t-derivative samples
+    REAL bound_squared = 0;
+
+    if (upsampling_factor<=2) {
+        // For the currently implemented discretizations with an upsampling factor
+        // of 1 or 2, all substep sizes are real. Therefore the spectrum we calculate
+        // is the exact spectrum of a staircase reconstruction from the preprocessed
+        // samples. Hence the maximum of the potential samples gives an upperbound
+        // on the eigenvalues.
+        for (i = 0; i < D; i++)
+            bound_squared = bound_squared > (REAL)CREAL(q[i]) ? bound_squared : (REAL)CREAL(q[i]);
+    } else {
+        // For other discretizations the above bound can be violated
+        // due to interpolation of the potential. Therefore we apply a safety factor.
+        switch (opts->discretization) {
+            case kdv_discretization_ES4_VANILLA:
+            case kdv_discretization_TES4_VANILLA:
+            case kdv_discretization_ES4:
+            case kdv_discretization_TES4:
+                // These discretizations contain samples of the first and
+                // second derivative in the preprocessed potential. We need
+                // to skip those.
+                for (i = 0; i < D; i+=3)
+                    bound_squared = bound_squared > (REAL)CREAL(q[i]) ? bound_squared : (REAL)CREAL(q[i]);
+                // Apply a safety factor, because the effective maximum may be higher due to interpolation
+                break;
+            default:
+                // Other discretizations with an order >2 contain weighted averages
+                // of interpolated potential samples in the preprocessed q.
+                // A theoretical calculation of the eigenvalue bound is
+                // complicated and not worth the effort. Instead, we estimate
+                // the bound from the maximum of the real part of the
+                // preprocessed q and proceed with fingers crossed.
+                for (i = 0; i < D; i++)
+                    bound_squared = bound_squared > (REAL)CREAL(q[i]) ? bound_squared : (REAL)CREAL(q[i]);
+                break;
+        }
+        bound_squared *= 2.0; // Safety factor
+    }
+
+    if (bound_squared==0.0){
+        // Non-positive potentials have no bound states
+        *K_ptr=0;
+        goto leave_fun;
+    }
+
+    REAL const bounding_box[4] = {0,0,0,SQRT(bound_squared)};
+
     // Localize bound states ...
     switch (opts->bound_state_localization) {
         case kdvv_bsloc_GRIDSEARCH_AND_REFINE:
-            {} // Stop the compiler from complaining about starting a case with a declaration rather than a statement
-
+        {
             // Set the search grid
             UINT const M = 1000;
             COMPLEX const eps_xi = I*(bounding_box[3]-bounding_box[2])/(M - 1);
@@ -625,10 +654,10 @@ static inline INT kdvv_compute_boundstates(
                 goto leave_fun;
             }
 
-            xi[0] = I*nexttoward(bounding_box[3],bounding_box[4]);
+            xi[0] = I*nexttoward(bounding_box[2],bounding_box[3]);
             for (i = 1; i < M-1; i++)
                 xi[i] = I * CIMAG(eps_xi*i);
-            xi[M-1] = I*nexttoward(bounding_box[4],bounding_box[3]);
+            xi[M-1] = I*nexttoward(bounding_box[3],bounding_box[2]);
 
             // Allocate memory for call to kdv_scatter_matrix
             scatter_coeffs = malloc(4 * M * sizeof(COMPLEX));
@@ -663,7 +692,7 @@ static inline INT kdvv_compute_boundstates(
                     K++;
                 }
             }
-
+        }
             // fall through
         case kdvv_bsloc_NEWTON: // Refine using Newton's method
 

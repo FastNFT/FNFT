@@ -243,10 +243,11 @@ INT fnft__akns_discretization_z_to_lambda(const UINT n, const REAL eps_t,
  * This routine computes various weights required by some methods
  * based on the discretization.
  */
-INT fnft__akns_discretization_method_weights(COMPLEX **weights_ptr,
-        akns_discretization_t akns_discretization)
+INT fnft__akns_discretization_method_weights(COMPLEX ** qr_weights_ptr,
+                                             COMPLEX ** eps_t_weights_ptr,
+                                             akns_discretization_t const akns_discretization)
 {
-    COMPLEX *weights = NULL;
+    COMPLEX *qr_weights = NULL, *eps_t_weights = NULL;
     INT ret_code = SUCCESS;
     
     
@@ -272,33 +273,38 @@ INT fnft__akns_discretization_method_weights(COMPLEX **weights_ptr,
         case akns_discretization_2SPLIT8A:
         case akns_discretization_2SPLIT8B:
         case akns_discretization_2SPLIT2_MODAL:
-            weights = malloc(1 * sizeof(COMPLEX));
-            if (weights == NULL) {
+            qr_weights = malloc(1 * sizeof(COMPLEX));
+            eps_t_weights = malloc(1 * sizeof(COMPLEX));
+            if (qr_weights == NULL || eps_t_weights == NULL) {
                 ret_code = E_NOMEM;
                 goto leave_fun;
             }
-            weights[0] = 1.0;
-            
+            qr_weights[0] = 1.0;
+            eps_t_weights[0] = 1.0;
             
             break;
         case akns_discretization_CF4_2:
         case akns_discretization_4SPLIT4A:
         case akns_discretization_4SPLIT4B:
-            weights = malloc(4 * sizeof(COMPLEX));
-            if (weights == NULL) {
+            qr_weights = malloc(4 * sizeof(COMPLEX));
+            eps_t_weights = malloc(2 * sizeof(COMPLEX));
+            if (qr_weights == NULL || eps_t_weights == NULL) {
                 ret_code = E_NOMEM;
                 goto leave_fun;
             }
-            REAL scl_factor = SQRT(3.0)/6.0;
-            weights[0] = 0.25+scl_factor;
-            weights[1] = 0.25-scl_factor;
-            weights[2] = 0.25-scl_factor;
-            weights[3] = 0.25+scl_factor;
+            REAL scl_factor = 1.0/SQRT(3.0);
+            qr_weights[0] = 0.5+scl_factor;
+            qr_weights[1] = 0.5-scl_factor;
+            qr_weights[2] = 0.5-scl_factor;
+            qr_weights[3] = 0.5+scl_factor;
+            eps_t_weights[0] = 0.5;
+            eps_t_weights[1] = 0.5;
             
             break;
         case akns_discretization_CF4_3:
-            weights = malloc(9 * sizeof(COMPLEX));
-            if (weights == NULL) {
+            qr_weights = malloc(9 * sizeof(COMPLEX));
+            eps_t_weights = malloc(3 * sizeof(COMPLEX));
+            if (qr_weights == NULL || eps_t_weights == NULL) {
                 ret_code = E_NOMEM;
                 goto leave_fun;
             }
@@ -318,53 +324,77 @@ INT fnft__akns_discretization_method_weights(COMPLEX **weights_ptr,
             UINT m, n, i;
             for (m = 0; m < 3; m++){
                 for (i = 0; i < 3; i++){
-                    weights[i*3+m] = 0.0;
+                    qr_weights[i*3+m] = 0.0;
                     for (n = 0; n < 3; n++){
-                        weights[i*3+m] = weights[i*3+m] + (2*n+1)*misc_legendre_poly(n,xm[m])*f[i][n];
+                        qr_weights[i*3+m] = qr_weights[i*3+m] + (2*n+1)*misc_legendre_poly(n,xm[m])*f[i][n];
                     }
-                    weights[i*3+m] = weights[i*3+m]*wm[m];
+                    qr_weights[i*3+m] = qr_weights[i*3+m]*wm[m];
                 }
+            }
+            for (m = 0; m < 3; m++){
+                eps_t_weights[m] = 0.0;
+                for (i = 0; i < 3; i++)
+                    eps_t_weights[m] += qr_weights[3*m + i];
+                for (i = 0; i < 3; i++)
+                    qr_weights[3*m + i] /= eps_t_weights[m];
             }
             
             break;
         case akns_discretization_CF5_3:
-            weights = malloc(9 * sizeof(COMPLEX));
-            if (weights == NULL) {
+            qr_weights = malloc(9 * sizeof(COMPLEX));
+            eps_t_weights = malloc(3 * sizeof(COMPLEX));
+            if (qr_weights == NULL || eps_t_weights == NULL) {
                 ret_code = E_NOMEM;
                 goto leave_fun;
             }
             
-            weights[0] = ((145.0+37.0*SQRT(15.0))/900.0)+I*((5.0+3.0*SQRT(15.0))/300.0);
-            weights[1] = (-1.0/45.0)+I*(1.0/15.0);
-            weights[2] = ((145.0-37.0*SQRT(15.0))/900.0)+I*((5.0-3.0*SQRT(15.0))/300.0);
-            weights[3] = (-2.0/45.0)+I*(-SQRT(15.0)/50.0);
-            weights[4] = 22.0/45.0;
-            weights[5] = CONJ(weights[3]);
-            weights[6] = CONJ(weights[2]);
-            weights[7] = CONJ(weights[1]);
-            weights[8] = CONJ(weights[0]);
+            qr_weights[0] = ((145.0+37.0*SQRT(15.0))/900.0)+I*((5.0+3.0*SQRT(15.0))/300.0);
+            qr_weights[1] = (-1.0/45.0)+I*(1.0/15.0);
+            qr_weights[2] = ((145.0-37.0*SQRT(15.0))/900.0)+I*((5.0-3.0*SQRT(15.0))/300.0);
+            qr_weights[3] = (-2.0/45.0)+I*(-SQRT(15.0)/50.0);
+            qr_weights[4] = 22.0/45.0;
+            qr_weights[5] = CONJ(qr_weights[3]);
+            qr_weights[6] = CONJ(qr_weights[2]);
+            qr_weights[7] = CONJ(qr_weights[1]);
+            qr_weights[8] = CONJ(qr_weights[0]);
+
+            for (m = 0; m < 3; m++){
+                eps_t_weights[m] = 0.0;
+                for (i = 0; i < 3; i++)
+                    eps_t_weights[m] += qr_weights[3*m + i];
+                for (i = 0; i < 3; i++)
+                    qr_weights[3*m + i] /= eps_t_weights[m];
+            }
             
             break;
         case akns_discretization_CF6_4:
-            weights = malloc(12 * sizeof(COMPLEX));
-            if (weights == NULL) {
+            qr_weights = malloc(12 * sizeof(COMPLEX));
+            eps_t_weights = malloc(4 * sizeof(COMPLEX));
+            if (qr_weights == NULL || eps_t_weights == NULL) {
                 ret_code = E_NOMEM;
                 goto leave_fun;
             }
             
-            weights[0] = (0.245985577298764 + 0.038734389227165*I);
-            weights[1] = (-0.046806149832549 + 0.012442141491185*I);
-            weights[2] = (0.010894359342569 - 0.004575808769067*I);
-            weights[3] = (0.062868370946917 - 0.048761268117765*I);
-            weights[4] = (0.269028372054771 - 0.012442141491185*I);
-            weights[5] = (-0.041970529810473 + 0.014602687659668*I);
-            weights[6] = (-0.041970529810473 + 0.014602687659668*I);
-            weights[7] = (0.269028372054771 - 0.012442141491185*I);
-            weights[8] = (0.062868370946917 - 0.048761268117765*I);
-            weights[9] = (0.010894359342569 - 0.004575808769067*I);
-            weights[10] = (-0.046806149832549 + 0.012442141491185*I);
-            weights[11] = (0.245985577298764 + 0.038734389227165*I);
-            
+            qr_weights[0] = (0.245985577298764 + 0.038734389227165*I);
+            qr_weights[1] = (-0.046806149832549 + 0.012442141491185*I);
+            qr_weights[2] = (0.010894359342569 - 0.004575808769067*I);
+            qr_weights[3] = (0.062868370946917 - 0.048761268117765*I);
+            qr_weights[4] = (0.269028372054771 - 0.012442141491185*I);
+            qr_weights[5] = (-0.041970529810473 + 0.014602687659668*I);
+            qr_weights[6] = (-0.041970529810473 + 0.014602687659668*I);
+            qr_weights[7] = (0.269028372054771 - 0.012442141491185*I);
+            qr_weights[8] = (0.062868370946917 - 0.048761268117765*I);
+            qr_weights[9] = (0.010894359342569 - 0.004575808769067*I);
+            qr_weights[10] = (-0.046806149832549 + 0.012442141491185*I);
+            qr_weights[11] = (0.245985577298764 + 0.038734389227165*I);
+
+            for (m = 0; m < 4; m++){
+                eps_t_weights[m] = 0.0;
+                for (i = 0; i < 3; i++)
+                    eps_t_weights[m] += qr_weights[3*m + i];
+                for (i = 0; i < 3; i++)
+                    qr_weights[3*m + i] /= eps_t_weights[m];
+            }
             break;
             
         default: // Unknown discretization
@@ -373,11 +403,14 @@ INT fnft__akns_discretization_method_weights(COMPLEX **weights_ptr,
             goto  leave_fun;
     }
     
-    leave_fun:
-    if (ret_code!=SUCCESS)
-        free(weights);
-    else
-        *weights_ptr = weights;
+leave_fun:
+    if (ret_code!=SUCCESS) {
+        free(qr_weights);
+        free(eps_t_weights);
+    } else {
+        *qr_weights_ptr = qr_weights;
+        *eps_t_weights_ptr = eps_t_weights;
+    }
     return ret_code;
 }
 
@@ -402,7 +435,8 @@ INT fnft__akns_discretization_preprocess_signal(UINT const D,
     COMPLEX *q_2 = NULL;
     COMPLEX *q_3 = NULL;
 
-    COMPLEX *weights = NULL;
+    COMPLEX *qr_weights = NULL;
+    COMPLEX *eps_t_weights = NULL;
 
     // Check inputs
     if (D < 2)
@@ -486,17 +520,16 @@ INT fnft__akns_discretization_preprocess_signal(UINT const D,
             ret_code = misc_resample(D, eps_t, q, eps_t*scl_factor*nskip_per_step, q_2);
             CHECK_RETCODE(ret_code, release_mem);
 
-
-            ret_code = akns_discretization_method_weights(&weights,discretization);
+            ret_code = akns_discretization_method_weights(&qr_weights,&eps_t_weights,discretization);
             CHECK_RETCODE(ret_code, release_mem);
 
             for (isub=0, i=0; isub<D_effective; isub+=2, i+= nskip_per_step) {
-                q_preprocessed[isub] = weights[0]*q_1[i] + weights[1]*q_2[i];
-                q_preprocessed[isub+1] = weights[2]*q_1[i] + weights[3]*q_2[i];
-                r_preprocessed[isub] = weights[0]*r_from_q[0](q_1[i])
-                                       + weights[1]*r_from_q[0](q_2[i]);
-                r_preprocessed[isub+1] = weights[2]*r_from_q[0](q_1[i])
-                                         + weights[3]*r_from_q[0](q_2[i]);
+                q_preprocessed[isub] = qr_weights[0]*q_1[i] + qr_weights[1]*q_2[i];
+                q_preprocessed[isub+1] = qr_weights[2]*q_1[i] + qr_weights[3]*q_2[i];
+                r_preprocessed[isub] = qr_weights[0]*r_from_q[0](q_1[i])
+                                       + qr_weights[1]*r_from_q[0](q_2[i]);
+                r_preprocessed[isub+1] = qr_weights[2]*r_from_q[0](q_1[i])
+                                         + qr_weights[3]*r_from_q[0](q_2[i]);
             }
             break;
         case akns_discretization_CF4_3:
@@ -512,22 +545,22 @@ INT fnft__akns_discretization_preprocess_signal(UINT const D,
             ret_code = misc_resample(D, eps_t, q, eps_t*SQRT(3.0/20.0)*nskip_per_step, q_3);
             CHECK_RETCODE(ret_code, release_mem);
 
-            ret_code = akns_discretization_method_weights(&weights,discretization);
+            ret_code = akns_discretization_method_weights(&qr_weights,&eps_t_weights,discretization);
             CHECK_RETCODE(ret_code, release_mem);
 
             for (isub=0, i=0; isub<D_effective; isub+=3, i+=nskip_per_step) {
-                q_preprocessed[isub] = weights[0]*q_1[i] + weights[1]*q[i] + weights[2]*q_3[i];
-                q_preprocessed[isub+1] = weights[3]*q_1[i] + weights[4]*q[i] + weights[5]*q_3[i];
-                q_preprocessed[isub+2] = weights[6]*q_1[i] + weights[7]*q[i] + weights[8]*q_3[i];
-                r_preprocessed[isub]   = weights[0]*r_from_q[0](q_1[i])
-                                         + weights[1]*r_from_q[0](q[i])
-                                         + weights[2]*r_from_q[0](q_3[i]);
-                r_preprocessed[isub+1] = weights[3]*r_from_q[0](q_1[i])
-                                         + weights[4]*r_from_q[0](q[i])
-                                         + weights[5]*r_from_q[0](q_3[i]);
-                r_preprocessed[isub+2] = weights[6]*r_from_q[0](q_1[i])
-                                         + weights[7]*r_from_q[0](q[i])
-                                         + weights[8]*r_from_q[0](q_3[i]);
+                q_preprocessed[isub] = qr_weights[0]*q_1[i] + qr_weights[1]*q[i] + qr_weights[2]*q_3[i];
+                q_preprocessed[isub+1] = qr_weights[3]*q_1[i] + qr_weights[4]*q[i] + qr_weights[5]*q_3[i];
+                q_preprocessed[isub+2] = qr_weights[6]*q_1[i] + qr_weights[7]*q[i] + qr_weights[8]*q_3[i];
+                r_preprocessed[isub]   = qr_weights[0]*r_from_q[0](q_1[i])
+                                         + qr_weights[1]*r_from_q[0](q[i])
+                                         + qr_weights[2]*r_from_q[0](q_3[i]);
+                r_preprocessed[isub+1] = qr_weights[3]*r_from_q[0](q_1[i])
+                                         + qr_weights[4]*r_from_q[0](q[i])
+                                         + qr_weights[5]*r_from_q[0](q_3[i]);
+                r_preprocessed[isub+2] = qr_weights[6]*r_from_q[0](q_1[i])
+                                         + qr_weights[7]*r_from_q[0](q[i])
+                                         + qr_weights[8]*r_from_q[0](q_3[i]);
             }
             break;
         case akns_discretization_CF5_3:
@@ -543,23 +576,22 @@ INT fnft__akns_discretization_preprocess_signal(UINT const D,
             ret_code = misc_resample(D, eps_t, q, eps_t*SQRT(15.0)/10.0*nskip_per_step, q_3);
             CHECK_RETCODE(ret_code, release_mem);
 
-            ret_code = akns_discretization_method_weights(&weights,discretization);
+            ret_code = akns_discretization_method_weights(&qr_weights,&eps_t_weights,discretization);
             CHECK_RETCODE(ret_code, release_mem);
 
-
             for (isub=0, i=0; isub<D_effective; isub+=3, i+=nskip_per_step) {
-                q_preprocessed[isub]   = weights[0]*q_1[i] + weights[1]*q[i] + weights[2]*q_3[i];
-                q_preprocessed[isub+1] = weights[3]*q_1[i] + weights[4]*q[i] + weights[5]*q_3[i];
-                q_preprocessed[isub+2] = weights[6]*q_1[i] + weights[7]*q[i] + weights[8]*q_3[i];
-                r_preprocessed[isub]   = weights[0]*r_from_q[0](q_1[i])
-                                         + weights[1]*r_from_q[0](q[i])
-                                         + weights[2]*r_from_q[0](q_3[i]);
-                r_preprocessed[isub+1] = weights[3]*r_from_q[0](q_1[i])
-                                         + weights[4]*r_from_q[0](q[i])
-                                         + weights[5]*r_from_q[0](q_3[i]);
-                r_preprocessed[isub+2] = weights[6]*r_from_q[0](q_1[i])
-                                         + weights[7]*r_from_q[0](q[i])
-                                         + weights[8]*r_from_q[0](q_3[i]);
+                q_preprocessed[isub]   = qr_weights[0]*q_1[i] + qr_weights[1]*q[i] + qr_weights[2]*q_3[i];
+                q_preprocessed[isub+1] = qr_weights[3]*q_1[i] + qr_weights[4]*q[i] + qr_weights[5]*q_3[i];
+                q_preprocessed[isub+2] = qr_weights[6]*q_1[i] + qr_weights[7]*q[i] + qr_weights[8]*q_3[i];
+                r_preprocessed[isub]   = qr_weights[0]*r_from_q[0](q_1[i])
+                                         + qr_weights[1]*r_from_q[0](q[i])
+                                         + qr_weights[2]*r_from_q[0](q_3[i]);
+                r_preprocessed[isub+1] = qr_weights[3]*r_from_q[0](q_1[i])
+                                         + qr_weights[4]*r_from_q[0](q[i])
+                                         + qr_weights[5]*r_from_q[0](q_3[i]);
+                r_preprocessed[isub+2] = qr_weights[6]*r_from_q[0](q_1[i])
+                                         + qr_weights[7]*r_from_q[0](q[i])
+                                         + qr_weights[8]*r_from_q[0](q_3[i]);
             }
             break;
         case akns_discretization_CF6_4:
@@ -575,26 +607,26 @@ INT fnft__akns_discretization_preprocess_signal(UINT const D,
             ret_code = misc_resample(D, eps_t, q, eps_t*nskip_per_step*SQRT(15.0)/10.0, q_3);
             CHECK_RETCODE(ret_code, release_mem);
 
-            ret_code = akns_discretization_method_weights(&weights,discretization);
+            ret_code = akns_discretization_method_weights(&qr_weights,&eps_t_weights,discretization);
             CHECK_RETCODE(ret_code, release_mem);
 
             for (isub=0, i=0; isub<D_effective; isub+=4, i+=nskip_per_step) {
-                q_preprocessed[isub]   = weights[0]*q_1[i] + weights[1]*q[i]  + weights[2]*q_3[i];
-                q_preprocessed[isub+1] = weights[3]*q_1[i] + weights[4]*q[i]  + weights[5]*q_3[i];
-                q_preprocessed[isub+2] = weights[6]*q_1[i] + weights[7]*q[i]  + weights[8]*q_3[i];
-                q_preprocessed[isub+3] = weights[9]*q_1[i] + weights[10]*q[i] + weights[11]*q_3[i];
-                r_preprocessed[isub]   = weights[0]*r_from_q[0](q_1[i])
-                                         + weights[1]*r_from_q[0](q[i])
-                                         + weights[2]*r_from_q[0](q_3[i]);
-                r_preprocessed[isub+1] = weights[3]*r_from_q[0](q_1[i])
-                                         + weights[4]*r_from_q[0](q[i])
-                                         + weights[5]*r_from_q[0](q_3[i]);
-                r_preprocessed[isub+2] = weights[6]*r_from_q[0](q_1[i])
-                                         + weights[7]*r_from_q[0](q[i])
-                                         + weights[8]*r_from_q[0](q_3[i]);
-                r_preprocessed[isub+3] = weights[9]*r_from_q[0](q_1[i])
-                                         + weights[10]*r_from_q[0](q[i])
-                                         + weights[11]*r_from_q[0](q_3[i]);
+                q_preprocessed[isub]   = qr_weights[0]*q_1[i] + qr_weights[1]*q[i]  + qr_weights[2]*q_3[i];
+                q_preprocessed[isub+1] = qr_weights[3]*q_1[i] + qr_weights[4]*q[i]  + qr_weights[5]*q_3[i];
+                q_preprocessed[isub+2] = qr_weights[6]*q_1[i] + qr_weights[7]*q[i]  + qr_weights[8]*q_3[i];
+                q_preprocessed[isub+3] = qr_weights[9]*q_1[i] + qr_weights[10]*q[i] + qr_weights[11]*q_3[i];
+                r_preprocessed[isub]   = qr_weights[0]*r_from_q[0](q_1[i])
+                                         + qr_weights[1]*r_from_q[0](q[i])
+                                         + qr_weights[2]*r_from_q[0](q_3[i]);
+                r_preprocessed[isub+1] = qr_weights[3]*r_from_q[0](q_1[i])
+                                         + qr_weights[4]*r_from_q[0](q[i])
+                                         + qr_weights[5]*r_from_q[0](q_3[i]);
+                r_preprocessed[isub+2] = qr_weights[6]*r_from_q[0](q_1[i])
+                                         + qr_weights[7]*r_from_q[0](q[i])
+                                         + qr_weights[8]*r_from_q[0](q_3[i]);
+                r_preprocessed[isub+3] = qr_weights[9]*r_from_q[0](q_1[i])
+                                         + qr_weights[10]*r_from_q[0](q[i])
+                                         + qr_weights[11]*r_from_q[0](q_3[i]);
             }
             break;
         case akns_discretization_ES4:
@@ -637,7 +669,8 @@ INT fnft__akns_discretization_preprocess_signal(UINT const D,
         free(q_1);
         free(q_2);
         free(q_3);
-        free(weights);
+        free(qr_weights);
+        free(eps_t_weights);
         return ret_code;
 }
 
@@ -772,6 +805,16 @@ INT fnft__akns_discretization_change_of_basis_matrix_to_S(COMPLEX * const T,
             
         case akns_pde_NSE:
             switch (akns_discretization) {
+                case akns_discretization_2SPLIT2_MODAL:
+                case akns_discretization_2SPLIT2A:
+                    // These two discretizations make use of a modification of
+                    // the AKNS basis (cf. akns_pde_KdV), which reduces the order
+                    // of the required polynomials. However, they must be kept
+                    // in this basis to use polynomial rootfinding for the bound
+                    // states. In the end this is corrected using
+                    // fnft__nse_discretization_phase_factor_rho() and /or
+                    // fnft__nse_discretization_phase_factor_b(), which in essence
+                    // calculalate the change of basis to E basis.
                 case akns_discretization_2SPLIT1A:
                 case akns_discretization_2SPLIT1B:
                 case akns_discretization_2SPLIT2B:
@@ -815,25 +858,6 @@ INT fnft__akns_discretization_change_of_basis_matrix_to_S(COMPLEX * const T,
                     }
                     break;
 
-                case akns_discretization_2SPLIT2_MODAL:
-                case akns_discretization_2SPLIT2A:
-                    // T from the modified AKNS basis to the S basis for NSE . This modification reduces the degree of the polynomial scattering matrix by 1 per step.
-                    // TODO: These discretizations require a modification that is currently contracted in the 'boundary coefficionts'
-                    T[0] = 1.0;            //T_11;
-                    T[1] = 0.0;            //T_12;
-                    if(!derivative_flag){
-                        T[2]  = 0.0;       //T_21;
-                        T[3]  = 1.0;       //T_22;
-                    } else {
-                        T[4]  = 0.0;       //T_21;
-                        T[5]  = 1.0;       //T_22;
-
-                        T[8]  = 0.0;       //T_31 = d/dxi T_11
-                        T[9]  = 0.0;       //T_32 = d/dxi T_12
-                        T[12] = 0.0;       //T_41 = d/dxi T_21
-                        T[13] = 0.0;       //T_42 = d/dxi T_22
-                    }
-                    break;
                 default:
                     ret_code =  E_INVALID_ARGUMENT(akns_discretization);
                     CHECK_RETCODE(ret_code, release_mem);
@@ -991,6 +1015,16 @@ INT fnft__akns_discretization_change_of_basis_matrix_from_S(COMPLEX * const T,
 
         case akns_pde_NSE:
             switch (akns_discretization) {
+                case akns_discretization_2SPLIT2_MODAL:
+                case akns_discretization_2SPLIT2A:
+                    // These two discretizations make use of a modification of
+                    // the AKNS basis (cf. akns_pde_KdV), which reduces the order
+                    // of the required polynomials. However, they must be kept
+                    // in this basis to use polynomial rootfinding for the bound
+                    // states. In the end this is corrected using
+                    // fnft__nse_discretization_phase_factor_rho() and /or
+                    // fnft__nse_discretization_phase_factor_b(), which in essence
+                    // calculalate the change of basis to E basis.
                 case akns_discretization_2SPLIT1A:
                 case akns_discretization_2SPLIT1B:
                 case akns_discretization_2SPLIT2B:
@@ -1034,25 +1068,6 @@ INT fnft__akns_discretization_change_of_basis_matrix_from_S(COMPLEX * const T,
                     }
                     break;
 
-                case akns_discretization_2SPLIT2_MODAL:
-                case akns_discretization_2SPLIT2A:
-                    // T from S basis for NSE to modified AKNS basis. This modification reduces the degree of the polynomial scattering matrix by 1 per step.
-                    // TODO: These discretizations require a modification that is currently contracted in the 'boundary coefficionts'
-                    T[0] = 1.0;            //T_11;
-                    T[1] = 0.0;            //T_12;
-                    if(!derivative_flag){
-                        T[2]  = 0.0;       //T_21;
-                        T[3]  = 1.0;       //T_22;
-                    } else {
-                        T[4]  = 0.0;       //T_21;
-                        T[5]  = 1.0;       //T_22;
-
-                        T[8]  = 0.0;       //T_31 = d/dxi T_11
-                        T[9]  = 0.0;       //T_32 = d/dxi T_12
-                        T[12] = 0.0;       //T_41 = d/dxi T_21
-                        T[13] = 0.0;       //T_42 = d/dxi T_22
-                    }
-                    break;
                 default:
                     ret_code =  E_INVALID_ARGUMENT(akns_discretization);
                     CHECK_RETCODE(ret_code, release_mem);

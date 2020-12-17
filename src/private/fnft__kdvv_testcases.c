@@ -79,16 +79,6 @@ INT kdvv_testcases(kdvv_testcases_t tc, const UINT D,
             *K_ptr = 2;
             break;
 
-        case kdvv_testcases_SECH:
-            *M_ptr = 16;
-            *K_ptr = 2;
-            break;
-
-        case kdvv_testcases_RECT:
-            *M_ptr = 16;
-            *K_ptr = 5;
-            break;
-
         case kdvv_testcases_NEGATIVE_RECT:
             *M_ptr = 16;
             *K_ptr = 0;
@@ -474,145 +464,7 @@ INT kdvv_testcases(kdvv_testcases_t tc, const UINT D,
             (*residues_ptr)[1] = 7425533024895468785633.04086390803007508*I;
 
             break;
-        case kdvv_testcases_SECH:
 
-            // This test case can be found in Sec. 5.3.1. of Trogdon et al.,
-            // Physica D 241 (2012) 1003-1024. They refer back to the book of
-            // Drazin and Johnson, "Solitons: An Introduction", 1996.
-
-            // The following MATLAB code has been used to compute the values below.
-            /*
-             cgam = @(z) gamma(sym(z));
-             at = @(k) 0.5 - 1j*k + (A + 0.25)^0.5;
-             bt = @(k) 0.5 - 1j*k - (A + 0.25)^0.5;
-             ct = @(k) 1 - 1j*k;
-             a = @(k) cgam(at(k)).*cgam(bt(k)) ./ (cgam(ct(k)).*cgam(at(k) + bt(k) - ct(k)));
-             rho = @(k) a(k).*cgam(ct(k)).*cgam(ct(k)-at(k)-bt(k)) ./ ( cgam(ct(k)-at(k)).*cgam(ct(k)-bt(k)) );
-
-             xi = (-sym(1)/10 + (-sym(7):sym(8)))/2;
-             XI = [xi(1) xi(end)]
-             digits(40);
-             contspec_exact = vpa(rho(xi)).'
-             */
-
-            // Space domain
-            T[0] = -16.0;//-10.5;
-            T[1] = 15.0;//10.0;
-
-            // Space domain signal.
-            for (i=0; i<D; i++)
-                (*q_ptr)[i] = 3.2 * CPOW(misc_sech(T[0] + i*(T[1] - T[0])/(D - 1)), 2.0);
-
-            // Nonlinear spectral domain
-            XI[0] = -71.0 / 20.0;
-            XI[1] = 79.0 / 20.0;
-
-            // Reflection coeffcient b(xi)/a(xi) (correct up to 40 digits)
-            (*contspec_ptr)[0] =   0.00001969133727937273786256309569057640147214 + 0.00001674031899324291878282874809046115677856*I;
-            (*contspec_ptr)[1] =   0.0001042924180868180241029534277241901174759 + 0.00006768141773041039691385238506571730630862*I;
-            (*contspec_ptr)[2] =    0.0005497992302347843662438396963070116445916 + 0.0002354192967860323004702520702102621027959*I;
-            (*contspec_ptr)[3] =     0.002836080801758817045949972145829401374196 + 0.0004838176592384099640435004607088935813189*I;
-            (*contspec_ptr)[4] =       0.01363997503332085032955915136653550260998 - 0.002341609324488054092139191512148319815275*I;
-            (*contspec_ptr)[5] =        0.05166842907012522766918606650773513057274 - 0.04189670084801774699210641959191233802322*I;
-            (*contspec_ptr)[6] =         0.02522525851207013024776243251692135365253 - 0.3129668484537972516927631727064614422506*I;
-            (*contspec_ptr)[7] =        - 0.9662812724225684323774956123872384448904 - 0.1912816707764648616985575230120299971374*I;
-            (*contspec_ptr)[8] =       - 0.05828057373883236699003469724963139197661 + 0.4183903740127110822937728254406981597783*I;
-            (*contspec_ptr)[9] =        0.06250255474895942181325668026198027247793 + 0.06614727260898870840753897306353062501362*I;
-            (*contspec_ptr)[10] =       0.01833190345613142519098859234810492849712 + 0.004789218463862199786383618780644774216483*I;
-            (*contspec_ptr)[11] =     0.003914704641391021868806404239021266734245 - 0.0004367271876152405705478883462156928985432*I;
-            (*contspec_ptr)[12] =    0.0007653177688926532754047857544255194940605 - 0.0002911773885213392112790377303427788297587*I;
-            (*contspec_ptr)[13] =    0.0001455283498004098201178193218482810829457 - 0.0000882963579879275159326990821726513549138*I;
-            (*contspec_ptr)[14] =  0.00002748286948200803407581026489337631688606 - 0.00002228910643157474631983979506634092581568*I;
-            (*contspec_ptr)[15] =0.000005195158073745829592578906521934403128604 - 0.000005207592023284621408556242469680129799988*I;
-
-            // Dummy values to prevent this abolished testcase from causing undefined behavior
-            for (UINT j=0; j<(*M_ptr)*2; j++)
-                (*ab_ptr)[j]=0.0; // Not correct
-
-            // Discrete spectrum
-            for (UINT j=0; j<(*K_ptr); j++) {
-                (*bound_states_ptr)[j] = 0; // Not correct
-                (*normconsts_ptr)[j] = 0; // Not correct
-                (*residues_ptr)[j] = 0; // Not correct
-            }
-
-            break;
-        case kdvv_testcases_RECT:
-
-            // This test case can be found in A.R. Osborne, “Non-linear Fourier
-            // analysis for the infinite-interval Korteweg-de Vries equation I: An
-            // algorithm for the direct scattering transform,” Journal of
-            // Computational Physics, Aug. 1991. DOI: 10.1016/0021-9991(91)90223-8,
-            // Section 8.
-
-            // The following MATLAB code has been used to compute the values below.
-            /*
-             ampl = sym(1);
-             zeta = sym(0.5:15.5).'*sym(pi)/sym(32);
-
-             ell = sym(1)/sym(2);
-
-             kappa = sqrt(ampl + zeta.^2);
-             gamma = (kappa./zeta - zeta./kappa)/2;
-             delta = (kappa./zeta + zeta./kappa)/2;
-             T = exp(-2i*zeta*ell) ./ (cos(2*kappa*ell) - 1i*delta.*sin(2*kappa*ell));
-             R = 1i*gamma.*sin(2*kappa*ell).*T;
-
-             digits(40)
-             T = vpa(T)
-             R = vpa(R)
-             */
-
-            // Space domain
-            T[0] = -1.0; // First midpoint, not Lower boundary
-            T[1] = 2.0; // Last midpoint, not upper boundary
-
-            // Space domain signal.
-            eps_t = (T[1] - T[0])/(D-1);
-            for (i=0; i<D; i++)
-            {
-                if (FABS(T[0] + i*eps_t) == 0.5)
-                    (*q_ptr)[i] = 0.5;
-                else if (FABS(T[0] + i*eps_t) < 0.5)
-                    (*q_ptr)[i] = 1.0;
-                else
-                    (*q_ptr)[i] = 0.0;
-            }
-
-            // Nonlinear spectral domain
-            XI[0] = 0.5/32.0 * PI;
-            XI[1] = 15.5/32.0 * PI;
-
-            // Reflection coeffcient b(xi)/a(xi) (correct up to 40 digits)
-            (*contspec_ptr)[0]  =  - 0.9870725601151357132059615656352921926505 + 0.1106668024779069100221269716635107304877*I;
-            (*contspec_ptr)[1]  =  - 0.8942815149074410593957141404188288844772 + 0.3006083214632606321259647673494588361592*I;
-            (*contspec_ptr)[2]  =  - 0.7517029093510107161488576830732266002746 + 0.4206295597197361344635948717938263256352*I;
-            (*contspec_ptr)[3]  =   - 0.6048948399952833243051638927785187704323 + 0.473028823684821169748255791803965887681*I;
-            (*contspec_ptr)[4]  =  - 0.4778504945251322156446773224766426668616 + 0.4793238390249636904293539788609397958394*I;
-            (*contspec_ptr)[5]  =  - 0.3763474370619386743068998268064633149192 + 0.4600799580888626688056742042252798497312*I;
-            (*contspec_ptr)[6]  =  - 0.2978533037542501812950159523446268231913 + 0.4288876704419926898290194462483566618216*I;
-            (*contspec_ptr)[7]  =  - 0.2376683134714269108688326192379982136498 + 0.3933818871480632195012270772991049487594*I;
-            (*contspec_ptr)[8]  =  - 0.1913637415605259149273312618011148544061 + 0.3574730594124660111171758774850972186401*I;
-            (*contspec_ptr)[9]  =   - 0.1554156420268148907718456860386422438162 + 0.323011103360301963974093270371986465161*I;
-            (*contspec_ptr)[10]  =  - 0.1271905034953081897751387070041458261916 + 0.2907720159569017256255551154712598493094*I;
-            (*contspec_ptr)[11]  =   - 0.104764644824235261140851729086816610633 + 0.2609937738957654296620696476801746084408*I;
-            (*contspec_ptr)[12]  = - 0.08673956215044220126053393160232166218066 + 0.2336564090694619140641045958452137680397*I;
-            (*contspec_ptr)[13]  = - 0.07209443935525737929778535768652561998093 + 0.2086253871411293640983513028978855291533*I;
-            (*contspec_ptr)[14]  = - 0.06007786636867152838650839313456544782936 + 0.1857236627095771710417966137341333503595*I;
-            (*contspec_ptr)[15]  = - 0.05013091571056271949743226122945714631744 + 0.1647668721023619467965349247926784741708*I;
-
-            // Dummy values to prevent this abolished testcase from causing undefined behavior
-            for (UINT j=0; j<(*M_ptr)*2; j++)
-                (*ab_ptr)[j]=0.0; // Not correct
-
-            // Discrete spectrum
-            for (UINT j=0; j<(*K_ptr); j++) {
-                (*bound_states_ptr)[j] = 0; // Not correct
-                (*normconsts_ptr)[j] = 0; // Not correct
-                (*residues_ptr)[j] = 0; // Not correct
-            }
-
-            break;
         case kdvv_testcases_NEGATIVE_RECT:
             
             // This test case can be found in A.R. Osborne, “Non-linear Fourier
@@ -631,17 +483,19 @@ INT kdvv_testcases(kdvv_testcases_t tc, const UINT D,
              kappa = sqrt(ampl + zeta.^2);
              gamma = (kappa./zeta - zeta./kappa)/2;
              delta = (kappa./zeta + zeta./kappa)/2;
-             T = exp(-2i*zeta*ell) ./ (cos(2*kappa*ell) - 1i*delta.*sin(2*kappa*ell));
-             R = 1i*gamma.*sin(2*kappa*ell).*T;
+             a = (cos(2*kappa*ell) - 1i*delta.*sin(2*kappa*ell))./exp(-2i*zeta*ell);
+             b = 1i*gamma.*sin(2*kappa*ell);
+             R = b./a;
 
              digits(40)
-             T = vpa(T)
              R = vpa(R)
+             a = vpa(a)
+             b = vpa(b)
              */
             
             // Space domain
             T[0] = -1.0; // First midpoint, not Lower boundary
-            T[1] = 2.0; // Last midpoint, not upper boundary
+            T[1] = 1.0; // Last midpoint, not upper boundary
             
             // Space domain signal.
             eps_t = (T[1] - T[0])/(D-1);
@@ -676,6 +530,44 @@ INT kdvv_testcases(kdvv_testcases_t tc, const UINT D,
             (*contspec_ptr)[13] = - 0.1263975284135399581284882178878508006411 - 0.2881146080008311951560139177538217304896*I;
             (*contspec_ptr)[14] = - 0.1060469774237907160964022087505637727953 - 0.2615204776144975185370691907861607140949*I;
             (*contspec_ptr)[15] = - 0.08903283712126179155781066343603991582133 - 0.2364465375984681127413182701998077329121*I;
+
+            // a(xi)
+            (*ab_ptr)[0] = 0.955494405185577730500005721422782161339 + 11.96962305471217007739442431047320532821*I;
+            (*ab_ptr)[1] = 0.9556091656686413730800206725657669637286 + 3.987537819474144239501981340310651934878*I;
+            (*ab_ptr)[2] = 0.9558377448518862929832998800787947121536 + 2.389734229244894460781119839520355358261*I;
+            (*ab_ptr)[3] = 0.9561782711721694033619298316429899944263 + 1.703992664879002713209687226281011433615*I;
+            (*ab_ptr)[4] = 0.9566279670966142514515687501722962430079 + 1.322296860918864894965467617272583130657*I;
+            (*ab_ptr)[5] = 0.9571831843552962319776649504694625413557 + 1.078830531388571222546964493369858546862*I;
+            (*ab_ptr)[6] = 0.9578394500265963314442065578166502942853 + 0.9098231806732716989676904223024711294053*I;
+            (*ab_ptr)[7] = 0.9585915227327361259914055671251229508456 + 0.7855191994135536406337840410570053903315*I;
+            (*ab_ptr)[8] = 0.9594334580439797207118065115427564084088 + 0.6901687229848314644105433677732090364837*I;
+            (*ab_ptr)[9] = 0.9603586820478667359831725237924694252442 + 0.6146558025137481416466318364174354775229*I;
+            (*ab_ptr)[10] = 0.9613600719172054654353825535811707017516 + 0.5533390200224617037275372734914969744449*I;
+            (*ab_ptr)[11] = 0.962430042209582183222577670681428319913 + 0.5025404577778892835258603601587119628682*I;
+            (*ab_ptr)[12] = 0.9635606355535572186255279811058467016957 + 0.4597599497702170702867579826804229463467*I;
+            (*ab_ptr)[13] = 0.9647436163237642627773048697063003608625 + 0.4232385490697246817045264558490097967808*I;
+            (*ab_ptr)[14] = 0.9659705658795448641665078074207278316821 + 0.3917026296612870696605813477810938656881*I;
+            (*ab_ptr)[15] = 0.9672329779397574698274831659866372455007 + 0.3642070510225198177333662154509569176185*I;
+
+            // b(xi)
+            (*ab_ptr)[16] = -11.96598703117457179627376062777509640617*I;
+            (*ab_ptr)[17] = -3.976637617290080633636592687503228695204*I;
+            (*ab_ptr)[18] = -2.371593447644058042059624960786535284743*I;
+            (*ab_ptr)[19] = -1.678650615292903638991823409742555518602*I;
+            (*ab_ptr)[20] = -1.289808534561345198151462951816028133975*I;
+            (*ab_ptr)[21] = -1.039266550923627085997632501234893560641*I;
+            (*ab_ptr)[22] = -0.8632697331180338143065168883651377704111*I;
+            (*ab_ptr)[23] = -0.7320779467395367533079274471688381886563*I;
+            (*ab_ptr)[24] = -0.6299566862894162713054349069537087749851*I;
+            (*ab_ptr)[25] = -0.5478052151527359741029695764703059802597*I;
+            (*ab_ptr)[26] = -0.4799971447374168900256344060291187718574*I;
+            (*ab_ptr)[27] = -0.4228693626300546551913102180828408295232*I;
+            (*ab_ptr)[28] = -0.373936237614232353209475408876354884685*I;
+            (*ab_ptr)[29] = -0.3314530353701715831438708675639591268872*I;
+            (*ab_ptr)[30] = -0.2941599636748949787202479167615584539808*I;
+            (*ab_ptr)[31] = -0.2611252757370142330158643777272460771204*I;
+
+            // Discrete spectrum: empty because the potential is non-positive.
             
             break;
         default: // unknown test case
@@ -881,10 +773,6 @@ INT kdvv_testcases_test_fnft(kdvv_testcases_t tc, UINT D,
     for (UINT i=0; i<6; i++)
         printf("kdvv_testcases_test_fnft: error_bounds[%i] = %2.1e <= %2.1e\n",
                (int)i, errs[i], error_bounds[i]);
-    misc_print_buf(M, contspec, "r_num");
-    misc_print_buf(M, contspec_exact, "r_exact");
-    misc_print_buf(2*M, contspec+M, "ab_num");
-    misc_print_buf(2*M, ab_exact, "ab_exact");
 #endif
 
     // Check if the errors are below the specified bounds. Organized such that

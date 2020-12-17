@@ -111,6 +111,24 @@ REAL misc_l2norm2(const UINT N, COMPLEX const * const Z,
     return val;
 }
 
+REAL misc_l2norm2_full(const UINT N, COMPLEX const * const Z,
+    const REAL a, const REAL b)
+{
+    // Check inputs
+    if (a >= b || N==0)
+        return NAN;
+
+    // Integrate |q(t)|^2 numerically
+    REAL val = 0.0;
+    for (UINT i=0; i<N; i++) {
+        REAL tmp = (REAL)CABS(Z[i]);
+        val += tmp * tmp;
+    }
+    val *= (b - a)/N;
+
+    return val;
+}
+
 INT misc_filter(UINT * const N_ptr, COMPLEX * const vals,
     COMPLEX * const rearrange_as_well,
     REAL const * const bounding_box)

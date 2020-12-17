@@ -65,12 +65,15 @@ INT nse_scatter_matrix(UINT const D,
     if (result == NULL)
         return E_INVALID_ARGUMENT(result);
 
+    // Fetch the AKNS discretizations corresponding to the NSE discretization
     ret_code = nse_discretization_to_akns_discretization(discretization,
             &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 
+    // Call akns_scatter_bound_states
+    UINT vanilla_flag = 0; // Ignored value for NSE
     ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result,
-            akns_discretization, derivative_flag);
+            akns_discretization, akns_pde_NSE, vanilla_flag, derivative_flag);
     CHECK_RETCODE(ret_code, leave_fun);
 
 leave_fun:
@@ -94,7 +97,7 @@ INT nse_scatter_bound_states(UINT const D,
 {
     INT ret_code = SUCCESS;
 
-    // Fetch the AKNS discretizations corresponding to the KdV discretization
+    // Fetch the AKNS discretizations corresponding to the NSE discretization
     akns_discretization_t akns_discretization;
     ret_code = nse_discretization_to_akns_discretization(discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);

@@ -16,6 +16,7 @@
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
+ * Peter J Prins (TU Delft) 2020.
  */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -34,7 +35,7 @@ INT main()
         4.1e-5,     // b
         1.6e-4,     // bound states
         3.0e-14,    // norming constants
-        6.2e-4      // residues
+        2.5e-4      // residues
     };
     opts = fnft_nsev_default_opts();
     opts.bound_state_localization = nsev_bsloc_NEWTON;
@@ -51,13 +52,11 @@ INT main()
     CHECK_RETCODE(ret_code, leave_fun);
     
     // Check for 4th-order error decay (error_bounds[4] corresponding
-    // to the norming constants stays as it is already close to machine precision,
-    // error_bounds[5] corresponding to the residues only decays with 2nd-order)
+    // to the norming constants stays as it is already close to machine precision)
     D *= 2;
     for (i=0; i<6; i++)
         error_bounds[i] /= 16.0;
     error_bounds[4] *= 16.0;
-    error_bounds[5] *= 4.0; // Residue has lower order.
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
@@ -68,19 +67,17 @@ INT main()
         1.2e-5,     // b
         1.2e-5,     // bound states
         2.5e-14,    // norming constants
-        3.1e-4      // residues
+        1.1e-5      // residues
     };
     opts.richardson_extrapolation_flag = 1;
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     // Check for at least 5th-order error decay (error_bounds_RE[4] corresponding
-    // to the norming constants stays as it is already close to machine precision, 
-    // error_bounds_RE[5] corresponding to the residues only decays with 2nd-order)
+    // to the norming constants stays as it is already close to machine precision)
     D *= 2;
     for (i=0; i<6; i++)
         error_bounds_RE[i] /= 32.0;
     error_bounds_RE[4] *= 32.0;
-    error_bounds_RE[5] *= 8.0; // Residue has lower order.
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun)
     

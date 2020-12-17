@@ -16,6 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
+* Peter J Prins (TU Delft) 2020.
 */
 
 /**
@@ -51,7 +52,12 @@
  *  are of length *K_ptr in this case. This method can be very fast if good
  *  initial guesses for the bound states are available. The complexity is
  *  \f$ O(niter (*K\_ptr) D) \f$. \n \n
- *  fnft_kdvv_bsloc_GRIDSEARCH_AND_REFINE: The algorithm evaluates \f$ a(\xi) \f$ on the grid \f$ \xi = \{j nexttoward(0,1), jh,2jh,3jh,\ldots,(M-3)jh\,(M-2)jh,j nexttoward((M-1)h,0)\\}\f$, where \f$ h:= \sqrt{\max_t q(t)} / (M-1)\f$, where \f$ M=1000\f$. The sign changes on this grid are used as initial guesses for the bound states, which are then refined as in `fnft_kdvv_bsloc_NEWTON`.
+ *  fnft_kdvv_bsloc_GRIDSEARCH_AND_REFINE: The algorithm evaluates \f$ a(\xi) \f$ on the grid
+ *  \f$ \xi = \{j nexttoward(0,1), jh,2jh,3jh,\ldots,(M-3)jh\,(M-2)jh,j nexttoward((M-1)h,0)\\}\f$,
+ *  where \f$ h:= \sqrt{c \max_t q(t)} / (M-1)\f$, where \f$ M=1000\f$ and
+ *  \f$ c=1\f$ for all second order discretizations, `fnft_kdv_discretization_4SPLIT4A'/'B'('_VANILLA'), and `fnft_kdv_discretization_CF4_2`(`_VANILLA`); \f$ c \f$ is approximately 2 for
+ *  other discretizations. The sign changes of \f$ a(\xi) \f$ on this grid are used as initial
+ *  guesses for the bound states, which are then refined as in `fnft_kdvv_bsloc_NEWTON`.
  */
 typedef enum {
     fnft_kdvv_bsloc_NEWTON,
@@ -106,23 +112,13 @@ typedef enum {
  * Use the \link fnft_kdvv_default_opts \endlink routine in order to generate
  * a new variable of this type with default options and modify as needed.
  *
- * @var fnft_kdvv_opts_t::bound_state_filtering
- *  Controls how \link fnft_kdvv \endlink decide whether a numerically found
- *  root of \f$ a(\lambda) \f$ is an actual bound state or not. \n
- *  Should be of type \link fnft_kdvv_bsfilt_t \endlink.
- *
  * @var fnft_kdvv_opts_t::bound_state_localization
  *  Controls how \link fnft_kdvv \endlink localizes bound states. \n
  * Should be of type \link fnft_kdvv_bsloc_t \endlink.
  *
- * @var fnft_kdvv_opts_t::Dsub
- *   Controls how many samples are used after subsampling when bound states are
- *   localized using the fnft_kdvv_bsloc_SUBSAMPLE_AND_REFINE method. See
- *   \link fnft_kdvv_bsloc_t \endlink for details.
- *
  * @var fnft_kdvv_opts_t::niter
  *  Number of Newton iterations to be carried out when either the
- *  fnft_kdvv_bsloc_NEWTON or the fnft_kdvv_bsloc_SUBSAMPLE_AND_REFINE method
+ *  fnft_kdvv_bsloc_NEWTON, or the fnft_kdvv_bsloc_GRIDSEARCH_AND_REFINE method
  *  is used.
  *
  * @var fnft_kdvv_opts_t::discspec_type
@@ -256,6 +252,8 @@ FNFT_UINT fnft_kdvv_max_K(const FNFT_UINT D,
  *       - fnft_kdv_discretization_4SPLIT4A(_VANILLA)
  *       - fnft_kdv_discretization_4SPLIT4B(_VANILLA)
  *
+ * The discretizations nft_kdv_discretization_2SPLIT2_MODAL(_VANILLA) require that q[i] * eps_t^2 is unequal to -1 for all samples i.
+ *
  * The following discretizations use classical algorithms which have a computational
  * complexity of \f$ \mathcal{O}(D^2)\f$ for \f$ D\f$ point continuous spectrum given \f$ D\f$ samples:
  *       - fnft_kdv_discretization_BO(_VANILLA)
@@ -270,14 +268,10 @@ FNFT_UINT fnft_kdvv_max_K(const FNFT_UINT D,
  * is know, the accuracy can be quantified by defining a suitable error. The error usually decreases with increasing \f$ D\f$ assuming everthing else remains the same.
  * The rate at which the error decreases with increase in \f$ D\f$ is known as the order of the method. The orders of the various discretizations can be found at \link fnft_kdv_discretization_t \endlink.
  * The orders of the discretizations which use exponential splitting schemes should be the same as their base methods but can deviate when accuracy of the splitting scheme is low.
- * In the following cases the orders of the methods has been observed to be less than expected:
- *       - CF5_3, residues have order four instead of five.
- *       - CF6_4, residues have order three instead of six.
- *       - TES4, residues have order two instead of four.
  *
  * Application of one step Richardson extrapolation should in theory increase the order by one. However, it can deviate both ways. In case of some smooth signals the order
  * may increase by two instead of one. On the other hand for discontinuous signals it maybe deterimental to apply Richardson extrapolation. It is observed that Richardson extrapolation has no effect on the order of the residues and norming constants, except for the following case:
- *       - CF6_4, residues have order four instead of three.
+ *       - CF5_3, residues and norming constants have order six instead of five.
  *
  * @param[in] D Number of samples
  * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
