@@ -52,7 +52,12 @@
  *  are of length *K_ptr in this case. This method can be very fast if good
  *  initial guesses for the bound states are available. The complexity is
  *  \f$ O(niter (*K\_ptr) D) \f$. \n \n
- *  fnft_kdvv_bsloc_GRIDSEARCH_AND_REFINE: The algorithm evaluates \f$ a(\xi) \f$ on the grid \f$ \xi = \{j nexttoward(0,1), jh,2jh,3jh,\ldots,(M-3)jh\,(M-2)jh,j nexttoward((M-1)h,0)\\}\f$, where \f$ h:= \sqrt{\max_t q(t)} / (M-1)\f$, where \f$ M=1000\f$. The sign changes on this grid are used as initial guesses for the bound states, which are then refined as in `fnft_kdvv_bsloc_NEWTON`.
+ *  fnft_kdvv_bsloc_GRIDSEARCH_AND_REFINE: The algorithm evaluates \f$ a(\xi) \f$ on the grid
+ *  \f$ \xi = \{j nexttoward(0,1), jh,2jh,3jh,\ldots,(M-3)jh\,(M-2)jh,j nexttoward((M-1)h,0)\\}\f$,
+ *  where \f$ h:= \sqrt{c \max_t q(t)} / (M-1)\f$, where \f$ M=1000\f$ and
+ *  \f$ c=1\f$ for all second order discretizations, `fnft_kdv_discretization_4SPLIT4A'/'B'('_VANILLA'), and `fnft_kdv_discretization_CF4_2`(`_VANILLA`); \f$ c \f$ is approximately 2 for
+ *  other discretizations. The sign changes of \f$ a(\xi) \f$ on this grid are used as initial
+ *  guesses for the bound states, which are then refined as in `fnft_kdvv_bsloc_NEWTON`.
  */
 typedef enum {
     fnft_kdvv_bsloc_NEWTON,

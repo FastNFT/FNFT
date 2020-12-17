@@ -594,19 +594,52 @@ static inline INT kdvv_compute_boundstates(
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Calculate the bounding box for the bound states. Therefore we need to find the maximum of the real part of q(t), skipping t-derivative samples
-    REAL maxq = 0;
-    UINT const q_sample_distance =
-    (opts->discretization==kdv_discretization_ES4 || opts->discretization==kdv_discretization_TES4)?3:1;
-    for (i = 0; i < D; i+=q_sample_distance)
-        maxq = maxq > (REAL)CREAL(q[i]) ? maxq : (REAL)CREAL(q[i]);
+    REAL bound_squared = 0;
 
-    if (maxq==0.0){
+    if (upsampling_factor<=2) {
+        // For the currently implemented discretizations with an upsampling factor
+        // of 1 or 2, all substep sizes are real. Therefore the spectrum we calculate
+        // is the exact spectrum of a staircase reconstruction from the preprocessed
+        // samples. Hence the maximum of the potential samples gives an upperbound
+        // on the eigenvalues.
+        for (i = 0; i < D; i++)
+            bound_squared = bound_squared > (REAL)CREAL(q[i]) ? bound_squared : (REAL)CREAL(q[i]);
+    } else {
+        // For other discretizations the above bound can be violated
+        // due to interpolation of the potential. Therefore we apply a safety factor.
+        switch (opts->discretization) {
+            case kdv_discretization_ES4_VANILLA:
+            case kdv_discretization_TES4_VANILLA:
+            case kdv_discretization_ES4:
+            case kdv_discretization_TES4:
+                // These discretizations contain samples of the first and
+                // second derivative in the preprocessed potential. We need
+                // to skip those.
+                for (i = 0; i < D; i+=3)
+                    bound_squared = bound_squared > (REAL)CREAL(q[i]) ? bound_squared : (REAL)CREAL(q[i]);
+                // Apply a safety factor, because the effective maximum may be higher due to interpolation
+                break;
+            default:
+                // Other discretizations with an order >2 contain weighted averages
+                // of interpolated potential samples in the preprocessed q.
+                // A theoretical calculation of the eigenvalue bound is
+                // complicated and not worth the effort. Instead, we estimate
+                // the bound from the maximum of the real part of the
+                // preprocessed q and proceed with fingers crossed.
+                for (i = 0; i < D; i++)
+                    bound_squared = bound_squared > (REAL)CREAL(q[i]) ? bound_squared : (REAL)CREAL(q[i]);
+                break;
+        }
+        bound_squared *= 2.0; // Safety factor
+    }
+
+    if (bound_squared==0.0){
         // Non-positive potentials have no bound states
         *K_ptr=0;
         goto leave_fun;
     }
 
-    REAL const bounding_box[4] = {0,0,0,SQRT(maxq)};
+    REAL const bounding_box[4] = {0,0,0,SQRT(bound_squared)};
 
     // Localize bound states ...
     switch (opts->bound_state_localization) {
