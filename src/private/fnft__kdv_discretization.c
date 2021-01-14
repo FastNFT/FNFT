@@ -16,7 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017.
 * Shrinivas Chimmalgi (TU Delft) 2017-2020.
-* Peter J Prins (TU Delft) 2020.
+* Peter J Prins (TU Delft) 2020-2021.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -507,45 +507,6 @@ INT fnft__kdv_discretization_change_of_basis_matrix_to_S(COMPLEX * const T,
     ret_code = akns_discretization_change_of_basis_matrix_to_S(T,xi,derivative_flag,eps_t, akns_discretization, vanilla_flag, akns_pde_KdV);
     CHECK_RETCODE(ret_code, release_mem);
 
-//        case
-//            // T from companion basis to S basis
-//
-//            T[0] = 0.5;             //T_11;
-//            T[1] = 0.5 * I / xi;    //T_12;
-//            if(!derivative_flag){
-//                T[2]  = 0.5;        //T_21;
-//                T[3]  = -T[1];      //T_22;
-//            } else {
-//                T[4]  = 0.5;        //T_21;
-//                T[5]  = -T[1];      //T_22;
-//
-//                T[8]  = 0.0;        //T_31 = d/dxi T_11
-//                T[9]  = -T[1]/xi;   //T_32 = d/dxi T_12
-//                T[12] = 0.0;        //T_41 = d/dxi T_21
-//                T[13] = -T[9];      //T_42 = d/dxi T_22
-//            }
-//
-//            break;
-//
-//        case
-//            //
-//            T[0] = ; //T_11;
-//            T[1] = ; //T_12;
-//            if(!derivative_flag){
-//                T[2]  = ; //T_21;
-//                T[3]  = ; //T_22;
-//            } else {
-//                T[4]  = ; //T_21;
-//                T[5]  = ; //T_22;
-//
-//                T[8]  = ; //T_31 = d/dxi T_11
-//                T[9]  = ; //T_32 = d/dxi T_12
-//                T[12] = ; //T_41 = d/dxi T_21
-//                T[13] = ; //T_42 = d/dxi T_22
-//            }
-//
-//            break;
-
 release_mem:
     return ret_code;
 }
@@ -574,44 +535,6 @@ INT fnft__kdv_discretization_change_of_basis_matrix_from_S(COMPLEX * const T,
     // Call akns_discretization_change_of_basis_matrix_from_S
     ret_code = akns_discretization_change_of_basis_matrix_from_S(T,xi,derivative_flag,eps_t, akns_discretization, vanilla_flag, akns_pde_KdV);
     CHECK_RETCODE(ret_code, release_mem);
-
-//            // T from S basis to companion basis
-//
-//            T[0] = 1.0;            //T_11;
-//            T[1] = 1.0;            //T_12;
-//            if(!derivative_flag){
-//                T[2]  = -I * xi;   //T_21;
-//                T[3]  = I * xi;    //T_22;
-//            } else {
-//                T[4]  = -I * xi;   //T_21;
-//                T[5]  = I * xi;    //T_22;
-//
-//                T[8]  = 0.0;       //T_31 = d/dxi T_11
-//                T[9]  = 0.0;       //T_32 = d/dxi T_12
-//                T[12] = -I;        //T_41 = d/dxi T_21
-//                T[13] = I;         //T_42 = d/dxi T_22
-//            }
-//
-//            break;
-//
-//        case
-//            //
-//            T[0] = ; //T_11;
-//            T[1] = ; //T_12;
-//            if(!derivative_flag){
-//                T[2]  = ; //T_21;
-//                T[3]  = ; //T_22;
-//            } else {
-//                T[4]  = ; //T_21;
-//                T[5]  = ; //T_22;
-//
-//                T[8]  = ; //T_31 = d/dxi T_11
-//                T[9]  = ; //T_32 = d/dxi T_12
-//                T[12] = ; //T_41 = d/dxi T_21
-//                T[13] = ; //T_42 = d/dxi T_22
-//            }
-//
-//            break;
 
 release_mem:
     return ret_code;

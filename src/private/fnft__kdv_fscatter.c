@@ -15,7 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018, 2020.
-* Peter J Prins (TU Delft) 2017-2018, 2020.
+* Peter J Prins (TU Delft) 2017-2018, 2020-2021.
 * Shrinivas Chimmalgi (TU Delft) 2018.
 */
 
@@ -57,8 +57,6 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r,
     if (eps_t <= 0.0)
         return E_INVALID_ARGUMENT(eps_t);
     (void) kappa; // Suppress compiler warning about not using kappa
-//    if (abs(kappa) != 1)
-//        return E_INVALID_ARGUMENT(kappa);
     if (result == NULL)
         return E_INVALID_ARGUMENT(result);
     if (deg_ptr == NULL)
