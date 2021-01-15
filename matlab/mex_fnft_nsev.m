@@ -9,7 +9,7 @@
 %   Provides an interface to the C routine fnft_nsev.
 %
 % INPUTS
-%   q               Complex row vector of length D>2
+%   q               Complex row vector of length D>1
 %   T               Real 1x2 vector
 %   XI              Real 1x2 vector
 %   kappa           +1.0 or -1.0
@@ -112,3 +112,4 @@
 % Contributors:
 % Sander Wahls (TU Delft) 2017-2018.
 % Shrinivas Chimmalgi (TU Delft) 2019-2020.
+% Peter J. Prins (TU Delft) 2021.

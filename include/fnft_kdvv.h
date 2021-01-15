@@ -185,22 +185,6 @@ typedef struct {
 fnft_kdvv_opts_t fnft_kdvv_default_opts();
 
 /**
- * @brief Returns the maximum number of bound states that can be detected by
- * fnft_kdvv.
- *
- * @param[in] D Number of samples that will be passed to
- * \link fnft_kdvv \endlink. Should be
- *  larger than zero.
- * @param[in] opts Options that will be passed to fnft_kdvv. If NULL is passed,
- *  the default options will be used.
- * @return Returns the maximum number of bound states or zero on error.
- *
- * @ingroup fnft
- */
-FNFT_UINT fnft_kdvv_max_K(const FNFT_UINT D,
-    fnft_kdvv_opts_t const * const opts);
-
-/**
  * @brief Nonlinear Fourier transform for the Korteweg-de Vries
  * equation with vanishing boundary conditions.
  *

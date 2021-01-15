@@ -45,18 +45,6 @@ fnft_kdvv_opts_t fnft_kdvv_default_opts()
 }
 
 /**
- * Returns the maximum number of bound states that can be detected by
- * fnft_kdvv. See header file for details.
- */
-UINT fnft_kdvv_max_K(const UINT D, fnft_kdvv_opts_t const * const opts)
-{
-    if (opts != NULL)
-        return kdv_discretization_degree(opts->discretization) * D;
-    else
-        return kdv_discretization_degree(default_opts.discretization) * D;
-}
-
-/**
  * Declare auxiliary routines used by the main routine fnft_kdvv.
  * Their bodies follow below.
  */
