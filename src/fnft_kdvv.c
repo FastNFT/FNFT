@@ -27,7 +27,6 @@
 static fnft_kdvv_opts_t default_opts = {
     .bound_state_localization = kdvv_bsloc_GRIDSEARCH_AND_REFINE,
     .niter = 10,
-    .Dsub = 0, // auto
     .discspec_type = kdvv_dstype_NORMING_CONSTANTS,
     .contspec_type = kdvv_cstype_REFLECTION_COEFFICIENT,
     .normalization_flag = 1,

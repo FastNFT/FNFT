@@ -244,7 +244,7 @@ static inline FNFT_COMPLEX fnft__misc_CSINC(FNFT_COMPLEX x)
  * d/dx sinc(x) = 0 if x=0, and (cos(x) - sinc(x)) / x otherwise.
  * However, if x is close to 0, a numerical implementation like that results in
  * catastrophic cancellation. Therefore we use its Taylor approximation instead:
- * d/dx sinc(x) = \sum_{n=0}^\infty x^(2*n+1) * (-1)^(n+1) / ( (2*n+3) * (2*n+1)! )
+ * \f$ \frac{d}{dx} \text{sinc}(x) = \sum_{n=0}^\infty \frac{x^{2n+1} (-1)^{n+1}}{(2n+3)(2*n+1)!} )\f$
  * of which we use the first 9 terms, i.e. a 18-th order Taylor approximation.
  * This polynomial is computed with Horner's method.
  * @param[in] x \link FNFT_COMPLEX \endlink argument.

@@ -139,6 +139,8 @@ typedef enum {
  * Applied Mathematics, vol. 53, pp. 249–315, 12 1974.
  * `fnft__akns_pde_KdV` -- Korteweg-de Vries equation: \f[ q_x + 6qq_{t} + q_{ttt}=0, \quad  q=q(x,t). \f]
  *`fnft__akns_pde_NSE` -- Nonlinear Schrödinger equation: \f[ iq_x + q_{tt} \pm 2q|q|^2=0, \quad  q=q(x,t), \f]
+ * 
+ * @ingroup data_types
  */
 typedef enum {
     fnft__akns_pde_KdV,

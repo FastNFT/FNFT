@@ -62,6 +62,8 @@
  * \link fnft__akns_discretization_t \endlink. Not all akns_discretization_t 
  * discretizations are supported. Check \link fnft__akns_discretization_t \endlink 
  * for list of supported types.
+ * @param[in] PDE Partial differential equation of type \link fnft__akns_pde_t \endlink.
+ * @param[in] vanilla_flag For calculations for the KdV equation, pass 1 for the original mapping to the AKNS framework with r=-1. Pass 0 for the alternative mapping with q=-1. Unused for NSE.
  * @param[in] derivative_flag Should be set to either 0 or 1. If set to 1
  * the derivatives [S11' S12' S21' S22'] are calculated. result should be
  * preallocated with size 8*K if flag is set to 1.
@@ -113,13 +115,16 @@ FNFT_INT fnft__akns_scatter_matrix(FNFT_UINT const D,
  * Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2932256">&quot;
  * Soliton Phase Shift Calculation for the Korteweg–De Vries Equation,&quot;</a>.
  * @param[in] discretization The type of discretization to be used. Should be of type
- * \link fnft_akns_discretization_t \endlink. Not all akns_discretization_t discretizations are supported.
- * @param[in] PDE The partial differential equation for which the calculation
- * has to be done. Should be of type\link fnft_akns_pde_t \endlink.
+ * \link fnft__akns_discretization_t \endlink. Not all akns_discretization_t discretizations are supported.
  * Check \link fnft_nse_discretization_t \endlink for list of supported types.
+ * @param[in] PDE The partial differential equation for which the calculation
+ * has to be done. Should be of type \link fnft__akns_pde_t \endlink.
+ * @param[in] vanilla_flag For calculations for the KdV equation, pass 1 for the original mapping to the AKNS framework with r=-1. Pass 0 for the alternative mapping with q=-1. Unused for NSE.
  * @param[in] skip_b_flag If set to 1 the routine will not compute \f$b(\lambda)\f$.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
- *  defined in \li
+ *  defined in \link fnft_errwarn.h \endlink.
+ *
+ * @ingroup akns
  */
 FNFT_INT akns_scatter_bound_states(FNFT_UINT const D,
                                    FNFT_COMPLEX const * const q,

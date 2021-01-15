@@ -210,9 +210,12 @@ FNFT_INT fnft__akns_discretization_preprocess_signal(FNFT_UINT const D,
  * @param[out] T 2x2 or 4x4 matrix. Left multiplication of a vector in the basis of the discretization by T changes it to the equivalent vector in S basis.
  * @param[in] xi spectral parameter \f$ \xi \f$.
  * @param[in] derivative_flag When 0, T is 2x2. When 1 T is 4x4, to include the derivatives.
+ * @param[in] eps_t Real-valued discretization step-size.
  * @param[in] akns_discretization Discretization of type \link fnft__akns_discretization_t \endlink.
  * @param[in] vanilla_flag For calculations for the KdV equation, pass 1 for the original mapping to the AKNS framework with r=-1. Pass 0 for the alternative mapping with q=-1. Unused for NSE.
  * @param[in] PDE PDE of type \link fnft__akns_pde_t \endlink.
+ *
+ * @ingroup akns
  */
 FNFT_INT fnft__akns_discretization_change_of_basis_matrix_to_S(FNFT_COMPLEX * const T,
                                                                FNFT_COMPLEX const xi,
@@ -227,9 +230,12 @@ FNFT_INT fnft__akns_discretization_change_of_basis_matrix_to_S(FNFT_COMPLEX * co
  * @param[out] T 2x2 or 4x4 matrix. Left multiplication of a vector in the S basis of the discretization by T changes it to the equivalent vector in the basis of the discretization.
  * @param[in] xi spectral parameter \f$ \xi \f$.
  * @param[in] derivative_flag When 0, T is 2x2. When 1 T is 4x4, to include the derivatives.
+ * @param[in] eps_t Real-valued discretization step-size.
  * @param[in] akns_discretization Discretization of type \link fnft__akns_discretization_t \endlink.
  * @param[in] vanilla_flag For calculations for the KdV equation, pass 1 for the original mapping to the AKNS framework with r=-1. Pass 0 for the alternative mapping with q=-1. Unused for NSE.
  * @param[in] PDE PDE of type \link fnft__akns_pde_t \endlink.
+ * 
+ * @ingroup akns
  */
 FNFT_INT fnft__akns_discretization_change_of_basis_matrix_from_S(FNFT_COMPLEX * const T,
                                                                 FNFT_COMPLEX const xi,

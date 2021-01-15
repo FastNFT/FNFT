@@ -273,12 +273,13 @@ FNFT_INT fnft__kdv_discretization_preprocess_signal(const FNFT_UINT D, FNFT_COMP
  * This routing computes the special weights required for the
  * higher-order methods CF\f$^{[4]}_2\f$, CF\f$^{[4]}_3\f$, CF\f$^{[5]}_3\f$
  * and CF\f$^{[6]}_4\f$. The weights are used in \link fnft__kdv_discretization_preprocess_signal \endlink,
- * \link fnft__akns_scatter_matrix \endlink and \link fnft__kdv_scatter_bound_states\endlink.
+ * \link fnft__akns_scatter_matrix \endlink and \link fnft__kdv_scatter_bound_states \endlink.
  * The weights for CF\f$^{[4]}_3\f$ are taken from Alvermann and Fehske (<a href="https://doi.org/10.1016/j.jcp.2011.04.006">Journal of Computational Phys. 230, 2011</a>)
  * and the weights for the others are from Blanes, Casas and Thalhammer(<a href="https://doi.org/10.1016/j.cpc.2017.07.016">Computer Phys. Comm. 220, 2017</a>).
  * The weights are mentioned as matrices in the references. This routine returns
  * them in row-major order.
- * @param[in,out] weights_ptr Pointer to the starting location of weights.
+ * @param[in,out] qr_weights_ptr Pointer to the starting location of potential weights.
+ * @param[in,out] eps_t_weights_ptr Pointer to the starting location of potential weights.
  * @param[in] kdv_discretization Discretization of type \link fnft_kdv_discretization_t \endlink.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
@@ -294,6 +295,7 @@ FNFT_INT fnft__kdv_discretization_method_weights(FNFT_COMPLEX **qr_weights_ptr,
  * @param[out] T 2x2 or 4x4 matrix. Left multiplication of a vector in the basis of the discretization by T changes it to the equivalent vector in S basis.
  * @param[in] xi spectral parameter \f$ \xi \f$.
  * @param[in] derivative_flag When 0, T is 2x2. When 1 T is 4x4, to include the derivatives.
+ * @param[in] eps_t Real-valued discretization step-size.
  * @param[in] kdv_discretization Discretization of type \link fnft_kdv_discretization_t \endlink.
  */
 FNFT_INT fnft__kdv_discretization_change_of_basis_matrix_to_S(FNFT_COMPLEX * const T,
@@ -307,6 +309,7 @@ FNFT_INT fnft__kdv_discretization_change_of_basis_matrix_to_S(FNFT_COMPLEX * con
  * @param[out] T 2x2 or 4x4 matrix. Left multiplication of a vector in the S basis of the discretization by T changes it to the equivalent vector in the basis of the discretization.
  * @param[in] xi spectral parameter \f$ \xi \f$.
  * @param[in] derivative_flag When 0, T is 2x2. When 1 T is 4x4, to include the derivatives.
+ * @param[in] eps_t Real-valued discretization step-size.
  * @param[in] kdv_discretization Discretization of type \link fnft_kdv_discretization_t \endlink.
  */
 FNFT_INT fnft__kdv_discretization_change_of_basis_matrix_from_S(FNFT_COMPLEX * const T,

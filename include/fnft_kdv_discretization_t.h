@@ -109,8 +109,7 @@
  * `fnft_kdv_discretization_4SPLIT4A(_VANILLA)`: Order of base method = 4, Degree = 4, Order of accuracy of splitting-scheme = 4\n
  * `fnft_kdv_discretization_4SPLIT4B(_VANILLA)`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4
  *
- * Used in \link fnft_kdvv_opts_t \endlink, \link fnft_kdvp_opts_t \endlink
- *  and \link fnft_kdvv_inverse_opts_t \endlink.
+ * Used in \link fnft_kdvv_opts_t \endlink.
  *
  * @ingroup data_types
  */

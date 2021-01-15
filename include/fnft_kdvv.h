@@ -158,7 +158,6 @@ typedef enum {
 typedef struct {
     fnft_kdvv_bsloc_t bound_state_localization;
     FNFT_UINT niter;
-    FNFT_UINT Dsub;
     fnft_kdvv_dstype_t discspec_type;
     fnft_kdvv_cstype_t contspec_type;
     FNFT_INT normalization_flag;
@@ -299,8 +298,6 @@ fnft_kdvv_opts_t fnft_kdvv_default_opts();
  *  possible to store the norming constants (the '\f$ b_k \f$') or both. Has to
  *  be pre-allocated by the user. If NULL is passed instead, the residues
  *  will not be computed.
- * @param[in] kappa =+1 for the focusing nonlinear Schroedinger equation,
- *  =-1 for the defocusing one.
  * @param[in] opts Pointer to a \link fnft_kdvv_opts_t \endlink object. The object
  *  can be used to modify the behavior of the routine. Use
  *  the routine \link fnft_kdvv_default_opts \endlink
