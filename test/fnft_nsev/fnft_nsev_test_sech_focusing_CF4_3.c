@@ -16,7 +16,7 @@
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
- * Peter J Prins (TU Delft) 2020.
+ * Peter J Prins (TU Delft) 2020-2021.
  */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -34,7 +34,7 @@ INT main()
         1.5e-4,     // a
         4.1e-5,     // b
         1.6e-4,     // bound states
-        3.0e-14,    // norming constants
+        3.1e-14,    // norming constants
         2.5e-4      // residues
     };
     opts = fnft_nsev_default_opts();

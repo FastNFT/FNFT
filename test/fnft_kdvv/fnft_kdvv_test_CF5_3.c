@@ -15,7 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
-* Peter J Prins (TU Delft) 2020.
+* Peter J Prins (TU Delft) 2020-2021.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -65,7 +65,7 @@ INT main()
         3.1e-9,     // b(xi)
         2.2e-10,    // bound states
         3.5e-9,     // norming constants
-        3.5e-9      // residues
+        3.6e-9      // residues
     };
 
     ret_code = kdvv_testcases_test_fnft(tc, D, eb_RE, &opts);
