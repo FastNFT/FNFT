@@ -16,7 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
-* Peter J Prins (TU Delft) 2020.
+* Peter J Prins (TU Delft) 2020-2021.
 */
 
 /**
@@ -59,7 +59,7 @@ typedef enum {
  * Enum that specifies how the bound states are localized. Used in
  * \link fnft_nsev_opts_t \endlink. \n \n
  * @ingroup data_types
- *  fnft_nsev_bsloc_FAST_EIGENVALUE: A rooting finding routine due to Aurentz et al. (see
+ *  fnft_nsev_bsloc_FAST_EIGENVALUE: A root finding routine due to Aurentz et al. (see
  *  https://arxiv.org/abs/1611.02435 and https://github.com/eiscor/eiscor)
  *  with \f$ O(D^2) \f$ complexity is used to detect the roots of
  *  \f$ a(\lambda) \f$. (Note: FNFT incorporates a development version of this
@@ -337,7 +337,10 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *  bound states as possible are returned instead. Note that in order to skip
  *  the computation of the bound states completely, it is not sufficient to pass
  *  *K_ptr==0. Instead, one needs to pass bound_states==NULL.
- * @param[out] bound_states Array. Upon return, the routine has stored the detected
+ * @param[in,out] bound_states Array. Upon entry, only if the option
+ *  `bound_state_localization=fnft_nsev_bsloc_NEWTON` is passed, this array should
+ *  contain initial guesses for the bound states. Otherwise the input values are
+ *  ignored. Upon return, the routine has stored the detected
  *  bound states (aka eigenvalues) in the first *K_ptr entries of this array.
  *  If NULL is passed instead, the discrete spectrum will not be computed.
  *  Has to be preallocated by the user. The user can choose an arbitrary

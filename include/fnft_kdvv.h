@@ -286,7 +286,11 @@ fnft_kdvv_opts_t fnft_kdvv_default_opts();
  *  bound states as possible are returned instead. Note that in order to skip
  *  the computation of the bound states completely, it is not sufficient to pass
  *  *K_ptr==0. Instead, one needs to pass bound_states==NULL.
- * @param[out] bound_states Array. Upon return, the routine has stored the detected
+ * @param[in,out] bound_states Array. Upon entry, only if the option
+ *  `bound_state_localization=fnft_kdvv_bsloc_NEWTON` is passed, this array should
+ *  contain initial guesses for the bound states. (These initial guesses should
+ *  be positive imaginary numbers.) Otherwise the input values are
+ *  ignored. Upon return, the routine has stored the detected
  *  bound states (aka eigenvalues) in the first *K_ptr entries of this array.
  *  If NULL is passed instead, the discrete spectrum will not be computed.
  *  Has to be preallocated by the user. The user can choose an arbitrary

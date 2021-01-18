@@ -162,11 +162,17 @@ INT fnft_kdvv(
     }
     for (i=0; i<M; i++){
         if (XI[0]+i*(XI[1]-XI[0])/(M-1) == 0)
-        return E_INVALID_ARGUMENT(XI);
+            return E_INVALID_ARGUMENT(XI);
     }
     if (bound_states != NULL) {
-        if (K_ptr == NULL)
+        if (K_ptr == NULL) {
             return E_INVALID_ARGUMENT(K_ptr);
+        } else {
+            for (i=0; i<*K_ptr; i++) {
+                if ( CREAL(bound_states[i])!=0.0 || CIMAG(bound_states[i])<=0.0 )
+                    return E_INVALID_ARGUMENT(bound_states);
+            }
+        }
     }
     if (opts == NULL)
         opts = &default_opts;
