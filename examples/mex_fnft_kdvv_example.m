@@ -67,7 +67,7 @@ ylabel('\angle r(\xi)');
 linkaxes([hmag,hang],'x');
 
 figure;
-stem(imag(bound_states),norming_constants, 'x');
+stem(imag(bound_states),real(norming_constants), 'x');
 title('Bound states and norming constants');
 xlabel('\lambda_k/j');
 ylabel('b(\lambda_k)');
