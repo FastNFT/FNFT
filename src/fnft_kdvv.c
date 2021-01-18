@@ -164,18 +164,21 @@ INT fnft_kdvv(
         if (XI[0]+i*(XI[1]-XI[0])/(M-1) == 0)
             return E_INVALID_ARGUMENT(XI);
     }
+
+    if (opts == NULL)
+        opts = &default_opts;
+
     if (bound_states != NULL) {
         if (K_ptr == NULL) {
             return E_INVALID_ARGUMENT(K_ptr);
-        } else {
+        } else if (opts->bound_state_localization==fnft_kdvv_bsloc_NEWTON) {
+            // This method needs user-provided initial guesses. Check those:
             for (i=0; i<*K_ptr; i++) {
                 if ( CREAL(bound_states[i])!=0.0 || CIMAG(bound_states[i])<=0.0 )
                     return E_INVALID_ARGUMENT(bound_states);
             }
         }
     }
-    if (opts == NULL)
-        opts = &default_opts;
 
     // Some higher-order discretizations require samples on a non-equidistant grid
     // while others require derivatives which are computed in the form of
