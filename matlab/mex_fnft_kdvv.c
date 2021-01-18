@@ -160,54 +160,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             /* Increase k to account for vector of initial guesses */
             k++;
 
-        } else if ( strcmp(str, "discr_modal") == 0 ) {
-
-            opts.discretization = fnft_kdv_discretization_2SPLIT2_MODAL;
-
-        } else if ( strcmp(str, "discr_2split2A") == 0 ) {
-
-            opts.discretization = fnft_kdv_discretization_2SPLIT2A;
-
-        } else if ( strcmp(str, "discr_2split4A") == 0 ) {
-
-            opts.discretization = fnft_kdv_discretization_2SPLIT4A;
-
-        } else if ( strcmp(str, "discr_2split4B") == 0 ) {
-
-            opts.discretization = fnft_kdv_discretization_2SPLIT4B;
-
-        } else if ( strcmp(str, "discr_4split4B") == 0 ) {
-
-            opts.discretization = fnft_kdv_discretization_4SPLIT4B;
-
-        } else if ( strcmp(str, "discr_BO") == 0 ) {
-
-            opts.discretization = fnft_kdv_discretization_BO;
-
-        } else if ( strcmp(str, "discr_CF4_2") == 0 ) {
-
-            opts.discretization = fnft_kdv_discretization_CF4_2;
-
-        } else if ( strcmp(str, "discr_CF4_3") == 0 ) {
-
-            opts.discretization = fnft_kdv_discretization_CF4_3;
-
-        } else if ( strcmp(str, "discr_CF5_3") == 0 ) {
-
-            opts.discretization = fnft_kdv_discretization_CF5_3;
-
-        } else if ( strcmp(str, "discr_CF6_4") == 0 ) {
-
-            opts.discretization = fnft_kdv_discretization_CF6_4;
-
-        } else if ( strcmp(str, "discr_ES4") == 0 ) {
-
-            opts.discretization = fnft_kdv_discretization_ES4;
-
-        } else if ( strcmp(str, "discr_TES4") == 0 ) {
-
-            opts.discretization = fnft_kdv_discretization_TES4;
-
         } else if ( strcmp(str, "RE") == 0 ) {
 
             opts.richardson_extrapolation_flag  = 1;
@@ -237,6 +189,120 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "quiet") == 0 ) {
 
             fnft_errwarn_setprintf(NULL);
+
+        // Fast discretizations
+        } else if ( strcmp(str, "discr_modal") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_2SPLIT2_MODAL;
+
+        } else if ( strcmp(str, "discr_2split1A") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_2SPLIT1A;
+
+        } else if ( strcmp(str, "discr_2split1B") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_2SPLIT1B;
+
+        } else if ( strcmp(str, "discr_2split2A") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_2SPLIT2A;
+
+        } else if ( strcmp(str, "discr_2split2B") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_2SPLIT2B;
+
+        } else if ( strcmp(str, "discr_2split2S") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_2SPLIT2S;
+
+        } else if ( strcmp(str, "discr_2split3A") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_2SPLIT3A;
+
+        } else if ( strcmp(str, "discr_2split3B") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_2SPLIT3B;
+
+        } else if ( strcmp(str, "discr_2split3S") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_2SPLIT3S;
+
+        } else if ( strcmp(str, "discr_2split4A") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_2SPLIT4A;
+
+        } else if ( strcmp(str, "discr_2split4B") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_2SPLIT4B;
+
+        } else if ( strcmp(str, "discr_2split5A") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_2SPLIT5A;
+
+        } else if ( strcmp(str, "discr_2split5B") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_2SPLIT5B;
+
+        } else if ( strcmp(str, "discr_2split6A") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_2SPLIT6A;
+
+        } else if ( strcmp(str, "discr_2split6B") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_2SPLIT6B;
+
+        } else if ( strcmp(str, "discr_2split7A") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_2SPLIT7A;
+
+        } else if ( strcmp(str, "discr_2split7B") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_2SPLIT7B;
+
+        } else if ( strcmp(str, "discr_2split8A") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_2SPLIT8A;
+
+        } else if ( strcmp(str, "discr_2split8B") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_2SPLIT8B;
+
+        } else if ( strcmp(str, "discr_4split4A") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_4SPLIT4A;
+
+        } else if ( strcmp(str, "discr_4split4B") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_4SPLIT4B;
+
+        // Slow discretizations
+        } else if ( strcmp(str, "discr_BO") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_BO;
+
+        } else if ( strcmp(str, "discr_CF4_2") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_CF4_2;
+
+        } else if ( strcmp(str, "discr_CF4_3") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_CF4_3;
+
+        } else if ( strcmp(str, "discr_CF5_3") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_CF5_3;
+
+        } else if ( strcmp(str, "discr_CF6_4") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_CF6_4;
+
+        } else if ( strcmp(str, "discr_ES4") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_ES4;
+
+        } else if ( strcmp(str, "discr_TES4") == 0 ) {
+
+            opts.discretization = fnft_kdv_discretization_TES4;
 
         } else {
             snprintf(msg, sizeof msg, "%uth input has invalid value.",
