@@ -213,14 +213,14 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  *
  * @param[in] D Number of samples. Should be power of two and \f$ D\geq 2\f$.
  * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
- *  where \f$ t_n = T[0] + n*L/D \f$, where \f$L=T[1]-T[0]\f$ is the period and
+ *  where \f$ t_n = T[0] + nL/D \f$, where \f$L=T[1]-T[0]\f$ is the period and
  *  \f$n=0,1,\dots,D-1\f$, of the to-be-transformed signal in ascending order
  *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$)
  * @param[in] T Array of length 2. T[0] is the position in time of the first
  *  sample. T[1] is the beginning of the next period. (The location of the last
  *  sample is thus \f$t_{D-1}=T[1]-L/D\f$.) It should be \f$T[0]<T[1]\f$.
  * @param[in] phase_shift Real scalar constant. It is the change in the phase
- * over one quasi-period,\f$ arg(q(t+L)/q(t))\f$. For periodic signals it will be 0.
+ * over one quasi-period,\f$ \angle(q(t+L)/q(t))\f$. For periodic signals it will be 0.
  * @param[in,out] K_ptr Upon entry, *K_ptr should contain the length of the array
  *  main_spec. Upon return, *K_ptr contains the number of actually detected
  *  points in the main spectrum. If the length of the array main_spec was not

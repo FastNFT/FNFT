@@ -209,12 +209,12 @@ INT akns_scatter_matrix(UINT const D,
     }
 
     if (derivative_flag){
-        // Colculate the scattering matrix with lamda-derivative as in G. Boffetta an A.R. Osborne, 'Computation of the direct scattering transform for the nonlinear Schroedinger equation', www.doi.org/10.1016/0021-9991(92)90370-e .
+        // Calculate the scattering matrix with lamda-derivative as in G. Boffetta an A.R. Osborne, 'Computation of the direct scattering transform for the nonlinear Schroedinger equation', www.doi.org/10.1016/0021-9991(92)90370-e .
         COMPLEX U[4][4] = {{ 0 }};
         for (UINT i = 0; i < K; i++) { // iterate over lambda
             // Initialize scattering matrix
             COMPLEX l_curr = lambda[i];
-            COMPLEX H[2][4][4] = { { {1,0,0,0}, {0,1,0,0}, {0,0,1,0}, {0,0,0,1} } }; // Init only first sixteen values
+            COMPLEX H[2][4][4] = { { {1,0,0,0}, {0,1,0,0}, {0,0,1,0}, {0,0,0,1} } }; // Initiate only first sixteen values
             UINT current = 0;
 
             switch (discretization) {
@@ -297,11 +297,11 @@ INT akns_scatter_matrix(UINT const D,
             result[8*i + 7] = H[current][3][1];
         }
     } else {
-        // Colculate the scattering matrix without lambda-derivative
+        // Calculate the scattering matrix without lambda-derivative
         for (UINT i = 0; i < K; i++) { // iterate over lambda
             // Initialize scattering matrix
             COMPLEX l_curr = lambda[i];
-            COMPLEX H[2][2][2] = { { {1,0}, {0,1} } }; // Init only first four values
+            COMPLEX H[2][2][2] = { { {1,0}, {0,1} } }; // Initiate only first four values
             UINT current = 0;
 
             switch (discretization) {

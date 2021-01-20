@@ -322,7 +322,7 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  * @param[out] contspec Array of length M in which the routine will store the
  *  desired samples \f$ r(\xi_m) \f$ of the continuous spectrum (aka
  *  reflection coefficient) in ascending order,
- *  where \f$ \xi_m = XI[0]+(XI[1]-XI[0])/(M-1) \f$ and \f$m=0,1,\dots,M-1\f$.
+ *  where \f$ \xi_m = XI[0]+m(XI[1]-XI[0])/(M-1) \f$ and \f$m=0,1,\dots,M-1\f$.
  *  Has to be preallocated by the user. If NULL is passed instead, the
  *  continuous spectrum will not be computed. By changing the options, it is
  *  also possible to compute the values of \f$ a(\xi) \f$ and \f$ b(\xi) \f$

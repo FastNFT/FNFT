@@ -73,14 +73,14 @@ FNFT_REAL fnft__kdv_discretization_boundary_coeff(fnft_kdv_discretization_t kdv_
  * Higher order methods use more than one sample per integration step. This routine returns
  * the value upsampling_factor based on the discretization of type \link fnft_kdv_discretization_t \endlink.
  * D_effective = upsampling_factor * D.
- * @param[in] discretization The type of discretization to be used. Should be
+ * @param[in] kdv_discretization The type of discretization to be used. Should be
  * of type \link fnft_kdv_discretization_t \endlink.
  * @returns the upsampling_factor value, or 0 for discretizations not supported
  * by \link fnft__kdv_fscatter \endlink.
  *
  * @ingroup kdv
  */
-FNFT_UINT fnft__kdv_discretization_upsampling_factor(fnft_kdv_discretization_t discretization);
+FNFT_UINT fnft__kdv_discretization_upsampling_factor(fnft_kdv_discretization_t kdv_discretization);
 
 /**
  * @brief This routine returns the order of the method based on the
@@ -90,13 +90,13 @@ FNFT_UINT fnft__kdv_discretization_upsampling_factor(fnft_kdv_discretization_t d
  * the order of the order based on the discretization of type \link fnft_kdv_discretization_t \endlink.
  * When the step-size of the signal samples is reduced by a factor \f$s\f$, the error in the
  * computed values is expected to decrease by a factor \f$s^{order}\f$.
- * @param[in] discretization The type of discretization to be used. Should be
+ * @param[in] kdv_discretization The type of discretization to be used. Should be
  * of type \link fnft_kdv_discretization_t \endlink.
  * @returns the method_order value, or 0.
  *
  * @ingroup kdv
  */
-FNFT_UINT fnft__kdv_discretization_method_order(fnft_kdv_discretization_t discretization);
+FNFT_UINT fnft__kdv_discretization_method_order(fnft_kdv_discretization_t kdv_discretization);
 
 
 /**
@@ -131,14 +131,14 @@ FNFT_INT fnft__kdv_discretization_to_akns_discretization(fnft_kdv_discretization
  * @param[in,out] vals Pointer to location of first element of array containing
  * complex-valued continuous-time domain spectral parameter \f$\lambda\f$. The values are replaced with
  * discrete-time domain values \f$z\f$.
- * @param[in] discretization Discretization of type \link fnft_kdv_discretization_t \endlink.
+ * @param[in] kdv_discretization Discretization of type \link fnft_kdv_discretization_t \endlink.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  *
  * @ingroup kdv
  */
 FNFT_INT fnft__kdv_discretization_lambda_to_z(const FNFT_UINT n, const FNFT_REAL eps_t,
-        FNFT_COMPLEX * const vals, fnft_kdv_discretization_t discretization);
+        FNFT_COMPLEX * const vals, fnft_kdv_discretization_t kdv_discretization);
 
 /**
  * @brief This routine maps \f$z\f$ from the discrete-time domain to
@@ -153,14 +153,14 @@ FNFT_INT fnft__kdv_discretization_lambda_to_z(const FNFT_UINT n, const FNFT_REAL
  * @param[in,out] vals Pointer to location of first element of array containing
  * complex-valued discrete-time domain spectral parameter \f$z\f$. The values are replaced with
  * continuous-time domain values \f$\lambda\f$.
- * @param[in] discretization Discretization of type \link fnft_kdv_discretization_t \endlink.
+ * @param[in] kdv_discretization Discretization of type \link fnft_kdv_discretization_t \endlink.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  *
  * @ingroup kdv
  */
 FNFT_INT fnft__kdv_discretization_z_to_lambda(const FNFT_UINT n, const FNFT_REAL eps_t,
-        FNFT_COMPLEX * const vals, fnft_kdv_discretization_t discretization);
+        FNFT_COMPLEX * const vals, fnft_kdv_discretization_t kdv_discretization);
 
 /**
  * @brief  This routine returns the phase factor for reflection coefficient (\f$\rho\f$).
@@ -254,7 +254,7 @@ FNFT_INT fnft__kdv_discretization_phase_factor_b(const FNFT_REAL eps_t, const FN
  * @param[out] first_last_index Vector of length two. Upon exit, it contains
  *             the original index of the first and the last sample used to build
  *             q_preprocessed.
- * @param[in] discretization Discretization of type \link fnft_kdv_discretization_t \endlink.
+ * @param[in] kdv_discretization Discretization of type \link fnft_kdv_discretization_t \endlink.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  *
@@ -263,7 +263,7 @@ FNFT_INT fnft__kdv_discretization_phase_factor_b(const FNFT_REAL eps_t, const FN
 FNFT_INT fnft__kdv_discretization_preprocess_signal(const FNFT_UINT D, FNFT_COMPLEX const * const q,
         FNFT_REAL const eps_t, const FNFT_INT kappa,
         FNFT_UINT * const Dsub_ptr, FNFT_COMPLEX **q_preprocessed_ptr, FNFT_COMPLEX **r_preprocessed_ptr,
-        FNFT_UINT * const first_last_index,  fnft_kdv_discretization_t discretization);
+        FNFT_UINT * const first_last_index,  fnft_kdv_discretization_t kdv_discretization);
 
 
 /**
