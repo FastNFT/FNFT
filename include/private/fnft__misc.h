@@ -87,21 +87,6 @@ FNFT_COMPLEX fnft__misc_sech(FNFT_COMPLEX Z);
  *
  * @ingroup misc
  * This function computes the quantity\n
- * \f$ val = \frac{b-a}{2N}.(|Z[0]|^2+|Z[N-1]|^2)+\sum_{i=1}^{i=N-2}\frac{b-a}{N}.|Z[i]|^2\f$.
- * @param[in] N Number of elements in the array.
- * @param[in] Z Complex valued array of length N.
- * @param[in] a Real number corresponding to first element of Z.
- * @param[in] b Real number corresponding to last element of Z.
- * @return Returns the quantity val. Returns NAN if N<2 or a>=b.
- */
-FNFT_REAL fnft__misc_l2norm2(const FNFT_UINT N, FNFT_COMPLEX const * const Z,
-    const FNFT_REAL a, const FNFT_REAL b);
-
-/**
- * @brief Squared l2 norm.
- *
- * @ingroup misc
- * This function computes the quantity\n
  * \f$ val = \frac{b-a}{N} \sum_{i=0}^{i=N-1}|Z[i]|^2\f$.
  * @param[in] N Number of elements in the array.
  * @param[in] Z Complex valued array of length N.
@@ -109,7 +94,7 @@ FNFT_REAL fnft__misc_l2norm2(const FNFT_UINT N, FNFT_COMPLEX const * const Z,
  * @param[in] b Real number corresponding to right boundary of the last element of Z.
  * @return Returns the quantity val. Returns NAN if N==0 or a>=b.
  */
-FNFT_REAL fnft__misc_l2norm2_full(const FNFT_UINT N, FNFT_COMPLEX const * const Z,
+FNFT_REAL fnft__misc_l2norm2(const FNFT_UINT N, FNFT_COMPLEX const * const Z,
     const FNFT_REAL a, const FNFT_REAL b);
 
 /**
@@ -414,7 +399,6 @@ static inline FNFT_REAL fnft__misc_legendre_poly(const FNFT_UINT n, const FNFT_R
 #define misc_hausdorff_dist(...) fnft__misc_hausdorff_dist(__VA_ARGS__)
 #define misc_sech(...) fnft__misc_sech(__VA_ARGS__)
 #define misc_l2norm2(...) fnft__misc_l2norm2(__VA_ARGS__)
-#define misc_l2norm2_full(...) fnft__misc_l2norm2_full(__VA_ARGS__)
 #define misc_filter(...) fnft__misc_filter(__VA_ARGS__)
 #define misc_filter_inv(...) fnft__misc_filter_inv(__VA_ARGS__)
 #define misc_filter_nonreal(...) fnft__misc_filter_nonreal(__VA_ARGS__)

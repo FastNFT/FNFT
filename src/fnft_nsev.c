@@ -593,7 +593,7 @@ static inline REAL im_bound(const UINT D, COMPLEX const * const q,
     // squared L2 norm of q(t) can be removed. A factor of 1.5 has been
     // added to account for numerical discrepancies when computing the norm
     // numerically (e.g., truncation errors or large step sizes).
-    return 1.5 * 0.25 * misc_l2norm2_full(D, q, T[0]-eps_t/2, T[1]+eps_t/2);
+    return 1.5 * 0.25 * misc_l2norm2(D, q, T[0]-eps_t/2, T[1]+eps_t/2);
 }
 
 // Auxiliary function: Computes the bound states.

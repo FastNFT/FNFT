@@ -90,30 +90,6 @@ COMPLEX misc_sech(COMPLEX Z)
 REAL misc_l2norm2(const UINT N, COMPLEX const * const Z,
     const REAL a, const REAL b)
 {
-    REAL val, h, tmp;
-    UINT i;
-
-    // Check inputs
-    if (N < 2 || a >= b)
-        return NAN;
-
-    // Integrate |q(t)|^2 numerically
-    h = (b - a)/N;
-    tmp = CABS(Z[0]);
-    val = 0.5 * h * tmp * tmp;
-    for (i=1; i<N-1; i++) {
-        tmp = CABS(Z[i]);
-        val += h * tmp * tmp;
-    }
-    tmp = CABS(Z[N-1]);
-    val += 0.5 * h * tmp * tmp;
-
-    return val;
-}
-
-REAL misc_l2norm2_full(const UINT N, COMPLEX const * const Z,
-    const REAL a, const REAL b)
-{
     // Check inputs
     if (a >= b || N==0)
         return NAN;
