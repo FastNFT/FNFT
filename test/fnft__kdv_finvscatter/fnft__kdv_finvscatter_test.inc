@@ -15,6 +15,7 @@
  *
  * Contributors:
  * Sander Wahls (TU Delft) 2018, 2020.
+ * Peter J Prins (TU Delft) 2020.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -32,33 +33,69 @@ static INT kdv_finvscatter_test(const UINT D,
 {
     INT ret_code = SUCCESS;
 
-    COMPLEX *q_exact = NULL, *q = NULL, *transfer_matrix = NULL;
+    COMPLEX *q_exact = NULL, *r_exact = NULL, *r = NULL, *q = NULL, *transfer_matrix = NULL;
     REAL eps_t = 0.12;
-    UINT deg, i;
+    UINT deg, i, vanilla_flag;
+    REAL error;
 
     CHECK_RETCODE(ret_code, leave_fun);
     const UINT len = kdv_fscatter_numel(D, kdv_discretization);
 
     q_exact = malloc(D * sizeof(COMPLEX));
-    q = malloc(D * sizeof(COMPLEX));
+    r_exact = malloc(D * sizeof(COMPLEX));
     transfer_matrix = malloc(len * sizeof(COMPLEX));
-    if (q_exact == NULL || q == NULL || transfer_matrix == NULL) {
+    if (q_exact == NULL || r_exact == NULL || transfer_matrix == NULL) {
         ret_code = E_NOMEM;
         goto leave_fun;
     }
 
-    for (i=0; i<D; i++)
-        q_exact[i] = ((REAL)(i+1)/(D+1)/D)*CEXP(I*(REAL)i/D);
-
-    ret_code = kdv_fscatter(D, q_exact, eps_t, transfer_matrix, &deg, NULL,
-                            kdv_discretization);
+    INT kappa = 1;
+    ret_code = kdv_discretization_vanilla_flag(&vanilla_flag, kdv_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    ret_code = kdv_finvscatter(deg, transfer_matrix, q, eps_t,
-                               kdv_discretization);
-    CHECK_RETCODE(ret_code, leave_fun);
+    if (vanilla_flag) {
 
-    REAL error = misc_rel_err(D, q, q_exact);
+        for (i=0; i<D; i++) {
+            q_exact[i] = ((REAL)(i+1)/(D+1)/D)*CEXP(I*(REAL)i/D);
+            r_exact[i] = -1;
+        }
+        ret_code = kdv_fscatter(D, q_exact, r_exact, eps_t, kappa, transfer_matrix, &deg, NULL,
+                                kdv_discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
+
+        q = malloc(D * sizeof(COMPLEX));
+        if (q == NULL) {
+            ret_code = E_NOMEM;
+            goto leave_fun;
+        }
+        ret_code = kdv_finvscatter(deg, transfer_matrix, q, eps_t,
+                                   kdv_discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
+
+        error = misc_rel_err(D, q, q_exact);
+
+    } else {
+
+        for (i=0; i<D; i++) {
+            q_exact[i] = -1;
+            r_exact[i] = ((REAL)(i+1)/(D+1)/D)*CEXP(I*(REAL)i/D);
+        }
+        ret_code = kdv_fscatter(D, q_exact, r_exact, eps_t, kappa, transfer_matrix, &deg, NULL,
+                                kdv_discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
+
+        r = malloc(D * sizeof(COMPLEX));
+        if (r == NULL) {
+            ret_code = E_NOMEM;
+            goto leave_fun;
+        }
+        ret_code = kdv_finvscatter(deg, transfer_matrix, r, eps_t,
+                                   kdv_discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
+
+        error = misc_rel_err(D, r, r_exact);
+
+    }
 #ifdef DEBUG
     printf("error = %g\n", error);
 #endif
@@ -69,6 +106,8 @@ static INT kdv_finvscatter_test(const UINT D,
 
 leave_fun:
     free(q_exact);
+    free(r_exact);
+    free(r);
     free(q);
     free(transfer_matrix);
     return ret_code;

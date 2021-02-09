@@ -63,7 +63,7 @@ UINT fnft_nsev_max_K(const UINT D, fnft_nsev_opts_t const * const opts)
  */
 
 static inline INT nsev_compute_boundstates(
-        UINT D,
+        UINT const D,
         COMPLEX const * const q,
         COMPLEX const * const r,
         const UINT deg,
@@ -100,7 +100,7 @@ static inline INT nsev_compute_contspec(
         const UINT M,
         COMPLEX * const result,
         const INT kappa,
-        fnft_nsev_opts_t * const opts);
+        fnft_nsev_opts_t const * const opts);
 
 static inline INT nsev_compute_normconsts_or_residues(
         const UINT D,
@@ -110,16 +110,16 @@ static inline INT nsev_compute_normconsts_or_residues(
         const UINT K,
         COMPLEX * const bound_states,
         COMPLEX * const normconsts_or_residues,
-        fnft_nsev_opts_t * const opts);
+        fnft_nsev_opts_t const * const opts);
 
 static inline INT nsev_refine_bound_states_newton(const UINT D,
         COMPLEX const * const q,
         COMPLEX const * const r,
         REAL const * const T,
         UINT K,
-        COMPLEX * bound_states,
-        nse_discretization_t discretization,
-        UINT niter,
+        COMPLEX * const bound_states,
+        nse_discretization_t const discretization,
+        UINT const niter,
         REAL const * const bounding_box);
 
 /**
@@ -133,7 +133,7 @@ static inline INT nsev_refine_bound_states_newton(const UINT D,
  */
 INT fnft_nsev(
         const UINT D,
-        COMPLEX * const q,
+        COMPLEX const * const q,
         REAL const * const T,
         const UINT M,
         COMPLEX * const contspec,
@@ -585,7 +585,7 @@ static inline REAL re_bound(const REAL eps_t, const REAL map_coeff)
 // Auxiliary function for filtering: We assume that bound states must have
 // imaginary part in the interval [0, im_bound].
 static inline REAL im_bound(const UINT D, COMPLEX const * const q,
-        REAL const * const T)
+        REAL const * const T, REAL const eps_t)
 {
     // The nonlinear Parseval relation tells us that the squared L2 norm of
     // q(t) is >= 4*(sum of the imaginary parts of the bound states). Thus,
@@ -593,7 +593,7 @@ static inline REAL im_bound(const UINT D, COMPLEX const * const q,
     // squared L2 norm of q(t) can be removed. A factor of 1.5 has been
     // added to account for numerical discrepancies when computing the norm
     // numerically (e.g., truncation errors or large step sizes).
-    return 1.5 * 0.25 * misc_l2norm2(D, q, T[0], T[1]);
+    return 1.5 * 0.25 * misc_l2norm2(D, q, T[0]-eps_t/2, T[1]+eps_t/2);
 }
 
 // Auxiliary function: Computes the bound states.
@@ -614,7 +614,6 @@ static inline INT nsev_compute_boundstates(
     REAL bounding_box[4] = { NAN };
     COMPLEX * buffer = NULL;
     INT ret_code = SUCCESS;
-    COMPLEX * q_tmp = NULL;
     nse_discretization_t discretization;
 
     degree1step = nse_discretization_degree(opts->discretization);
@@ -641,20 +640,24 @@ static inline INT nsev_compute_boundstates(
         bounding_box[2] = 0;
         // This step is required as q contains scaled values on a
         // non-equispaced grid
-        if (upsampling_factor == 1){
-            bounding_box[3] = im_bound(D_given, q, T);
-        } else {
-            q_tmp = malloc(D_given * sizeof(COMPLEX));
-            if (q_tmp == NULL) {
-                ret_code = E_NOMEM;
-                goto leave_fun;
+        switch(opts->discretization) {
+            case fnft_nse_discretization_ES4:
+            case fnft_nse_discretization_TES4:
+            {
+                // For these discretizations we need to skip the time-derivative samples for determining the L2-norm of q
+                COMPLEX * const q_tmp = malloc(D_given * sizeof(COMPLEX));
+                if (q_tmp == NULL) {
+                    ret_code = E_NOMEM;
+                    CHECK_RETCODE(ret_code, leave_fun);
+                }
+                for (i = 0, j = 0; i < D_given; i++, j+=3)
+                    q_tmp[i] = q[j];
+                bounding_box[3] = im_bound(D_given, q_tmp, T, eps_t);
+                free(q_tmp);
             }
-            j = 1;
-            for (i = 0; i < D_given; i++) {
-                q_tmp[i] = upsampling_factor*q[j];
-                j = j+upsampling_factor;
-            }
-            bounding_box[3] = im_bound(D_given, q_tmp, T);
+                break;
+            default:
+                bounding_box[3] = im_bound(D, q, T, eps_t);
         }
     }else{
         bounding_box[0] = -INFINITY;
@@ -740,9 +743,8 @@ static inline INT nsev_compute_boundstates(
     // Update number of bound states
     *K_ptr = K;
 
-    leave_fun:
-        free(q_tmp);
-        return ret_code;
+leave_fun:
+    return ret_code;
 }
 
 // Auxiliary function: Computes continuous spectrum on a frequency grid
@@ -758,7 +760,7 @@ static inline INT nsev_compute_contspec(
         const UINT M,
         COMPLEX * const result,
         const INT kappa,
-        fnft_nsev_opts_t * const opts)
+        fnft_nsev_opts_t const * const opts)
 {
     COMPLEX *H11_vals = NULL, *H21_vals = NULL;
     COMPLEX A, V;
@@ -905,7 +907,7 @@ static inline INT nsev_compute_normconsts_or_residues(
         const UINT K,
         COMPLEX * const bound_states,
         COMPLEX * const normconsts_or_residues,
-        fnft_nsev_opts_t * const opts)
+        fnft_nsev_opts_t const * const opts)
 {
     COMPLEX *a_vals = NULL, *aprime_vals = NULL;
     UINT i, offset = 0;
@@ -981,8 +983,8 @@ static inline INT nsev_refine_bound_states_newton(
         COMPLEX const * const r,
         REAL const * const T,
         const UINT K,
-        COMPLEX * bound_states,
-        nse_discretization_t discretization,
+        COMPLEX * const bound_states,
+        nse_discretization_t const discretization,
         const UINT niter,
         REAL const * const bounding_box)
 {

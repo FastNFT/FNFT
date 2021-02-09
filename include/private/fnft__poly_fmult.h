@@ -15,6 +15,7 @@
  *
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
+ * Peter J Prins (TU Delft) 2020.
  */
 
 /**
@@ -169,14 +170,14 @@ FNFT_UINT fnft__poly_fmult_numel(const FNFT_UINT deg, const FNFT_UINT n);
  * stored in the array p and will be overwritten. If W_ptr != NULL, the
  * result has been normalized by a factor 2^W. Upon exit, W has been stored
  * in *W_ptr.
- * @param[in, out] d Upon entry, degree of the input polynomials. Upon exit,
+ * @param[in,out] d Upon entry, degree of the input polynomials. Upon exit,
  *  degree of their product.
- * @param[in] n Number of polynomials.
+ * @param[in,out] n Number of polynomials (=1 upon exit).
  * @param[in,out] p Complex valued array with m entries, where m is determined
  *  using \link fnft__poly_fmult_numel \endlink. Upon entry, the first
  *  (*d+1)*n elements of this array contain the coefficients of the
  *  polynomials. Upon exit, the first *d+1 elements contain the result.
- * @param[in] W_ptr Pointer to normalization flag.
+ * @param[out] W_ptr Pointer to normalization flag.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  */
@@ -216,7 +217,7 @@ FNFT_UINT fnft__poly_fmult2x2_numel(const FNFT_UINT deg, const FNFT_UINT n);
  * WARNING: p is overwritten.
  * @param[out] result Complex valued array that holds the result of the
  * multiplication. Should be of the same size as p.
- * @param[in] W_ptr Pointer to normalization flag.
+ * @param[out] W_ptr Pointer to normalization flag.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  */

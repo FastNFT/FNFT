@@ -42,7 +42,7 @@ UINT nse_fscatter_numel(UINT D, nse_discretization_t discretization)
 
 INT nse_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r,
         const REAL eps_t, COMPLEX * const result, UINT * const deg_ptr,
-        INT * const W_ptr, nse_discretization_t discretization)
+        INT * const W_ptr, nse_discretization_t const discretization)
 {
     INT ret_code = SUCCESS;
     akns_discretization_t akns_discretization;

@@ -90,23 +90,17 @@ COMPLEX misc_sech(COMPLEX Z)
 REAL misc_l2norm2(const UINT N, COMPLEX const * const Z,
     const REAL a, const REAL b)
 {
-    REAL val, h, tmp;
-    UINT i;
-
     // Check inputs
-    if (N < 2 || a >= b)
+    if (a >= b || N==0)
         return NAN;
 
     // Integrate |q(t)|^2 numerically
-    h = (b - a)/N;
-    tmp = CABS(Z[0]);
-    val = 0.5 * h * tmp * tmp;
-    for (i=1; i<N-1; i++) {
-        tmp = CABS(Z[i]);
-        val += h * tmp * tmp;
+    REAL val = 0.0;
+    for (UINT i=0; i<N; i++) {
+        REAL tmp = (REAL)CABS(Z[i]);
+        val += tmp * tmp;
     }
-    tmp = CABS(Z[N-1]);
-    val += 0.5 * h * tmp * tmp;
+    val *= (b - a)/N;
 
     return val;
 }
@@ -299,18 +293,6 @@ INT misc_downsample(const UINT D, COMPLEX const * const q,
     *qsub_ptr = qsub;
     *Dsub_ptr = Dsub;
     return SUCCESS;
-}
-
-// Computes sinc(x):= 1 if x=0 and sin(x)/x otherwise. If x is close to 0, the
-// calculation is approximated with sinc(x) = cos(x/sqrt(3)) + O(x^4)
-COMPLEX misc_CSINC(COMPLEX x)
-{
-    const REAL sinc_th=1.0E-8;
-
-    if (CABS(x)>=sinc_th)
-        return CSIN(x)/x;
-    else
-        return CCOS(x/CSQRT(3));
 }
 
 UINT misc_nextpowerof2(const UINT number)

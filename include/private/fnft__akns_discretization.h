@@ -16,7 +16,7 @@
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
  * Shrinivas Chimmalgi (TU Delft) 2017.
- * Peter J. Prins (TU Delft) 2018, 2020.
+ * Peter J. Prins (TU Delft) 2018, 2020-2021.
  */
 
 /**
@@ -150,15 +150,17 @@ FNFT_INT fnft__akns_discretization_z_to_lambda(const FNFT_UINT n, const FNFT_REA
  * and the weights for the others are from Blanes, Casas and Thalhammer(<a href="https://doi.org/10.1016/j.cpc.2017.07.016">Computer Phys. Comm. 220, 2017</a>).
  * The weights are mentioned as matrices in the references. This routine returns 
  * them in row-major order.
- * @param[in,out] weights_ptr Pointer to the starting location of weights.
+ * @param[in,out] qr_weights_ptr Pointer to the starting location of potential weights.
+ * @param[in,out] eps_t_weights_ptr Pointer to the starting location of step size weights.
  * @param[in] akns_discretization Discretization of type \link fnft__akns_discretization_t \endlink.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  *
  * @ingroup akns
  */
-FNFT_INT fnft__akns_discretization_method_weights(FNFT_COMPLEX **weights_ptr,
-        fnft__akns_discretization_t akns_discretization);
+FNFT_INT fnft__akns_discretization_method_weights(FNFT_COMPLEX **qr_weights_ptr,
+                                                  FNFT_COMPLEX **eps_t_weights_ptr,
+                                                  fnft__akns_discretization_t const akns_discretization);
 
 /**
  * @brief  This routine preprocesses the signal by resampling and subsampling based on the discretization.
@@ -202,7 +204,47 @@ FNFT_INT fnft__akns_discretization_preprocess_signal(FNFT_UINT const D,
                                                      FNFT_COMPLEX **r_preprocessed_ptr,
                                                      FNFT_UINT * const first_last_index,
                                                      fnft__akns_discretization_t discretization);
-        
+
+/**
+ * @brief This routine returns the change of basis matrix from the basis of the discretization to S.
+ * @param[out] T 2x2 or 4x4 matrix. Left multiplication of a vector in the basis of the discretization by T changes it to the equivalent vector in S basis.
+ * @param[in] xi spectral parameter \f$ \xi \f$.
+ * @param[in] derivative_flag When 0, T is 2x2. When 1 T is 4x4, to include the derivatives.
+ * @param[in] eps_t Real-valued discretization step-size.
+ * @param[in] akns_discretization Discretization of type \link fnft__akns_discretization_t \endlink.
+ * @param[in] vanilla_flag For calculations for the KdV equation, pass 1 for the original mapping to the AKNS framework with r=-1. Pass 0 for the alternative mapping with q=-1. Unused for NSE.
+ * @param[in] PDE PDE of type \link fnft__akns_pde_t \endlink.
+ *
+ * @ingroup akns
+ */
+FNFT_INT fnft__akns_discretization_change_of_basis_matrix_to_S(FNFT_COMPLEX * const T,
+                                                               FNFT_COMPLEX const xi,
+                                                               FNFT_UINT  const derivative_flag, // 0- > 2x2, 1->4x4
+                                                               FNFT_REAL const eps_t,
+                                                               fnft__akns_discretization_t const akns_discretization,
+                                                               FNFT_UINT vanilla_flag,
+                                                               fnft__akns_pde_t const PDE);
+
+/**
+ * @brief This routine returns the change of basis matrix from the S basis to the basis of the discretization.
+ * @param[out] T 2x2 or 4x4 matrix. Left multiplication of a vector in the S basis of the discretization by T changes it to the equivalent vector in the basis of the discretization.
+ * @param[in] xi spectral parameter \f$ \xi \f$.
+ * @param[in] derivative_flag When 0, T is 2x2. When 1 T is 4x4, to include the derivatives.
+ * @param[in] eps_t Real-valued discretization step-size.
+ * @param[in] akns_discretization Discretization of type \link fnft__akns_discretization_t \endlink.
+ * @param[in] vanilla_flag For calculations for the KdV equation, pass 1 for the original mapping to the AKNS framework with r=-1. Pass 0 for the alternative mapping with q=-1. Unused for NSE.
+ * @param[in] PDE PDE of type \link fnft__akns_pde_t \endlink.
+ * 
+ * @ingroup akns
+ */
+FNFT_INT fnft__akns_discretization_change_of_basis_matrix_from_S(FNFT_COMPLEX * const T,
+                                                                FNFT_COMPLEX const xi,
+                                                                FNFT_UINT  const derivative_flag, // 0- > 2x2, 1->4x4
+                                                                FNFT_REAL const eps_t,
+                                                                fnft__akns_discretization_t const akns_discretization,
+                                                                FNFT_UINT vanilla_flag,
+                                                                fnft__akns_pde_t const PDE);
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define akns_discretization_degree(...) fnft__akns_discretization_degree(__VA_ARGS__)
 #define akns_discretization_boundary_coeff(...) fnft__akns_discretization_boundary_coeff(__VA_ARGS__)
@@ -212,7 +254,8 @@ FNFT_INT fnft__akns_discretization_preprocess_signal(FNFT_UINT const D,
 #define akns_discretization_z_to_lambda(...) fnft__akns_discretization_z_to_lambda(__VA_ARGS__)
 #define akns_discretization_method_weights(...) fnft__akns_discretization_method_weights(__VA_ARGS__)
 #define akns_discretization_preprocess_signal(...) fnft__akns_discretization_preprocess_signal(__VA_ARGS__)
-
+#define akns_discretization_change_of_basis_matrix_to_S(...) fnft__akns_discretization_change_of_basis_matrix_to_S(__VA_ARGS__)
+#define akns_discretization_change_of_basis_matrix_from_S(...) fnft__akns_discretization_change_of_basis_matrix_from_S(__VA_ARGS__)
 #endif
 
 #endif

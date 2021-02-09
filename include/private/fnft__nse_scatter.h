@@ -73,11 +73,17 @@
  *  defined in \link fnft_errwarn.h \endlink.
  * @ingroup nse
  */
-FNFT_INT fnft__nse_scatter_bound_states(const FNFT_UINT D, FNFT_COMPLEX const * const q,
-    FNFT_COMPLEX const * const r, FNFT_REAL const *const T, FNFT_UINT K,
-    FNFT_COMPLEX *bound_states, FNFT_COMPLEX *a_vals,
-    FNFT_COMPLEX *aprime_vals, FNFT_COMPLEX *b,
-    fnft_nse_discretization_t discretization, FNFT_UINT skip_b_flag);
+FNFT_INT fnft__nse_scatter_bound_states(FNFT_UINT const D,
+                                        FNFT_COMPLEX const * const q,
+                                        FNFT_COMPLEX const * const r,
+                                        FNFT_REAL const * const T,
+                                        FNFT_UINT const K,
+                                        FNFT_COMPLEX * const bound_states,
+                                        FNFT_COMPLEX * const a_vals,
+                                        FNFT_COMPLEX * const aprime_vals,
+                                        FNFT_COMPLEX * const b,
+                                        fnft_nse_discretization_t const discretization,
+                                        FNFT_UINT const skip_b_flag);
 
 /**
  * @brief Computes the scattering matrix and its derivative.
@@ -118,7 +124,7 @@ FNFT_INT fnft__nse_scatter_bound_states(const FNFT_UINT D, FNFT_COMPLEX const * 
 FNFT_INT fnft__nse_scatter_matrix(const FNFT_UINT D, FNFT_COMPLEX const * const q, FNFT_COMPLEX const * const r,
     const FNFT_REAL eps_t, const FNFT_INT kappa, const FNFT_UINT K,
     FNFT_COMPLEX const * const lambda,
-    FNFT_COMPLEX * const result, fnft_nse_discretization_t discretization,
+    FNFT_COMPLEX * const result, fnft_nse_discretization_t const discretization,
     const FNFT_UINT derivative_flag);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES

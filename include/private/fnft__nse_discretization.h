@@ -16,6 +16,7 @@
  * Contributors:
  * Sander Wahls (TU Delft) 2017.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
+ * Peter J. Prins (TU Delft) 2021.
  */
 
 /**
@@ -282,15 +283,17 @@ FNFT_INT fnft__nse_discretization_preprocess_signal(const FNFT_UINT D, FNFT_COMP
  * and the weights for the others are from Blanes, Casas and Thalhammer(<a href="https://doi.org/10.1016/j.cpc.2017.07.016">Computer Phys. Comm. 220, 2017</a>).
  * The weights are mentioned as matrices in the references. This routine returns 
  * them in row-major order.
- * @param[in,out] weights_ptr Pointer to the starting location of weights.
+ * @param[in,out] qr_weights_ptr Pointer to the starting location of potential weights.
+ * @param[in,out] eps_t_weights_ptr Pointer to the starting location of potential weights.
  * @param[in] nse_discretization Discretization of type \link fnft_nse_discretization_t \endlink.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  *
  * @ingroup nse
  */
-FNFT_INT fnft__nse_discretization_method_weights(FNFT_COMPLEX **weights_ptr,
-        fnft_nse_discretization_t nse_discretization);
+FNFT_INT fnft__nse_discretization_method_weights(FNFT_COMPLEX **qr_weights_ptr,
+                                                 FNFT_COMPLEX **eps_t_weights_ptr,
+                                                 fnft_nse_discretization_t const nse_discretization);
         
         
 

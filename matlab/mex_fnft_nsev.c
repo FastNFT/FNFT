@@ -16,6 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
+* Peter J. Prins (2021).
 */
 
 #include <string.h>
@@ -194,27 +195,123 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "bsfilt_full") == 0 ) {
             
             opts.bound_state_filtering = fnft_nsev_bsfilt_FULL;
-            
-        } else if ( strcmp(str, "discr_modal") == 0 ) {
-            
-            opts.discretization = fnft_nse_discretization_2SPLIT2_MODAL;
-            
-        } else if ( strcmp(str, "discr_2split2A") == 0 ) {
-            
-            opts.discretization = fnft_nse_discretization_2SPLIT2A;
-            
-        } else if ( strcmp(str, "discr_2split4A") == 0 ) {
-            
-            opts.discretization = fnft_nse_discretization_2SPLIT4A;
-            
-        } else if ( strcmp(str, "discr_2split4B") == 0 ) {
-            
-            opts.discretization = fnft_nse_discretization_2SPLIT4B;
-            
-        } else if ( strcmp(str, "discr_4split4B") == 0 ) {
-            
-            opts.discretization = fnft_nse_discretization_4SPLIT4B; 
+        } else if ( strcmp(str, "RE") == 0 ) {
+
+            opts.richardson_extrapolation_flag  = 1;
+
+        } else if ( strcmp(str, "dstype_residues") == 0 ) {
+
+            opts.discspec_type = fnft_nsev_dstype_RESIDUES;
+
+        } else if ( strcmp(str, "cstype_ab") == 0 ) {
+
+            opts.contspec_type = fnft_nsev_cstype_AB;
+
+        } else if ( strcmp(str, "skip_cs") == 0 ) {
+
+            skip_contspec_flag = 1;
+
+        } else if ( strcmp(str, "skip_bs") == 0 ) {
+
+            skip_bound_states_flag = 1;
+            skip_normconsts_flag = 1; // since bound states are needed to
+                                      // compute norming constants
+
+        } else if ( strcmp(str, "skip_nc") == 0 ) {
+
+            skip_normconsts_flag = 1;
+
+        } else if ( strcmp(str, "quiet") == 0 ) {
+
+            fnft_errwarn_setprintf(NULL);
         
+        // Fast discretizations
+        } else if ( strcmp(str, "discr_modal") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT2_MODAL;
+
+        } else if ( strcmp(str, "discr_2split1A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT1A;
+
+        } else if ( strcmp(str, "discr_2split1B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT1B;
+
+        } else if ( strcmp(str, "discr_2split2A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT2A;
+
+        } else if ( strcmp(str, "discr_2split2B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT2B;
+
+        } else if ( strcmp(str, "discr_2split2S") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT2S;
+
+        } else if ( strcmp(str, "discr_2split3A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT3A;
+
+        } else if ( strcmp(str, "discr_2split3B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT3B;
+
+        } else if ( strcmp(str, "discr_2split3S") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT3S;
+
+        } else if ( strcmp(str, "discr_2split4A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT4A;
+
+        } else if ( strcmp(str, "discr_2split4B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT4B;
+
+        } else if ( strcmp(str, "discr_2split5A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT5A;
+
+        } else if ( strcmp(str, "discr_2split5B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT5B;
+
+        } else if ( strcmp(str, "discr_2split6A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT6A;
+
+        } else if ( strcmp(str, "discr_2split6B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT6B;
+
+        } else if ( strcmp(str, "discr_2split7A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT7A;
+
+        } else if ( strcmp(str, "discr_2split7B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT7B;
+
+        } else if ( strcmp(str, "discr_2split8A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT8A;
+
+        } else if ( strcmp(str, "discr_2split8B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT8B;
+
+        } else if ( strcmp(str, "discr_4split4A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_4SPLIT4A;
+
+        } else if ( strcmp(str, "discr_4split4B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_4SPLIT4B;
+
+
+        // Slow discretizations
         } else if ( strcmp(str, "discr_BO") == 0 ) {
             
             opts.discretization = fnft_nse_discretization_BO;
@@ -242,36 +339,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "discr_TES4") == 0 ) {
             
             opts.discretization = fnft_nse_discretization_TES4;
-            
-        } else if ( strcmp(str, "RE") == 0 ) {
-            
-            opts.richardson_extrapolation_flag  = 1;
-            
-        } else if ( strcmp(str, "dstype_residues") == 0 ) {
-            
-            opts.discspec_type = fnft_nsev_dstype_RESIDUES;
- 
-        } else if ( strcmp(str, "cstype_ab") == 0 ) {
-            
-            opts.contspec_type = fnft_nsev_cstype_AB;
- 
-        } else if ( strcmp(str, "skip_cs") == 0 ) {
-            
-            skip_contspec_flag = 1;
-
-        } else if ( strcmp(str, "skip_bs") == 0 ) {
-            
-            skip_bound_states_flag = 1;
-            skip_normconsts_flag = 1; // since bound states are needed to
-                                      // compute norming constants
-
-        } else if ( strcmp(str, "skip_nc") == 0 ) {
-            
-            skip_normconsts_flag = 1;
-          
-        } else if ( strcmp(str, "quiet") == 0 ) {
-            
-            fnft_errwarn_setprintf(NULL);
             
         } else {
             snprintf(msg, sizeof msg, "%uth input has invalid value.", 

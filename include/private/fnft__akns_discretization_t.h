@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Shrinivas Chimmalgi (TU Delft) 2018-2020.
+* Peter J. Prins (TU Delft) 2021.
 */
 
 /**
@@ -50,10 +51,10 @@
  * Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot;
  * </a>Proc. ICASSP 2018, pp. 4524-4528 have been applied to the second-order method by Boffetta and Osborne
  * and to the fourth-order CF4_2 method to obtain other discretizations.\n
-* The `fnft__akns_discretization_2SPLIT2_MODAL` discretization is an exception. It is the normalized Ablowitz-Ladik 
+ * The `fnft__akns_discretization_2SPLIT2_MODAL` discretization is an exception. It is the normalized Ablowitz-Ladik
  * discretization Eq. 25 in Wahls and Vaibhav<a href="https://arxiv.org/pdf/1607.01305v2.pdf">&quot;
  * Fast Inverse Nonlinear Fourier Transforms for Continuous Spectra of Zakharov-Shabat Type
- * ,&quot;</a> Unpublished. The second one is the variant described in the sentence below Eq. 25 due to Skaar et al., IEEE J Quantum Electon. 37(2), 2001.\n 
+ * ,&quot;</a> Unpublished.\n 
  * All other discretizations have the notation `xSPLITyz`, where `x` is the error order 
  * of the base numerical method and `y` is the order of accuracy of splitting scheme. `z` is type of splitting and
  * can be `A`, `B` or `S`, with `A` standing for schemes implemented as defined in Prins and Wahls, 
@@ -131,6 +132,21 @@ typedef enum {
     fnft__akns_discretization_TES4
 } fnft__akns_discretization_t;
 
+/**
+ * @brief Enum that specifies partial differential equations for which the
+ * nonlinear Fourier transform can be calculated with the AKNS framework.
+ * M. J. Ablowitz, D. J. Kaup, A. C. Newell, and H. Segur, “The inverse
+ * scattering transform - Fourier analysis for nonlinear problems,” Studies in
+ * Applied Mathematics, vol. 53, pp. 249–315, 12 1974.
+ * `fnft__akns_pde_KdV` -- Korteweg-de Vries equation: \f[ q_x + 6qq_{t} + q_{ttt}=0, \quad  q=q(x,t). \f]
+ *`fnft__akns_pde_NSE` -- Nonlinear Schrödinger equation: \f[ iq_x + q_{tt} \pm 2q|q|^2=0, \quad  q=q(x,t), \f]
+ *
+ * @ingroup data_types
+ */
+typedef enum {
+    fnft__akns_pde_KdV,
+    fnft__akns_pde_NSE
+} fnft__akns_pde_t;
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define akns_discretization_2SPLIT2_MODAL fnft__akns_discretization_2SPLIT2_MODAL
@@ -162,6 +178,9 @@ typedef enum {
 #define akns_discretization_ES4 fnft__akns_discretization_ES4
 #define akns_discretization_TES4 fnft__akns_discretization_TES4
 #define akns_discretization_t fnft__akns_discretization_t
+#define akns_pde_KdV fnft__akns_pde_KdV
+#define akns_pde_NSE fnft__akns_pde_NSE
+#define akns_pde_t fnft__akns_pde_t
 #endif
 
 #endif

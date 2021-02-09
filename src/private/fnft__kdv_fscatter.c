@@ -15,7 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018, 2020.
-* Peter J Prins (TU Delft) 2017-2018.
+* Peter J Prins (TU Delft) 2017-2018, 2020-2021.
 * Shrinivas Chimmalgi (TU Delft) 2018.
 */
 
@@ -24,16 +24,16 @@
 #include "fnft__errwarn.h"
 #include "fnft__poly_fmult.h"
 #include "fnft__kdv_fscatter.h"
-#include "fnft__kdv_discretization.h"
-#include "fnft__akns_discretization.h"
 #include "fnft__misc.h"
 
 /**
  * Returns the length of array to be allocated based on the number
  * of samples and discretization.
  */
+
 UINT kdv_fscatter_numel(UINT D, kdv_discretization_t discretization)
 {
+
     const UINT deg = kdv_discretization_degree(discretization);
     if (deg == 0)
         return 0; // unknown discretization
@@ -41,21 +41,22 @@ UINT kdv_fscatter_numel(UINT D, kdv_discretization_t discretization)
         return poly_fmult2x2_numel(deg, D);
 }
 
-INT kdv_fscatter(const UINT D, COMPLEX const * const q,
-                 const REAL eps_t, COMPLEX * const result, UINT * const deg_ptr,
-                 INT * const W_ptr, kdv_discretization_t discretization)
+INT kdv_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r,
+        const REAL eps_t, const INT kappa,
+        COMPLEX * const result, UINT * const deg_ptr,
+        INT * const W_ptr, kdv_discretization_t const discretization)
 {
-    INT ret_code;
-    UINT i;
-    fnft__akns_discretization_t akns_discretization;
-    COMPLEX *r = NULL;
+    INT ret_code = SUCCESS;
+    akns_discretization_t akns_discretization;
+
     // Check inputs
     if (D == 0)
         return E_INVALID_ARGUMENT(D);
     if (q == NULL)
-        return E_INVALID_ARGUMENT(u);
+        return E_INVALID_ARGUMENT(q);
     if (eps_t <= 0.0)
         return E_INVALID_ARGUMENT(eps_t);
+    (void) kappa; // Suppress compiler warning about not using kappa
     if (result == NULL)
         return E_INVALID_ARGUMENT(result);
     if (deg_ptr == NULL)
@@ -64,20 +65,16 @@ INT kdv_fscatter(const UINT D, COMPLEX const * const q,
     ret_code = kdv_discretization_to_akns_discretization(discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 
-
-    r = malloc(D*sizeof(COMPLEX));
-    if (r == NULL) {
-        ret_code = E_NOMEM;
-        goto leave_fun;
+    UINT vanilla_flag;
+    kdv_discretization_vanilla_flag(&vanilla_flag, discretization);
+    if(vanilla_flag) {
+        ret_code = akns_fscatter(D, q, r, eps_t, result, deg_ptr, W_ptr, akns_discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
+    } else {
+        ret_code = akns_fscatter(D, r, q, eps_t, result, deg_ptr, W_ptr, akns_discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
     }
 
-    for (i = 0; i < D; i++)
-        r[i] = -1;
-
-    ret_code = akns_fscatter(D, q, r, eps_t, result, deg_ptr, W_ptr, akns_discretization);
-    CHECK_RETCODE(ret_code, leave_fun);
-
 leave_fun:
-    free(r);
     return ret_code;
 }

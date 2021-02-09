@@ -16,6 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
+* Peter J Prins (TU Delft) 2020-2021.
 */
 
 /**
@@ -58,7 +59,7 @@ typedef enum {
  * Enum that specifies how the bound states are localized. Used in
  * \link fnft_nsev_opts_t \endlink. \n \n
  * @ingroup data_types
- *  fnft_nsev_bsloc_FAST_EIGENVALUE: A rooting finding routine due to Aurentz et al. (see
+ *  fnft_nsev_bsloc_FAST_EIGENVALUE: A root finding routine due to Aurentz et al. (see
  *  https://arxiv.org/abs/1611.02435 and https://github.com/eiscor/eiscor)
  *  with \f$ O(D^2) \f$ complexity is used to detect the roots of
  *  \f$ a(\lambda) \f$. (Note: FNFT incorporates a development version of this
@@ -304,17 +305,10 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  * is know, the accuracy can be quantified by defining a suitable error. The error usually decreases with increasing \f$ D\f$ assuming everthing else remains the same.
  * The rate at which the error decreases with increase in \f$ D\f$ is known as the order of the method. The orders of the various discretizations can be found at \link fnft_nse_discretization_t \endlink.
  * The orders of the discretizations which use exponential splitting schemes should be the same as their base methods but can deviate when accuracy of the splitting scheme is low.
- * In the following cases the orders of the methods has been observed to be less than expected:
- *       - Focusing case CF4_3, residues have order two instead of four.
- *       - Focusing case CF6_4, residues have order three instead of six.
- *       - Focusing case TES4, residues have order two instead of four.
  *
  * Application of one step Richardson extrapolation should in theory increase the order by one. However, it can deviate both ways. In case of some smooth signals the order
- * may increase by two instead of one. On the other hand for discontinuous signals it maybe deterimental to apply Richardson extrapolation. In the following cases the orders of the methods has been observed to be less than expected:
- *       - Focusing case CF4_3, residues have order two instead of five.
- *       - Focusing case CF5_3, residues have order five instead of six.
- *       - Focusing case CF6_4, residues have order four instead of seven.
- *       - Focusing case TES4, residues have order two instead of five.
+ * may increase by two instead of one. On the other hand for discontinuous signals it maybe deterimental to apply Richardson extrapolation. In the following case the order of the method has been observed to be less than expected:
+ *       - Focusing case CF5_3, residues and norming constants have order five instead of six.
  *
  * @param[in] D Number of samples
  * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
@@ -328,7 +322,7 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  * @param[out] contspec Array of length M in which the routine will store the
  *  desired samples \f$ r(\xi_m) \f$ of the continuous spectrum (aka
  *  reflection coefficient) in ascending order,
- *  where \f$ \xi_m = XI[0]+(XI[1]-XI[0])/(M-1) \f$ and \f$m=0,1,\dots,M-1\f$.
+ *  where \f$ \xi_m = XI[0]+m(XI[1]-XI[0])/(M-1) \f$ and \f$m=0,1,\dots,M-1\f$.
  *  Has to be preallocated by the user. If NULL is passed instead, the
  *  continuous spectrum will not be computed. By changing the options, it is
  *  also possible to compute the values of \f$ a(\xi) \f$ and \f$ b(\xi) \f$
@@ -343,7 +337,10 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *  bound states as possible are returned instead. Note that in order to skip
  *  the computation of the bound states completely, it is not sufficient to pass
  *  *K_ptr==0. Instead, one needs to pass bound_states==NULL.
- * @param[out] bound_states Array. Upon return, the routine has stored the detected
+ * @param[in,out] bound_states Array. Upon entry, only if the option
+ *  `bound_state_localization=fnft_nsev_bsloc_NEWTON` is passed, this array should
+ *  contain initial guesses for the bound states. Otherwise the input values are
+ *  ignored. Upon return, the routine has stored the detected
  *  bound states (aka eigenvalues) in the first *K_ptr entries of this array.
  *  If NULL is passed instead, the discrete spectrum will not be computed.
  *  Has to be preallocated by the user. The user can choose an arbitrary
@@ -368,12 +365,12 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *
  * @ingroup fnft
  */
-FNFT_INT fnft_nsev(const FNFT_UINT D, FNFT_COMPLEX * const q,
+FNFT_INT fnft_nsev(const FNFT_UINT D, FNFT_COMPLEX const * const q,
     FNFT_REAL const * const T, const FNFT_UINT M,
     FNFT_COMPLEX * const contspec, FNFT_REAL const * const XI,
     FNFT_UINT * const K_ptr, FNFT_COMPLEX * const bound_states,
     FNFT_COMPLEX * const normconsts_or_residues, const FNFT_INT kappa,
-    fnft_nsev_opts_t *opts);
+    fnft_nsev_opts_t * opts);
 
 
 #ifdef FNFT_ENABLE_SHORT_NAMES

@@ -57,8 +57,8 @@ static inline void akns_fscatter_zero_freq_scatter_matrix(COMPLEX * const M,
  * matrix.
  */
 INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r,
-                 const REAL eps_t, COMPLEX * const result, UINT * const deg_ptr,
-                 INT * const W_ptr, akns_discretization_t discretization)
+                 REAL eps_t, COMPLEX * const result, UINT * const deg_ptr,
+                 INT * const W_ptr, akns_discretization_t const discretization)
 {
 
     INT ret_code;
@@ -122,7 +122,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                     goto release_mem;
                 }
                 scl = 1.0/scl_den;
-
+              
                 // construct the scattering matrix for the i-th sample
                 p11[0] = 0.0;
                 p11[1] = scl;
@@ -169,8 +169,8 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             break;
 
         case akns_discretization_2SPLIT1B: //Intentional fallthrough
-        case akns_discretization_2SPLIT2A: //Differs by correction in fnft_kdvv.c
-
+        case akns_discretization_2SPLIT2A: //By a trick that modifies the basis, see fnft__kdv_discretization.c -> fnft__kdv_discretization_change_of_basis_matrix_from_S and fnft__kdv_discretization_change_of_basis_matrix_to_S
+            
             e_1B = &e_Bstorage[0];
 
             for (i=D; i-->0;) {
@@ -352,8 +352,11 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             }
 
             break;
-        case akns_discretization_2SPLIT4A:
+
         case akns_discretization_4SPLIT4A:
+            eps_t /= 2.0;
+            // fall through
+        case akns_discretization_2SPLIT4A:
 
             e_2B = &e_Bstorage[0];
             e_4B = &e_Bstorage[3];
@@ -392,8 +395,11 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             }
 
             break;
-        case akns_discretization_2SPLIT4B:
+
         case akns_discretization_4SPLIT4B:
+            eps_t /= 2.0;
+            // fall through
+        case akns_discretization_2SPLIT4B:
 
             e_0_5B = &e_Bstorage[0];
             e_1B = &e_Bstorage[3];
