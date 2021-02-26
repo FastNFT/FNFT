@@ -148,6 +148,20 @@ FNFT_INT fnft__poly_fmult_two_polys2x2(const FNFT_UINT deg,
     FNFT_COMPLEX * const buf2,
     const FNFT_UINT mode_offset);
 
+FNFT_INT fnft__poly_fmult_two_polys3x3(const FNFT_UINT deg,
+    FNFT_COMPLEX const * const p1_11,
+    const FNFT_UINT p1_stride,
+    FNFT_COMPLEX const * const p2_11,
+    const FNFT_UINT p2_stride,
+    FNFT_COMPLEX * const result_11,
+    const FNFT_UINT result_stride,
+    fnft__fft_wrapper_plan_t plan_fwd,
+    fnft__fft_wrapper_plan_t plan_inv,
+    FNFT_COMPLEX * const buf0,
+    FNFT_COMPLEX * const buf1,
+    FNFT_COMPLEX * const buf2,
+    const FNFT_UINT mode_offset);
+
 /**
  * @brief Number of elements that the input p to
  * \link fnft__poly_fmult \endlink should have.
@@ -199,6 +213,13 @@ FNFT_INT fnft__poly_fmult(FNFT_UINT * const d, FNFT_UINT n, FNFT_COMPLEX * const
  */
 FNFT_UINT fnft__poly_fmult2x2_numel(const FNFT_UINT deg, const FNFT_UINT n);
 
+/* 
+ * Specifies how much memory (in number of elements) the user needs to allocate
+ * for the inputs p and result of the routine where the dimension of the AKNS system
+ * is NxN
+ */
+FNFT_UINT fnft__poly_fmult3x3_numel(const FNFT_UINT deg, const FNFT_UINT n);
+
 /**
  * @brief Fast multiplication of multiple 2x2 matrix-valued polynomials of the
  *   same degree.
@@ -224,15 +245,22 @@ FNFT_UINT fnft__poly_fmult2x2_numel(const FNFT_UINT deg, const FNFT_UINT n);
 FNFT_INT fnft__poly_fmult2x2(FNFT_UINT *d, FNFT_UINT n, FNFT_COMPLEX * const p,
     FNFT_COMPLEX * const result, FNFT_INT * const W_ptr);
 
+// My code, 3x3 case
+FNFT_INT fnft__poly_fmult3x3(FNFT_UINT* d, FNFT_UINT n, FNFT_COMPLEX* const p,
+	FNFT_COMPLEX* const result, FNFT_INT* const W_ptr);
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define poly_fmult_two_polys_len(...) fnft__poly_fmult_two_polys_len(__VA_ARGS__)
 #define poly_fmult_two_polys_lenmen(...) fnft__poly_fmult_two_polys_lenmen(__VA_ARGS__)
 #define poly_fmult_two_polys(...) fnft__poly_fmult_two_polys(__VA_ARGS__)
 #define poly_fmult_two_polys2x2(...) fnft__poly_fmult_two_polys2x2(__VA_ARGS__)
+#define poly_fmult_two_polys3x3(...) fnft__poly_fmult_two_polys3x3(__VA_ARGS__)
 #define poly_fmult_numel(...) fnft__poly_fmult_numel(__VA_ARGS__)
 #define poly_fmult2x2_numel(...) fnft__poly_fmult2x2_numel(__VA_ARGS__)
+#define poly_fmult3x3_numel(...) fnft__poly_fmult3x3_numel(__VA_ARGS__)
 #define poly_fmult(...) fnft__poly_fmult(__VA_ARGS__)
 #define poly_fmult2x2(...) fnft__poly_fmult2x2(__VA_ARGS__)
+#define poly_fmult3x3(...) fnft__poly_fmult3x3(__VA_ARGS__)
 #endif
 
 #endif

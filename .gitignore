@@ -16,7 +16,9 @@
 !/src/private/
 !/src/3rd_party/eiscor/
 !/src/3rd_party/kiss_fft/
-#!/test/
+!/test/
+!/test/fnft__poly/
+
 
 # Ignore MacOS hidden files in subdirectories
 /**/*.DS_Store
