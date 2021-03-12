@@ -15,6 +15,7 @@
  *
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
+ * Lianne de Vries (TU Delft) 2021.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -180,13 +181,17 @@ i = 0:7;
         for (i=0; i<9*(deg+1); i++)
             result[i] *= scl;
     }
+    printf("error\n");
+    for(UINT k = 0; k<45; k++){
+        printf("%f +i%f \n",creal(result[k])-creal(result_exact[k]), cimag(result[k])-cimag(result_exact[k]));
+    }
     if (!(misc_rel_err(9*(deg+1), result, result_exact) <= 100*EPSILON)){
         REAL err;
         err = misc_rel_err(9*(deg+1), result, result_exact);
         return E_TEST_FAILED;
     }
 
-    return SUCCESS; // Replaced SUCCES by E_TEST_FAILED
+    return SUCCESS;
 }
 
 INT main(void)
@@ -205,7 +210,9 @@ INT main(void)
         E_SUBROUTINE(ret_code);
         return EXIT_FAILURE;
     }
+
+    printf("Succes\n");
     
 
-    return EXIT_SUCCESS; // Replaced SUCCES FAILURE
+    return EXIT_SUCCESS;
 }

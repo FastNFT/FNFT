@@ -16,6 +16,7 @@
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
  * Peter J Prins (TU Delft) 2020.
+ * Lianne de Vries (TU Delft) 2021.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -75,18 +76,6 @@ inline INT poly_fmult_two_polys(
     const UINT mode)
 {
 
-    /*
-    // Printing p to see if input is okay
-    printf("p1 = \n");
-    for (UINT i=0; i<=deg; i++){
-        printf("%f + i%f\n", creal(p1[i]), cimag(p1[i]));
-    }
-    printf("p2 = \n");
-    for (UINT i=0; i<=deg; i++){
-        printf("%f + i%f\n", creal(p2[i]), cimag(p2[i]));
-    }
-    */
-
     UINT i;
     INT ret_code = SUCCESS;
 
@@ -100,7 +89,7 @@ inline INT poly_fmult_two_polys(
         ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf1);
         CHECK_RETCODE(ret_code, leave_fun);
     }
-
+ 
     // FFT of second polynomial
     if (p2 != NULL) {
         memcpy(buf0, p2, (deg+1)*sizeof(COMPLEX));
@@ -132,13 +121,13 @@ inline INT poly_fmult_two_polys(
         for (i = 0; i < len; i++)
             result[i] += buf0[i];
 
-        // Temporarily store the fft of the final answer (result) in buf0
-        memcpy(buf0, result, len*sizeof(COMPLEX));
+        // Temporarily store the fft of the final answer (result) in buf0 (not needed?)
+        // memcpy(buf0, result, len*sizeof(COMPLEX));
     }
 
 
-    if (mode != 2 || mode !=4) {
-
+    if (mode != 2 && mode !=4) {        // Replaced || by && operator
+    
         // Inverse FFT of product
         ret_code = fft_wrapper_execute_plan(plan_inv, buf0, buf1);
         CHECK_RETCODE(ret_code, leave_fun);
@@ -154,6 +143,9 @@ inline INT poly_fmult_two_polys(
 
         for (i = 0; i < 2*deg + 1; i++)
             result[i] += buf1[i]/len;
+    }
+    
+    if (mode ==3){
     }
 
 leave_fun:
@@ -383,6 +375,7 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
     COMPLEX * const buf2,
     const UINT mode_offset)
 {
+
     INT ret_code;
 
     COMPLEX const * const p1_12 = p1_11 + p1_stride;
@@ -394,10 +387,10 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
     COMPLEX const * const p1_32 = p1_31 + p1_stride;
     COMPLEX const * const p1_33 = p1_32 + p1_stride;
 
-    /*
+    
     // Printing some stuff to see if the pointers point to the right addresses
     // Print first entry of each pij
-    printf("First value that pij points to. Should be coefficient of 1st matrix for 1st order element\n");
+/*    printf("First value that pij points to. Should be coefficient of 1st matrix for 6th order element\n");
         printf("%f + i%f\n", creal(*p1_11), cimag(*p1_11));
         printf("%f + i%f\n", creal(*p1_12), cimag(*p1_12));
         printf("%f + i%f\n", creal(*p1_13), cimag(*p1_13));
@@ -406,9 +399,50 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
         printf("%f + i%f\n", creal(*p1_23), cimag(*p1_23));
         printf("%f + i%f\n", creal(*p1_31), cimag(*p1_31));
         printf("%f + i%f\n", creal(*p1_32), cimag(*p1_32));
-        printf("%f + i%f\n", creal(*p1_33), cimag(*p1_33));
-        */
+        printf("%f + i%f\n", creal(*p1_33), cimag(*p1_33));*/
 
+    // Printing coefficients of first matrix to be multiplied
+   /* printf("coeffs of first matrix in fmult_two_polys3x3\n");
+    
+    printf("p1_11 = \n");
+    for (j = 0; j<7; j++)
+        printf("%f + i%f\n", creal(p1_11[j]), cimag(p1_11[j]));
+
+    printf("p1_12 = \n");
+    for (j = 0; j<7; j++)
+        printf("%f + i%f\n", creal(p1_12[j]), cimag(p1_12[j]));
+
+    printf("p1_13 = \n");
+    for (j = 0; j<7; j++)
+        printf("%f + i%f\n", creal(p1_13[j]), cimag(p1_13[j]));
+    
+    printf("p1_21 = \n");
+    for (j = 0; j<7; j++)
+        printf("%f + i%f\n", creal(p1_21[j]), cimag(p1_21[j]));
+
+    printf("p1_22 = \n");
+    for (j = 0; j<7; j++)
+        printf("%f + i%f\n", creal(p1_22[j]), cimag(p1_22[j]));
+
+    printf("p1_23 = \n");
+    for (j = 0; j<7; j++)
+        printf("%f + i%f\n", creal(p1_23[j]), cimag(p1_23[j]));
+
+    printf("p1_31 = \n");
+    for (j = 0; j<7; j++)
+        printf("%f + i%f\n", creal(p1_31[j]), cimag(p1_31[j]));
+
+    printf("p1_32 = \n");
+    for (j = 0; j<7; j++)
+        printf("%f + i%f\n", creal(p1_32[j]), cimag(p1_32[j]));
+
+    printf("p1_33 = \n");
+    for (j = 0; j<7; j++)
+        printf("%f + i%f\n", creal(p1_33[j]), cimag(p1_33[j]));
+    
+    */
+
+    
     COMPLEX const * const p2_12 = p2_11 + p2_stride;
     COMPLEX const * const p2_13 = p2_12 + p2_stride;
     COMPLEX const * const p2_21 = p2_13 + p2_stride;
@@ -440,6 +474,50 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
     COMPLEX * const result_32 = result_31 + result_stride;
     COMPLEX * const result_33 = result_32 + result_stride;
 
+    // Printing results
+    printf("result BEFORE multipication in fmult_two_polys3x3\n");
+    UINT j;
+    printf("result_11 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_11[j]), cimag(result_11[j]));
+
+    printf("result_12 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_12[j]), cimag(result_12[j]));
+
+    printf("result_13 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_13[j]), cimag(result_13[j]));
+    
+    printf("result_21 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_21[j]), cimag(result_21[j]));
+
+    printf("result_22 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_22[j]), cimag(result_22[j]));
+
+    printf("result_23 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_23[j]), cimag(result_23[j]));
+
+    printf("result_31 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_31[j]), cimag(result_31[j]));
+
+    printf("result_32 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_32[j]), cimag(result_32[j]));
+
+    printf("result_33 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_33[j]), cimag(result_33[j]));
+
+    printf("deg in polys3x3 = %d\n",deg);
+
+    // Second time, these memory addresses already contain values, but they shouldn't (I think)
+    // However, this should not matter? They are overwritten in first round of multiplication when "mode"=2?
+
     // We compute the matrix product
     //
     //  [a b ; c d][e f ; g h]=[ae af ; ce cf]+[bg bh ; dg dh],
@@ -464,33 +542,34 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
     ret_code = poly_fmult_two_polys(deg, p1_11, p2_11, result_11,
                                     plan_fwd, plan_inv, buf0, buf1, buf2, mode);
     CHECK_RETCODE(ret_code, leave_fun);
-    // printing first term of result 11
-//     printf("result 11 (1)= %f + i%f\n", creal(*result_11), cimag(*result_11));
+    ret_code = poly_fmult_two_polys(deg, NULL /*p1_11*/, p2_12, result_12,
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = poly_fmult_two_polys(deg, NULL /*p1_11*/, p2_13, result_13,
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = poly_fmult_two_polys(deg, NULL /*p2_13*/, p1_21, result_23,
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = poly_fmult_two_polys(deg, NULL /*p1_21*/, p2_12, result_22,
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = poly_fmult_two_polys(deg, NULL /*p1_21*/, p2_11, result_21,
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = poly_fmult_two_polys(deg, NULL /*p2_11*/, p1_31, result_31,
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = poly_fmult_two_polys(deg, NULL /*p1_31*/, p2_12, result_32,
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = poly_fmult_two_polys(deg, NULL /*p1_31*/, p2_13, result_33,
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+    CHECK_RETCODE(ret_code, leave_fun);
 
-    ret_code = poly_fmult_two_polys(deg, p1_11, p2_12, result_12,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_11, p2_13, result_13,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p2_13, p1_21, result_23,
-                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_21, p2_12, result_22,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_21, p2_11, result_21,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p2_11, p1_31, result_31,
-                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_31, p2_12, result_32,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_31, p2_13, result_33,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
-    CHECK_RETCODE(ret_code, leave_fun);
+    printf("result_11 after calculating first term of multiplication= \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_11[j]), cimag(result_11[j]));
 
 
     mode = mode_offset + 2;     // We are now switching to the mode:
@@ -511,68 +590,118 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
     ret_code = poly_fmult_two_polys(deg, p1_12, p2_21, result_11,
                                     plan_fwd, plan_inv, buf0, buf1, buf2, mode);
     CHECK_RETCODE(ret_code, leave_fun);
-//         printf("result 11 (2) = %f + i%f\n", creal(*result_11), cimag(*result_11));
-    ret_code = poly_fmult_two_polys(deg, p1_12, p2_22, result_12,
+    ret_code = poly_fmult_two_polys(deg, NULL /*p1_12*/, p2_22, result_12,
                                     plan_fwd, plan_inv, buf0, buf1, buf2, mode);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_12, p2_23, result_13,
+    ret_code = poly_fmult_two_polys(deg, NULL /*p1_12*/, p2_23, result_13,
                                     plan_fwd, plan_inv, buf0, buf1, buf2, mode);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p2_23, p1_22, result_23,
+    ret_code = poly_fmult_two_polys(deg, NULL /*p2_23*/, p1_22, result_23,
                                     plan_fwd, plan_inv, buf0, buf2, buf1, mode);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_22, p2_22, result_22,
+    ret_code = poly_fmult_two_polys(deg, NULL /*p1_22*/, p2_22, result_22,
                                     plan_fwd, plan_inv, buf0, buf1, buf2, mode);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_22, p2_21, result_21,
+    ret_code = poly_fmult_two_polys(deg, NULL /*p1_22*/, p2_21, result_21,
                                     plan_fwd, plan_inv, buf0, buf1, buf2, mode);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p2_21, p1_32, result_31,
+    ret_code = poly_fmult_two_polys(deg, NULL /*p2_21*/, p1_32, result_31,
                                     plan_fwd, plan_inv, buf0, buf2, buf1, mode);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_32, p2_22, result_32,
+    ret_code = poly_fmult_two_polys(deg, NULL /*p1_32*/, p2_22, result_32,
                                     plan_fwd, plan_inv, buf0, buf1, buf2, mode);
     CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_32, p2_23, result_33,
+    ret_code = poly_fmult_two_polys(deg, NULL /*p1_32*/, p2_23, result_33,
                                     plan_fwd, plan_inv, buf0, buf1, buf2, mode);
     CHECK_RETCODE(ret_code, leave_fun);
+
+    printf("result_11 after calculating 2nd term of multiplication= \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_11[j]), cimag(result_11[j]));
 
 
     // add 3rd term
     mode = mode - 1;        // We are now switching to the mode:
                             // caluclating last term. Add to previous result AND take inverse fft
                             // (mode 1 or 3)
-    ret_code = poly_fmult_two_polys(deg, p1_13, p2_31, result_11,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
-    CHECK_RETCODE(ret_code, leave_fun);
-//         printf("result 11 (3)= %f + i%f\n", creal(*result_11), cimag(*result_11));
-    ret_code = poly_fmult_two_polys(deg, p1_13, p2_32, result_12,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_13, p2_33, result_13,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p2_33, p1_23, result_23,
-                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_23, p2_32, result_22,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_23, p2_31, result_21,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p2_31, p1_33, result_31,
-                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_33, p2_32, result_32,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = poly_fmult_two_polys(deg, p1_33, p2_33, result_33,
+
+    // For 3x3, it is not impossible to avoid calculating some values twice,
+    // unless we use an extra buffer. I chose not to, so in the last two calls
+    // of poly_fmult_two_polys we cannot use the NULL pointer and reuse values
+        ret_code = poly_fmult_two_polys(deg, p1_13, p2_31, result_11,
                                     plan_fwd, plan_inv, buf0, buf1, buf2, mode);
     CHECK_RETCODE(ret_code, leave_fun);
 
+        ret_code = poly_fmult_two_polys(deg, NULL /*p2_31*/, p1_23, result_21,
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+        ret_code = poly_fmult_two_polys(deg, NULL /*p1_23*/, p2_32, result_22,
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+        ret_code = poly_fmult_two_polys(deg, NULL /*p2_32*/, p1_13, result_12,
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+        ret_code = poly_fmult_two_polys(deg, NULL /*p1_13*/, p2_33, result_13,
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+        ret_code = poly_fmult_two_polys(deg, NULL /*p2_33*/, p1_33, result_33,
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+        ret_code = poly_fmult_two_polys(deg, NULL /*p1_33*/, p2_31, result_31,
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+
+        ret_code = poly_fmult_two_polys(deg, p1_33, p2_32, result_32,
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+    CHECK_RETCODE(ret_code, leave_fun);
+        ret_code = poly_fmult_two_polys(deg, p1_23, p2_33, result_23,
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+
+    // Printing results
+    printf("result AFTER multiplication in fmult_two_polys3x3\n");
+    printf("result_11 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_11[j]), cimag(result_11[j]));
+
+    printf("result_12 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_12[j]), cimag(result_12[j]));
+
+    printf("result_13 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_13[j]), cimag(result_13[j]));
     
+    printf("result_21 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_21[j]), cimag(result_21[j]));
 
+    printf("result_22 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_22[j]), cimag(result_22[j]));
+
+    printf("result_23 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_23[j]), cimag(result_23[j]));
+
+    printf("result_31 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_31[j]), cimag(result_31[j]));
+
+    printf("result_32 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_32[j]), cimag(result_32[j]));
+
+    printf("result_33 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(result_33[j]), cimag(result_33[j]));
 
 
 leave_fun:
@@ -1022,20 +1151,48 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
         r32 = r31 + r_stride;
         r33 = r32 + r_stride;
 
+
+        // Printing results
+    printf("result before starting treewise multiplication\n");
+    printf("r11 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(r11[j]), cimag(r11[j]));
+
+    printf("r12 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(r12[j]), cimag(r12[j]));
+
+    printf("r13 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(r13[j]), cimag(r13[j]));
+    
+    printf("r21 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(r21[j]), cimag(r21[j]));
+
+    printf("r22 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(r22[j]), cimag(r22[j]));
+
+    printf("r23 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(r23[j]), cimag(r23[j]));
+
+    printf("r31 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(r31[j]), cimag(r31[j]));
+
+    printf("r32 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(r32[j]), cimag(r32[j]));
+
+    printf("r33 = \n");
+    for (j = 0; j<26; j++)
+        printf("%f + i%f\n", creal(r33[j]), cimag(r33[j]));
+
+
         // Multiply all pairs of polynomials, normalize if desired
         for (i=0; i<n; i+=2) {
-
-        /* // print p and results
-        UINT j;
-        printf("p = \n");
-        for (j=0; j<73; j++){
-            printf("%f + i%f\n", creal(p[j]), cimag(p[j]));
-        }
-        printf("result before mult = \n");
-        for (j=0; j<73; j++){
-            printf("%f + i%f\n", creal(result[j]), cimag(result[j]));
-        }
-        */
 
             const UINT mode_offset  = r_stride - or < len ? 0 : 2;
             ret_code = poly_fmult_two_polys3x3(deg, p+o1, p_stride, p+o2,
@@ -1043,12 +1200,6 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
                                                plan_fwd, plan_inv, buf0, buf1,
                                                buf2, mode_offset);
             CHECK_RETCODE(ret_code, release_mem);
-            /* // print p and results
-            printf("result after mult= \n");
-            for (j=0; j<73; j++){
-                printf("%f + i%f\n", creal(result[j]), cimag(result[j]));
-            }
-            */
 
             // Normalize if desired
             if (W_ptr != NULL)

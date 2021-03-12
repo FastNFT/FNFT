@@ -18,6 +18,7 @@
 !/src/3rd_party/kiss_fft/
 !/test/
 !/test/fnft__poly/
+!/test/fnft__manakov_fscatter/
 
 
 # Ignore MacOS hidden files in subdirectories
