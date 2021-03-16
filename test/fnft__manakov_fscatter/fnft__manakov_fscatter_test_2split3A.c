@@ -29,7 +29,7 @@
 
 static INT manakov_fscatter_test_2split3A()
 {
-    UINT i, j, D = 4, deg, nz = 5;
+    UINT i, j, D = 8, deg, nz = 5;
     INT W = 0, *W_ptr = NULL;
     REAL scl;
     INT ret_code;
@@ -59,7 +59,7 @@ for i = 1:1:5
         % equation, to appear in Proc. of IEEE ICASSP 2018, Calgary, April 2018.
         eA_3 = [1/z 0 0; 0 z 0; 0 0 z];
         B = [0, q(2*n-1), q(2*n); r(2*n-1), 0, 0; r(2*n), 0, 0];
-        U = 9/8*eA_3*expm(B*2*eps_t/3)*eA_3*eA_3*expm(B*eps_t/3) - 1/8*eA_3*eA_3*eA_3*expm(B*eps_t);
+        U = (9/8)*eA_3*expm(B*eps_t*2/3)*eA_3^2*expm(B*eps_t/3) - (1/8)*eA_3^3*expm(B*eps_t);
         S = U*S;
     end
     result_exact(i) = S(1,1);
@@ -142,6 +142,13 @@ end
         
         // without normalization 
         ret_code = manakov_fscatter(D, q, kappa, eps_t, transfer_matrix, &deg, NULL, akns_discretization);  // with kappa =1
+
+/*        for (i = 0; i<9; i++){
+                printf("transfer_matrix in manakov_fscatter_test (p%d)=\n",i);
+            for (UINT j = 0; j<25; j++){
+                printf("%f + i%f\n", creal(transfer_matrix[j+(i*25)]), cimag(transfer_matrix[j+(i*25)]));
+            }
+        }*/
     
         if (ret_code != SUCCESS){
             return E_SUBROUTINE(ret_code);
@@ -160,13 +167,19 @@ end
                 goto leave_fun;
             }
         }
-        
+        #define DEBUG
 #ifdef DEBUG
         printf("error without normalization = %2.1e < %2.1e\n",misc_rel_err(9*nz, result, result_exact),err_bnd);
         printf("result and exact result\n");
         for (UINT j = 0; j<45; j++){
                 printf("%f + i%f,    %f + i%f\n", creal(result[j]), cimag(result[j]), creal(result_exact[j]), cimag(result_exact[j]));
             }
+
+        /*Note: For z[0], z[1] and z[3] result and result_exact match, but the values for z[2] and z[4] are different.
+        If we change D, some of the other values with z=z[i] match but not all.
+        The values for z an p passed to poly_eval are okay, and when evaluating using horners method in matlab
+        result and result_exact do agree, so there is probably a mistake in the matlab test file
+        */
 
 #endif
         if (misc_rel_err(9*nz, result, result_exact) > err_bnd)

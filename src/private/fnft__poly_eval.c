@@ -21,12 +21,18 @@
 #include "fnft.h"
 #include "fnft__poly_eval.h"
 #include "fnft__errwarn.h"
+#include <stdio.h>
 
 INT poly_eval(const UINT deg, COMPLEX const * const p, const UINT nz, \
     COMPLEX * const z)
 {
     UINT i, j;
     COMPLEX tmp;
+    printf("p in poly_eval = \n");
+    for (i=0; i<25; i++){
+       printf("%f + i%f\n",creal(p[i]), cimag(p[i])); 
+    }
+    
 
     // Check inputs
     if (p == NULL)
@@ -38,16 +44,26 @@ INT poly_eval(const UINT deg, COMPLEX const * const p, const UINT nz, \
         // Evaluate p(z) at z=z[i]
         if (FNFT_CABS(z[i]) <= 1.0) { // Horner's method
             tmp = p[0];
-            for (j=1; j<=deg; j++)
+            printf("horners method on polynomial\n");
+            for (j=1; j<=deg; j++){      // why start at j=1 here and not j=0?
                 tmp = p[j] + tmp*z[i];
+                printf("tmp = %f + i%f\n",creal(tmp), cimag(tmp));
+            }
             z[i] = tmp;
         } else { // Apply Horner's method to reversed polynomial for stability
             tmp = p[deg];
+            printf("horners method on reverse polynomial\n");
             for (j=1; j<=deg; j++)
                 tmp = p[deg - j] + tmp/z[i];
             z[i] = tmp * FNFT_CPOW(z[i], deg);
         }
     }
+
+    printf("z after evaluation in poly_eval\n");
+    for (i=0; i<5; i++){
+        printf("%f + i%f\n",creal(z[i]), cimag(z[i]));
+    }
+
 
     return SUCCESS;
 }
