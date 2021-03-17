@@ -252,6 +252,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q, const UINT kappa,
             goto release_mem;
     }
     // Multiply the individual scattering matrices
+    misc_print_buf(7*9*2,p,"c");
     ret_code = poly_fmult3x3(deg_ptr, D, p, result, W_ptr);
 /*    printf("result in manakov_fscatter=\n");
             for (UINT j = 0; j<7; j++){

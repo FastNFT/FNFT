@@ -60,7 +60,8 @@ UINT poly_fmultNxN_numel(UINT deg, UINT n)
 
 inline UINT poly_fmult_two_polys_len(const UINT deg)
 {
-    return 2*(deg + 1) - 1;
+    //return 2*(deg + 1) - 1;
+    return fft_wrapper_next_fft_length(2*(deg + 1) - 1);
     /* Original code:
     return fft_wrapper_next_fft_length(2*(deg + 1) - 1);
     calls a function from the kiss_fft library and outputs the "next fast size"
@@ -90,8 +91,9 @@ inline INT poly_fmult_two_polys(
     const UINT len = poly_fmult_two_polys_len(deg);
     memset(&buf0[deg+1], 0, (len - (deg+1))*sizeof(COMPLEX));
 
-/*    printf("len in fmult_two_polys = %d\n", len);
-    printf("deg in fmult_two_polys = %d\n", deg);*/
+    printf("len in fmult_two_polys = %ld\n", len);
+    printf("deg in fmult_two_polys = %ld\n", deg);
+    printf("mode = %ld\n",mode);
 
     // FFT of first polynomial
     if (p1 != NULL) {
@@ -509,6 +511,8 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
     COMPLEX * const result_31 = result_23 + result_stride;
     COMPLEX * const result_32 = result_31 + result_stride;
     COMPLEX * const result_33 = result_32 + result_stride;
+    
+    printf("result_stride=%ld\n",result_stride);
 
     // Printing results
 /*    printf("result BEFORE multipication in fmult_two_polys3x3\n");
@@ -1059,6 +1063,7 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
 
     // Setup pointers to the individual polynomials in p
     deg = *d;
+    printf("deg=%ld\n",deg);
     p11 = p;
     p12 = p11 + n*(deg+1);
     p13 = p12 + n*(deg+1);
@@ -1149,8 +1154,9 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
         n += n_excess;
     }
     
-    // Allocate memory for calls to poly_fmult_two_polys2x2
+    // Allocate memory for calls to poly_fmult_two_polys3x3
     lenmem = poly_fmult_two_polys_len(deg * n/2) * sizeof(COMPLEX);
+    printf("len buf0= %ld\n",poly_fmult_two_polys_len(deg * n/2));
     buf0 = fft_wrapper_malloc(lenmem);
     buf1 = fft_wrapper_malloc(lenmem);
     buf2 = fft_wrapper_malloc(lenmem);
@@ -1166,6 +1172,7 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
 
         // Create FFT and IFFT config (computes twiddle factors, so reuse)
         len = poly_fmult_two_polys_len(deg);
+        printf("len= %ld\n",poly_fmult_two_polys_len(deg));
         ret_code = fft_wrapper_create_plan(&plan_fwd, len, buf0, buf1, -1);
         CHECK_RETCODE(ret_code, release_mem);
         ret_code = fft_wrapper_create_plan(&plan_inv, len, buf0, buf2, 1);
@@ -1247,6 +1254,8 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
             o1 += 2*deg + 2;
             o2 += 2*deg + 2;
             or += 2*deg + 1;
+
+            printf("In loop %ld for n=%ld\n",i,n);
         }
 
         // Update degrees and number of polynomials
@@ -1275,6 +1284,9 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
         }
     }
 
+
+
+    misc_print_buf(15*9,r11,"r");
     // If padding was applied, reduce degree of the result
     if (n_excess > 0) {
         r12_pad = r12;
@@ -1306,6 +1318,7 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
 
     // Set degree of final result, free memory and return w/o error
     *d = deg;
+    printf("new deg = %ld\n",deg);
     if (W_ptr != NULL)
         *W_ptr = W;
 release_mem:
