@@ -1038,7 +1038,7 @@ release_mem:
 }
 
 
-// My code, for 3x3 case
+// My code, for 3x3 case %
 INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
     COMPLEX * const result, INT * const W_ptr)
 {
