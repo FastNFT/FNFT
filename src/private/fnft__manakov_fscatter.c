@@ -115,7 +115,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q, const UINT kappa,
     if (len == 0) { // size D>0, this means unknown discretization
         return E_INVALID_ARGUMENT(discretization);
     }
-    p = malloc(len*sizeof(COMPLEX)); // replaced len by 7*9. 7 coefficients, 1 timestep, 9 elements in tm
+    p = malloc(len*sizeof(COMPLEX));
 
     // degree 1 polynomials
     if (p == NULL)
@@ -340,7 +340,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q, const UINT kappa,
             }
             break;
 
-            case manakov_discretization_FCF24_4:
+            /*case manakov_discretization_FCF24_4:
             // Getting non-equidistant samples. qci has sample points at T0+(n+ci)*eps_t,
             // c1 = 0.5-sqrt(3)/6, c2 = 0.5+sqrt(3)/6
 
@@ -369,7 +369,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q, const UINT kappa,
 
 
 
-            break;
+            break;*/
 
 
         default: // Unknown discretization
@@ -379,10 +379,10 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q, const UINT kappa,
     // Multiply the individual scattering matrices
     misc_print_buf(7*9*2,p,"c");
     ret_code = poly_fmult3x3(deg_ptr, D, p, result, W_ptr);
-/*    printf("result in manakov_fscatter=\n");
-            for (UINT j = 0; j<7; j++){
+    printf("result in manakov_fscatter=\n");
+            for (UINT j = 0; j<135; j++){
                 printf("%f + i%f\n", creal(result[j]), cimag(result[j]));
-            }*/
+            }
     CHECK_RETCODE(ret_code, release_mem);
 
 release_mem:
