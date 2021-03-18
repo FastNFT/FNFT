@@ -29,7 +29,7 @@
 
 static INT manakov_fscatter_test_2split3A()
 {
-    UINT i, j, D = 8, deg, nz = 5;
+    UINT i, j, D = 2, deg, nz = 5;
     INT W = 0, *W_ptr = NULL;
     REAL scl;
     INT ret_code;
@@ -142,6 +142,8 @@ end
         
         // without normalization 
         ret_code = manakov_fscatter(D, q, kappa, eps_t, transfer_matrix, &deg, NULL, akns_discretization);  // with kappa =1
+        misc_print_buf(deg+1,transfer_matrix,"p1");
+        return;
 
 /*        for (i = 0; i<9; i++){
                 printf("transfer_matrix in manakov_fscatter_test (p%d)=\n",i);
