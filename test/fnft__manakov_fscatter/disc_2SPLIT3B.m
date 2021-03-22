@@ -83,6 +83,7 @@ for i = 1:1:5
             (1/8)*expm(B*eps_t)*eA_3^3;
         S = U*S;
     end
+    S=S*z^(D*3);
     result_exact(i) = S(1,1);
     result_exact(5+i) = S(1,2);
     result_exact(10+i) = S(1,3);

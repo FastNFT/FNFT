@@ -64,7 +64,7 @@ matz6 = [0,         0,          0;
 %% Computing values for the test file
 eps_t = 0.13;
 kappa = 1;
-D=2;
+D=8;
 q = (0.41*cos(1:2*D)+0.59j*sin(0.28*(1:2*D)))*50;
 r = -conj(q);
 zlist = exp(1i*[0,pi/4,9*pi/14,4*pi/3,-pi/5]);
@@ -81,6 +81,7 @@ for i = 1:1:5
         U = (9/8)*eA_3*expm(B*eps_t*2/3)*eA_3^2*expm(B*eps_t/3) - (1/8)*eA_3^3*expm(B*eps_t);
         S = U*S;
     end
+    S=S*z^(D*3);
     result_exact(i) = S(1,1);
     result_exact(5+i) = S(1,2);
     result_exact(10+i) = S(1,3);

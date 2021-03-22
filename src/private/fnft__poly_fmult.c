@@ -67,7 +67,10 @@ inline UINT poly_fmult_two_polys_len(const UINT deg)
     return fft_wrapper_next_fft_length(2*(deg + 1) - 1);
     calls a function from the kiss_fft library and outputs the "next fast size"
     which is the next number that can be written completely in factors of 2, 3 and 5
-    Not sure why this is useful / needed
+    This is useful because the kiss_fft library calculates the fft more efficiently
+    in that case. However, this caused problems when the lenght of buf0 determined
+    by this function was >result_stride
+    TODO: set result_stride to appropriate length if this happens
     */
 
 }
@@ -89,7 +92,7 @@ inline INT poly_fmult_two_polys(
     INT ret_code = SUCCESS;
 
     // Zero-pad polynomials
-    const UINT len = 2*(deg + 1) - 1;
+    const UINT len = 2*(deg + 1) - 1;       // TODO: use next_fast_size
     memset(&buf0[deg+1], 0, (len - (deg+1))*sizeof(COMPLEX));
 
     printf("len in fmult_two_polys = %ld\n", len);
@@ -1185,7 +1188,7 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
         or = 0;
 
         // Setup pointers to the individual polynomials in result
-        const UINT r_stride = (n/2)*(2*deg+1);
+        const UINT r_stride = (n/2)*(2*deg+1);  // TODO: adjust using next_fast_size
         printf("r_stride = %d\n",r_stride);
         printf("len = %d\n",len);
         r11 = result;

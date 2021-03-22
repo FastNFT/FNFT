@@ -101,6 +101,7 @@ p = [p11; p12; p13; p21; p22; p23; p31; p32; p33];
     r33 = conv(s31,t13) + conv(s32,t23) + conv(s33,t33);
     
     %% horners method
+        zlist = exp(1i*[0,pi/4,9*pi/14,4*pi/3,-pi/5]);
     % to check the values calculated by poly_eval
     z_cur = zlist(2);       % which of the 5 different z's we are evaluating
     r_cur = r12;            % matrix element
@@ -110,3 +111,15 @@ p = [p11; p12; p13; p21; p22; p23; p31; p32; p33];
         tmp = r_cur(i)+tmp*z_cur;
         tmp_log(i-1) = tmp;
     end
+    
+    %% horners method for D=1
+    z_cur = zlist(1);       % which of the 5 different z's we are evaluating
+    r_cur = p12(1:7);            % matrix element
+    tmp = r_cur(1);
+    tmp_log = zeros(24,1);
+    for i = 2:7
+        tmp = r_cur(i)+tmp*z_cur;
+        tmp_log(i-1) = tmp;
+    end
+    
+   tmp

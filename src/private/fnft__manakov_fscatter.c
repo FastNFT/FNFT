@@ -75,6 +75,8 @@ static inline void manakov_fscatter_zero_freq_scatter_matrix(COMPLEX * const M,
 INT manakov_fscatter(const UINT D, COMPLEX const * const q, const UINT kappa, 
                  REAL eps_t, COMPLEX * const result, UINT * const deg_ptr,
                  INT * const W_ptr, akns_discretization_t const discretization)
+                 //TODO: make sure enough memory is allocated for result to allow
+                 // r_stride > (2*(deg + 1) - 1) if needed because of next_fast_size
 {
     /* D: number of samples
     q: array of length 2*D containing the samples: q=[q1(t0), q2(t0), ... q1(T{D-1}),q2(T{D-1})]
