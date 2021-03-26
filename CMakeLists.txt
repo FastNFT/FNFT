@@ -224,3 +224,12 @@ if (WITH_MATLAB)
     endforeach()
   endif()
 endif()
+
+# Copying dll file to test folders windows
+#add_custom_command(TARGET ./test/fnft_manakov_fscatter/fnft__manakov_fscatter_test_2split3A POST_BUILD	# TODO: make TARGET work for all test files	
+#					COMMAND message(STATUS "test")
+#	)
+	
+	#install(CODE "MESSAGE(\"Sample install message.\")")
+
+

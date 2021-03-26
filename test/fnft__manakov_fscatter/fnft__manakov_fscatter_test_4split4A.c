@@ -27,42 +27,72 @@
 #include "fnft__errwarn.h"
 
 
-static INT manakov_fscatter_test_2split3A()
+static INT manakov_fscatter_test_4split4A()
 {
-    UINT i, j, D = 8, deg, nz = 5;
+    UINT i, j, D = 512, deg, nz = 5;
     INT W = 0, *W_ptr = NULL;
     REAL scl;
     INT ret_code;
     COMPLEX *transfer_matrix = NULL;
-    akns_discretization_t akns_discretization = akns_discretization_2SPLIT3A;
+    akns_discretization_t akns_discretization = akns_discretization_4SPLIT4A;
     const REAL eps_t = 0.13;
     COMPLEX z[5] = {1.0+0.0*I, CEXP(I*PI/4), CEXP(I*9*PI/14), CEXP(I*4*PI/3), CEXP(I*-PI/5)};
-    COMPLEX q1[8], q2[8];
+    COMPLEX q1[512], q2[512];   // [D]
     COMPLEX result[45];
     const REAL err_bnd = 100*EPSILON;
     UINT kappa = 1;
-    /* matlab code to compute results:
-    %% Computing values for the test file
+    /* %% Exact answer for test file:
 eps_t = 0.13;
 kappa = 1;
-D=8;
-q = (0.41*cos(1:2*D)+0.59j*sin(0.28*(1:2*D)))*50;
-r = -conj(q);
+D=512;
+q1 = 0.92*sech((-(D-1)*eps_t/2):eps_t:((D-1)*eps_t/2));
+q2 = 2.13*sech((-(D-1)*eps_t/2):eps_t:((D-1)*eps_t/2));
 zlist = exp(1i*[0,pi/4,9*pi/14,4*pi/3,-pi/5]);
 result_exact = zeros(45,1);
+c1 = 0.5-sqrt(3)/6;
+c2 = 0.5+sqrt(3)/6;
+a1  = 0.25 + sqrt(3)/6;
+a2  = 0.25 - sqrt(3)/6;
+
+% getting the non-equidistant samples
+[q1_c1, q2_c1] =  bandlimited_interpolation(eps_t,...
+                                    [q1; q2],c1*eps_t);
+[q1_c2, q2_c2] = bandlimited_interpolation(eps_t,...
+                                    [q1; q2],c2*eps_t);
+
+%%
+% Interlacing the samples:
+qeff = zeros(2,2*D);
+reff = zeros(2,2*D);
+
+qeff(1,2:2:end)=a2*q1_c1+a1*q1_c2;
+qeff(2,2:2:end)=a2*q2_c1+a1*q2_c2;
+reff(1,2:2:end)=-kappa*(a2*conj(q1_c1)+a1*conj(q1_c2));
+reff(2,2:2:end)=-kappa*(a2*conj(q2_c1)+a1*conj(q2_c2));
+
+qeff(1,1:2:end)=a1*q1_c1+a2*q1_c2;
+qeff(2,1:2:end)=a1*q2_c1+a2*q2_c2;
+reff(1,1:2:end)=-kappa*(a1*conj(q1_c1)+a2*conj(q1_c2));
+reff(2,1:2:end)=-kappa*(a1*conj(q2_c1)+a2*conj(q2_c2));
+
 for i = 1:1:5
     z = zlist(i);
     S = eye(3);
-    for n=1:D
+    for n=1:2*D
         % Eq. 19 in P. J. Prins and S. Wahls, Higher order exponential
         % splittings for the fast non-linear Fourier transform of the KdV
         % equation, to appear in Proc. of IEEE ICASSP 2018, Calgary, April 2018.
-        eA_3 = [1/z 0 0; 0 z 0; 0 0 z];
-        B = [0, q(2*n-1), q(2*n); r(2*n-1), 0, 0; r(2*n), 0, 0];
-        U = (9/8)*eA_3*expm(B*eps_t*2/3)*eA_3^2*expm(B*eps_t/3) - (1/8)*eA_3^3*expm(B*eps_t);
+        eA_4 = [1/z 0 0; 0 z 0; 0 0 z];
+        B = [0, qeff(1,n), qeff(2,n);...
+             reff(1,n), 0, 0;
+             reff(2,n), 0, 0];
+        eB = expm(B*eps_t);
+        eB_1_2 = expm(B*eps_t/2);
+        U = (4/3)*eA_4*eB_1_2*eA_4*eA_4*eB_1_2*eA_4+...
+            -(1/3)*eA_4*eA_4*eB*eA_4*eA_4;
         S = U*S;
     end
-    S=S*z^(D*3);
+    S=S*z^(2*D*4);
     result_exact(i) = S(1,1);
     result_exact(5+i) = S(1,2);
     result_exact(10+i) = S(1,3);
@@ -73,57 +103,79 @@ for i = 1:1:5
     result_exact(35+i) = S(3,2);
     result_exact(40+i) = S(3,3);
 end
+
+%%
+function [q1s, q2s] = bandlimited_interpolation(eps_t, qn, ts)
+% implements bandlimited interpolation (interpolation using the time shift
+% property of the Fourier Transform)
+% 
+% inputs:
+% eps_t sampling period
+% qn    values of the samples of q taken at the points in vector tn
+% ts    desired shift of the samples
+% 
+% output: qs    the shifted vector of samples
+
+Qn = [fft(qn(1,:)); fft(qn(2,:))];
+N = length(qn(1,:));
+Np = floor(N/2);
+Nn = -floor((N-1)/2);
+Qn = [Qn(1,:).*exp(2i*pi*[0:Np, Nn:-1]*ts/(N*eps_t));...
+      Qn(2,:).*exp(2i*pi*[0:Np, Nn:-1]*ts/(N*eps_t))];
+q1s = ifft(Qn(1,:));
+q2s = ifft(Qn(2,:));
+end
 */
 
-    COMPLEX result_exact[45] = {    //(for D = 8)
-        0.717079769494587 + I*0.603849188423540,
- -0.669517227404166 - I*1.126212701993991,
- -1.205426270741966 - I*0.245452300373313,
-  0.769324774846953 + I*0.458993691653882,
-  0.366662225901886 - I*0.770892826233883,
- -0.019426985252253 - I*0.323809345097833,
-  0.497448887020238 - I*0.949261504910699,
- -0.261436847501865 + I*0.690268022871104,
-  0.405707233863645 + I*0.418097072974667,
- -0.773822833028319 - I*1.154624507704179,
-  0.117897313765893 + I*0.045089749388625,
- -0.199416759535318 + I*0.577910492565164,
-  0.149103076456717 + I*0.503216619744914,
- -0.046905113011129 - I*0.994090689472043,
- -0.286722955970471 - I*0.671651740246069,
- -0.035861335498322 + I*0.195304943612686,
- -0.276023805001875 + I*0.576426953733081,
- -0.361265241519421 + I*0.521300650126837,
- -0.564216734514218 - I*1.188404890187716,
-  0.237984451838333 + I*1.156420490694242,
- -0.354959894220305 + I*0.563607365810547,
-  0.006371392883521 - I*0.354242388105808,
- -0.035220527488110 - I*1.078493629107347,
-  0.502424512067295 + I*0.515360830795772,
- -0.267789113789004 - I*0.145934634563106,
-  0.718384875296165 - I*0.029040063044732,
- -1.314042299506553 - I*0.319358058388560,
-  0.382835690520380 + I*0.630645653681684,
-  0.627309252316094 - I*0.153204191181139,
- -0.929044002718357 - I*0.620229959736022,
-  0.043902236727244 + I*0.282498316895673,
- -0.971144231475345 - I*0.680049142075383,
- -0.764328966546298 + I*0.398253528370027,
-  0.142408341594341 - I*0.645985906800806,
-  0.945456896799084 + I*0.942301939995414,
- -0.545709285372266 + I*0.391563132622335,
- -0.390833633338943 + I*1.176985480133516,
- -0.440343978096879 - I*0.450650866020793,
- -0.970994183180071 - I*0.003891979641344,
- -0.739198781192066 - I*0.057247192380030,
- -0.658806653082993 - I*0.181991146610252,
- -1.292184403231215 + I*0.056331639648754,
- -0.810528680854822 - I*0.511282172237863,
-  0.049872508514115 - I*1.244805644515133,
-  0.877255914293173 + I*0.195774534543759,
+    COMPLEX result_exact[45] = {    //(for D = 4)
+        0.535312216834827 + 0.000000000000000*I,
+ -0.876100554400375 + 0.000000000000189*I,
+  1.488309514396944 - 0.177469655362891*I,
+  1.413466575055319 + 0.001680256683798*I,
+  1.067509010332368 + 0.143660232128824*I,
+  0.334921105634314 + 0.000000000000000*I,
+  0.305961558188473 - 0.000000000000139*I,
+ -0.000006334981011 - 0.000000000000000*I,
+ -0.000000000000425 + 0.000000000000737*I,
+ -0.000000000000030 - 0.000000000000092*I,
+  0.775415168479450 + 0.000000000000000*I,
+  0.708367520588534 - 0.000000000000321*I,
+ -0.000014666858210 - 0.000000000000001*I,
+ -0.000000000000984 + 0.000000000001708*I,
+ -0.000000000000069 - 0.000000000000212*I,
+ -0.334921105634314 + 0.000000000000000*I,
+ -0.305961558188469 + 0.000000000000139*I,
+  0.000003949796055 + 0.000004952887595*I,
+ -0.000000000000851 - 0.000000000000001*I,
+ -0.000000000000078 - 0.000000000000057*I,
+  0.926938543333800 + 0.000000000000000*I,
+  0.705026376154884 - 0.000000000000509*I,
+  0.649543041719028 + 0.859254177924683*I,
+ -0.532275262355729 + 0.922456161387930*I,
+  0.290815209239376 - 0.968131104877846*I,
+ -0.169153155107540 + 0.000000000000000*I,
+ -0.682928063901806 + 0.000000000000481*I,
+  0.060318914023684 + 0.179250371003925*I,
+ -0.074724248722293 + 0.130649471402472*I,
+ -0.042141089498959 - 0.039531384435203*I,
+ -0.775415168479449 + 0.000000000000000*I,
+ -0.708367520588522 + 0.000000000000321*I,
+  0.000009144636519 + 0.000011467011498*I,
+ -0.000000000001971 - 0.000000000000001*I,
+ -0.000000000000180 - 0.000000000000131*I,
+ -0.169153155107539 + 0.000000000000000*I,
+ -0.682928063901806 + 0.000000000000481*I,
+  0.060318914023684 + 0.179250371003925*I,
+ -0.074724248722293 + 0.130649471402473*I,
+ -0.042141089498959 - 0.039531384435203*I,
+  0.608373673501001 + 0.000000000000000*I,
+ -0.581126930555475 + 0.000000000000397*I,
+  0.763141200631258 + 1.196835058813635*I,
+ -0.673002880190806 + 1.168507332142588*I,
+  0.211451211078578 - 1.042580265042229*I
     };
         
-        i = manakov_fscatter_numel(D, akns_discretization);
+        i = manakov_fscatter_numel(2*D, akns_discretization);
         if (i == 0) { // size D>=2, this means unknown discretization
             ret_code = E_INVALID_ARGUMENT(akns_discretization);
             goto leave_fun;
@@ -137,14 +189,13 @@ end
         }
         
         for (i=0; i<D; i++){
-            q1[i] = (0.41*COS(2*i+1) + 0.59*I*SIN(0.28*(2*i+1)))*50;
-            q2[i] = (0.41*COS(2*(i+1)) + 0.59*I*SIN(0.28*(2*(i+1))))*50;
+            q1[i] = 0.92*1/COSH(i*eps_t-(D-1)*eps_t*0.5);
+            q2[i] = 2.13*1/COSH(i*eps_t-(D-1)*eps_t*0.5);
         }
         
         
         // without normalization 
         ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, NULL, akns_discretization);  // with kappa =1
-        misc_print_buf(deg+1,transfer_matrix,"p1");
     
         if (ret_code != SUCCESS){
             return E_SUBROUTINE(ret_code);
@@ -173,14 +224,8 @@ end
             }
 #endif  // DEBUG
 
-        /*Note: For z[0], z[1] and z[3] result and result_exact match, but the values for z[2] and z[4] are different.
-        If we change D, some of the other values with z=z[i] match but not all.
-        The values for z an p passed to poly_eval are okay, and when evaluating using horners method in matlab
-        result and result_exact do agree, so there is probably a mistake in the matlab test file
-        */
-        if (misc_rel_err(9*nz, result, result_exact) > err_bnd)
+        if (misc_rel_err(9*nz, result, result_exact) > 100*err_bnd)
             return E_TEST_FAILED;
-        
         
         
         // with normalization
@@ -197,7 +242,7 @@ end
         }
         scl = POW(2.0, W);
         for (i=0; i<9*(deg+1); i++)
-            transfer_matrix[i] *= scl;  // replaced 4 by 9. TODO: also do this in the other test files
+            transfer_matrix[i] *= scl;
         
         for (i=0; i<9; i++){    // replaced 4 by 9
             for (j=0; j<nz; j++)
@@ -211,7 +256,7 @@ end
         }
         
 #ifdef DEBUG
-        printf("error with normalization = %2.1e < %2.1e\n",misc_rel_err(9*nz, result, result_exact),err_bnd);
+        printf("error with normalization = %2.1e < %2.1e\n",misc_rel_err(4*nz, result, result_exact),err_bnd);
         printf("result and exact result\n");
         for (UINT j = 0; j<45; j++){
                 printf("%f + i%f,    %f + i%f\n", creal(result[j]), cimag(result[j]), creal(result_exact[j]), cimag(result_exact[j]));
@@ -229,8 +274,7 @@ end
 
 INT main()
 {
-
-    if (manakov_fscatter_test_2split3A() != SUCCESS)
+    if (manakov_fscatter_test_4split4A() != SUCCESS)
         return EXIT_FAILURE;
     
     printf("SUCCES");

@@ -27,12 +27,7 @@ INT poly_eval(const UINT deg, COMPLEX const * const p, const UINT nz, \
     COMPLEX * const z)
 {
     UINT i, j;
-    COMPLEX tmp;
-    printf("p in poly_eval = \n");
-    for (i=0; i<25; i++){
-       printf("%f + i%f\n",creal(p[i]), cimag(p[i])); 
-    }
-    
+    COMPLEX tmp;    
 
     // Check inputs
     if (p == NULL)
@@ -46,7 +41,6 @@ INT poly_eval(const UINT deg, COMPLEX const * const p, const UINT nz, \
             tmp = p[0];
             for (j=1; j<=deg; j++){
                 tmp = p[j] + tmp*z[i];
-                //printf("tmp = %f + i%f\n",creal(tmp), cimag(tmp));
             }
             z[i] = tmp;
         } else { // Apply Horner's method to reversed polynomial for stability
@@ -56,12 +50,6 @@ INT poly_eval(const UINT deg, COMPLEX const * const p, const UINT nz, \
             z[i] = tmp * FNFT_CPOW(z[i], deg);
         }
     }
-
-    printf("z after evaluation in poly_eval\n");
-    for (i=0; i<5; i++){
-        printf("%f + i%f\n",creal(z[i]), cimag(z[i]));
-    }
-
 
     return SUCCESS;
 }

@@ -40,10 +40,6 @@ CE_approx_pos = expand(CE_approx*z^3);
 [c32,t32] = coeffs(CE_approx_pos(3,2),z);
 [c33,t33] = coeffs(CE_approx_pos(3,3),z);
 
-% Organizing all coefficients in corresponding matrices. Don't know if this
-% is useful for writing the C code actually, the values cij an tij might be
-% enough
-% Answer: yes, useful for writing the test file
 matz0 = [c11(2),    c12(2),     c13(2);
          0,         0,          0;
          0,         0,          0];
@@ -187,10 +183,6 @@ for k =1:5
         end
     end
 end
-% These should be the same as result from manakov_fscatter_test_2split3A
-% for D=2, and they are. In check_p, the values tmp evaluated using the
-% polynomial coefs and horners method are also the same as the
-% (intermediate) values from poly_eval. So it looks like the matlab test
-% file does not give the right output
+
             
             

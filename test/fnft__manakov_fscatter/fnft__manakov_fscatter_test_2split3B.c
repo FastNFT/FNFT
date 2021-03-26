@@ -37,7 +37,7 @@ static INT manakov_fscatter_test_2split3B()
     akns_discretization_t akns_discretization = akns_discretization_2SPLIT3B;
     const REAL eps_t = 0.13;
     COMPLEX z[5] = {1.0+0.0*I, CEXP(I*PI/4), CEXP(I*9*PI/14), CEXP(I*4*PI/3), CEXP(I*-PI/5)};
-    COMPLEX q[16];
+    COMPLEX q1[8], q2[8];
     COMPLEX result[45];
     const REAL err_bnd = 100*EPSILON;
     UINT kappa = 1;
@@ -137,13 +137,13 @@ end
             goto leave_fun;
         }
         
-        for (i=0; i<2*D; i++){
-            q[i] = (0.41*COS(i+1) + 0.59*I*SIN(0.28*(i+1)))*50;
+        for (i=0; i<D; i++){
+            q1[i] = (0.41*COS(2*i+1) + 0.59*I*SIN(0.28*(2*i+1)))*50;
+            q2[i] = (0.41*COS(2*(i+1)) + 0.59*I*SIN(0.28*(2*(i+1))))*50;
         }
         
-        
         // without normalization 
-        ret_code = manakov_fscatter(D, q, kappa, eps_t, transfer_matrix, &deg, NULL, akns_discretization);  // with kappa =1
+        ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, NULL, akns_discretization);  // with kappa =1
 
 /*        for (i = 0; i<9; i++){
                 printf("transfer_matrix in manakov_fscatter_test (p%d)=\n",i);
@@ -191,7 +191,7 @@ end
         
         // with normalization
         W_ptr = &W;
-        ret_code = manakov_fscatter(D, q, 1, eps_t, transfer_matrix, &deg, W_ptr, akns_discretization); // with kappa = 1
+        ret_code = manakov_fscatter(D, q1, q2, 1, eps_t, transfer_matrix, &deg, W_ptr, akns_discretization); // with kappa = 1
 
         if (ret_code != SUCCESS){
             return E_SUBROUTINE(ret_code);
@@ -202,7 +202,7 @@ end
             goto leave_fun;
         }
         scl = POW(2.0, W);
-        for (i=0; i<4*(deg+1); i++)
+        for (i=0; i<9*(deg+1); i++)
             transfer_matrix[i] *= scl;
         
         for (i=0; i<9; i++){    // replaced 4 by 9
@@ -217,9 +217,9 @@ end
         }
         
 #ifdef DEBUG
-        printf("error with normalization = %2.1e < %2.1e\n",misc_rel_err(4*nz, result, result_exact),err_bnd);
+        printf("error with normalization = %2.1e < %2.1e\n",misc_rel_err(9*nz, result, result_exact),err_bnd);
 #endif
-        if (misc_rel_err(4*nz, result, result_exact) > err_bnd)
+        if (misc_rel_err(9*nz, result, result_exact) > 100*err_bnd)
             return E_TEST_FAILED;
         
         

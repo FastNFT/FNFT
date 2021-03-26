@@ -1,6 +1,21 @@
-// Not sure yet what functions should be in this file and if it is necessary,
-// but because the methods for 2x2 all use a change of base trick to reduce the degree,
-// we need a different function to determine the degree for the 3x3 system methods
+/*
+* This file is part of FNFT.
+*
+* FNFT is free software; you can redistribute it and/or
+* modify it under the terms of the version 2 of the GNU General
+* Public License as published by the Free Software Foundation.
+*
+* FNFT is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program. If not, see <http://www.gnu.org/licenses/>.
+*
+* Contributor:
+* Lianne de Vries (TU Delft) 2021.
+*/
 
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -19,6 +34,9 @@ UINT fnft__manakov_discretization_degree(akns_discretization_t
         case akns_discretization_2SPLIT3A:
         case akns_discretization_2SPLIT3B:
             return 6;
+        case akns_discretization_4SPLIT4A:
+        case akns_discretization_4SPLIT4B:
+            return 8;
 
                     
         default: // Unknown discretization

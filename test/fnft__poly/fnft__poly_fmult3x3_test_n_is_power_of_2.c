@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2017-2018.
+ * Sander Wahls (TU Delft) 2017-2018 (fmult2x2 test files).
  * Lianne de Vries (TU Delft) 2021.
  */
 
@@ -185,6 +185,15 @@ i = 0:7;
     for(UINT k = 0; k<45; k++){
         printf("%f +i%f \n",creal(result[k])-creal(result_exact[k]), cimag(result[k])-cimag(result_exact[k]));
     }
+    #define DEBUG
+    #ifdef DEBUG
+        printf("deg in test = %d\n", deg);
+        printf("error = %2.1e < %2.1e\n",misc_rel_err(45, result, result_exact),100*EPSILON);
+        printf("result and exact result\n");
+        for (UINT j = 0; j<45; j++){
+                printf("%f + i%f,    %f + i%f\n", creal(result[j]), cimag(result[j]), creal(result_exact[j]), cimag(result_exact[j]));
+            }
+    #endif
     if (!(misc_rel_err(9*(deg+1), result, result_exact) <= 100*EPSILON)){
         REAL err;
         err = misc_rel_err(9*(deg+1), result, result_exact);
