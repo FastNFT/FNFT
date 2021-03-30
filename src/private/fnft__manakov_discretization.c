@@ -36,6 +36,8 @@ UINT fnft__manakov_discretization_degree(akns_discretization_t
             return 6;
         case akns_discretization_4SPLIT4A:
         case akns_discretization_4SPLIT4B:
+        case akns_discretization_FTES4_4A:
+        case akns_discretization_FTES4_4B:
             return 8;
 
                     

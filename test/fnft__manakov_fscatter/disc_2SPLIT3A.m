@@ -72,7 +72,7 @@ for i = 1:1:5
         % Eq. 19 in P. J. Prins and S. Wahls, Higher order exponential
         % splittings for the fast non-linear Fourier transform of the KdV
         % equation, to appear in Proc. of IEEE ICASSP 2018, Calgary, April 2018.
-        eA_3 = [z^-1 0 0; 0 z 0; 0 0 z];
+        eA_4 = [z^-1 0 0; 0 z 0; 0 0 z];
         B = [0, q(2*n-1), q(2*n); r(2*n-1), 0, 0; r(2*n), 0, 0];
         U = (9/8)*eA_3*expm(B*eps_t*2/3)*eA_3^2*expm(B*eps_t/3) - (1/8)*eA_3^3*expm(B*eps_t);
         S = U*S;

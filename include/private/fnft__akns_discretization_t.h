@@ -129,7 +129,9 @@ typedef enum {
     fnft__akns_discretization_CF5_3,
     fnft__akns_discretization_CF6_4,
     fnft__akns_discretization_ES4,  
-    fnft__akns_discretization_TES4
+    fnft__akns_discretization_TES4,
+	fnft__akns_discretization_FTES4_4A,		// TODO: added this one. Needed, or should this be put in manakov_discretization?
+	fnft__akns_discretization_FTES4_4B
 } fnft__akns_discretization_t;
 
 /**
@@ -177,6 +179,8 @@ typedef enum {
 #define akns_discretization_CF6_4 fnft__akns_discretization_CF6_4
 #define akns_discretization_ES4 fnft__akns_discretization_ES4
 #define akns_discretization_TES4 fnft__akns_discretization_TES4
+#define akns_discretization_FTES4_4A fnft__akns_discretization_FTES4_4A
+#define akns_discretization_FTES4_4B fnft__akns_discretization_FTES4_4B
 #define akns_discretization_t fnft__akns_discretization_t
 #define akns_pde_KdV fnft__akns_pde_KdV
 #define akns_pde_NSE fnft__akns_pde_NSE

@@ -48,7 +48,11 @@ UINT poly_fmult2x2_numel(UINT deg, UINT n)
 UINT poly_fmult3x3_numel(UINT deg, UINT n)
 {
 
-	return 9*(deg+1)*misc_nextpowerof2(n);      // TODO: maybe change this to include fft_next_size, then we ensure "result" is big enough to set r_stride=len
+    if (fft_wrapper_next_fft_length(n)>9*(deg+1)*misc_nextpowerof2(n))
+        return fft_wrapper_next_fft_length(n);
+    else
+        return 9*(deg+1)*misc_nextpowerof2(n);
+        // TODO: original: return 9*(deg+1)*misc_nextpowerof2(n)
 }
 
 /*
@@ -92,7 +96,7 @@ inline INT poly_fmult_two_polys(
     INT ret_code = SUCCESS;
 
     // Zero-pad polynomials
-    const UINT len = 2*(deg + 1) - 1;       // TODO: use next_fast_size
+    const UINT len = 2*(deg + 1) - 1;       // TODO: maybe try fft_wrapper_next_fft_length(2*(deg + 1) - 1);?
     memset(&buf0[deg+1], 0, (len - (deg+1))*sizeof(COMPLEX));
 
     // FFT of first polynomial
@@ -1043,6 +1047,7 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
     
     // Allocate memory for calls to poly_fmult_two_polys3x3
     lenmem = poly_fmult_two_polys_len(deg * n/2) * sizeof(COMPLEX); //TODO: change how buf0 is allocated here?
+    printf("length of lenmen = %d\n",poly_fmult_two_polys_len(deg * n/2));
     buf0 = fft_wrapper_malloc(lenmem);
     buf1 = fft_wrapper_malloc(lenmem);
     buf2 = fft_wrapper_malloc(lenmem);
@@ -1057,7 +1062,8 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
     while (n >= 2) {
 
         // Create FFT and IFFT config (computes twiddle factors, so reuse)
-        len = 2*(deg + 1) - 1;    // TODO: original: poly_fmult_two_polys_len(deg);
+        len = 2*(deg + 1) - 1;    // TODO: this is the alternative code. This makes the code work, but is less efficient
+//        len = poly_fmult_two_polys_len(deg);    // original code
         ret_code = fft_wrapper_create_plan(&plan_fwd, len, buf0, buf1, -1);
         CHECK_RETCODE(ret_code, release_mem);
         ret_code = fft_wrapper_create_plan(&plan_inv, len, buf0, buf2, 1);
@@ -1069,7 +1075,22 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
         or = 0;
 
         // Setup pointers to the individual polynomials in result
-        const UINT r_stride = (n/2)*(2*deg+1);  // TODO: adjust using next_fast_size
+        // TODO: check this, maybe use next_fast_size
+              // Alternative code
+        UINT r_stride_temp = (n/2)*(2*deg+1);
+        printf("r_stride_temp = %d\n",r_stride_temp);
+        if (r_stride_temp < len)
+            r_stride_temp = len;
+        const UINT r_stride = r_stride_temp;
+                  
+  //      const UINT r_stride = poly_fmult_two_polys_len(deg*n/2);
+        // If we use the original code for getting len, both the code with r_stride_temp 
+        // and poly_fmult_two_polys give r_stride >= len
+
+        printf("r_stride = %d\n",r_stride);
+        printf("len = %d\n",len);
+        
+
         r11 = result;
         r12 = r11 + r_stride;
         r13 = r12 + r_stride;
@@ -1124,6 +1145,9 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
         for (i=0; i<n; i+=2) {
 
             const UINT mode_offset  = r_stride - or < len ? 0 : 2;
+            // Maybe this line causes problems? It becomes 0 sometimes if we use original code, 
+//            const UINT mode_offset = 2;     // See if code works when we force mode_offset = 2. Answer: no
+            printf("mode_offset = %d\n",mode_offset);
             ret_code = poly_fmult_two_polys3x3(deg, p+o1, p_stride, p+o2,
                                                p_stride, result+or, r_stride,
                                                plan_fwd, plan_inv, buf0, buf1,

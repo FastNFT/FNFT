@@ -39,7 +39,7 @@ static INT manakov_fscatter_test_4split4A()
     COMPLEX z[5] = {1.0+0.0*I, CEXP(I*PI/4), CEXP(I*9*PI/14), CEXP(I*4*PI/3), CEXP(I*-PI/5)};
     COMPLEX q1[512], q2[512];   // [D]
     COMPLEX result[45];
-    const REAL err_bnd = 100*EPSILON;
+    const REAL err_bnd = 3*1000*EPSILON;
     UINT kappa = 1;
     /* %% Exact answer for test file:
 eps_t = 0.13;
@@ -224,7 +224,7 @@ end
             }
 #endif  // DEBUG
 
-        if (misc_rel_err(9*nz, result, result_exact) > 100*err_bnd)
+        if (misc_rel_err(9*nz, result, result_exact) > err_bnd)
             return E_TEST_FAILED;
         
         
@@ -256,7 +256,7 @@ end
         }
         
 #ifdef DEBUG
-        printf("error with normalization = %2.1e < %2.1e\n",misc_rel_err(4*nz, result, result_exact),err_bnd);
+        printf("error with normalization = %2.1e < %2.1e\n",misc_rel_err(9*nz, result, result_exact),err_bnd);
         printf("result and exact result\n");
         for (UINT j = 0; j<45; j++){
                 printf("%f + i%f,    %f + i%f\n", creal(result[j]), cimag(result[j]), creal(result_exact[j]), cimag(result_exact[j]));

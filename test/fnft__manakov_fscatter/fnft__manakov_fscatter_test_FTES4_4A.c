@@ -27,22 +27,21 @@
 #include "fnft__errwarn.h"
 
 
-static INT manakov_fscatter_test_4split4B()
+static INT manakov_fscatter_test_FTES4_4A()
 {
-    UINT i, j, D = 512, deg, nz = 5;
+    UINT i, j, D = 512, deg, nz = 5;      // Make sure to choose D high enough, otherwise the values on boundaries don't make sense. D is lower now for debugging
     INT W = 0, *W_ptr = NULL;
     REAL scl;
     INT ret_code;
     COMPLEX *transfer_matrix = NULL;
-    akns_discretization_t akns_discretization = akns_discretization_4SPLIT4B;
+    akns_discretization_t akns_discretization = akns_discretization_FTES4_4A;
     const REAL eps_t = 0.13;
     COMPLEX z[5] = {1.0+0.0*I, CEXP(I*PI/4), CEXP(I*9*PI/14), CEXP(I*4*PI/3), CEXP(I*-PI/5)};
     COMPLEX q1[512], q2[512];   // [D]
     COMPLEX result[45];
-    const REAL err_bnd = 3*1000*EPSILON;
+    const REAL err_bnd = 2*1000*EPSILON;
     UINT kappa = 1;
-    /* matlab code to compute results:
-    %% Exact answer for test file:
+    /* %% Exact answer for test file:
 eps_t = 0.13;
 kappa = 1;
 D=512;
@@ -50,50 +49,44 @@ q1 = 0.92*sech((-(D-1)*eps_t/2):eps_t:((D-1)*eps_t/2));
 q2 = 2.13*sech((-(D-1)*eps_t/2):eps_t:((D-1)*eps_t/2));
 zlist = exp(1i*[0,pi/4,9*pi/14,4*pi/3,-pi/5]);
 result_exact = zeros(45,1);
-c1 = 0.5-sqrt(3)/6;
-c2 = 0.5+sqrt(3)/6;
-a1  = 0.25 + sqrt(3)/6;
-a2  = 0.25 - sqrt(3)/6;
-
-% getting the non-equidistant samples
-[q1_c1, q2_c1] =  bandlimited_interpolation(eps_t,...
-                                    [q1; q2],c1*eps_t);
-[q1_c2, q2_c2] = bandlimited_interpolation(eps_t,...
-                                    [q1; q2],c2*eps_t);
-%%
-% Interlacing the samples:
-qeff = zeros(2,2*D);
-reff = zeros(2,2*D);
-
-qeff(1,2:2:end)=a2*q1_c1+a1*q1_c2;
-qeff(2,2:2:end)=a2*q2_c1+a1*q2_c2;
-reff(1,2:2:end)=-kappa*(a2*conj(q1_c1)+a1*conj(q1_c2));
-reff(2,2:2:end)=-kappa*(a2*conj(q2_c1)+a1*conj(q2_c2));
-
-qeff(1,1:2:end)=a1*q1_c1+a2*q1_c2;
-qeff(2,1:2:end)=a1*q2_c1+a2*q2_c2;
-reff(1,1:2:end)=-kappa*(a1*conj(q1_c1)+a2*conj(q1_c2));
-reff(2,1:2:end)=-kappa*(a1*conj(q2_c1)+a2*conj(q2_c2));
-
 for i = 1:1:5
     z = zlist(i);
     S = eye(3);
-    for n=1:2*D
-        % Eq. 19 in P. J. Prins and S. Wahls, Higher order exponential
-        % splittings for the fast non-linear Fourier transform of the KdV
-        % equation, to appear in Proc. of IEEE ICASSP 2018, Calgary, April 2018.
-        eA_4 = [1/z 0 0; 0 z 0; 0 0 z];
-        B = [0, qeff(1,n), qeff(2,n);...
-             reff(1,n), 0, 0;
-             reff(2,n), 0, 0];
+    for n=1:D
+        if n == 1
+    Q1 = [0                                 q1(2)-q1(1) q2(2)-q2(1);
+          -kappa*(conj(q1(2))-conj(q1(1)))  0           0;
+          -kappa*(conj(q2(2))-conj(q2(1)))  0           0]/(2*eps_t);
+    Q2 = [0         q1(2)-2*q1(1)+q1(1)       q2(2)-2*q2(1)+q2(1);
+          -kappa*(conj(q1(2))-2*conj(q1(1))+conj(q1(1)))    0 0;
+          -kappa*(conj(q2(2))-2*conj(q2(1))+conj(q2(1)))    0 0]/(eps_t^2);
+        elseif n == D
+    Q1 = [0                                 q1(n)-q1(n-1) q2(n)-q2(n-1);
+          -kappa*(conj(q1(n))-conj(q1(n-1)))  0           0;
+          -kappa*(conj(q2(n))-conj(q2(n-1)))  0           0]/(2*eps_t);
+    Q2 = [0         q1(n)-2*q1(n)+q1(n-1)       q2(n)-2*q2(n)+q2(n-1);
+          -kappa*(conj(q1(n))-2*conj(q1(n))+conj(q1(n-1)))    0 0;
+          -kappa*(conj(q2(n))-2*conj(q2(n))+conj(q2(n-1)))    0 0]/(eps_t^2);
+        else
+    Q1 = [0                                 q1(n+1)-q1(n-1) q2(n+1)-q2(n-1);
+          -kappa*(conj(q1(n+1))-conj(q1(n-1)))  0           0;
+          -kappa*(conj(q2(n+1))-conj(q2(n-1)))  0           0]/(2*eps_t);
+    Q2 = [0         q1(n+1)-2*q1(n)+q1(n-1)       q2(n+1)-2*q2(n)+q2(n-1);
+          -kappa*(conj(q1(n+1))-2*conj(q1(n))+conj(q1(n-1)))    0 0;
+          -kappa*(conj(q2(n+1))-2*conj(q2(n))+conj(q2(n-1)))    0 0]/(eps_t^2);
+        end
+  
+E1 = expm(eps_t^2*Q1/12 + eps_t^3*Q2/48);
+E2 = expm(-eps_t^2*Q1/12 + eps_t^3*Q2/48);
+        eA_4 = [z^-1 0 0; 0 z 0; 0 0 z];
+        B = [0, q1(n), q2(n); -kappa*conj(q1(n)), 0, 0; -kappa*conj(q2(n)), 0, 0];
         eB = expm(B*eps_t);
         eB_1_2 = expm(B*eps_t/2);
-        eB_1_4 = expm(B*eps_t/4);
-        U = ((4/3)*eB_1_4*eA_4*eA_4*eB_1_2*eA_4*eA_4*eB_1_4)+...
-            -((1/3)*eB_1_2*eA_4*eA_4*eA_4*eA_4*eB_1_2);
+        U = E1*((4/3)*eA_4*eB_1_2*eA_4*eA_4*eB_1_2*eA_4+...
+            -(1/3)*eA_4*eA_4*eB*eA_4*eA_4)*E2;
         S = U*S;
     end
-    S=S*z^(2*D*4);
+    S=S*z^(D*4);
     result_exact(i) = S(1,1);
     result_exact(5+i) = S(1,2);
     result_exact(10+i) = S(1,3);
@@ -104,79 +97,57 @@ for i = 1:1:5
     result_exact(35+i) = S(3,2);
     result_exact(40+i) = S(3,3);
 end
-
-%%
-function [q1s, q2s] = bandlimited_interpolation(eps_t, qn, ts)
-% implements bandlimited interpolation (interpolation using the time shift
-% property of the Fourier Transform)
-% 
-% inputs:
-% eps_t sampling period
-% qn    values of the samples of q taken at the points in vector tn
-% ts    desired shift of the samples
-% 
-% output: qs    the shifted vector of samples
-
-Qn = [fft(qn(1,:)); fft(qn(2,:))];
-N = length(qn(1,:));
-Np = floor(N/2);
-Nn = -floor((N-1)/2);
-Qn = [Qn(1,:).*exp(2i*pi*[0:Np, Nn:-1]*ts/(N*eps_t));...
-      Qn(2,:).*exp(2i*pi*[0:Np, Nn:-1]*ts/(N*eps_t))];
-q1s = ifft(Qn(1,:));
-q2s = ifft(Qn(2,:));
-end
 */
 
     COMPLEX result_exact[45] = {    //(for D = 4)
-          0.535312216834830 + 0.000000000000000*I,
- -0.876100554400426 + 0.000000000000181*I,
-  1.038800200364441 - 0.209527447358909*I,
-  1.078710463977776 + 0.164380951016611*I,
-  1.133018291154739 + 0.069406226135903*I,
-  0.334921105634316 + 0.000000000000000*I,
- -0.305961558188488 + 0.000000000000139*I,
-  0.000002038933887 + 0.000000000000000*I,
-  0.000000000000224 - 0.000000000000388*I,
- -0.000000000000059 - 0.000000000000182*I,
-  0.775415168479455 + 0.000000000000000*I,
- -0.708367520588573 + 0.000000000000321*I,
-  0.000004720575195 + 0.000000000000000*I,
-  0.000000000000518 - 0.000000000000898*I,
- -0.000000000000137 - 0.000000000000422*I,
- -0.334921105634316 + 0.000000000000000*I,
-  0.305961558188484 - 0.000000000000139*I,
- -0.000001271254485 - 0.000001594102704*I,
-  0.000000000000447 + 0.000000000000000*I,
- -0.000000000000155 - 0.000000000000113*I,
-  0.926938543333805 + 0.000000000000000*I,
-  0.705026376154915 - 0.000000000000517*I,
-  0.601537200914534 + 0.807140851012290*I,
- -0.483805173381847 + 0.889665382178414*I,
-  0.305101361612649 - 0.974319130930809*I,
+        0.535312216834839 + 0.000000000000000*I,
+ -0.991215593863799 + 0.000000000000108*I,
+  2.121479689834247 - 0.505365858408398*I,
+  1.953710014612273 + 0.016344648763347*I,
+  1.119833672781209 + 0.304216259507834*I,
+  0.334921105634320 + 0.000000000000000*I,
+  0.367596221582105 - 0.000000000000083*I,
+ -0.000000000000006 + 0.000000000000028*I,
+ -0.000000000001356 + 0.000000000002349*I,
+ -0.000000061175858 - 0.000000188279932*I,
+  0.775415168479460 + 0.000000000000000*I,
+  0.851065165184647 - 0.000000000000194*I,
+ -0.000000000000015 + 0.000000000000063*I,
+ -0.000000000003140 + 0.000000000005438*I,
+ -0.000000141635411 - 0.000000435908973*I,
+ -0.334921105634321 + 0.000000000000000*I,
+ -0.367596221582100 + 0.000000000000083*I,
+  0.000000000000006 - 0.000000000000028*I,
+  0.000000000001356 - 0.000000000002349*I,
+  0.000000061175858 + 0.000000188279932*I,
+  0.926938543333818 + 0.000000000000000*I,
+  0.686927186178218 - 0.000000000000248*I,
+ -1.025358719069819 - 0.581977514678531*I,
+ -0.577200001766949 - 0.994600089664814*I,
+ -0.796145394940462 + 0.637555859865877*I,
+ -0.169153155107541 + 0.000000000000000*I,
+ -0.724831623304542 + 0.000000000000255*I,
+ -0.287989546724421 - 0.342869284723302*I,
+ -0.178734786695307 - 0.297678348833525*I,
+  0.029800550865007 + 0.115229776229482*I,
+ -0.775415168479462 + 0.000000000000000*I,
+ -0.851065165184648 + 0.000000000000194*I,
+  0.000000000000015 - 0.000000000000064*I,
+  0.000000000003140 - 0.000000000005439*I,
+  0.000000141635411 + 0.000000435908973*I,
  -0.169153155107540 + 0.000000000000000*I,
- -0.682928063901840 + 0.000000000000489*I,
- -0.050825043491043 + 0.058596690217650*I,
-  0.037494544228042 + 0.054731689102213*I,
- -0.009065541069525 - 0.053858009970816*I,
- -0.775415168479451 + 0.000000000000000*I,
-  0.708367520588559 - 0.000000000000322*I,
- -0.000002943230493 - 0.000003690694303*I,
-  0.000000000001036 + 0.000000000000000*I,
- -0.000000000000359 - 0.000000000000260*I,
- -0.169153155107539 + 0.000000000000000*I,
- -0.682928063901840 + 0.000000000000489*I,
- -0.050825043491043 + 0.058596690217650*I,
-  0.037494544228042 + 0.054731689102213*I,
- -0.009065541069525 - 0.053858009970816*I,
-  0.608373673501002 + 0.000000000000000*I,
- -0.581126930555507 + 0.000000000000403*I,
-  0.505818777254755 + 0.917495558732356*I,
- -0.413191979120976 + 0.992741162251760*I,
-  0.288028296029328 - 1.075749517640996*I
+ -0.724831623304542 + 0.000000000000255*I,
+ -0.287989546724421 - 0.342869284723301*I,
+ -0.178734786695308 - 0.297678348833526*I,
+  0.029800550865007 + 0.115229776229482*I,
+  0.608373673501011 + 0.000000000000000*I,
+ -0.678142780042136 + 0.000000000000233*I,
+ -1.567727274992710 - 1.227700670052783*I,
+ -0.913809886589897 - 1.555215494017812*I,
+ -0.740022240741997 + 0.854567234215191*I
     };
         
-        i = manakov_fscatter_numel(2*D, akns_discretization);
+        i = manakov_fscatter_numel(D, akns_discretization);
         if (i == 0) { // size D>=2, this means unknown discretization
             ret_code = E_INVALID_ARGUMENT(akns_discretization);
             goto leave_fun;
@@ -190,10 +161,6 @@ end
         }
         
         for (i=0; i<D; i++){
-//            q1[i] = (0.41*COS(2*i+1) + 0.59*I*SIN(0.28*(2*i+1)))*50;
-  //          q2[i] = (0.41*COS(2*(i+1)) + 0.59*I*SIN(0.28*(2*(i+1))))*50;
-//            q1[i] = (0.41*cos(0.012*(2*i+1))+0.59*I*sin(0.08*(2*i+1)))*50;
-  //          q2[i] = (0.41*cos(0.012*(2*(i+1)))+0.59*I*sin(0.08*(2*(i+1))))*50;
             q1[i] = 0.92*1/COSH(i*eps_t-(D-1)*eps_t*0.5);
             q2[i] = 2.13*1/COSH(i*eps_t-(D-1)*eps_t*0.5);
         }
@@ -279,7 +246,7 @@ end
 
 INT main()
 {
-    if (manakov_fscatter_test_4split4B() != SUCCESS)
+    if (manakov_fscatter_test_FTES4_4A() != SUCCESS)
         return EXIT_FAILURE;
     
     printf("SUCCES");

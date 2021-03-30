@@ -128,9 +128,10 @@ end
             ret_code = E_INVALID_ARGUMENT(akns_discretization);
             goto leave_fun;
         }
+        printf("i (length of tf = result) = %d\n",i);
         
 
-        transfer_matrix = malloc(i*sizeof(COMPLEX));
+        transfer_matrix = malloc(i*sizeof(COMPLEX)); //problems are not caused by too small array allocated for transfer_matrix, tried array 5x the size and problems after changing line 1065 in poly_fmult to len = poly_fmult_two_polys_len(deg); persisted
         if (transfer_matrix == NULL) {
             ret_code = E_NOMEM;
             goto leave_fun;
@@ -144,7 +145,6 @@ end
         
         // without normalization 
         ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, NULL, akns_discretization);  // with kappa =1
-        misc_print_buf(deg+1,transfer_matrix,"p1");
     
         if (ret_code != SUCCESS){
             return E_SUBROUTINE(ret_code);
