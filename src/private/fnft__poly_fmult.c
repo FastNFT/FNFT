@@ -1047,7 +1047,6 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
     
     // Allocate memory for calls to poly_fmult_two_polys3x3
     lenmem = poly_fmult_two_polys_len(deg * n/2) * sizeof(COMPLEX); //TODO: change how buf0 is allocated here?
-    printf("length of lenmen = %d\n",poly_fmult_two_polys_len(deg * n/2));
     buf0 = fft_wrapper_malloc(lenmem);
     buf1 = fft_wrapper_malloc(lenmem);
     buf2 = fft_wrapper_malloc(lenmem);
@@ -1078,7 +1077,6 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
         // TODO: check this, maybe use next_fast_size
               // Alternative code
         UINT r_stride_temp = (n/2)*(2*deg+1);
-        printf("r_stride_temp = %d\n",r_stride_temp);
         if (r_stride_temp < len)
             r_stride_temp = len;
         const UINT r_stride = r_stride_temp;
@@ -1086,9 +1084,6 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
   //      const UINT r_stride = poly_fmult_two_polys_len(deg*n/2);
         // If we use the original code for getting len, both the code with r_stride_temp 
         // and poly_fmult_two_polys give r_stride >= len
-
-        printf("r_stride = %d\n",r_stride);
-        printf("len = %d\n",len);
         
 
         r11 = result;
@@ -1147,7 +1142,6 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
             const UINT mode_offset  = r_stride - or < len ? 0 : 2;
             // Maybe this line causes problems? It becomes 0 sometimes if we use original code, 
 //            const UINT mode_offset = 2;     // See if code works when we force mode_offset = 2. Answer: no
-            printf("mode_offset = %d\n",mode_offset);
             ret_code = poly_fmult_two_polys3x3(deg, p+o1, p_stride, p+o2,
                                                p_stride, result+or, r_stride,
                                                plan_fwd, plan_inv, buf0, buf1,
