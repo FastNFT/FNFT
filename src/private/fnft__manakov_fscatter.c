@@ -109,7 +109,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
 
     INT ret_code;
     COMPLEX *p, *p11, *p12, *p13, *p21, *p22, *p23, *p31, *p32, *p33;
-    UINT i, n, len, D_eff, j;   // TODO: j for print statements, remove when done
+    UINT i, n, len, D_eff, j, upsampling_factor;   // TODO: j for print statements, remove when done
     COMPLEX e_Bstorage[63], E_storage[18], scl, scl_den, Q, R; // e_Bstorage length: 9x the max. amount of e_B matrices we need for a discretization
     // These variables are used to store the values of matrix exponentials
     // e_aB = expm([0,q;r,0]*a*eps_t/degree1step)
@@ -132,6 +132,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
         return E_INVALID_ARGUMENT(deg_ptr);
 
     //Determine D_eff. Some methods are better implemented "as if" we have 2*D samples
+    /* 
     if (discretization == akns_discretization_4SPLIT4A || discretization == akns_discretization_4SPLIT4B
             || akns_discretization_4SPLIT6B){
         D_eff = 2*D;
@@ -139,6 +140,14 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
     else{
         D_eff = D;
     }
+    */
+
+    upsampling_factor = manakov_discretization_upsampling_factor(discretization);
+    if (upsampling_factor == 0) {
+        ret_code = E_INVALID_ARGUMENT(discretization);
+        goto release_mem;       // TODO: or maybe define leave_funa and goto leave_fun
+    }
+    D_eff = D*upsampling_factor;
 
     // Declaring and defining some variables for 4split4 methods
     COMPLEX *q1_c1, *q1_c2, *q2_c1, *q2_c2, *q1_eff, *q2_eff;
