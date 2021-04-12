@@ -190,10 +190,10 @@ INT manakov_testcases(manakov_testcases_t tc, const UINT D,
         // I, we get exactly the a() and b() provided there for the signal
         // A*sech(t) without an extra I.
         // Test signal: q1 = 0.8*sech(t), q2 = 5.2*sech(t)
-        for (i=0; i<D; i++)
+        for (i=0; i<D; i++){
             (*q1_ptr)[i] = I * 0.8 * misc_sech(T[0] + i*(T[1] - T[0])/(D - 1));
             (*q2_ptr)[i] = I * 5.2 * misc_sech(T[0] + i*(T[1] - T[0])/(D - 1));
-
+        }
         // Nonlinear spectral domain
         XI[0] = -7.0 / 5.0;
         XI[1] = 8.0 / 5.0;

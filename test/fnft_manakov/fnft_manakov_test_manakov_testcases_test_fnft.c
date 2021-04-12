@@ -9,7 +9,7 @@ File tesing the fnft_manakov_testcases function
 
 INT main(){
     printf("Goes into main loop\n");
-
+/*
     manakov_testcases_t tc = manakov_testcases_SECH_FOCUSING;
     INT D = 16;
     REAL error_bounds[7] = {
@@ -17,12 +17,12 @@ INT main(){
     fnft_manakov_opts_t opts = fnft_manakov_default_opts();
     INT ret_code = manakov_testcases_test_fnft(tc, D, error_bounds, &opts);
     printf("ret_code = %d\n",ret_code);    
-  
+*/  
 
-/*
+
    // Check if segmentation fault is in manakov_testcases. answer: no
    manakov_testcases_t tc = manakov_testcases_SECH_FOCUSING;
-   INT D = 16;
+   UINT D = 16;
    COMPLEX * q1 = NULL;
     COMPLEX * q2 = NULL;
     COMPLEX * contspec = NULL;
@@ -44,7 +44,7 @@ INT main(){
    ret_code = manakov_testcases(tc, D, &q1, &q2, T, &M, &contspec_exact, &ab_exact,
         XI, &K_exact,&bound_states_exact, &normconsts_exact, &residues_exact,
         &kappa);
-*/
+
     printf("ret_code = %d\n",ret_code);
 
 
