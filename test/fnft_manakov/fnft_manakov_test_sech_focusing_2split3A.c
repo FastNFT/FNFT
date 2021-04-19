@@ -20,16 +20,18 @@
 
 #include "fnft__manakov_testcases.h"
 #include "fnft__errwarn.h"
+#define DEBUG
 
 INT main()
 {
-    printf("Goes into main loop manakov_test_sech_focusing_2split3A");
     INT ret_code, i;
     fnft_manakov_opts_t opts;
-    UINT D = 256;
+    UINT D = 512;
     const manakov_testcases_t tc = manakov_testcases_SECH_FOCUSING;
-    REAL error_bounds[7] = { 
-        3.9e-6,     // reflection coefficient
+// const manakov_testcases_t tc = manakov_testcases_SECH_DEFOCUSING;
+    REAL error_bounds[8] = { 
+        3.9e-6,     // reflection coefficient 1
+        3.9e-6,     // reflection coefficient 2 TODO: determine suitable bound
         6.7e-6,     // a
         2.4e-6,     // b1
         2.4e-6,     // b2   TODO: determine suitable bound

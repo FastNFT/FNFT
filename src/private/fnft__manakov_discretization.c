@@ -241,7 +241,7 @@ INT fnft__manakov_discretization_lambda_to_z(const UINT n, const REAL eps_t,
         return E_INVALID_ARGUMENT(discretization);
     degree1step = degree1step * upsampling_factor;
     for (i = 0; i < n; i++)
-        vals[i] = CEXP(I*vals[i]*eps_t/degree1step);      // In original code this was 2*I*vals[i]*eps_t/degree1step. Why the 2?
+        vals[i] = CEXP(2*I*vals[i]*eps_t/degree1step);
     return SUCCESS;
 }
 
@@ -293,7 +293,7 @@ INT fnft__manakov_discretization_phase_factor_a(const REAL eps_t, const UINT D, 
         case akns_discretization_4SPLIT4A:
         case akns_discretization_4SPLIT4B:
         case akns_discretization_4SPLIT6B:
-            *phase_factor_a = -eps_t*D + (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
+            *phase_factor_a =(T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
         break;
 
@@ -315,7 +315,7 @@ INT fnft__manakov_discretization_phase_factor_b(const REAL eps_t, const UINT D, 
     boundary_coeff = manakov_discretization_boundary_coeff(discretization);
     if (boundary_coeff == NAN)
         return E_INVALID_ARGUMENT(discretization);
-
+    UINT degree1step = 0;
     switch (discretization) {
 
         case akns_discretization_2SPLIT3A:
@@ -327,7 +327,11 @@ INT fnft__manakov_discretization_phase_factor_b(const REAL eps_t, const UINT D, 
         case akns_discretization_4SPLIT4A:
         case akns_discretization_4SPLIT4B:
         case akns_discretization_4SPLIT6B:
-            *phase_factor_b =  - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
+                    degree1step = manakov_discretization_degree(discretization);
+            if (degree1step == 0)
+                return E_INVALID_ARGUMENT(discretization);
+//            *phase_factor_b =  - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
+           *phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
             break;
 

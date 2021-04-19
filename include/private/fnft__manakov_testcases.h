@@ -67,7 +67,9 @@ typedef enum {
 FNFT_INT fnft__manakov_testcases_test_fnft(fnft__manakov_testcases_t tc, FNFT_UINT D,
 	const FNFT_REAL eb[7], fnft_manakov_opts_t * const opts);
 
-INT fnft__manakov_testcases(fnft__manakov_testcases_t tc, const FNFT_UINT D,
+// fnft__nsev_testcases.h does not have function declaration for fnft__nsev_testcases, so maybe this is not needed?
+// Might not be needed because fnft__nsev_testcases is the first function that appaears in the fnft__nsev_testcases file, so it is already known. 
+/*FNFT_INT fnft__manakov_testcases(fnft__manakov_testcases_t tc, const FNFT_UINT D,
 	FNFT_COMPLEX** const q1_ptr, FNFT_COMPLEX** const q2_ptr,
 	FNFT_REAL* const T,
 	FNFT_UINT* const M_ptr, FNFT_COMPLEX** const contspec_ptr,
@@ -76,6 +78,7 @@ INT fnft__manakov_testcases(fnft__manakov_testcases_t tc, const FNFT_UINT D,
 	FNFT_COMPLEX** const bound_states_ptr,
 	FNFT_COMPLEX** const normconsts_ptr,
 	FNFT_COMPLEX** residues_ptr, FNFT_INT* const kappa_ptr);
+	*/
 
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
@@ -87,7 +90,6 @@ INT fnft__manakov_testcases(fnft__manakov_testcases_t tc, const FNFT_UINT D,
 #define manakov_testcases_SECH_FOCUSING_CONTSPEC fnft__manakov_testcases_SECH_FOCUSING_CONTSPEC
 #define manakov_testcases(...) fnft__manakov_testcases(__VA_ARGS__)
 #define manakov_testcases_test_fnft(...) fnft__manakov_testcases_test_fnft(__VA_ARGS__)
-
 #endif
 
 #endif

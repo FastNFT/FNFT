@@ -97,7 +97,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
     q1,2: arrays of length D containing the samples: qi=[q1(t0), q1(t0+eps_t), ... q1(T{D-1})]
     eps_t: timestep size
     result: array of size given by manakov_fscatter_numel, containing the final result for the scattering matrix
-    deg_ptr: pointer to var. containing the degree of the discretization (why is this a pointer? Guess we will find out when looking through the code)
+    deg_ptr: pointer to var. containing the degree of the discretization
     W_ptr: normalization flag. polynomial coefficients are normalized if W_ptr is non-zero (is that the same as not NULL? I think so)
     discretization: type of discretization used. We use the discretizations of fnft__akns_discretization_t, BUT call manakov_fscatter instead of akns_fscatter when dealing with manakov
     kappa: focussing or defocussing
