@@ -19,6 +19,6 @@ xi = (-sym(7):sym(8))/4;        % xi has 16 elements, M = 16
 XI = [xi(1) xi(end)]
 digits(40);
 contspec = vpa([(b1(xi)./a(xi)) (b2(xi)./a(xi))]).'
-ab = vpa([a(xi) b1(xi) b2(xi)])'
+ab = vpa([a(xi) b1(xi) b2(xi)]).'
         
         

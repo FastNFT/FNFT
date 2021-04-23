@@ -19,37 +19,37 @@
 #ifndef FNFT__MANAKOV_DISCRETIZATION_H
 #define FNFT__MANAKOV_DISCRETIZATION_H
 
-#include "fnft__akns_discretization_t.h"
+#include "fnft_manakov_discretization_t.h"
 #include "fnft__errwarn.h"
 #include "fnft__misc.h"
 
 
 
-FNFT_UINT fnft__manakov_discretization_degree(fnft__akns_discretization_t
+FNFT_UINT fnft__manakov_discretization_degree(fnft_manakov_discretization_t
         discretization);
 
-FNFT_UINT fnft__manakov_discretization_upsampling_factor(fnft__akns_discretization_t discretization);
+FNFT_UINT fnft__manakov_discretization_upsampling_factor(fnft_manakov_discretization_t discretization);
 
-FNFT_UINT fnft__manakov_discretization_method_order(fnft__akns_discretization_t discretization);
+FNFT_UINT fnft__manakov_discretization_method_order(fnft_manakov_discretization_t discretization);
 
 FNFT_INT fnft__manakov_discretization_lambda_to_z(const FNFT_UINT n, const FNFT_REAL eps_t,
-	FNFT_COMPLEX* const vals, fnft__akns_discretization_t discretization);
+	FNFT_COMPLEX* const vals, fnft_manakov_discretization_t discretization);
 
 FNFT_INT fnft__manakov_discretization_phase_factor_rho(const FNFT_REAL eps_t, const FNFT_REAL T1,
-	FNFT_REAL* const phase_factor_rho, fnft__akns_discretization_t discretization);
+	FNFT_REAL* const phase_factor_rho, fnft_manakov_discretization_t discretization);
 
 FNFT_INT fnft__manakov_discretization_phase_factor_a(const FNFT_REAL eps_t, const FNFT_UINT D, FNFT_REAL const* const T,
-	FNFT_REAL* const phase_factor_a, fnft__akns_discretization_t discretization);
+	FNFT_REAL* const phase_factor_a, fnft_manakov_discretization_t discretization);
 
 FNFT_INT fnft__manakov_discretization_phase_factor_b(const FNFT_REAL eps_t, const FNFT_UINT D, FNFT_REAL const* const T,
-	FNFT_REAL* const phase_factor_b, fnft__akns_discretization_t discretization);
+	FNFT_REAL* const phase_factor_b, fnft_manakov_discretization_t discretization);
 
-FNFT_REAL fnft__manakov_discretization_boundary_coeff(fnft__akns_discretization_t discretization);
+FNFT_REAL fnft__manakov_discretization_boundary_coeff(fnft_manakov_discretization_t discretization);
 
 FNFT_UINT fnft__manakov_discretization_preprocess_signal(const FNFT_UINT D, FNFT_COMPLEX const* const q1,
 		FNFT_COMPLEX const* const q2, FNFT_REAL const eps_t, const FNFT_INT kappa,
 	FNFT_UINT* const Dsub_ptr, FNFT_COMPLEX** q1_preprocessed_ptr, FNFT_COMPLEX** q2_preprocessed_ptr,
-	FNFT_UINT* const first_last_index, akns_discretization_t discretization);
+	FNFT_UINT* const first_last_index, manakov_discretization_t discretization);
 
 
 

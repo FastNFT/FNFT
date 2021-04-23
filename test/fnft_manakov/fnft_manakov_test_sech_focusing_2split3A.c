@@ -20,7 +20,6 @@
 
 #include "fnft__manakov_testcases.h"
 #include "fnft__errwarn.h"
-#define DEBUG
 
 INT main()
 {
@@ -41,7 +40,7 @@ INT main()
     };
 
     opts = fnft_manakov_default_opts();
-    opts.discretization = akns_discretization_2SPLIT3A;
+    opts.discretization = manakov_discretization_2SPLIT3A;
 
 
     ret_code = manakov_testcases_test_fnft(tc, D, error_bounds, &opts);

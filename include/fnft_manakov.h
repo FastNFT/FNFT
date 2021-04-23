@@ -9,7 +9,7 @@
 #include "fnft__errwarn.h"
 #include "fnft__poly_roots_fasteigen.h"
 #include "fnft__poly_chirpz.h"
-#include "fnft__akns_discretization_t.h"
+#include "fnft_manakov_discretization_t.h"
 
 
 typedef enum{
@@ -45,7 +45,7 @@ typedef struct {
 	fnft_manakov_dstype_t discspec_type;
 	fnft_manakov_cstype_t contspec_type;
 	FNFT_INT normalization_flag;
-	fnft__akns_discretization_t discretization;
+	fnft_manakov_discretization_t discretization;
 	FNFT_UINT richardson_extrapolation_flag;
 } fnft_manakov_opts_t;
 

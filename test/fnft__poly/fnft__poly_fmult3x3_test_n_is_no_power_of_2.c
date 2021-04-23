@@ -201,5 +201,7 @@ INT main(void)
         return EXIT_FAILURE;
     }
 
-    return EXIT_SUCCESS; // Replaced SUCCES FAILURE
+    printf("Succes\n");
+
+    return EXIT_SUCCESS;
 }

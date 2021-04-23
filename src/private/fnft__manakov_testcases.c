@@ -230,22 +230,24 @@ ab = vpa([a(xi) b1(xi) b2(xi)])'
 (*contspec_ptr)[31] =  - 0.001841288031177041829178223715697483375602 + 0.001975156579882484525345108220411743342899*I;
 
         // a(xi)
-(*ab_ptr)[0] =    - 0.9644260197535661844055887685714734731134 - 0.264284973916233303521273290494627448225*I;
-(*ab_ptr)[1] =- 0.9384622196166738803568342561341871279729 + 0.3451318071638965566800072247374635856464*I;
-(*ab_ptr)[2] =- 0.4943100550496050454214875083017573470469 + 0.8688079880664351532328775593907366338957*I;
-(*ab_ptr)[3] =  0.2810892903972032141830471188653041109586 + 0.9576046680320670360215962770028529755004*I;
-(*ab_ptr)[4] =  0.9302059085550343591590609057736645286585 + 0.3403385888744578025475381557967291611616*I;
-(*ab_ptr)[5] =  0.6972263717196523322046195661096254813211 - 0.6548940701020918256290523117187639335591*I;
-(*ab_ptr)[6] =- 0.3611240215511071771662267139149164025175 - 0.7514144455355884276706649859308055662765*I;
+(*ab_ptr)[0] =    - 0.9644260197535661844055887685714734731134 + 0.264284973916233303521273290494627448225*I;
+(*ab_ptr)[1] =- 0.9384622196166738803568342561341871279729 - 0.3451318071638965566800072247374635856464*I;
+(*ab_ptr)[2] =- 0.4943100550496050454214875083017573470469 - 0.8688079880664351532328775593907366338957*I;
+(*ab_ptr)[3] =  0.2810892903972032141830471188653041109586 - 0.9576046680320670360215962770028529755004*I;
+(*ab_ptr)[4] =  0.9302059085550343591590609057736645286585 - 0.3403385888744578025475381557967291611616*I;
+(*ab_ptr)[5] =  0.6972263717196523322046195661096254813211 + 0.6548940701020918256290523117187639335591*I;
+(*ab_ptr)[6] =- 0.3611240215511071771662267139149164025175 + 0.7514144455355884276706649859308055662765*I;
 (*ab_ptr)[7] =                                               -0.6818433382464592089246771552443181892922;
-(*ab_ptr)[8] =- 0.3611240215511071771662267139149164025175 + 0.7514144455355884276706649859308055662765*I;
-(*ab_ptr)[9] =  0.6972263717196523322046195661096254813211 + 0.6548940701020918256290523117187639335591*I;
-(*ab_ptr)[10] =  0.9302059085550343591590609057736645286585 - 0.3403385888744578025475381557967291611616*I;
-(*ab_ptr)[11] =  0.2810892903972032141830471188653041109586 - 0.9576046680320670360215962770028529755004*I;
-(*ab_ptr)[12] =- 0.4943100550496050454214875083017573470469 - 0.8688079880664351532328775593907366338957*I;
-(*ab_ptr)[13] =- 0.9384622196166738803568342561341871279729 - 0.3451318071638965566800072247374635856464*I;
-(*ab_ptr)[14] = - 0.9644260197535661844055887685714734731134 + 0.264284973916233303521273290494627448225*I;
-(*ab_ptr)[15] =- 0.6818818551989321768088818959213628711837 + 0.7314572246134086248857721886650956234335*I;
+(*ab_ptr)[8] =- 0.3611240215511071771662267139149164025175 - 0.7514144455355884276706649859308055662765*I;
+(*ab_ptr)[9] =  0.6972263717196523322046195661096254813211 - 0.6548940701020918256290523117187639335591*I;
+(*ab_ptr)[10] =  0.9302059085550343591590609057736645286585 + 0.3403385888744578025475381557967291611616*I;
+(*ab_ptr)[11] =  0.2810892903972032141830471188653041109586 + 0.9576046680320670360215962770028529755004*I;
+(*ab_ptr)[12] =- 0.4943100550496050454214875083017573470469 + 0.8688079880664351532328775593907366338957*I;
+(*ab_ptr)[13] =- 0.9384622196166738803568342561341871279729 + 0.3451318071638965566800072247374635856464*I;
+(*ab_ptr)[14] = - 0.9644260197535661844055887685714734731134 - 0.264284973916233303521273290494627448225*I;
+(*ab_ptr)[15] =- 0.6818818551989321768088818959213628711837 - 0.7314572246134086248857721886650956234335*I;
+
+
 
     // [b1(xi) b2(xi)]
     (*ab_ptr)[16] =    0.0009111383262031659175316826947484097435264;
@@ -500,20 +502,6 @@ const REAL error_bounds[8], fnft_manakov_opts_t * const opts) {
         &kappa);
     CHECK_RETCODE(ret_code, release_mem);
 
-    // Check if the right values are loaded (TODO: remove)
-/*    for (UINT i = 0; i<D; i++){
-        printf("D = %d, q1 = %f + i%f\n",(i+1), creal(q1[i]), cimag(q1[i]));
-    }
-    printf("contspec = \n");
-    for (UINT i = 0; i<2*M; i++){
-        printf("%f + i%f\n",creal(contspec_exact[i]), cimag(contspec_exact[i]));
-    }
-    printf("ab = \n");
-    for (UINT i = 0; i<3*M; i++){
-        printf("%f + i%f\n",creal(ab_exact[i]), cimag(ab_exact[i]));
-    }
-*/
-
     // Allocate memory
     contspec = malloc(5*M * sizeof(COMPLEX));
     K = manakov_discretization_degree(opts->discretization) * D;
@@ -546,14 +534,6 @@ const REAL error_bounds[8], fnft_manakov_opts_t * const opts) {
     opts->contspec_type = fnft_manakov_cstype_BOTH;
     opts->discspec_type = fnft_manakov_dstype_BOTH;
 
-    // print to check if we pass the right values to fnft_manakov TODO: remove
-    printf("opts_Dsub = %d,\n opts_contspec_type = %d,\n opts_normflag = %d,\n opts_discretization = %d,\n opts_richardson_extrap = %d\n",
-            opts->Dsub, opts->contspec_type, opts->normalization_flag, opts->discretization, opts->richardson_extrapolation_flag);
-    printf ("D = %d\n",D);
-    printf("M = %d\n",M);
-    printf("T = [%f  %f]\n",T[0], T[1]);
-    printf("XI = [%f  %f]\n",XI[0], XI[1]);
-    printf("kappa = %d\n",kappa);
     ret_code = fnft_manakov(D, q1, q2, T, M, contspec, XI, &K, bound_states,
         normconsts_and_residues, kappa, opts);
     CHECK_RETCODE(ret_code, release_mem);
@@ -594,6 +574,11 @@ for (UINT i =0; i<16; i++){
     printf("%f + i%f,     %f + i%f\n",creal(contspec[4*M+i]), cimag(contspec[4*M+i]), creal(ab_exact[2*M+i]), cimag(ab_exact[2*M+i]));
 }
 
+printf("errors\n");
+for (UINT i = 0; i<7; i++){
+    printf("%f \n", errs[i]);
+}
+
     misc_print_buf(3*M, contspec+2*M, "ab_num");
     misc_print_buf(3*M, ab_exact, "ab_exact");
     misc_print_buf(2*M, contspec, "contspec_num");
@@ -627,25 +612,15 @@ for (UINT i =0; i<16; i++){
     ///// Clean up /////
 release_mem:
     free(q1);
-    printf("freed q1\n");
     free(q2);
-    printf("freed q2\n");
     free(contspec);
-    printf("freed contspec\n");
     free(ab_exact);
-    printf("freed ab_exact\n");
     free(bound_states);
-    printf("freed bound_states\n");
     free(normconsts_and_residues);
-    printf("freed normconst_residues\n");
     free(bound_states_exact);
-    printf("freed bound_exact\n");
     free(contspec_exact);
-    printf("freed contspec_exact\n");
     free(normconsts_exact);
-    printf("freed normconst_exact\n");
     free(residues_exact);
-    printf("released memory\n");
 
     return ret_code;
 }

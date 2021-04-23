@@ -20,7 +20,6 @@
 #ifndef FNFT__MANAKOV_FSCATTER_H
 #define FNFT__MANAKOV_FSCATTER_H
 
-#include "fnft__akns_discretization.h"
 #include "fnft__manakov_discretization.h"
 #include "fnft__misc.h"
 #include "fnft__errwarn.h"
@@ -28,11 +27,11 @@
 
 
 FNFT_UINT fnft__manakov_fscatter_numel(FNFT_UINT D,
-	fnft__akns_discretization_t discretization);
+	fnft_manakov_discretization_t discretization);
 
 FNFT_INT fnft__manakov_fscatter(const UINT D, COMPLEX const* const q1, COMPLEX const* const q2, const UINT kappa,
 	REAL eps_t, COMPLEX* const result, UINT* const deg_ptr,
-	INT* const W_ptr, akns_discretization_t const discretization);
+	INT* const W_ptr, manakov_discretization_t const discretization);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define manakov_fscatter_numel(...) fnft__manakov_fscatter_numel(__VA_ARGS__)

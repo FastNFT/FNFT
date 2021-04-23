@@ -28,7 +28,7 @@
  * Returns the length of array to be allocated based on the number
  * of samples and discretization.
  */
-UINT manakov_fscatter_numel(UINT D, akns_discretization_t discretization)
+UINT manakov_fscatter_numel(UINT D, manakov_discretization_t discretization)
 {
     const UINT deg = manakov_discretization_degree(discretization);
     if (deg == 0)
@@ -89,7 +89,7 @@ static inline void manakov_fscatter_get_E(COMPLEX * const M, const REAL eps_t,
  */
 INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * const q2, const UINT kappa, 
                  REAL eps_t, COMPLEX * const result, UINT * const deg_ptr,
-                 INT * const W_ptr, akns_discretization_t const discretization)
+                 INT * const W_ptr, manakov_discretization_t const discretization)
                  //TODO: make sure enough memory is allocated for result to allow
                  // r_stride > (2*(deg + 1) - 1) if needed because of next_fast_size
 {
@@ -188,7 +188,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
 
     switch (discretization) {
 
-        case akns_discretization_2SPLIT3A:
+        case manakov_discretization_2SPLIT3A:
             e_1_3B = &e_Bstorage[0];    // exp(Bh/3)
             e_B    = &e_Bstorage[18];   // exp(3/3 Bh) = exp(Bh)
             
@@ -281,7 +281,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
             }
             break;
 
-            case akns_discretization_2SPLIT3B:
+            case manakov_discretization_2SPLIT3B:
             e_1_3B = &e_Bstorage[0];    // exp(Bh/3)
             e_2_3B = &e_Bstorage[9];    // exp(2/3 Bh)
             e_B    = &e_Bstorage[18];   // exp(3/3 Bh) = exp(Bh)
@@ -376,7 +376,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
             }
             break;
 
-            case akns_discretization_2SPLIT4A:
+            case manakov_discretization_2SPLIT4A:
             e_1_2B = &e_Bstorage[0];    // exp(Bh/2)
             e_B = &e_Bstorage[9];    // exp(Bh)
 
@@ -487,7 +487,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
             }
             break;
 
-            case akns_discretization_2SPLIT4B:
+            case manakov_discretization_2SPLIT4B:
             e_1_2B = &e_Bstorage[0];    // exp(Bh/2)
             e_1_4B = &e_Bstorage[9];    // exp(Bh/4)
 
@@ -562,7 +562,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
             }
             break;
 
-            case akns_discretization_2SPLIT6B:
+            case manakov_discretization_2SPLIT6B:
             e_1_2B = &e_Bstorage[0];    // exp(Bh/2)
             e_1_3B = &e_Bstorage[9];    // exp(Bh/2)
             e_1_4B = &e_Bstorage[18];    // exp(Bh/2)
@@ -713,7 +713,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
             }
             break;
 
-            case akns_discretization_4SPLIT4A:
+            case manakov_discretization_4SPLIT4A:
             e_1_2B = &e_Bstorage[0];    // exp(Bh/2)
             e_B = &e_Bstorage[9];    // exp(Bh)
             q1_c1 = malloc(D*sizeof(COMPLEX));
@@ -847,7 +847,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
             }
             break;
 
-         case akns_discretization_4SPLIT4B:
+         case manakov_discretization_4SPLIT4B:
             e_1_2B = &e_Bstorage[0];    // exp(Bh/2)
             e_1_4B = &e_Bstorage[9];    // exp(Bh/4)
             q1_c1 = malloc(D*sizeof(COMPLEX));
@@ -945,7 +945,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
             }
             break;
 
-            case akns_discretization_4SPLIT6B:
+            case manakov_discretization_4SPLIT6B:
             e_1_2B = &e_Bstorage[0];    // exp(Bh/2)
             e_1_3B = &e_Bstorage[9];    // exp(Bh/2)
             e_1_4B = &e_Bstorage[18];    // exp(Bh/4)
@@ -1121,7 +1121,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
 
 
 
-        case akns_discretization_FTES4_4A: // Check if there is not yet a type for this.
+        case manakov_discretization_FTES4_4A: // Check if there is not yet a type for this.
                                             // _4 denotes the 4th order splitting schem
 
             e_1_2B = &e_Bstorage[0];    // exp(Bh/2)
@@ -1278,7 +1278,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
             }
             break;
 
-        case akns_discretization_FTES4_4B: // Check if there is not yet a type for this.
+        case manakov_discretization_FTES4_4B: // Check if there is not yet a type for this.
                                             // _4 denotes the 4th order splitting scheme
 
                                             // TODO: change def. of z so we have 4th order coefficients instead of 8

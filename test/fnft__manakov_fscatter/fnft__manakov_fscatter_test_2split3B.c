@@ -34,7 +34,7 @@ static INT manakov_fscatter_test_2split3B()
     REAL scl;
     INT ret_code;
     COMPLEX *transfer_matrix = NULL;
-    akns_discretization_t akns_discretization = akns_discretization_2SPLIT3B;
+    manakov_discretization_t manakov_discretization = manakov_discretization_2SPLIT3B;
     const REAL eps_t = 0.13;
     COMPLEX z[5] = {1.0+0.0*I, CEXP(I*PI/4), CEXP(I*9*PI/14), CEXP(I*4*PI/3), CEXP(I*-PI/5)};
     COMPLEX q1[8], q2[8];
@@ -124,9 +124,9 @@ end
   0.626337813546028 - 0.614180907014008*I
     };
         
-        i = manakov_fscatter_numel(D, akns_discretization);
+        i = manakov_fscatter_numel(D, manakov_discretization);
         if (i == 0) { // size D>=2, this means unknown discretization
-            ret_code = E_INVALID_ARGUMENT(akns_discretization);
+            ret_code = E_INVALID_ARGUMENT(manakov_discretization);
             goto leave_fun;
         }
         
@@ -143,7 +143,7 @@ end
         }
         
         // without normalization 
-        ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, NULL, akns_discretization);  // with kappa =1
+        ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, NULL, manakov_discretization);  // with kappa =1
 
 /*        for (i = 0; i<9; i++){
                 printf("transfer_matrix in manakov_fscatter_test (p%d)=\n",i);
@@ -191,7 +191,7 @@ end
         
         // with normalization
         W_ptr = &W;
-        ret_code = manakov_fscatter(D, q1, q2, 1, eps_t, transfer_matrix, &deg, W_ptr, akns_discretization); // with kappa = 1
+        ret_code = manakov_fscatter(D, q1, q2, 1, eps_t, transfer_matrix, &deg, W_ptr, manakov_discretization); // with kappa = 1
 
         if (ret_code != SUCCESS){
             return E_SUBROUTINE(ret_code);

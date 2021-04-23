@@ -32,7 +32,7 @@ static fnft_manakov_opts_t default_opts = {
     .discspec_type = manakov_dstype_NORMING_CONSTANTS,
     .contspec_type = manakov_cstype_REFLECTION_COEFFICIENT,
     .normalization_flag = 1,
-    .discretization = akns_discretization_2SPLIT4B,     // TODO: or manakov_disc? Check this
+    .discretization = manakov_discretization_2SPLIT4B,
     .richardson_extrapolation_flag = 0
 };
 
@@ -166,7 +166,6 @@ INT fnft_manakov(
     fnft_manakov_dstype_t ds_type_opt = 0;
     INT ret_code = SUCCESS;
     UINT i, j, upsampling_factor, D_effective, nskip_per_step;
-       printf("richardson exptrapolation flag start= %d\n",(opts->richardson_extrapolation_flag));
 
     // Check inputs
     if (D < 2)
@@ -181,7 +180,6 @@ INT fnft_manakov(
         if (XI == NULL || XI[0] >= XI[1])
             return E_INVALID_ARGUMENT(XI);
     }
-    printf("kappa in fnft_manakov = %d\n",kappa);
     if (abs(kappa) != 1)
         return E_INVALID_ARGUMENT(kappa);
     if (bound_states != NULL) {
@@ -191,7 +189,7 @@ INT fnft_manakov(
     if (opts == NULL)
         opts = &default_opts;
 
-    // This switch checks for incompatible bound_state_localization options
+/*    // This switch checks for incompatible bound_state_localization options
     switch (opts->discretization) {
         case akns_discretization_2SPLIT2_MODAL:
         case akns_discretization_2SPLIT1A:
@@ -230,7 +228,7 @@ INT fnft_manakov(
             break;
         default: // Unknown discretization
             return E_INVALID_ARGUMENT(opts->discretization);
-    }
+    }*/
 
     // Some higher-order discretizations require samples on a non-equidistant grid
     // while others require derivatives which are computed in the form of
@@ -323,7 +321,6 @@ INT fnft_manakov(
         opts->bound_state_localization = manakov_bsloc_NEWTON;
         ret_code = fnft_manakov_base(D_effective, q1, q2, T, M, contspec, XI, K_ptr,
                 bound_states, normconsts_or_residues_reserve, kappa, opts);     // This line computes cont. spec.
-        printf("does fnction call on line 323\n");
         CHECK_RETCODE(ret_code, leave_fun);
 
         // Restore original state of opts
@@ -332,9 +329,7 @@ INT fnft_manakov(
         ret_code = fnft_manakov_base(D_effective, q1, q2, T, M, contspec, XI, K_ptr,
                     bound_states, normconsts_or_residues, kappa, opts);
         CHECK_RETCODE(ret_code, leave_fun);
-                printf("does fnction call on line 331\n");
     }
-   printf("richardson extrapolation flag later= %d\n",(opts->richardson_extrapolation_flag));
     if (opts->richardson_extrapolation_flag == 1){
         // Allocating memory
         UINT contspec_len = 0;
@@ -414,7 +409,6 @@ INT fnft_manakov(
         return E_INVALID_ARGUMENT(kappa);       // here to stop executing 
         ret_code = fnft_manakov_base(Dsub * upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, Tsub, M, contspec_sub, XI, &K_sub,
                 bound_states_sub, normconsts_or_residues_sub, kappa, opts);
-                        printf("does fnction cal on line 414");
         CHECK_RETCODE(ret_code, leave_fun);
         opts->bound_state_localization = bs_loc_opt;
         opts->discspec_type = ds_type_opt;
@@ -819,7 +813,6 @@ static inline INT manakov_compute_contspec(
     D_given = D/upsampling_factor;
     const REAL eps_t = (T[1] - T[0])/(D_given - 1);
     const REAL eps_xi = (XI[1] - XI[0])/(M - 1);
-                printf("eps_t = %f\n",eps_t);
 
 
     // Build xi-grid which is required for applying boundary conditions
@@ -868,10 +861,7 @@ static inline INT manakov_compute_contspec(
         // grid xi(i) = XI1 + i*eps_xi, where i=0,...,M-1. Since
         // z=exp(2.0*I*XI*eps_t/degree1step), we find that the z at which z the transfer
         // matrix has to be evaluated are given by z(i) = 1/(A * V^-i), where:
-        // TODO: I don't get why the V and A are chosen as they are. Check.
         V = eps_xi;
-        // TODO: remove
-        printf("eps_xi = %f\n",eps_xi);
         ret_code = manakov_discretization_lambda_to_z(1, eps_t, &V, opts->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
         A = -XI[0];
@@ -881,20 +871,35 @@ static inline INT manakov_compute_contspec(
         ret_code = poly_chirpz(deg, transfer_matrix, A, V, M, H11_vals);
         CHECK_RETCODE(ret_code, leave_fun);
 
-        ret_code = poly_chirpz(deg, transfer_matrix+(deg+1), A, V, M, H21_vals);
+        ret_code = poly_chirpz(deg, transfer_matrix+3*(deg+1), A, V, M, H21_vals);
         CHECK_RETCODE(ret_code, leave_fun);
 
-        ret_code = poly_chirpz(deg, transfer_matrix+2*(deg+1), A, V, M, H31_vals);
+        ret_code = poly_chirpz(deg, transfer_matrix+6*(deg+1), A, V, M, H31_vals);
         CHECK_RETCODE(ret_code, leave_fun);
 
     }
+
+// TODO: remove this
+// printing Hij_vals to compare with matlab
+/*
+for (UINT i=0; i<M; i++){
+    printf("H11[%d] = %f + i%f\n",i, creal(H11_vals[i]), cimag(H11_vals[i]));
+}
+for (UINT i=0; i<M; i++){
+    printf("H21[%d] = %f + i%f\n",i, creal(H21_vals[i]), cimag(H21_vals[i]));
+}
+for (UINT i=0; i<M; i++){
+    printf("H31[%d] = %f + i%f\n",i, creal(H31_vals[i]), cimag(H31_vals[i]));
+}
+*/
+
     // Compute the continuous spectrum
     switch (opts->contspec_type) {
 
         case manakov_cstype_BOTH:
 
             offset = 2*M;       // If we want both the reflection coefficient and the a an b coefficients, we put
-                                // the refl. coef. in result[0 : 2*M-1], so we have offset 2*M s.t. a=result[2*M : 3*M-1],
+                                // the reflection coefficient in result[0 : 2*M-1], so we have offset 2*M s.t. a=result[2*M : 3*M-1],
                                 // b1 = result[3*M : 4*M-1], b2 = result[4*M : 5*M-1]
 
         // fall through
@@ -902,7 +907,6 @@ static inline INT manakov_compute_contspec(
 
             ret_code = manakov_discretization_phase_factor_rho(eps_t, T[1], &phase_factor_rho,opts->discretization);
             CHECK_RETCODE(ret_code, leave_fun);
-            printf("phase_factor rho = %f\n",phase_factor_rho);
 
             for (i = 0; i < M; i++) {
                 if (H11_vals[i] == 0.0){
@@ -933,10 +937,10 @@ static inline INT manakov_compute_contspec(
             CHECK_RETCODE(ret_code, leave_fun);
 
             //TODO: remove
-            printf("phase_factor a = %f\n",phase_factor_a);
+/*            printf("phase_factor a = %f\n",phase_factor_a);
             printf("phase_factor b1 = %f\n",phase_factor_b1);
             printf("phase_factor b2 = %f\n",phase_factor_b2);
-            printf("scale = %f\n",scale);
+            printf("scale = %f\n",scale);*/
 
             for (i = 0; i < M; i++) {
                 result[offset + i] = H11_vals[i] * scale * CEXP(I*xi[i]*phase_factor_a);

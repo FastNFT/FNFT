@@ -27,23 +27,23 @@
  * scattering matrix or zero if the discretization is unknown.
  * 
  */
-UINT fnft__manakov_discretization_degree(akns_discretization_t
+UINT fnft__manakov_discretization_degree(manakov_discretization_t
         discretization)
 {
     switch (discretization) {
-        case akns_discretization_2SPLIT3A:
-        case akns_discretization_2SPLIT3B:
+        case manakov_discretization_2SPLIT3A:
+        case manakov_discretization_2SPLIT3B:
             return 6;
-        case akns_discretization_2SPLIT4B:
-		case akns_discretization_4SPLIT4B:
+        case manakov_discretization_2SPLIT4B:
+		case manakov_discretization_4SPLIT4B:
 			return 4;
-        case akns_discretization_2SPLIT4A:            
-        case akns_discretization_4SPLIT4A:
-        case akns_discretization_FTES4_4A:
-        case akns_discretization_FTES4_4B:
+        case manakov_discretization_2SPLIT4A:            
+        case manakov_discretization_4SPLIT4A:
+        case manakov_discretization_FTES4_4A:
+        case manakov_discretization_FTES4_4B:
             return 8;
-        case akns_discretization_2SPLIT6B:
-        case akns_discretization_4SPLIT6B:
+        case manakov_discretization_2SPLIT6B:
+        case manakov_discretization_4SPLIT6B:
             return 12;
 
                     
@@ -55,20 +55,20 @@ UINT fnft__manakov_discretization_degree(akns_discretization_t
 /**
  * This routine returns the scaling for effective number of samples based on the discretization.
  */
-UINT fnft__manakov_discretization_upsampling_factor(akns_discretization_t discretization)
+UINT fnft__manakov_discretization_upsampling_factor(manakov_discretization_t discretization)
 {
     switch (discretization) {
-        case akns_discretization_4SPLIT4A:
-        case akns_discretization_4SPLIT4B:
-        case akns_discretization_4SPLIT6B:
+        case manakov_discretization_4SPLIT4A:
+        case manakov_discretization_4SPLIT4B:
+        case manakov_discretization_4SPLIT6B:
             return 2;
-        case akns_discretization_2SPLIT3A:
-        case akns_discretization_2SPLIT3B:
-        case akns_discretization_2SPLIT4B:
-        case akns_discretization_2SPLIT4A:            
-        case akns_discretization_FTES4_4A:
-        case akns_discretization_FTES4_4B:
-        case akns_discretization_2SPLIT6B:
+        case manakov_discretization_2SPLIT3A:
+        case manakov_discretization_2SPLIT3B:
+        case manakov_discretization_2SPLIT4B:
+        case manakov_discretization_2SPLIT4A:            
+        case manakov_discretization_FTES4_4A:
+        case manakov_discretization_FTES4_4B:
+        case manakov_discretization_2SPLIT6B:
             return 1;
 
         default: // discretization not implemented for manakov
@@ -76,19 +76,19 @@ UINT fnft__manakov_discretization_upsampling_factor(akns_discretization_t discre
     }
 }
 
-UINT fnft__manakov_discretization_method_order(akns_discretization_t discretization){
+UINT fnft__manakov_discretization_method_order(manakov_discretization_t discretization){
     switch (discretization) {
-        case akns_discretization_2SPLIT3A:
-        case akns_discretization_2SPLIT3B:
-        case akns_discretization_2SPLIT4B:
-        case akns_discretization_2SPLIT4A:
-        case akns_discretization_2SPLIT6B:
+        case manakov_discretization_2SPLIT3A:
+        case manakov_discretization_2SPLIT3B:
+        case manakov_discretization_2SPLIT4B:
+        case manakov_discretization_2SPLIT4A:
+        case manakov_discretization_2SPLIT6B:
             return 2;
-        case akns_discretization_4SPLIT4A:
-        case akns_discretization_4SPLIT4B:
-        case akns_discretization_4SPLIT6B:
-        case akns_discretization_FTES4_4A:
-        case akns_discretization_FTES4_4B:
+        case manakov_discretization_4SPLIT4A:
+        case manakov_discretization_4SPLIT4B:
+        case manakov_discretization_4SPLIT6B:
+        case manakov_discretization_FTES4_4A:
+        case manakov_discretization_FTES4_4B:
             return 4;
 
         default: // discretization not implemented for manakov
@@ -102,7 +102,7 @@ UINT fnft__manakov_discretization_method_order(akns_discretization_t discretizat
 UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * const q1,
         COMPLEX const * const q2, REAL const eps_t, const INT kappa,
         UINT * const Dsub_ptr, COMPLEX **q1_preprocessed_ptr, COMPLEX **q2_preprocessed_ptr, 
-        UINT * const first_last_index,  akns_discretization_t discretization){
+        UINT * const first_last_index,  manakov_discretization_t discretization){
 
     UINT isub, i, D_effective;
 
@@ -159,13 +159,13 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
 
     // actually getting the samples
     switch (discretization){
-        case akns_discretization_2SPLIT3A:
-        case akns_discretization_2SPLIT3B:
-        case akns_discretization_2SPLIT4B:
-        case akns_discretization_2SPLIT4A:            
-        case akns_discretization_FTES4_4A:
-        case akns_discretization_FTES4_4B:
-        case akns_discretization_2SPLIT6B:
+        case manakov_discretization_2SPLIT3A:
+        case manakov_discretization_2SPLIT3B:
+        case manakov_discretization_2SPLIT4B:
+        case manakov_discretization_2SPLIT4A:            
+        case manakov_discretization_FTES4_4A:
+        case manakov_discretization_FTES4_4B:
+        case manakov_discretization_2SPLIT6B:
             for (isub=0, i=0; isub<D_effective; isub++, i += nskip_per_step) {  // downsampling
                 q1_preprocessed[isub] = q1[i];
                 q2_preprocessed[isub] = q2[i];
@@ -173,9 +173,9 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
                 r2_preprocessed[isub] = conj(q2[i])*-1*kappa;
             }
             break;
-        case akns_discretization_4SPLIT4A:
-        case akns_discretization_4SPLIT4B:
-        case akns_discretization_4SPLIT6B:
+        case manakov_discretization_4SPLIT4A:
+        case manakov_discretization_4SPLIT4B:
+        case manakov_discretization_4SPLIT6B:
     {
         // Getting bandlimited interpolated samples. First get the samples and 
         // then subsampling
@@ -229,7 +229,7 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
  * z in the discrete-time domain based on the discretization.
  */
 INT fnft__manakov_discretization_lambda_to_z(const UINT n, const REAL eps_t,
-        COMPLEX * const vals, akns_discretization_t discretization)
+        COMPLEX * const vals, manakov_discretization_t discretization)
 {
     REAL degree1step;
     UINT i, upsampling_factor;
@@ -252,20 +252,13 @@ INT fnft__manakov_discretization_lambda_to_z(const UINT n, const REAL eps_t,
  * based on the discretization.
  */
 INT fnft__manakov_discretization_phase_factor_rho(const REAL eps_t, const REAL T1,
-        REAL * const phase_factor_rho, akns_discretization_t discretization)
+        REAL * const phase_factor_rho, manakov_discretization_t discretization)
 {
     REAL boundary_coeff;
     boundary_coeff = manakov_discretization_boundary_coeff(discretization);
     if (boundary_coeff == NAN)
         return E_INVALID_ARGUMENT(discretization);
-    if (discretization == akns_discretization_2SPLIT2A){
-        UINT degree1step = manakov_discretization_degree(discretization);
-        if (degree1step == 0)
-            return E_INVALID_ARGUMENT(discretization);
-        *phase_factor_rho = -2.0*(T1 + eps_t*boundary_coeff) + eps_t/degree1step;
-    }
-    else
-        *phase_factor_rho = -2.0*(T1 + eps_t*boundary_coeff);
+    *phase_factor_rho = -2.0*(T1 + eps_t*boundary_coeff);
     return SUCCESS;
 }
 
@@ -275,7 +268,7 @@ INT fnft__manakov_discretization_phase_factor_rho(const REAL eps_t, const REAL T
  * based on the discretization.
  */
 INT fnft__manakov_discretization_phase_factor_a(const REAL eps_t, const UINT D, REAL const * const T,
-        REAL * const phase_factor_a, akns_discretization_t discretization)
+        REAL * const phase_factor_a, manakov_discretization_t discretization)
 {
     REAL boundary_coeff;
     boundary_coeff = manakov_discretization_boundary_coeff(discretization);
@@ -284,16 +277,18 @@ INT fnft__manakov_discretization_phase_factor_a(const REAL eps_t, const UINT D, 
 
     switch (discretization) {
 
-        case akns_discretization_2SPLIT3A:
-        case akns_discretization_2SPLIT3B:
-        case akns_discretization_2SPLIT4A:
-        case akns_discretization_2SPLIT4B:
-        case akns_discretization_2SPLIT6A:
-        case akns_discretization_2SPLIT6B:
-        case akns_discretization_4SPLIT4A:
-        case akns_discretization_4SPLIT4B:
-        case akns_discretization_4SPLIT6B:
-            *phase_factor_a =(T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
+        case manakov_discretization_2SPLIT3A:
+        case manakov_discretization_2SPLIT3B:
+        case manakov_discretization_2SPLIT4A:
+        case manakov_discretization_2SPLIT4B:
+        case manakov_discretization_2SPLIT6B:
+        case manakov_discretization_4SPLIT4A:
+        case manakov_discretization_4SPLIT4B:
+        case manakov_discretization_4SPLIT6B:
+        case manakov_discretization_FTES4_4A:
+        case manakov_discretization_FTES4_4B:
+//            *phase_factor_a =2*(T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);   // same as in matlab, does not give better results
+            *phase_factor_a = -eps_t*D + (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
         break;
 
@@ -309,7 +304,7 @@ INT fnft__manakov_discretization_phase_factor_a(const REAL eps_t, const UINT D, 
  * based on the discretization.
  */
 INT fnft__manakov_discretization_phase_factor_b(const REAL eps_t, const UINT D, REAL const * const T,
-        REAL * const phase_factor_b, akns_discretization_t discretization)
+        REAL * const phase_factor_b, manakov_discretization_t discretization)
 {
     REAL boundary_coeff;
     boundary_coeff = manakov_discretization_boundary_coeff(discretization);
@@ -318,20 +313,22 @@ INT fnft__manakov_discretization_phase_factor_b(const REAL eps_t, const UINT D, 
     UINT degree1step = 0;
     switch (discretization) {
 
-        case akns_discretization_2SPLIT3A:
-        case akns_discretization_2SPLIT3B:
-        case akns_discretization_2SPLIT4A:
-        case akns_discretization_2SPLIT4B:
-        case akns_discretization_2SPLIT6A:
-        case akns_discretization_2SPLIT6B:
-        case akns_discretization_4SPLIT4A:
-        case akns_discretization_4SPLIT4B:
-        case akns_discretization_4SPLIT6B:
+        case manakov_discretization_2SPLIT3A:
+        case manakov_discretization_2SPLIT3B:
+        case manakov_discretization_2SPLIT4A:
+        case manakov_discretization_2SPLIT4B:
+        case manakov_discretization_2SPLIT6B:
+        case manakov_discretization_4SPLIT4A:
+        case manakov_discretization_4SPLIT4B:
+        case manakov_discretization_4SPLIT6B:
+        case manakov_discretization_FTES4_4A:
+        case manakov_discretization_FTES4_4B:
                     degree1step = manakov_discretization_degree(discretization);
             if (degree1step == 0)
                 return E_INVALID_ARGUMENT(discretization);
 //            *phase_factor_b =  - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
            *phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
+//           *phase_factor_b = -2*(T[0]-eps_t*boundary_coeff);           // matlab expression, result is worses
             return SUCCESS;
             break;
 
@@ -344,40 +341,20 @@ INT fnft__manakov_discretization_phase_factor_b(const REAL eps_t, const UINT D, 
 /**
  * This routine returns the boundary coefficient based on the discretization.
  */
-REAL fnft__manakov_discretization_boundary_coeff(akns_discretization_t discretization)
+REAL fnft__manakov_discretization_boundary_coeff(manakov_discretization_t discretization)
 {
     
     switch (discretization) {
-//        case akns_discretization_2SPLIT1A:
-//        case akns_discretization_2SPLIT1B:
-//        case akns_discretization_2SPLIT2A:
-//        case akns_discretization_2SPLIT2B:
-//        case akns_discretization_2SPLIT2S:
-        case akns_discretization_2SPLIT3A:
-        case akns_discretization_2SPLIT3B:
-//        case akns_discretization_2SPLIT3S:
-        case akns_discretization_2SPLIT4A:
-        case akns_discretization_2SPLIT4B:
-        case akns_discretization_4SPLIT4A:
-        case akns_discretization_4SPLIT4B:
-        case akns_discretization_4SPLIT6B:
-//        case akns_discretization_2SPLIT5A:
-//        case akns_discretization_2SPLIT5B:
-//        case akns_discretization_2SPLIT6A:
-        case akns_discretization_2SPLIT6B:
-//        case akns_discretization_2SPLIT7A:
-//        case akns_discretization_2SPLIT7B:
-//        case akns_discretization_2SPLIT8A:
-//        case akns_discretization_2SPLIT8B:
-//        case akns_discretization_2SPLIT2_MODAL:
-//        case akns_discretization_BO:
-//        case akns_discretization_CF4_2:
-//        case akns_discretization_CF4_3:
-//        case akns_discretization_CF5_3:
-//        case akns_discretization_CF6_4:
-//        case akns_discretization_ES4:
-//        case akns_discretization_TES4:
-// NOTE: commented out all discretizations not (yet) implemented for manakov
+        case manakov_discretization_2SPLIT3A:
+        case manakov_discretization_2SPLIT3B:
+        case manakov_discretization_2SPLIT4A:
+        case manakov_discretization_2SPLIT4B:
+        case manakov_discretization_4SPLIT4A:
+        case manakov_discretization_4SPLIT4B:
+        case manakov_discretization_4SPLIT6B:
+        case manakov_discretization_2SPLIT6B:
+        case manakov_discretization_FTES4_4A:
+        case manakov_discretization_FTES4_4B:
             return 0.5;
             
         default: // Unknown discretization
