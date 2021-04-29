@@ -1132,10 +1132,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
             for (i=D_eff; i-->0;){
                 manakov_fscatter_zero_freq_scatter_matrix(e_1_2B, eps_t/2, q1[i], q2[i], kappa);
                 manakov_fscatter_zero_freq_scatter_matrix(e_B, eps_t, q1[i], q2[i], kappa);
-
-                // Determine the finite difference matrices and multiply by eps_t^2/12, eps_t^3/48 for Q1, Q2 respectively
-                // TODO: make function for this
-                
+ 
                 // Setting which elements of q we use
                 q1n[1] = q1[i];
                 q2n[1] = q2[i];
@@ -1268,13 +1265,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
                 p23 += 9;
                 p31 += 9;
                 p32 += 9;
-                p33 += 9;
-
-       //     Multiply resulting matrix of pol. coefs. with E1, E2
-         //       Is it better to use poly_fmult_two_polys3x3 here, or should we just write some code here, as the degrees of the matrices are not the same? 
-           //     (scalar for E1, E2, very high degree for pij matrix)
-           // Answer: no, probably better to multiply with E1, E2 in matlab file for getting the pol. coefs. and use those
-            
+                p33 += 9;            
             }
             break;
 
@@ -1282,6 +1273,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
                                             // _4 denotes the 4th order splitting scheme
 
                                             // TODO: change def. of z so we have 4th order coefficients instead of 8
+                                            // TODO: change to Suzuki factorization
 
             e_1_2B = &e_Bstorage[0];    // exp(Bh/2)
             e_1_4B = &e_Bstorage[9];    // exp(Bh/4)
@@ -1291,9 +1283,6 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
             for (i=D_eff; i-->0;){
                 manakov_fscatter_zero_freq_scatter_matrix(e_1_2B, eps_t/2, q1[i], q2[i], kappa);
                 manakov_fscatter_zero_freq_scatter_matrix(e_1_4B, eps_t/4, q1[i], q2[i], kappa);
-
-                // Determine the finite difference matrices and multiply by eps_t^2/12, eps_t^3/48 for Q1, Q2 respectively
-                // TODO: make function for this
                 
                 // Setting which elements of q we use
                 q1n[1] = q1[i];
@@ -1326,8 +1315,6 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
                                 -(q2n[2]-q2n[0])*eps_t/24+(q2n[2]-2*q2n[1]+q2n[0])*eps_t/48,
                                 kappa*CONJ(q1n[2]-q1n[0])*eps_t/24-kappa*CONJ(q1n[2]-2*q1n[1]+q1n[0])*eps_t/48,
                                 kappa*CONJ(q2n[2]-q2n[0])*eps_t/24-kappa*CONJ(q2n[2]-2*q2n[1]+q2n[0])*eps_t/48);
-
-                //TODO: update coefficients for B instead of A
 
                 p11[0] = (4*e_1_2B[4]*e_1_4B[4]*e_1_4B[4]*E1[1]*E2[3])/3 - (e_1_2B[8]*e_1_2B[8]*E1[2]*E2[6])/3 - (e_1_2B[1]*e_1_2B[3]*E1[0]*E2[0])/3 - (e_1_2B[1]*e_1_2B[4]*E1[0]*E2[3])/3 - (e_1_2B[2]*e_1_2B[6]*E1[0]*E2[0])/3 - (e_1_2B[3]*e_1_2B[4]*E1[1]*E2[0])/3 - (e_1_2B[1]*e_1_2B[5]*E1[0]*E2[6])/3 - (e_1_2B[2]*e_1_2B[7]*E1[0]*E2[3])/3 - (e_1_2B[3]*e_1_2B[7]*E1[2]*E2[0])/3 - (e_1_2B[5]*e_1_2B[6]*E1[1]*E2[0])/3 - (e_1_2B[2]*e_1_2B[8]*E1[0]*E2[6])/3 - (e_1_2B[4]*e_1_2B[5]*E1[1]*E2[6])/3 - (e_1_2B[4]*e_1_2B[7]*E1[2]*E2[3])/3 - (e_1_2B[5]*e_1_2B[7]*E1[1]*E2[3])/3 - (e_1_2B[6]*e_1_2B[8]*E1[2]*E2[0])/3 - (e_1_2B[5]*e_1_2B[7]*E1[2]*E2[6])/3 - (e_1_2B[5]*e_1_2B[8]*E1[1]*E2[6])/3 - (e_1_2B[7]*e_1_2B[8]*E1[2]*E2[3])/3 - (e_1_2B[4]*e_1_2B[4]*E1[1]*E2[3])/3 + (4*e_1_2B[5]*e_1_4B[7]*e_1_4B[7]*E1[2]*E2[3])/3 + (4*e_1_2B[7]*e_1_4B[5]*e_1_4B[5]*E1[1]*E2[6])/3 + (4*e_1_2B[8]*e_1_4B[8]*e_1_4B[8]*E1[2]*E2[6])/3 + (4*e_1_2B[4]*e_1_4B[1]*e_1_4B[3]*E1[0]*E2[0])/3 + (4*e_1_2B[4]*e_1_4B[1]*e_1_4B[4]*E1[0]*E2[3])/3 + (4*e_1_2B[4]*e_1_4B[3]*e_1_4B[4]*E1[1]*E2[0])/3 + (4*e_1_2B[5]*e_1_4B[1]*e_1_4B[6]*E1[0]*E2[0])/3 + (4*e_1_2B[7]*e_1_4B[2]*e_1_4B[3]*E1[0]*E2[0])/3 + (4*e_1_2B[4]*e_1_4B[1]*e_1_4B[5]*E1[0]*E2[6])/3 + (4*e_1_2B[4]*e_1_4B[3]*e_1_4B[7]*E1[2]*E2[0])/3 + (4*e_1_2B[5]*e_1_4B[1]*e_1_4B[7]*E1[0]*E2[3])/3 + (4*e_1_2B[5]*e_1_4B[4]*e_1_4B[6]*E1[1]*E2[0])/3 + (4*e_1_2B[7]*e_1_4B[2]*e_1_4B[4]*E1[0]*E2[3])/3 + (4*e_1_2B[7]*e_1_4B[3]*e_1_4B[5]*E1[1]*E2[0])/3 + (4*e_1_2B[8]*e_1_4B[2]*e_1_4B[6]*E1[0]*E2[0])/3 + (4*e_1_2B[4]*e_1_4B[4]*e_1_4B[5]*E1[1]*E2[6])/3 + (4*e_1_2B[4]*e_1_4B[4]*e_1_4B[7]*E1[2]*E2[3])/3 + (4*e_1_2B[5]*e_1_4B[1]*e_1_4B[8]*E1[0]*E2[6])/3 + (4*e_1_2B[5]*e_1_4B[4]*e_1_4B[7]*E1[1]*E2[3])/3 + (4*e_1_2B[5]*e_1_4B[6]*e_1_4B[7]*E1[2]*E2[0])/3 + (4*e_1_2B[7]*e_1_4B[2]*e_1_4B[5]*E1[0]*E2[6])/3 + (4*e_1_2B[7]*e_1_4B[3]*e_1_4B[8]*E1[2]*E2[0])/3 + (4*e_1_2B[7]*e_1_4B[4]*e_1_4B[5]*E1[1]*E2[3])/3 + (4*e_1_2B[8]*e_1_4B[2]*e_1_4B[7]*E1[0]*E2[3])/3 + (4*e_1_2B[8]*e_1_4B[5]*e_1_4B[6]*E1[1]*E2[0])/3 + (4*e_1_2B[4]*e_1_4B[5]*e_1_4B[7]*E1[2]*E2[6])/3 + (4*e_1_2B[5]*e_1_4B[4]*e_1_4B[8]*E1[1]*E2[6])/3 + (4*e_1_2B[7]*e_1_4B[4]*e_1_4B[8]*E1[2]*E2[3])/3 + (4*e_1_2B[8]*e_1_4B[2]*e_1_4B[8]*E1[0]*E2[6])/3 + (4*e_1_2B[8]*e_1_4B[5]*e_1_4B[7]*E1[1]*E2[3])/3 + (4*e_1_2B[8]*e_1_4B[6]*e_1_4B[8]*E1[2]*E2[0])/3 + (4*e_1_2B[5]*e_1_4B[7]*e_1_4B[8]*E1[2]*E2[6])/3 + (4*e_1_2B[7]*e_1_4B[5]*e_1_4B[8]*E1[2]*E2[6])/3 + (4*e_1_2B[8]*e_1_4B[5]*e_1_4B[8]*E1[1]*E2[6])/3 + (4*e_1_2B[8]*e_1_4B[7]*e_1_4B[8]*E1[2]*E2[3])/3;   // z^8
                 p11[1] = 0.0;   // z^7

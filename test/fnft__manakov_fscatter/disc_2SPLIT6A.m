@@ -1,5 +1,5 @@
 %% Matlab file to get the polynomial coefficients for the 4SPLIT4A
-%  BO method with 6th order splitting (Eq. 22 in P. J. Prins and S. Wahls,
+% BO method with 6th order splitting (Eq. 22 in P. J. Prins and S. Wahls,
 % Higher order exponential
 % splittings for the fast non-linear Fourier transform of the KdV
 % equation

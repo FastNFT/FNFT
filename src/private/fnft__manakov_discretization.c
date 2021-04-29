@@ -328,7 +328,7 @@ INT fnft__manakov_discretization_phase_factor_b(const REAL eps_t, const UINT D, 
                 return E_INVALID_ARGUMENT(discretization);
 //            *phase_factor_b =  - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
            *phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
-//           *phase_factor_b = -2*(T[0]-eps_t*boundary_coeff);           // matlab expression, result is worses
+//           *phase_factor_b = -2*(T[0]-eps_t*boundary_coeff);           // matlab expression
             return SUCCESS;
             break;
 

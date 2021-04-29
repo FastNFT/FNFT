@@ -344,7 +344,7 @@ static INT manakov_compare_nfs(const UINT M, const UINT K1, const UINT K2,
     COMPLEX const * const normconsts_2,
     COMPLEX const * const residues_1,
     COMPLEX const * const residues_2,
-    REAL dists[8])
+    REAL dists[5])
 {
     UINT i, j, min_j = 0;
     REAL dist, min_dist, nrm;
@@ -474,7 +474,7 @@ static INT manakov_compare_nfs(const UINT M, const UINT K1, const UINT K2,
 }
 
 INT manakov_testcases_test_fnft(manakov_testcases_t tc, UINT D,
-const REAL error_bounds[8], fnft_manakov_opts_t * const opts) {
+const REAL error_bounds[5], fnft_manakov_opts_t * const opts) {
     COMPLEX * q1 = NULL;
     COMPLEX * q2 = NULL;
     COMPLEX * contspec = NULL;
@@ -488,8 +488,8 @@ const REAL error_bounds[8], fnft_manakov_opts_t * const opts) {
     COMPLEX * residues_exact = NULL;
     UINT K, K_exact=0, M;
     INT kappa = 0;
-    REAL errs[8] = {
-        FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN };
+    REAL errs[5] = {
+        FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN};
     INT ret_code;
 
     // Check inputs
@@ -547,14 +547,13 @@ const REAL error_bounds[8], fnft_manakov_opts_t * const opts) {
 //    return E_INVALID_ARGUMENT(kappa);       // here to stop executing
 
 #ifdef DEBUG
-    for (UINT i=0; i<7; i++)
+    for (UINT i=0; i<5; i++)
         printf("manakov_testcases_test_fnft: error_bounds[%i] = %2.1e <= %2.1e\n",
             (int)i, errs[i], error_bounds[i]);
-    //misc_print_buf(M, contspec, "r_num");
-    //misc_print_buf(M, contspec_exact, "r_exact");
-    //misc_print_buf(2*M, contspec+M, "ab_num");
-     //misc_print_buf(2*M, ab_exact, "ab_exact");
-#endif
+    misc_print_buf(3*M, contspec+2*M, "ab_num");
+    misc_print_buf(3*M, ab_exact, "ab_exact");
+    misc_print_buf(2*M, contspec, "contspec_num");
+    misc_print_buf(2*M, contspec_exact, "contspec_exact");
 
 // Printing for error checking      TODO: remove
 printf("contspec_num and contspec_exact\n");
@@ -575,14 +574,10 @@ for (UINT i =0; i<16; i++){
 }
 
 printf("errors\n");
-for (UINT i = 0; i<7; i++){
+for (UINT i = 0; i<5; i++){
     printf("%f \n", errs[i]);
 }
-
-    misc_print_buf(3*M, contspec+2*M, "ab_num");
-    misc_print_buf(3*M, ab_exact, "ab_exact");
-    misc_print_buf(2*M, contspec, "contspec_num");
-    misc_print_buf(2*M, contspec_exact, "contspec_exact");
+#endif
 
 
     // Check if the errors are below the specified bounds. Organized such that

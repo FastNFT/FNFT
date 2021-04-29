@@ -237,8 +237,8 @@ INT fnft_manakov(
     // number of samples for the chosen discretization. The effective number
     // of samples is required for the auxiliary function calls.
 //    upsampling_factor = nse_discretization_upsampling_factor(opts->discretization);
-        // TODO: maybe use manakov_discretization_upsampling_factor and move the resampling out of manakov_fscatter
-        upsampling_factor = 1;
+        // TODO: move the resampling out of manakov_fscatter
+        upsampling_factor = manakov_discretization_upsampling_factor(opts->discretization);     // TODO: just changed this, see if it does anything for the 2split discs
     if (upsampling_factor == 0) {
         ret_code = E_INVALID_ARGUMENT(opts->discretization);
         goto leave_fun;
@@ -540,10 +540,19 @@ static inline INT fnft_manakov_base(
     // to a slow method. Incorrect discretizations will have been checked for
     // in fnft_nsev main
 
+    // multiplying i by 2 for the 4split methods. These methods use D_eff = 2*D samples
+    // TODO: move this part of the code elsewhere IF we move the resampling code out of manakov_fscatter
+/*    if (opts->discretization == manakov_discretization_4SPLIT4A || opts->discretization == manakov_discretization_4SPLIT4B ||
+        opts->discretization == manakov_discretization_4SPLIT6B){
+            i *= 2;
+        }
+        */
+       // NOTE: not needed if we pass D_effective for D as we do now
+
     if (i != 0){
     //This corresponds to methods based on polynomial transfer matrix
        // Allocate memory for the transfer matrix.
-        transfer_matrix = malloc(i*sizeof(COMPLEX));
+        transfer_matrix = malloc(i*sizeof(COMPLEX));  // original code
         if (transfer_matrix == NULL) {
             ret_code = E_NOMEM;
             goto leave_fun;
@@ -552,8 +561,8 @@ static inline INT fnft_manakov_base(
         // Compute the transfer matrix
         if (opts->normalization_flag)
             W_ptr = &W;
-        ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, W_ptr,
-                opts->discretization);
+        ret_code = manakov_fscatter(D_given, q1, q2, kappa, eps_t, transfer_matrix, &deg, W_ptr,
+                opts->discretization);  // NOTE: changed D to D_given
         CHECK_RETCODE(ret_code, leave_fun);
     }else{
         // These indicate to the functions to follow that the discretization
@@ -879,9 +888,10 @@ static inline INT manakov_compute_contspec(
 
     }
 
+
 // TODO: remove this
 // printing Hij_vals to compare with matlab
-/*
+
 for (UINT i=0; i<M; i++){
     printf("H11[%d] = %f + i%f\n",i, creal(H11_vals[i]), cimag(H11_vals[i]));
 }
@@ -891,7 +901,7 @@ for (UINT i=0; i<M; i++){
 for (UINT i=0; i<M; i++){
     printf("H31[%d] = %f + i%f\n",i, creal(H31_vals[i]), cimag(H31_vals[i]));
 }
-*/
+
 
     // Compute the continuous spectrum
     switch (opts->contspec_type) {

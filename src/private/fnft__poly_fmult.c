@@ -522,7 +522,6 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
     //   but since the polynomials are zero-padded before the FFT is taken, it
     //   is only possible if the result_* arrays are larger than strictly
     //   necessary. See the doc of this fun.
-
     ret_code = poly_fmult_two_polys(deg, p1_11, p2_11, result_11,
                                     plan_fwd, plan_inv, buf0, buf1, buf2, mode);
     CHECK_RETCODE(ret_code, leave_fun);
