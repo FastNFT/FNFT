@@ -29,11 +29,11 @@ INT main()
     const manakov_testcases_t tc = manakov_testcases_SECH_FOCUSING;
 // const manakov_testcases_t tc = manakov_testcases_SECH_DEFOCUSING;
     REAL error_bounds[5] = { 
-        2.3e-4,     // reflection coefficient 1
-        2.3e-4,     // reflection coefficient 2
-        3.7e-4,     // a
-        9.7e-4,     // b1
-        9.7e-4     // b2
+        2.8e-6,     // reflection coefficient 1
+        2.8e-6,     // reflection coefficient 2
+        1.7e-5,     // a
+        2.5e-6,     // b1
+        2.5e-6     // b2
     };
 
     opts = fnft_manakov_default_opts();

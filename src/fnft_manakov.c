@@ -189,6 +189,7 @@ INT fnft_manakov(
     if (opts == NULL)
         opts = &default_opts;
 
+
 /*    // This switch checks for incompatible bound_state_localization options
     switch (opts->discretization) {
         case akns_discretization_2SPLIT2_MODAL:
@@ -406,7 +407,6 @@ INT fnft_manakov(
         // Calling fnft_manakov_base with subsampled signal
         bs_loc_opt = opts->bound_state_localization;
         opts->bound_state_localization = manakov_bsloc_NEWTON;
-        return E_INVALID_ARGUMENT(kappa);       // here to stop executing 
         ret_code = fnft_manakov_base(Dsub * upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, Tsub, M, contspec_sub, XI, &K_sub,
                 bound_states_sub, normconsts_or_residues_sub, kappa, opts);
         CHECK_RETCODE(ret_code, leave_fun);
@@ -540,15 +540,6 @@ static inline INT fnft_manakov_base(
     // to a slow method. Incorrect discretizations will have been checked for
     // in fnft_nsev main
 
-    // multiplying i by 2 for the 4split methods. These methods use D_eff = 2*D samples
-    // TODO: move this part of the code elsewhere IF we move the resampling code out of manakov_fscatter
-/*    if (opts->discretization == manakov_discretization_4SPLIT4A || opts->discretization == manakov_discretization_4SPLIT4B ||
-        opts->discretization == manakov_discretization_4SPLIT6B){
-            i *= 2;
-        }
-        */
-       // NOTE: not needed if we pass D_effective for D as we do now
-
     if (i != 0){
     //This corresponds to methods based on polynomial transfer matrix
        // Allocate memory for the transfer matrix.
@@ -571,12 +562,17 @@ static inline INT fnft_manakov_base(
         W = 0;
     }
 
+        misc_print_buf(10, transfer_matrix, "tm before manakov_compute_contspec");
+        misc_print_buf(10, contspec, "contspec before manakov_compute_contspec");
     // Compute the continuous spectrum
     if (contspec != NULL && M > 0) {
         ret_code = manakov_compute_contspec(deg, W, transfer_matrix, q1, q2, T, D, XI, M,
                 contspec, kappa, opts);
         CHECK_RETCODE(ret_code, leave_fun);
     }
+
+        misc_print_buf(10, transfer_matrix, "tm after manakov_compute_contspec");
+        misc_print_buf(10, contspec, "contspec after manakov_compute_contspec");
 
     /* Code for disc. spec.
     // Compute the discrete spectrum
@@ -877,8 +873,16 @@ static inline INT manakov_compute_contspec(
         ret_code = manakov_discretization_lambda_to_z(1, eps_t, &A, opts->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
 
+        printf("Does Hij evaluation loop\n");
+        printf("V = %f+i%f,     A = %f+i%f\n", creal(V), cimag(V), creal(A), cimag(A));
+        printf("M = %d\n",M);
+        printf("deg = %d",deg);
+        misc_print_buf(M, H11_vals, "H11 before poly_chirpz");
+        misc_print_buf(M, transfer_matrix, "tm before poly_chirpz");
+
         ret_code = poly_chirpz(deg, transfer_matrix, A, V, M, H11_vals);
         CHECK_RETCODE(ret_code, leave_fun);
+        misc_print_buf(M, H11_vals, "H11 directly after poly_chirpz");
 
         ret_code = poly_chirpz(deg, transfer_matrix+3*(deg+1), A, V, M, H21_vals);
         CHECK_RETCODE(ret_code, leave_fun);
@@ -901,6 +905,11 @@ for (UINT i=0; i<M; i++){
 for (UINT i=0; i<M; i++){
     printf("H31[%d] = %f + i%f\n",i, creal(H31_vals[i]), cimag(H31_vals[i]));
 }
+
+//misc_print_buf(3*M, contspec+2*M, "ab_num");
+misc_print_buf(M, H11_vals, "H11");
+misc_print_buf(M, H21_vals, "H21");
+misc_print_buf(M, H31_vals, "H31");
 
 
     // Compute the continuous spectrum
@@ -947,10 +956,10 @@ for (UINT i=0; i<M; i++){
             CHECK_RETCODE(ret_code, leave_fun);
 
             //TODO: remove
-/*            printf("phase_factor a = %f\n",phase_factor_a);
+            printf("phase_factor a = %f\n",phase_factor_a);
             printf("phase_factor b1 = %f\n",phase_factor_b1);
             printf("phase_factor b2 = %f\n",phase_factor_b2);
-            printf("scale = %f\n",scale);*/
+            printf("scale = %f\n",scale);
 
             for (i = 0; i < M; i++) {
                 result[offset + i] = H11_vals[i] * scale * CEXP(I*xi[i]*phase_factor_a);

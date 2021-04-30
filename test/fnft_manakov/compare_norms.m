@@ -23,44 +23,25 @@ for i = 1:2*M
     rel_err_contspec(i) = (abs(contspec_num(i))-abs(contspec_exact(i)))/abs(contspec_exact(i));
 end
 
-% %% code to try out phase factors
-% T0 = -25;
-% T1 = 25;
-% D = 512;
-% eps_t = (T1-T0)/(D-1);
-% b1_num = ab_num(M+1:2*M);
-% b1_exact = ab_exact(M+1:2*M);
-% 
-% phase_factor = +eps_t/3;
-% phase_factor = -eps_t*D - (T1+eps_t*0.5) - (T0-eps_t*0.5)% + eps_t/3
-% %phase_factor = -eps_t*(D-1) + (T1+eps_t*0.5) - (T0-eps_t*0.5)     % also works pretty well for real part, slightly worse for imag part
-% xi = (-sym(7):sym(8))/4;        % xi has 16 elements, M = 16
-% 
-% b1_C = zeros(M,1);
-% for i = 1:M
-%     b1_C(i) = b1_num(i)*exp(1i*xi(i)*phase_factor);
-% end
-% b1_side_by_side = [b1_exact', b1_C];
-% real_err = abs(sum(real(b1_C))+sum(real(b1_exact)))
-% imag_err = abs(sum(imag(b1_C))-sum(imag(b1_exact)))
-% 
-% %% code to try out phase factors
-% M = 16;
-% T0 = -25;
-% T1 = 25;
-% D = 512;
-% eps_t = (T1-T0)/(D-1);
-% a_num = ab_num(1:M);
-% a_exact = ab_exact(1:M);
-% 
-% phase_factor = (T1+eps_t*0.5) - (T0-eps_t*0.5);
-% phase_factor = eps_t;
-% xi = (-sym(7):sym(8))/4;        % xi has 16 elements, M = 16
-% 
-% a_C = zeros(M,1);
-% for i = 1:M
-%     a_C(i) = a_num(i)*exp(1i*xi(i)*phase_factor);
-% end
-% a_side_by_side = [a_exact', a_C];
-% real_err = norm(abs(real(a_C))-abs(real(a_exact)))
-% imag_err = norm(abs(imag(a_C))-abs(imag(a_exact)))
+%% code to try out phase factors
+eps_t = 50/511;
+t_step_sizes = eps_t;
+T = [-25-0.5*eps_t 25+0.5*eps_t];
+
+D = 512;
+b1_num = ab_num(M+1:2*M);
+b1_exact = ab_exact(M+1:2*M);
+
+phase_factor = +eps_t/3;
+phase_factor = -eps_t*D - (T(2)+eps_t*0.5) - (T(1)-eps_t*0.5)% + eps_t/3
+%phase_factor = -eps_t*(D-1) + (T1+eps_t*0.5) - (T0-eps_t*0.5)     % also works pretty well for real part, slightly worse for imag part
+phase_factor = 0
+xi = (-sym(7):sym(8))/4;        % xi has 16 elements, M = 16
+
+b1_C = zeros(M,1);
+for i = 1:M
+    b1_C(i) = b1_num(i)*exp(1i*xi(i)*phase_factor);
+end
+b1_side_by_side = [b1_exact', b1_C];
+real_err = abs(sum(real(b1_C))+sum(real(b1_exact)))
+imag_err = abs(sum(imag(b1_C))-sum(imag(b1_exact)))
