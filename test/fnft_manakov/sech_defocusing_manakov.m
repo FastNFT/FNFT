@@ -4,7 +4,7 @@
 A1 = sym(0.8);
 A2 = sym(5.2);
 kappa = sym(-1);
-q0 = kappa*sqrt(A1*A1+A2*A2);
+q0 = sqrt(kappa)*sqrt(A1*A1+A2*A2);
 hlf = sym(1)/sym(2);
 im = sym(1j);
 syms lam;

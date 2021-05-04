@@ -28,15 +28,15 @@ INT main()
     UINT D = 512;
     const manakov_testcases_t tc = manakov_testcases_SECH_DEFOCUSING;
     REAL error_bounds[5] = {
-        6.5e-4,     // reflection coefficient 1
-        6.5e-4,     // reflection coefficient 2
-        7.0e-4,     // a
-        6.3e-4,     // b1
-        6.3e-4     // b2
+        7.5e-4,     // reflection coefficient 1
+        7.5e-4,     // reflection coefficient 2
+        3.1e-4,     // a
+        1.3e-4,     // b1
+        1.3e-4     // b2
     };
 
     opts = fnft_manakov_default_opts();
-    opts.discretization = manakov_discretization_2SPLIT3A;
+    opts.discretization = manakov_discretization_2SPLIT4A;
 
 
     ret_code = manakov_testcases_test_fnft(tc, D, error_bounds, &opts);

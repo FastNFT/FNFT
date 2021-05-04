@@ -59,9 +59,9 @@ matz6 = [0,         0,          0;
 
 %% Computing values for the test file
 eps_t = 0.13;
-kappa = 1;
+kappa = -1;
 D=8;
-q = (0.41*cos(1:2*D)+0.59j*sin(0.28*(1:2*D)))*50;
+q = (0.1*cos(1:2*D)+0.08j*sin(0.28*(1:2*D)))*50;
 r = -kappa*conj(q);
 zlist = exp(1i*[0,pi/4,9*pi/14,4*pi/3,-pi/5]);
 result_exact = zeros(45,1);
@@ -110,9 +110,9 @@ AE_3 = [1/z,0,0;0,z,0;0,0,z];
 % Let CE_approx be approximation of CE after application of splitting
 % scheme
 eps_t = 0.13;
-kappa = 1;
+kappa = -1;
 D=2;
-q = (0.41*cos(1:2*D)+0.59j*sin(0.28*(1:2*D)))*50;
+q = (0.1*cos(1:2*D)+0.08j*sin(0.28*(1:2*D)))*50;
 r = -kappa*conj(q);
 M = eye(3);
 for n=1:D
@@ -124,7 +124,7 @@ for n=1:D
     CE_approx_pos = expand(CE_approx*z^3);
     M = CE_approx_pos*M;
 end
-[p1e,t] = coeffs(expand(M(1,1)),'all');
+[p1e,t] = coeffs(expand(M(2,2)),'all');
 p1e = double(p1e).';
 
 %%

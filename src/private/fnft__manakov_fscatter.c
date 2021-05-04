@@ -20,8 +20,8 @@
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft__manakov_fscatter.h"
+#include "fnft__misc.h"
 #include <limits.h>
-
 
 
 /**
@@ -42,7 +42,7 @@ UINT manakov_fscatter_numel(UINT D, manakov_discretization_t discretization)
  * Exact expressions computed with Maple.
  */
 static inline void manakov_fscatter_zero_freq_scatter_matrix(COMPLEX * const M,
-                                                const REAL eps_t, const COMPLEX q1, const COMPLEX q2, const UINT kappa)
+                                                const REAL eps_t, const COMPLEX q1, const COMPLEX q2, const INT kappa)
 {
     // This function computes the matrix exponential
     //   M = expm([0,q1,q2; -q1*,0,0; -q2*,0,0]*eps_t)
@@ -55,10 +55,10 @@ static inline void manakov_fscatter_zero_freq_scatter_matrix(COMPLEX * const M,
     M[0] = CCOS(I*x);                               // M11
     M[1] = q1*misc_CSINC(I*x)*eps_t;                // M12
     M[2] = q2*misc_CSINC(I*x)*eps_t;                // M13
-    M[3] = -conj(M[1]);                             // M21
+    M[3] = -conj(M[1])*kappa;                             // M21
     M[4] = eps_t*eps_t*(r2*q2 + r1*q1*CCOS(I*x))/(x*x);     // M22
     M[5] = q2*r1*(CCOS(I*x)-1)*eps_t*eps_t/(x*x);   // M23
-    M[6] = -conj(M[2]);                             // M31
+    M[6] = -conj(M[2])*kappa;                             // M31
     M[7] = conj(M[5]);                              // M32
     M[8] = eps_t*eps_t*(r1*q1 + r2*q2*CCOS(I*x))/(x*x);     // M33
     
@@ -79,7 +79,6 @@ static inline void manakov_fscatter_get_E(COMPLEX * const M, const REAL eps_t,
     M[6] = t2*misc_CSINC(I*x);                             // M31
     M[7] = s1*t2*(CCOS(I*x)-1)/(x*x);                              // M32
     M[8] = (t1*s1 + t2*s2*CCOS(I*x))/(x*x);     // M33
-    //TODO: check if this function is correct
 }
 
 
@@ -87,7 +86,7 @@ static inline void manakov_fscatter_get_E(COMPLEX * const M, const REAL eps_t,
  * Fast computation of polynomial approximation of the combined scattering
  * matrix.
  */
-INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * const q2, const UINT kappa, 
+INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * const q2, const INT kappa, 
                  REAL eps_t, COMPLEX * const result, UINT * const deg_ptr,
                  INT * const W_ptr, manakov_discretization_t const discretization)
                  //TODO: make sure enough memory is allocated for result to allow
@@ -104,8 +103,6 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
 
     r is not passed here, as for the manakov equation this is always equal to -kappa *conj(q)
     */
-
-
 
     INT ret_code;
     COMPLEX *p, *p11, *p12, *p13, *p21, *p22, *p23, *p31, *p32, *p33;
@@ -130,6 +127,8 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
         return E_INVALID_ARGUMENT(result);
     if (deg_ptr == NULL)
         return E_INVALID_ARGUMENT(deg_ptr);
+    if (abs(kappa) != 1)
+        return E_INVALID_ARGUMENT(kappa);
 
     //Determine D_eff. Some methods are better implemented "as if" we have 2*D samples
     /* 
@@ -1423,11 +1422,10 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
             goto release_mem;
     }
     // Multiply the individual scattering matrices
-//    misc_print_buf(7*9*2,p,"c");
-printf("&W_ptr before poly_fmult = %d\n",&W_ptr);
+//    misc_print_buf(9,p,"c");
+
     ret_code = poly_fmult3x3(deg_ptr, D_eff, p, result, W_ptr); // replaced D by D_eff because some methods are better 
                                                                 // implemented "as if" there are 2*D samples
-                                                                printf("&W_ptr after poly_fmult = %d\n",&W_ptr);
     CHECK_RETCODE(ret_code, release_mem);
 
 release_mem:

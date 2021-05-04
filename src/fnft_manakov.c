@@ -239,7 +239,7 @@ INT fnft_manakov(
     // of samples is required for the auxiliary function calls.
 //    upsampling_factor = nse_discretization_upsampling_factor(opts->discretization);
         // TODO: move the resampling out of manakov_fscatter
-        upsampling_factor = manakov_discretization_upsampling_factor(opts->discretization);     // TODO: just changed this, see if it does anything for the 2split discs
+        upsampling_factor = manakov_discretization_upsampling_factor(opts->discretization);
     if (upsampling_factor == 0) {
         ret_code = E_INVALID_ARGUMENT(opts->discretization);
         goto leave_fun;
@@ -552,6 +552,14 @@ static inline INT fnft_manakov_base(
         // Compute the transfer matrix
         if (opts->normalization_flag)
             W_ptr = &W;
+/*            printf("inputs to manakov f_scatter\n");
+            printf("D_given = %d\n",D_given);
+            misc_print_buf(16,q1,"first_16_entries_q1");
+            misc_print_buf(16,q2,"first_16_entries_q2");
+            printf("kappa = %d\n",kappa);
+            printf("eps_t = %f\n", eps_t);
+            misc_print_buf(16,transfer_matrix,"first_16_entries_transfer_matrix");
+            */
         ret_code = manakov_fscatter(D_given, q1, q2, kappa, eps_t, transfer_matrix, &deg, W_ptr,
                 opts->discretization);  // NOTE: changed D to D_given
         CHECK_RETCODE(ret_code, leave_fun);
@@ -562,8 +570,7 @@ static inline INT fnft_manakov_base(
         W = 0;
     }
 
-        misc_print_buf(10, transfer_matrix, "tm before manakov_compute_contspec");
-        misc_print_buf(10, contspec, "contspec before manakov_compute_contspec");
+//        misc_print_buf(10, transfer_matrix, "tm before manakov_compute_contspec");
     // Compute the continuous spectrum
     if (contspec != NULL && M > 0) {
         ret_code = manakov_compute_contspec(deg, W, transfer_matrix, q1, q2, T, D, XI, M,
@@ -571,8 +578,7 @@ static inline INT fnft_manakov_base(
         CHECK_RETCODE(ret_code, leave_fun);
     }
 
-        misc_print_buf(10, transfer_matrix, "tm after manakov_compute_contspec");
-        misc_print_buf(10, contspec, "contspec after manakov_compute_contspec");
+//        misc_print_buf(10, transfer_matrix, "tm after manakov_compute_contspec");
 
     /* Code for disc. spec.
     // Compute the discrete spectrum
@@ -873,16 +879,8 @@ static inline INT manakov_compute_contspec(
         ret_code = manakov_discretization_lambda_to_z(1, eps_t, &A, opts->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
 
-        printf("Does Hij evaluation loop\n");
-        printf("V = %f+i%f,     A = %f+i%f\n", creal(V), cimag(V), creal(A), cimag(A));
-        printf("M = %d\n",M);
-        printf("deg = %d",deg);
-        misc_print_buf(M, H11_vals, "H11 before poly_chirpz");
-        misc_print_buf(M, transfer_matrix, "tm before poly_chirpz");
-
         ret_code = poly_chirpz(deg, transfer_matrix, A, V, M, H11_vals);
         CHECK_RETCODE(ret_code, leave_fun);
-        misc_print_buf(M, H11_vals, "H11 directly after poly_chirpz");
 
         ret_code = poly_chirpz(deg, transfer_matrix+3*(deg+1), A, V, M, H21_vals);
         CHECK_RETCODE(ret_code, leave_fun);
@@ -896,6 +894,7 @@ static inline INT manakov_compute_contspec(
 // TODO: remove this
 // printing Hij_vals to compare with matlab
 
+/*
 for (UINT i=0; i<M; i++){
     printf("H11[%d] = %f + i%f\n",i, creal(H11_vals[i]), cimag(H11_vals[i]));
 }
@@ -905,6 +904,7 @@ for (UINT i=0; i<M; i++){
 for (UINT i=0; i<M; i++){
     printf("H31[%d] = %f + i%f\n",i, creal(H31_vals[i]), cimag(H31_vals[i]));
 }
+*/
 
 //misc_print_buf(3*M, contspec+2*M, "ab_num");
 misc_print_buf(M, H11_vals, "H11");

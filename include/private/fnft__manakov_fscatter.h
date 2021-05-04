@@ -29,7 +29,7 @@
 FNFT_UINT fnft__manakov_fscatter_numel(FNFT_UINT D,
 	fnft_manakov_discretization_t discretization);
 
-FNFT_INT fnft__manakov_fscatter(const UINT D, COMPLEX const* const q1, COMPLEX const* const q2, const UINT kappa,
+FNFT_INT fnft__manakov_fscatter(const UINT D, COMPLEX const* const q1, COMPLEX const* const q2, const INT kappa,
 	REAL eps_t, COMPLEX* const result, UINT* const deg_ptr,
 	INT* const W_ptr, manakov_discretization_t const discretization);
 
