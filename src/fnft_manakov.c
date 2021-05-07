@@ -152,8 +152,6 @@ INT fnft_manakov(
 {
     COMPLEX *q1sub_preprocessed = NULL;
     COMPLEX *q2sub_preprocessed = NULL;
-    COMPLEX *q_preprocessed = NULL;
-    COMPLEX *r_preprocessed = NULL;
     UINT Dsub = 0;
     REAL Tsub[2] = {0.0 ,0.0};
     UINT first_last_index[2] = {0};
@@ -468,8 +466,6 @@ INT fnft_manakov(
     leave_fun:      // TODO: check which variables we need to free
         free(q1sub_preprocessed);
         free(q2sub_preprocessed);
-        free(q_preprocessed);   // TODO: needed?
-        free(r_preprocessed);   // TODO: needed?
         free(contspec_sub);
         free(bound_states_sub);
         free(normconsts_or_residues_sub);

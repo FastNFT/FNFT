@@ -49,6 +49,15 @@ INT main()
     ret_code = manakov_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
+    // with Richardson extrapolation
+    // The 2split methods start displaying 2nd order error decay only for small values of eps_t,
+    // so we choose a bigger D here
+    D = 4*512;
+    opts.richardson_extrapolation_flag = 1;
+
+    ret_code = manakov_testcases_test_fnft(tc, D, error_bounds, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+
 leave_fun:
     if (ret_code != SUCCESS)
         return EXIT_FAILURE;

@@ -50,18 +50,15 @@ INT main()
     ret_code = manakov_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
+    // with Richardson extrapolation
+    // The 2split methods start displaying 2nd order error decay only for small values of eps_t,
+    // so we choose a bigger D here
+    D = 4*512;
+    opts.richardson_extrapolation_flag = 1;
 
-/*    // Check for quadratic error decay (error_bounds[4] stays as it is because it is
-    // already close to machine precision)
-    // For this to make sense the error bounds have to be pretty tight. Also, this only checks if the error decay is 
-    // at least quadratic, so it doesn't catch the error decay of b coefficients being >2
-    D *= 2;
-    for (i=0; i<5; i++)
-        error_bounds[i] /= 4.0;
-    error_bounds[4] *= 4.0;
     ret_code = manakov_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-*/
+
 
 leave_fun:
     if (ret_code != SUCCESS)

@@ -61,6 +61,7 @@ UINT fnft__manakov_discretization_upsampling_factor(manakov_discretization_t dis
         case manakov_discretization_4SPLIT4A:
         case manakov_discretization_4SPLIT4B:
         case manakov_discretization_4SPLIT6B:
+        case manakov_discretization_CF4_2:
             return 2;
         case manakov_discretization_2SPLIT3A:
         case manakov_discretization_2SPLIT3B:
@@ -69,6 +70,7 @@ UINT fnft__manakov_discretization_upsampling_factor(manakov_discretization_t dis
         case manakov_discretization_FTES4_4A:
         case manakov_discretization_FTES4_4B:
         case manakov_discretization_2SPLIT6B:
+        case manakov_discretization_BO:
             return 1;
 
         default: // discretization not implemented for manakov
@@ -176,6 +178,7 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
         case manakov_discretization_4SPLIT4A:
         case manakov_discretization_4SPLIT4B:
         case manakov_discretization_4SPLIT6B:
+        case manakov_discretization_CF4_2:
     {
         // Getting bandlimited interpolated samples. First get the samples and 
         // then subsampling
