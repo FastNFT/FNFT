@@ -25,6 +25,7 @@
 
 #include "fnft__manakov_scatter.h"
 
+
 /**
  * Auxiliary routines, used by the main routines below
  */
@@ -109,12 +110,48 @@ INT manakov_scatter_matrix(UINT const D,
     // q and r but not l.
         COMPLEX *q1_preprocessed = NULL;
         COMPLEX *q2_preprocessed = NULL;
+            UINT D_eff = upsampling_factor*D;
     switch (discretization) {
         case manakov_discretization_CF4_2:;         // commutator-free fourth-order. Semicolon added to resolve "a label can only be part of a statement and a declaration is not a statement" error
             // Do the resampling here
-            UINT first_last_index[2] = {0};     // not using this somewhere after this, maybe leave out? TODO
+            COMPLEX *q1_c1, *q1_c2, *q2_c1, *q2_c2;
+            const REAL a1 = 0.25 + sqrt(3)/6;
+            const REAL a2 = 0.25 - sqrt(3)/6;
+            q1_c1 = malloc(D*sizeof(COMPLEX));
+            q2_c1 = malloc(D*sizeof(COMPLEX));
+            q1_c2 = malloc(D*sizeof(COMPLEX));
+            q2_c2 = malloc(D*sizeof(COMPLEX));
+            q1_preprocessed = malloc(D_eff*sizeof(COMPLEX));
+            q2_preprocessed = malloc(D_eff*sizeof(COMPLEX));
+
+            for (UINT j=0; j<D; j++){
+                printf("q1 = %f+i%f\n",creal(q1[j]), cimag(q1[j]));
+            }            
+            // Getting non-equidistant samples. qci has sample points at T0+(n+ci)*eps_t,
+            // c1 = 0.5-sqrt(3)/6, c2 = 0.5+sqrt(3)/6
+            // Getting new samples:
+            misc_resample(D, eps_t, q1, (0.5-SQRT(3)/6)*eps_t, q1_c1);
+            misc_resample(D, eps_t, q1, (0.5+SQRT(3)/6)*eps_t, q1_c2);
+            misc_resample(D, eps_t, q2, (0.5-SQRT(3)/6)*eps_t, q2_c1);
+            misc_resample(D, eps_t, q2, (0.5+SQRT(3)/6)*eps_t, q2_c2);
+            for (UINT j=0; j<D; j++){
+                printf("q1_c1 = %f+i%f\n",creal(q1_c1[j]), cimag(q1_c1[j]));
+            }
+            for (UINT i=0; i<D; i++){
+                q1_preprocessed[2*i] = a1*q1_c1[i]+a2*q1_c2[i];
+                q2_preprocessed[2*i] = a1*q2_c1[i]+a2*q2_c2[i];
+                q1_preprocessed[2*i+1] = a2*q1_c1[i]+a1*q1_c2[i];
+                q2_preprocessed[2*i+1] = a2*q2_c1[i]+a1*q2_c2[i];
+            }
+            for (UINT j=0; j<D; j++){
+                printf("q1_preprocessed = %f+i%f\n",creal(q1_preprocessed[j]), cimag(q1_preprocessed[j]));
+            }            
+
+/*            UINT first_last_index[2] = {0};     // not using this somewhere after this, maybe leave out? TODO
+            misc_print_buf(8,q1,'q1');
             manakov_discretization_preprocess_signal(D, q1, q2, eps_t, kappa,
                     &D, &q1_preprocessed, &q2_preprocessed, first_last_index, discretization);
+            misc_print_buf(8,q1_preprocessed,'q1_preprocessed');*/
         break;
         case manakov_discretization_BO:            // bofetta-osborne scheme
             q1_preprocessed = q1;
@@ -126,10 +163,8 @@ INT manakov_scatter_matrix(UINT const D,
             CHECK_RETCODE(ret_code, leave_fun);
     }
 
-
 //    for (UINT n=0; n<upsampling_factor; n++ )       // TODO: check if this is ok.
 //                eps_t_scaled[n] *= eps_t;
-    UINT D_eff = upsampling_factor*D;
         // Calculate the scattering matrix without lambda-derivative
         for (UINT i = 0; i < K; i++) { // iterate over lambda
             // Initialize scattering matrix
@@ -145,10 +180,11 @@ INT manakov_scatter_matrix(UINT const D,
                     for (UINT n = 0; n < D_eff; n++){
                         manakov_scatter_U_BO(q1_preprocessed[n],q2_preprocessed[n],l_curr,eps_t,kappa,*U);
                         printf("in loop %d\n",n);
+                        printf("current lambda = %f + i%f\n",creal(l_curr), cimag(l_curr));
                         misc_print_buf(9,U,"TM");
-//                        misc_print_buf(9,H[!current][0][0],"H before mult");
+//                        misc_print_buf(9,&H[current][0][0],"H before mult");
                         misc_matrix_mult(3,3,3,&U[0][0],&H[current][0][0],&H[!current][0][0]);
-//                        misc_print_buf(9,H[!current][0][0],"H after mult");
+//                        misc_print_buf(9,&H[!current][0][0],"H after mult");
                         current = !current;
                     }
                     break;

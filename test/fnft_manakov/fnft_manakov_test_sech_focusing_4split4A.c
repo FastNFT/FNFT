@@ -49,15 +49,15 @@ INT main()
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = manakov_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
+printf("did first 3tests");    
 
-    /*
+    
     // with Richardson extrapolation
-    D /= 2;     // Otherwise test takes a long time to run
     opts.richardson_extrapolation_flag = 1;
-
+    D *=8;
     ret_code = manakov_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-*/
+
 
 leave_fun:
     if (ret_code != SUCCESS)

@@ -394,6 +394,8 @@ INT fnft_manakov(
         // required for obtaining a second approximation of the spectrum
         // which will be used for Richardson extrapolation.
         Dsub = (UINT) CEIL(D/2);
+        printf("D for preprocess_signal = %d\n",D);
+        printf("Dsub for preprocess_signal = %d\n",Dsub);
         ret_code = manakov_discretization_preprocess_signal(D, q1, q2, eps_t, kappa, &Dsub, &q1sub_preprocessed, &q2sub_preprocessed,
                     first_last_index, opts->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
@@ -903,9 +905,9 @@ for (UINT i=0; i<M; i++){
 */
 
 //misc_print_buf(3*M, contspec+2*M, "ab_num");
-misc_print_buf(M, H11_vals, "H11");
-misc_print_buf(M, H21_vals, "H21");
-misc_print_buf(M, H31_vals, "H31");
+//misc_print_buf(M, H11_vals, "H11");
+//misc_print_buf(M, H21_vals, "H21");
+//misc_print_buf(M, H31_vals, "H31");
 
 
     // Compute the continuous spectrum
@@ -950,12 +952,6 @@ misc_print_buf(M, H31_vals, "H31");
 
             ret_code = manakov_discretization_phase_factor_b(eps_t, D_given, T, &phase_factor_b2,opts->discretization);
             CHECK_RETCODE(ret_code, leave_fun);
-
-            //TODO: remove
-            printf("phase_factor a = %f\n",phase_factor_a);
-            printf("phase_factor b1 = %f\n",phase_factor_b1);
-            printf("phase_factor b2 = %f\n",phase_factor_b2);
-            printf("scale = %f\n",scale);
 
             for (i = 0; i < M; i++) {
                 result[offset + i] = H11_vals[i] * scale * CEXP(I*xi[i]*phase_factor_a);

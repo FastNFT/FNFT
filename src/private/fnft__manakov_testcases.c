@@ -657,7 +657,6 @@ const REAL error_bounds[5], fnft_manakov_opts_t * const opts) {
         XI, &K_exact,&bound_states_exact, &normconsts_exact, &residues_exact,
         &kappa);
     CHECK_RETCODE(ret_code, release_mem);
-    printf("kappa of loaded testcase = %d\n",kappa);
 
     // Allocate memory
     contspec = malloc(5*M * sizeof(COMPLEX));

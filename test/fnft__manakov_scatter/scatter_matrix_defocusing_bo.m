@@ -1,7 +1,6 @@
-clear lam lambda
 clear
 eps_t = 0.13;
-    kappa = +1; D=8;
+    kappa = -1; D=8;
     q1 = 0.4*cos(1:D)+0.5j*sin(0.3*(1:D));
     q2 = 0.21*cos(1:D)+1.05j*sin(0.2*(1:D));
     result_exact = []; lam = [2, 1+0.5*i];

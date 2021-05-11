@@ -21,6 +21,8 @@
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft__manakov_discretization.h"
+#include "fnft__misc.h"
+#include<stdio.h>
 
 /**
  * This routine returns the max degree d of the polynomials in a single
@@ -108,6 +110,8 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
 
     UINT isub, i, D_effective;
 
+    printf("Goes into preprocess signal\n");
+
             // Check inputs
     if (D < 2)
         return E_INVALID_ARGUMENT(D);
@@ -128,7 +132,7 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
 
 
     // Determine number of samples after downsampling, Dsub
-    // If Dsub = D, we o not downsample
+    // If Dsub = D, we do not downsample
     UINT Dsub = *Dsub_ptr; // desired Dsub
     if (Dsub < 2)
         Dsub = 2;
@@ -180,6 +184,15 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
         case manakov_discretization_4SPLIT6B:
         case manakov_discretization_CF4_2:
     {
+
+        for (isub=0, i=0; isub<D_effective; isub++, i += nskip_per_step) {  // downsampling
+                q1_preprocessed[isub] = q1[i];
+                q2_preprocessed[isub] = q2[i];
+                r1_preprocessed[isub] = conj(q1[i])*-1*kappa;
+                r2_preprocessed[isub] = conj(q2[i])*-1*kappa;
+            }
+
+/*
         // Getting bandlimited interpolated samples. First get the samples and 
         // then subsampling
             const REAL a1 = 0.25 + sqrt(3)/6;
@@ -200,10 +213,10 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
                 q1_preprocessed[isub+1] = a2*q1_c1[i]+a1*q1_c2[i];
                 q2_preprocessed[isub+1] = a2*q2_c1[i]+a1*q2_c2[i];
             }
-            for (i=0; i<D_effective;){
+            for (i=0; i<D_effective; i++){
                 r1_preprocessed[i] =conj(q1_preprocessed[i])*-1*kappa;
                 r2_preprocessed[i] =conj(q2_preprocessed[i])*-1*kappa;
-            }
+            }*/
     }
             break;
 
