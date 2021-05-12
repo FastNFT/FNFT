@@ -147,7 +147,8 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
         ret_code =  E_INVALID_ARGUMENT(discretization);
         goto release_mem;
     }
-    D_effective = Dsub * upsampling_factor;
+    //D_effective = Dsub * upsampling_factor;       // original code, from when we still did the interlacing as well in this file
+    D_effective = Dsub;
     COMPLEX * const q1_preprocessed = malloc(D_effective * sizeof(COMPLEX));
     COMPLEX * const q2_preprocessed = malloc(D_effective * sizeof(COMPLEX));
     COMPLEX * const r1_preprocessed = malloc(D_effective * sizeof(COMPLEX));
@@ -172,6 +173,7 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
         case manakov_discretization_FTES4_4A:
         case manakov_discretization_FTES4_4B:
         case manakov_discretization_2SPLIT6B:
+                    printf("D = %d, D_eff = %d, Dsub = %d",D, D_effective, Dsub);
             for (isub=0, i=0; isub<D_effective; isub++, i += nskip_per_step) {  // downsampling
                 q1_preprocessed[isub] = q1[i];
                 q2_preprocessed[isub] = q2[i];
@@ -184,7 +186,7 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
         case manakov_discretization_4SPLIT6B:
         case manakov_discretization_CF4_2:
     {
-
+        printf("D = %d, D_eff = %d, Dsub = %d",D, D_effective, Dsub);
         for (isub=0, i=0; isub<D_effective; isub++, i += nskip_per_step) {  // downsampling
                 q1_preprocessed[isub] = q1[i];
                 q2_preprocessed[isub] = q2[i];

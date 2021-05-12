@@ -1,6 +1,61 @@
+/*
+* This file is part of FNFT.
+*
+* FNFT is free software; you can redistribute it and/or
+* modify it under the terms of the version 2 of the GNU General
+* Public License as published by the Free Software Foundation.
+*
+* FNFT is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program. If not, see <http://www.gnu.org/licenses/>.
+*
+* Contributors:
+* Lianne de Vries (TU Delft) 2021.
+*/
+
+#define FNFT_ENABLE_SHORT_NAMES
+
+#include "fnft__manakov_scatter.h"
+#include "fnft__misc.h"
+#include "fnft__errwarn.h"
+
+// TODO: update result_exact and matlab code
+INT manakov_scatter_matrix_test_defocusing_CF4_2()
+{
+    UINT i, D = 8;
+    INT ret_code;
+    const REAL eps_t = 0.13;
+    const INT kappa = -1;
+    COMPLEX q1[8], q2[8];
+    COMPLEX result[18];
+    COMPLEX lam[2] = {2, 1+0.5*I};
+    // TODO: update matlab code and result
+    COMPLEX result_exact[18] = { -0.360589966187354 -      1.17028981468031*I,
+        -0.0241956711020656 +     0.403833944944134*I,
+         -0.169329555844066 +     0.554313620604708*I,
+       -0.00519431569923585 -     0.390786889139384*I,
+         -0.475344428414229 +     0.954920383900963*I,
+         0.0248456421687098 +     0.119577600285474*I,
+         -0.182512465332931 -     0.559956427250144*I,
+         0.0761233332205738 +     0.141588341732639*I,
+          -0.37270039144989 +      1.08725084422066*I,
+           1.23866017259926 -      1.78512313003366*I,
+        0.00367523892219178 +     0.487852957066265*I,
+        -0.0271421495454989 +     0.777051429705551*I,
+        -0.0115552294310941 -     0.491046420752017*I,
+          0.350054575808624 +     0.571400095102463*I,
+         0.0831342553760913 +     0.081684819238415*I,
+         -0.217845544004535 -     0.884181359128605*I,
+          0.131727926593581 +    0.0868162278820376*I,
+          0.515444384818016 +     0.631623144772692*I };
+    /* Matlab code to generate result_exact:
 clear
 eps_t = 0.13;
-    kappa = +1; D=8;
+    kappa = -1; D=8;
     q1 = 0.4*cos(1:D)+0.5j*sin(0.3*(1:D));
     q2 = 0.21*cos(1:D)+1.05j*sin(0.2*(1:D));
     result_exact = []; lam = [2, 1+0.5*i];
@@ -27,7 +82,6 @@ q1_c1 = [1.959445940890e-001+1.241004022547e-001j, -2.592131203174e-001+3.452237
 q1_c2 = [-5.590625485913e-002+2.138239999513e-001j, -3.856966939342e-001+4.046327835275e-001j, -3.206394446118e-001+4.243784759145e-001j, 4.180433278990e-002+5.216076384561e-001j, 3.299466175909e-001+4.701354532991e-001j, 3.883736304468e-001+4.656136858304e-001j, -5.143984459071e-002+3.498070606383e-001j, 1.866592749703e-001+1.927728225495e-001j];
 q2_c1 = [7.080038365208e-002+1.346306842042e-001j, -1.040163599220e-001+5.069460117029e-001j, -2.390168143246e-001+5.950595276911e-001j, -6.580700396317e-002+8.019351848364e-001j, 6.022699906875e-002+9.021869491973e-001j, 2.561786336031e-001+9.814499044214e-001j, 6.766428684148e-002+1.083299632198e+000j, 2.384822439043e-002+9.045427290125e-001j];
 q2_c2 = [-6.142131204569e-002+2.931676403723e-001j, -1.704202360708e-001+5.979502372586e-001j, -2.004062366658e-001+6.970919258710e-001j, 5.401780295934e-002+8.692997389206e-001j, 1.411514459906e-001+9.661912518895e-001j, 2.359666842292e-001+9.996280110607e-001j, -5.907644665477e-002+1.129339523823e+000j, 1.300666476041e-001+3.573822940680e-001j];
-
 
 % Getting the interlaced "samples".
 Neff = length(q1_c1)+length(q1_c2);
@@ -81,3 +135,29 @@ Qn = [Qn(1,:).*exp(2i*pi*[0:Np, Nn:-1]*ts/(N*eps_t));...
 q1s = ifft(Qn(1,:));
 q2s = ifft(Qn(2,:));
 end
+    */
+    for (i=0; i<D; i++) {
+        q1[i] = 0.4*cos(i+1) + 0.5*I*sin(0.3*(i+1));
+        q2[i] = 0.21*cos(i+1) + 1.05*I*sin(0.2*(i+1));
+    }
+
+    ret_code = manakov_scatter_matrix(D, q1, q2, eps_t, 2, lam, kappa, result, manakov_discretization_CF4_2);
+    for (i=0; i<18; i++){
+        printf("result[%d] = %f + i%f\n", i, creal(result[i]), cimag(result[i]));
+    }
+
+    if (ret_code != SUCCESS)
+        return E_SUBROUTINE(ret_code);
+    if (misc_rel_err(18, result, result_exact) > 1000*EPSILON)
+        return E_TEST_FAILED;
+
+    return SUCCESS;
+}
+
+INT main()
+{
+    if (manakov_scatter_matrix_test_defocusing_CF4_2() != SUCCESS)
+        return EXIT_FAILURE;
+
+    return EXIT_SUCCESS;
+}

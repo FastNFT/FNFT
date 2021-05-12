@@ -706,10 +706,10 @@ const REAL error_bounds[5], fnft_manakov_opts_t * const opts) {
     for (UINT i=0; i<5; i++)
         printf("manakov_testcases_test_fnft: error_bounds[%i] = %2.1e <= %2.1e\n",
             (int)i, errs[i], error_bounds[i]);
-    misc_print_buf(3*M, contspec+2*M, "ab_num");
-    misc_print_buf(3*M, ab_exact, "ab_exact");
-    misc_print_buf(2*M, contspec, "contspec_num");
-    misc_print_buf(2*M, contspec_exact, "contspec_exact");
+//    misc_print_buf(3*M, contspec+2*M, "ab_num");
+//    misc_print_buf(3*M, ab_exact, "ab_exact");
+//    misc_print_buf(2*M, contspec, "contspec_num");
+//    misc_print_buf(2*M, contspec_exact, "contspec_exact");
 
 // Printing for error checking      TODO: remove
 printf("contspec_num and contspec_exact\n");

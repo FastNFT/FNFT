@@ -24,6 +24,7 @@
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft__manakov_scatter.h"
+#include "fnft__misc.h"
 
 
 /**
@@ -124,9 +125,8 @@ INT manakov_scatter_matrix(UINT const D,
             q1_preprocessed = malloc(D_eff*sizeof(COMPLEX));
             q2_preprocessed = malloc(D_eff*sizeof(COMPLEX));
 
-            for (UINT j=0; j<D; j++){
-                printf("q1 = %f+i%f\n",creal(q1[j]), cimag(q1[j]));
-            }            
+            misc_print_buf(8,q1,"q1");
+            misc_print_buf(8,q2,"q2");
             // Getting non-equidistant samples. qci has sample points at T0+(n+ci)*eps_t,
             // c1 = 0.5-sqrt(3)/6, c2 = 0.5+sqrt(3)/6
             // Getting new samples:
@@ -134,18 +134,18 @@ INT manakov_scatter_matrix(UINT const D,
             misc_resample(D, eps_t, q1, (0.5+SQRT(3)/6)*eps_t, q1_c2);
             misc_resample(D, eps_t, q2, (0.5-SQRT(3)/6)*eps_t, q2_c1);
             misc_resample(D, eps_t, q2, (0.5+SQRT(3)/6)*eps_t, q2_c2);
-            for (UINT j=0; j<D; j++){
-                printf("q1_c1 = %f+i%f\n",creal(q1_c1[j]), cimag(q1_c1[j]));
-            }
+                misc_print_buf(8,q1_c1,"q1_c1");
+                misc_print_buf(8,q1_c2,"q1_c2");
+                misc_print_buf(8,q2_c1,"q2_c1");
+                misc_print_buf(8,q2_c2,"q2_c2");
             for (UINT i=0; i<D; i++){
                 q1_preprocessed[2*i] = a1*q1_c1[i]+a2*q1_c2[i];
                 q2_preprocessed[2*i] = a1*q2_c1[i]+a2*q2_c2[i];
                 q1_preprocessed[2*i+1] = a2*q1_c1[i]+a1*q1_c2[i];
                 q2_preprocessed[2*i+1] = a2*q2_c1[i]+a1*q2_c2[i];
             }
-            for (UINT j=0; j<D; j++){
-                printf("q1_preprocessed = %f+i%f\n",creal(q1_preprocessed[j]), cimag(q1_preprocessed[j]));
-            }            
+                misc_print_buf(16,q1_preprocessed,"q1_preprocessed");
+                misc_print_buf(16,q2_preprocessed,"q2_preprocessed");                        
 
 /*            UINT first_last_index[2] = {0};     // not using this somewhere after this, maybe leave out? TODO
             misc_print_buf(8,q1,'q1');
@@ -179,12 +179,7 @@ INT manakov_scatter_matrix(UINT const D,
                 case manakov_discretization_BO:
                     for (UINT n = 0; n < D_eff; n++){
                         manakov_scatter_U_BO(q1_preprocessed[n],q2_preprocessed[n],l_curr,eps_t,kappa,*U);
-                        printf("in loop %d\n",n);
-                        printf("current lambda = %f + i%f\n",creal(l_curr), cimag(l_curr));
-                        misc_print_buf(9,U,"TM");
-//                        misc_print_buf(9,&H[current][0][0],"H before mult");
                         misc_matrix_mult(3,3,3,&U[0][0],&H[current][0][0],&H[!current][0][0]);
-//                        misc_print_buf(9,&H[!current][0][0],"H after mult");
                         current = !current;
                     }
                     break;
