@@ -892,7 +892,7 @@ static inline INT manakov_compute_contspec(
 // TODO: remove this
 // printing Hij_vals to compare with matlab
 
-/*
+	/*
 for (UINT i=0; i<M; i++){
     printf("H11[%d] = %f + i%f\n",i, creal(H11_vals[i]), cimag(H11_vals[i]));
 }

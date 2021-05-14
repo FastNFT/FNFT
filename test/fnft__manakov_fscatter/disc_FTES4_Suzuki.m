@@ -44,7 +44,6 @@ CE_approx_pos = expand(CE_approx*z^7);
 [c33,t33] = coeffs(CE_approx_pos(3,3),z);
 
 %% Computing values for the test file
-% TODO: continue here!
 eps_t = 0.13;
 kappa = 1;
 D=512;
@@ -81,15 +80,20 @@ for i = 1:1:5
   
 E1 = expm(eps_t^2*Q1/12 + eps_t^3*Q2/48);
 E2 = expm(-eps_t^2*Q1/12 + eps_t^3*Q2/48);
-        eA_4 = [z^-1 0 0; 0 z 0; 0 0 z];
+        AE_1_3 = [z^-1 0 0; 0 z 0; 0 0 z];
+        AE_m1_3 = [z 0 0; 0 z^-1 0; 0 0 z^-1];
+        AE = [z^-3 0 0; 0 z^3 0; 0 0 z^3];
         B = [0, q1(n), q2(n); -kappa*conj(q1(n)), 0, 0; -kappa*conj(q2(n)), 0, 0];
-        eB = expm(B*eps_t);
-        eB_1_2 = expm(B*eps_t/2);
-        U = E1*((4/3)*eA_4*eB_1_2*eA_4*eA_4*eB_1_2*eA_4+...
-            -(1/3)*eA_4*eA_4*eB*eA_4*eA_4)*E2;
+        BE7_48_ = expm(7*B*eps_t/48);
+        BE3_8_ = expm(3*B*eps_t/8);
+        BEm1_48_ = expm(-B/48);
+        U = E1*(BE7_48_*AE_1_3*BE3_8_*AE_m1_3*BEm1_48_*...
+        AE*BEm1_48_*AE_m1_3*BE3_8_*AE_1_3*BE7_48_)*E2;
+%        U = (BE7_48_*AE_1_3*BE3_8_*AE_m1_3*BEm1_48_*...
+%        AE*BEm1_48_*AE_m1_3*BE3_8_*AE_1_3*BE7_48_);
         S = U*S;
     end
-    S=S*z^(D*4);
+    S=S*z^(D*7);
     result_exact(i) = S(1,1);
     result_exact(5+i) = S(1,2);
     result_exact(10+i) = S(1,3);

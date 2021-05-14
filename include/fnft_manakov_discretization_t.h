@@ -82,6 +82,7 @@ typedef enum {
     fnft_manakov_discretization_4SPLIT6B,
     fnft_manakov_discretization_FTES4_4A,
     fnft_manakov_discretization_FTES4_4B,
+	fnft_manakov_discretization_FTES4_suzuki,
     fnft_manakov_discretization_CF4_2,
     fnft_manakov_discretization_BO,
 } fnft_manakov_discretization_t;
@@ -99,6 +100,7 @@ typedef enum {
 #define manakov_discretization_4SPLIT6B fnft_manakov_discretization_4SPLIT6B
 #define manakov_discretization_FTES4_4A fnft_manakov_discretization_FTES4_4A
 #define manakov_discretization_FTES4_4B fnft_manakov_discretization_FTES4_4B
+#define manakov_discretization_FTES4_suzuki fnft_manakov_discretization_FTES4_suzuki
 #define manakov_discretization_CF4_2 fnft_manakov_discretization_CF4_2
 #define manakov_discretization_BO fnft_manakov_discretization_BO
 #endif
