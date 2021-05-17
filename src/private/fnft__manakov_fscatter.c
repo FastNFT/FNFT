@@ -1631,10 +1631,19 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
 
                 printf("i=%d\n",i);
                 misc_print_buf(15,p11,"p11");
+                misc_print_buf(15,p12,"p12");
+                misc_print_buf(15,p13,"p13");
+                misc_print_buf(15,p21,"p21");
+                misc_print_buf(15,p22,"p22");
+                misc_print_buf(15,p23,"p23");
+                misc_print_buf(15,p31,"p31");
+                misc_print_buf(15,p32,"p32");
+                misc_print_buf(15,p33,"p33");
 
 
-                // TODO: multiply with E1, E2. We can use misc_matrix_mult (see fnft__misc.h)
+                // multiply with E1, E2
                 // We do this coefficient by coefficient
+// Check if multiplication code works
 /*if (i==D_eff-200){
             misc_print_buf(15,p11,"p11_before");
             misc_print_buf(15,p12,"p12_before");
@@ -1648,10 +1657,10 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
             misc_print_buf(9,E1,"E1");
             misc_print_buf(9,E2,"E2");
 }*/
-                for (j=0; j<15; j+=2){
-                manakov_fscatter_mult_E1_TM_E2(&p11[j], &p12[j], &p13[j], &p21[j], &p22[j], 
-                        &p23[j], &p31[j], &p32[j], &p33[j], E1, E2);
-                }
+//                for (j=0; j<15; j+=2){
+//                manakov_fscatter_mult_E1_TM_E2(&p11[j], &p12[j], &p13[j], &p21[j], &p22[j], 
+//                        &p23[j], &p31[j], &p32[j], &p33[j], E1, E2);
+//                }
 /*if (i==D_eff-200){
             misc_print_buf(15,p11,"p11");
             misc_print_buf(15,p12,"p12");
@@ -1679,13 +1688,14 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
             ret_code = E_INVALID_ARGUMENT(discretization);
             goto release_mem;
     }
+
     // Multiply the individual scattering matrices
 //    misc_print_buf(9,p,"c");
-
+    misc_print_buf(540,p,"p");
     ret_code = poly_fmult3x3(deg_ptr, D_eff, p, result, W_ptr); // replaced D by D_eff because some methods are better 
                                                                 // implemented "as if" there are 2*D samples
 
-    misc_print_buf(14,result,"result");
+//    misc_print_buf(540,result,"result");
     CHECK_RETCODE(ret_code, release_mem);
 
 release_mem:

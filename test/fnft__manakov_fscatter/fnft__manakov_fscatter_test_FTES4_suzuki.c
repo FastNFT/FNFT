@@ -199,6 +199,7 @@ end
         
         // without normalization 
         ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, NULL, manakov_discretization);  // with kappa =1
+        misc_print_buf(540,transfer_matrix,"TM_C");
     
         if (ret_code != SUCCESS){
             return E_SUBROUTINE(ret_code);
@@ -206,6 +207,7 @@ end
         }
 
         
+        printf("deg=%d\n",deg);
         for (i=0; i<9; i++){
             for (j=0; j<nz; j++){
                 result[i*nz+j] = z[j];
@@ -225,6 +227,7 @@ end
         for (UINT j = 0; j<45; j++){
                 printf("%f + i%f,    %f + i%f\n", creal(result[j]), cimag(result[j]), creal(result_exact[j]), cimag(result_exact[j]));
             }
+        misc_print_buf(45,result,"result_C");
 #endif  // DEBUG
 
         if (misc_rel_err(9*nz, result, result_exact) > err_bnd)
