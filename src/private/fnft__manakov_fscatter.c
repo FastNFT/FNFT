@@ -290,8 +290,6 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
                 p33[5] = 0.0;
                 p33[6] = 0.0;
 
-                misc_print_buf(7,p11,"p11");
-
                 p11 += 7;
                 p12 += 7;
                 p13 += 7;
@@ -1485,6 +1483,9 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
                                 kappa*CONJ(q1n[2]-q1n[0])*eps_t/24-kappa*CONJ(q1n[2]-2*q1n[1]+q1n[0])*eps_t/48,
                                 kappa*CONJ(q2n[2]-q2n[0])*eps_t/24-kappa*CONJ(q2n[2]-2*q2n[1]+q2n[0])*eps_t/48);
 
+//                misc_print_buf(9,E1,"E1");
+//                misc_print_buf(9,E2,"E2");
+
 				p11[0] = e_3_8B[1]*e_3_8B[3]*e_m1_48B[1]*e_m1_48B[3]*e_7_48B[1]*e_7_48B[3] + e_3_8B[1]*e_3_8B[3]*e_m1_48B[2]*e_m1_48B[6]*e_7_48B[1]*e_7_48B[3] + e_3_8B[1]*e_3_8B[6]*e_m1_48B[1]*e_m1_48B[3]*e_7_48B[2]*e_7_48B[3] + e_3_8B[2]*e_3_8B[3]*e_m1_48B[1]*e_m1_48B[3]*e_7_48B[1]*e_7_48B[6] + e_3_8B[1]*e_3_8B[6]*e_m1_48B[2]*e_m1_48B[6]*e_7_48B[2]*e_7_48B[3] + e_3_8B[2]*e_3_8B[3]*e_m1_48B[2]*e_m1_48B[6]*e_7_48B[1]*e_7_48B[6] + e_3_8B[2]*e_3_8B[6]*e_m1_48B[1]*e_m1_48B[3]*e_7_48B[2]*e_7_48B[6] + e_3_8B[2]*e_3_8B[6]*e_m1_48B[2]*e_m1_48B[6]*e_7_48B[2]*e_7_48B[6];
                 p11[1] = 0.0;
                 p11[2] = e_3_8B[0]*e_3_8B[1]*e_m1_48B[1]*e_m1_48B[3]*e_7_48B[0]*e_7_48B[3] + e_3_8B[0]*e_3_8B[3]*e_m1_48B[1]*e_m1_48B[3]*e_7_48B[0]*e_7_48B[1] + e_3_8B[0]*e_3_8B[1]*e_m1_48B[2]*e_m1_48B[6]*e_7_48B[0]*e_7_48B[3] + e_3_8B[0]*e_3_8B[2]*e_m1_48B[1]*e_m1_48B[3]*e_7_48B[0]*e_7_48B[6] + e_3_8B[0]*e_3_8B[3]*e_m1_48B[2]*e_m1_48B[6]*e_7_48B[0]*e_7_48B[1] + e_3_8B[0]*e_3_8B[6]*e_m1_48B[1]*e_m1_48B[3]*e_7_48B[0]*e_7_48B[2] + e_3_8B[0]*e_3_8B[2]*e_m1_48B[2]*e_m1_48B[6]*e_7_48B[0]*e_7_48B[6] + e_3_8B[0]*e_3_8B[6]*e_m1_48B[2]*e_m1_48B[6]*e_7_48B[0]*e_7_48B[2] + e_3_8B[1]*e_3_8B[4]*e_m1_48B[3]*e_m1_48B[4]*e_7_48B[1]*e_7_48B[3] + e_3_8B[3]*e_3_8B[4]*e_m1_48B[1]*e_m1_48B[4]*e_7_48B[1]*e_7_48B[3] + e_3_8B[1]*e_3_8B[4]*e_m1_48B[5]*e_m1_48B[6]*e_7_48B[1]*e_7_48B[3] + e_3_8B[1]*e_3_8B[5]*e_m1_48B[3]*e_m1_48B[7]*e_7_48B[1]*e_7_48B[3] + e_3_8B[1]*e_3_8B[7]*e_m1_48B[3]*e_m1_48B[4]*e_7_48B[2]*e_7_48B[3] + e_3_8B[2]*e_3_8B[4]*e_m1_48B[3]*e_m1_48B[4]*e_7_48B[1]*e_7_48B[6] + e_3_8B[3]*e_3_8B[4]*e_m1_48B[2]*e_m1_48B[7]*e_7_48B[1]*e_7_48B[3] + e_3_8B[3]*e_3_8B[5]*e_m1_48B[1]*e_m1_48B[4]*e_7_48B[1]*e_7_48B[6] + e_3_8B[3]*e_3_8B[7]*e_m1_48B[1]*e_m1_48B[5]*e_7_48B[1]*e_7_48B[3] + e_3_8B[4]*e_3_8B[6]*e_m1_48B[1]*e_m1_48B[4]*e_7_48B[2]*e_7_48B[3] + e_3_8B[1]*e_3_8B[5]*e_m1_48B[6]*e_m1_48B[8]*e_7_48B[1]*e_7_48B[3] + e_3_8B[1]*e_3_8B[7]*e_m1_48B[5]*e_m1_48B[6]*e_7_48B[2]*e_7_48B[3] + e_3_8B[1]*e_3_8B[8]*e_m1_48B[3]*e_m1_48B[7]*e_7_48B[2]*e_7_48B[3] + e_3_8B[2]*e_3_8B[4]*e_m1_48B[5]*e_m1_48B[6]*e_7_48B[1]*e_7_48B[6] + e_3_8B[2]*e_3_8B[5]*e_m1_48B[3]*e_m1_48B[7]*e_7_48B[1]*e_7_48B[6] + e_3_8B[2]*e_3_8B[7]*e_m1_48B[3]*e_m1_48B[4]*e_7_48B[2]*e_7_48B[6] + e_3_8B[3]*e_3_8B[5]*e_m1_48B[2]*e_m1_48B[7]*e_7_48B[1]*e_7_48B[6] + e_3_8B[3]*e_3_8B[7]*e_m1_48B[2]*e_m1_48B[8]*e_7_48B[1]*e_7_48B[3] + e_3_8B[3]*e_3_8B[8]*e_m1_48B[1]*e_m1_48B[5]*e_7_48B[1]*e_7_48B[6] + e_3_8B[4]*e_3_8B[6]*e_m1_48B[2]*e_m1_48B[7]*e_7_48B[2]*e_7_48B[3] + e_3_8B[5]*e_3_8B[6]*e_m1_48B[1]*e_m1_48B[4]*e_7_48B[2]*e_7_48B[6] + e_3_8B[6]*e_3_8B[7]*e_m1_48B[1]*e_m1_48B[5]*e_7_48B[2]*e_7_48B[3] + e_3_8B[1]*e_3_8B[8]*e_m1_48B[6]*e_m1_48B[8]*e_7_48B[2]*e_7_48B[3] + e_3_8B[2]*e_3_8B[5]*e_m1_48B[6]*e_m1_48B[8]*e_7_48B[1]*e_7_48B[6] + e_3_8B[2]*e_3_8B[7]*e_m1_48B[5]*e_m1_48B[6]*e_7_48B[2]*e_7_48B[6] + e_3_8B[2]*e_3_8B[8]*e_m1_48B[3]*e_m1_48B[7]*e_7_48B[2]*e_7_48B[6] + e_3_8B[3]*e_3_8B[8]*e_m1_48B[2]*e_m1_48B[8]*e_7_48B[1]*e_7_48B[6] + e_3_8B[5]*e_3_8B[6]*e_m1_48B[2]*e_m1_48B[7]*e_7_48B[2]*e_7_48B[6] + e_3_8B[6]*e_3_8B[7]*e_m1_48B[2]*e_m1_48B[8]*e_7_48B[2]*e_7_48B[3] + e_3_8B[6]*e_3_8B[8]*e_m1_48B[1]*e_m1_48B[5]*e_7_48B[2]*e_7_48B[6] + e_3_8B[2]*e_3_8B[8]*e_m1_48B[6]*e_m1_48B[8]*e_7_48B[2]*e_7_48B[6] + e_3_8B[6]*e_3_8B[8]*e_m1_48B[2]*e_m1_48B[8]*e_7_48B[2]*e_7_48B[6];
@@ -1628,7 +1629,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
                 p33[12] =  e_3_8B[0]*e_3_8B[1]*e_m1_48B[0]*e_m1_48B[3]*e_7_48B[2]*e_7_48B[6] + e_3_8B[0]*e_3_8B[3]*e_m1_48B[0]*e_m1_48B[1]*e_7_48B[2]*e_7_48B[6] + e_3_8B[0]*e_3_8B[2]*e_m1_48B[0]*e_m1_48B[6]*e_7_48B[2]*e_7_48B[6] + e_3_8B[0]*e_3_8B[6]*e_m1_48B[0]*e_m1_48B[2]*e_7_48B[2]*e_7_48B[6] + e_3_8B[1]*e_3_8B[4]*e_m1_48B[1]*e_m1_48B[3]*e_7_48B[5]*e_7_48B[6] + e_3_8B[3]*e_3_8B[4]*e_m1_48B[1]*e_m1_48B[3]*e_7_48B[2]*e_7_48B[7] + e_3_8B[1]*e_3_8B[5]*e_m1_48B[1]*e_m1_48B[3]*e_7_48B[6]*e_7_48B[8] + e_3_8B[1]*e_3_8B[7]*e_m1_48B[2]*e_m1_48B[3]*e_7_48B[5]*e_7_48B[6] + e_3_8B[2]*e_3_8B[4]*e_m1_48B[1]*e_m1_48B[6]*e_7_48B[5]*e_7_48B[6] + e_3_8B[3]*e_3_8B[5]*e_m1_48B[1]*e_m1_48B[6]*e_7_48B[2]*e_7_48B[7] + e_3_8B[3]*e_3_8B[7]*e_m1_48B[1]*e_m1_48B[3]*e_7_48B[2]*e_7_48B[8] + e_3_8B[4]*e_3_8B[6]*e_m1_48B[2]*e_m1_48B[3]*e_7_48B[2]*e_7_48B[7] + e_3_8B[1]*e_3_8B[8]*e_m1_48B[2]*e_m1_48B[3]*e_7_48B[6]*e_7_48B[8] + e_3_8B[2]*e_3_8B[5]*e_m1_48B[1]*e_m1_48B[6]*e_7_48B[6]*e_7_48B[8] + e_3_8B[2]*e_3_8B[7]*e_m1_48B[2]*e_m1_48B[6]*e_7_48B[5]*e_7_48B[6] + e_3_8B[3]*e_3_8B[8]*e_m1_48B[1]*e_m1_48B[6]*e_7_48B[2]*e_7_48B[8] + e_3_8B[5]*e_3_8B[6]*e_m1_48B[2]*e_m1_48B[6]*e_7_48B[2]*e_7_48B[7] + e_3_8B[6]*e_3_8B[7]*e_m1_48B[2]*e_m1_48B[3]*e_7_48B[2]*e_7_48B[8] + e_3_8B[2]*e_3_8B[8]*e_m1_48B[2]*e_m1_48B[6]*e_7_48B[6]*e_7_48B[8] + e_3_8B[6]*e_3_8B[8]*e_m1_48B[2]*e_m1_48B[6]*e_7_48B[2]*e_7_48B[8];
                 p33[13] = 0.0;
                 p33[14] = e_3_8B[1]*e_3_8B[3]*e_m1_48B[1]*e_m1_48B[3]*e_7_48B[2]*e_7_48B[6] + e_3_8B[1]*e_3_8B[6]*e_m1_48B[2]*e_m1_48B[3]*e_7_48B[2]*e_7_48B[6] + e_3_8B[2]*e_3_8B[3]*e_m1_48B[1]*e_m1_48B[6]*e_7_48B[2]*e_7_48B[6] + e_3_8B[2]*e_3_8B[6]*e_m1_48B[2]*e_m1_48B[6]*e_7_48B[2]*e_7_48B[6];
-
+/*
                 printf("i=%d\n",i);
                 misc_print_buf(15,p11,"p11");
                 misc_print_buf(15,p12,"p12");
@@ -1639,7 +1640,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
                 misc_print_buf(15,p31,"p31");
                 misc_print_buf(15,p32,"p32");
                 misc_print_buf(15,p33,"p33");
-
+*/
 
                 // multiply with E1, E2
                 // We do this coefficient by coefficient
@@ -1657,10 +1658,10 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
             misc_print_buf(9,E1,"E1");
             misc_print_buf(9,E2,"E2");
 }*/
-//                for (j=0; j<15; j+=2){
-//                manakov_fscatter_mult_E1_TM_E2(&p11[j], &p12[j], &p13[j], &p21[j], &p22[j], 
-//                        &p23[j], &p31[j], &p32[j], &p33[j], E1, E2);
-//                }
+                for (j=0; j<15; j+=2){
+                manakov_fscatter_mult_E1_TM_E2(&p11[j], &p12[j], &p13[j], &p21[j], &p22[j], 
+                        &p23[j], &p31[j], &p32[j], &p33[j], E1, E2);
+                }
 /*if (i==D_eff-200){
             misc_print_buf(15,p11,"p11");
             misc_print_buf(15,p12,"p12");
@@ -1691,7 +1692,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const * const q1, COMPLEX const * con
 
     // Multiply the individual scattering matrices
 //    misc_print_buf(9,p,"c");
-    misc_print_buf(540,p,"p");
+//    misc_print_buf(540,p,"p");
     ret_code = poly_fmult3x3(deg_ptr, D_eff, p, result, W_ptr); // replaced D by D_eff because some methods are better 
                                                                 // implemented "as if" there are 2*D samples
 

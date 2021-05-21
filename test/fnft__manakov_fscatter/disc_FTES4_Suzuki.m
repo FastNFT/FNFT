@@ -80,13 +80,13 @@ for i = 1:1:5
   
 E1 = expm(eps_t^2*Q1/12 + eps_t^3*Q2/48);
 E2 = expm(-eps_t^2*Q1/12 + eps_t^3*Q2/48);
-        AE_1_3 = [z^-1 0 0; 0 z 0; 0 0 z];
-        AE_m1_3 = [z 0 0; 0 z^-1 0; 0 0 z^-1];
-        AE = [z^-3 0 0; 0 z^3 0; 0 0 z^3];
+        AE_1_3 = [1/z 0 0; 0 z 0; 0 0 z];
+        AE_m1_3 = [z 0 0; 0 1/z 0; 0 0 1/z];
+        AE = [1/z^3 0 0; 0 z^3 0; 0 0 z^3];
         B = [0, q1(n), q2(n); -kappa*conj(q1(n)), 0, 0; -kappa*conj(q2(n)), 0, 0];
         BE7_48_ = expm(7*B*eps_t/48);
         BE3_8_ = expm(3*B*eps_t/8);
-        BEm1_48_ = expm(-B/48);
+        BEm1_48_ = expm(-B*eps_t/48);
         U = E1*(BE7_48_*AE_1_3*BE3_8_*AE_m1_3*BEm1_48_*...
         AE*BEm1_48_*AE_m1_3*BE3_8_*AE_1_3*BE7_48_)*E2;
 %        U = (BE7_48_*AE_1_3*BE3_8_*AE_m1_3*BEm1_48_*...

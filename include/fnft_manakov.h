@@ -2,7 +2,7 @@
 #define FNFT_MANAKOV_H
 
 #include "fnft__manakov_fscatter.h"
-// #include "fnft__nse_scatter.h"
+#include "fnft__manakov_scatter.h"
 #include "fnft__misc.h" // for l2norm
 #include <string.h> // for memcpy
 #include <stdio.h>

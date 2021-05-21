@@ -799,8 +799,8 @@ static inline INT manakov_compute_contspec(
         COMPLEX * const result,
         const INT kappa,
         fnft_manakov_opts_t const * const opts)
-{
-
+{   
+//    misc_print_buf(deg*D,transfer_matrix,"transfer_matrix_in_contspec");
     COMPLEX *H11_vals = NULL, *H21_vals = NULL, *H31_vals = NULL;
     COMPLEX A, V;
     REAL scale;
@@ -843,26 +843,41 @@ static inline INT manakov_compute_contspec(
 
     // If the discretization is a slow method then there should be no transfer_matrix
     if (deg == 0 && transfer_matrix == NULL && W == 0){
-        /* Code for slow methods
+        //Code for slow methods
         // Allocate memory for call to nse_scatter_matrix
-        scatter_coeffs = malloc(4 * M * sizeof(COMPLEX));
+        scatter_coeffs = malloc(9 * M * sizeof(COMPLEX));
         if (scatter_coeffs == NULL) {
             ret_code = E_NOMEM;
             goto leave_fun;
         }
 
-        ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, M,
-                xi, scatter_coeffs, opts->discretization, 0);
+        printf("Inputs to manakov_scatter_matrix\n");
+        printf("D=%d\n",D);
+        misc_print_buf(D,q1,"q1");
+        misc_print_buf(D,q2,"q2");
+        printf("eps_t=%f\n",eps_t);
+        printf("M=%d\n",M);
+        misc_print_buf(M,xi,"xi");
+        printf("kappa=%d\n",kappa);
+        ret_code = manakov_scatter_matrix(D, q1, q2, eps_t, M, xi, kappa, 
+			scatter_coeffs, opts->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
+        printf("scatter_coeffs after manakov_scatter_matrix\n");
+        misc_print_buf(9*M,scatter_coeffs,"scatter_coeffs");
 
         // This is necessary because nse_scatter_matrix to ensure
         // boundary conditions can be applied using common code for slow
         // methods and polynomial transfer matrix based methods.
         for (i = 0; i < M; i++){
-            H11_vals[i] = scatter_coeffs[i*4];
-            H21_vals[i] = scatter_coeffs[i*4+2];
+            H11_vals[i] = scatter_coeffs[i*9];
+            H21_vals[i] = scatter_coeffs[i*9+3];
+			H31_vals[i] = scatter_coeffs[i*9+6];
         }
-        */
+        // Check if we have the right values stored in Hij:
+        misc_print_buf(M,H11_vals,"H11");
+        misc_print_buf(M,H21_vals,"H21");
+        misc_print_buf(M,H31_vals,"H31");
+        
 
     }else{
         // Prepare the use of the chirp transform. The entries of the transfer
@@ -885,14 +900,12 @@ static inline INT manakov_compute_contspec(
 
         ret_code = poly_chirpz(deg, transfer_matrix+6*(deg+1), A, V, M, H31_vals);
         CHECK_RETCODE(ret_code, leave_fun);
-
     }
 
 
 // TODO: remove this
 // printing Hij_vals to compare with matlab
 
-	/*
 for (UINT i=0; i<M; i++){
     printf("H11[%d] = %f + i%f\n",i, creal(H11_vals[i]), cimag(H11_vals[i]));
 }
@@ -902,12 +915,11 @@ for (UINT i=0; i<M; i++){
 for (UINT i=0; i<M; i++){
     printf("H31[%d] = %f + i%f\n",i, creal(H31_vals[i]), cimag(H31_vals[i]));
 }
-*/
 
 //misc_print_buf(3*M, contspec+2*M, "ab_num");
-//misc_print_buf(M, H11_vals, "H11");
-//misc_print_buf(M, H21_vals, "H21");
-//misc_print_buf(M, H31_vals, "H31");
+misc_print_buf(M, H11_vals, "H11");
+misc_print_buf(M, H21_vals, "H21");
+misc_print_buf(M, H31_vals, "H31");
 
 
     // Compute the continuous spectrum
@@ -950,8 +962,11 @@ for (UINT i=0; i<M; i++){
             ret_code = manakov_discretization_phase_factor_b(eps_t, D_given, T, &phase_factor_b1,opts->discretization);
             CHECK_RETCODE(ret_code, leave_fun);
 
+            // TODO: remove this second call, phase factor b2= phase factor b1
             ret_code = manakov_discretization_phase_factor_b(eps_t, D_given, T, &phase_factor_b2,opts->discretization);
             CHECK_RETCODE(ret_code, leave_fun);
+            printf("phase_factor a = %f\n",phase_factor_a);
+            printf("phase_factor b = %f\n",phase_factor_b1);
 
             for (i = 0; i < M; i++) {
                 result[offset + i] = H11_vals[i] * scale * CEXP(I*xi[i]*phase_factor_a);

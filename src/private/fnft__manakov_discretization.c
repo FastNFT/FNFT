@@ -257,7 +257,7 @@ INT fnft__manakov_discretization_lambda_to_z(const UINT n, const REAL eps_t,
 	// For the Suzuki factorization this is not the case, so it is treated separately
 	if (discretization == manakov_discretization_FTES4_suzuki) {
 		for (i = 0; i < n; i++)
-			vals[i] = CEXP(I * vals[i] * eps_t / 3);
+			vals[i] = CEXP(I * vals[i] * eps_t/3);	// added 7*
 	}
 	else {
 		REAL degree1step;
@@ -299,6 +299,7 @@ INT fnft__manakov_discretization_phase_factor_rho(const REAL eps_t, const REAL T
         case manakov_discretization_FTES4_4A:
         case manakov_discretization_FTES4_4B:
 		case manakov_discretization_FTES4_suzuki:
+		case manakov_discretization_BO:		// TODO: check this
             *phase_factor_rho = -2.0*(T1 + eps_t*boundary_coeff);
             return SUCCESS;
         break;
@@ -306,6 +307,7 @@ INT fnft__manakov_discretization_phase_factor_rho(const REAL eps_t, const REAL T
         case manakov_discretization_4SPLIT4A:
         case manakov_discretization_4SPLIT4B:
         case manakov_discretization_4SPLIT6B:
+		case manakov_discretization_CF4_2:	// TODO: check this
             *phase_factor_rho = -2.0*(T1 + eps_t*boundary_coeff)-eps_t;
             return SUCCESS;
         break;
@@ -342,11 +344,21 @@ INT fnft__manakov_discretization_phase_factor_a(const REAL eps_t, const UINT D, 
         case manakov_discretization_4SPLIT6B:
         case manakov_discretization_FTES4_4A:
         case manakov_discretization_FTES4_4B:
-		case manakov_discretization_FTES4_suzuki:
 //            *phase_factor_a =2*(T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);   // same as in matlab, does not give better results
             *phase_factor_a = -eps_t*D + (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
         break;
+		
+		case manakov_discretization_FTES4_suzuki:
+			*phase_factor_a = (T[1] + eps_t * boundary_coeff) - (T[0] - eps_t * boundary_coeff) - eps_t*7*D/3;
+			return SUCCESS;
+		break;
+
+		case manakov_discretization_BO:		// TODO: check this
+		case manakov_discretization_CF4_2:	// TODO: check this
+			*phase_factor_a = (T[1] + eps_t * boundary_coeff) - (T[0] - eps_t * boundary_coeff);
+			return SUCCESS;
+		break;
 
         default: // Unknown discretization
 
@@ -368,7 +380,6 @@ INT fnft__manakov_discretization_phase_factor_b(const REAL eps_t, const UINT D, 
         return E_INVALID_ARGUMENT(discretization);
     UINT degree1step = 0;
     switch (discretization) {
-
         case manakov_discretization_2SPLIT3A:
         case manakov_discretization_2SPLIT3B:
         case manakov_discretization_2SPLIT4A:
@@ -376,7 +387,6 @@ INT fnft__manakov_discretization_phase_factor_b(const REAL eps_t, const UINT D, 
         case manakov_discretization_2SPLIT6B:
         case manakov_discretization_FTES4_4A:
         case manakov_discretization_FTES4_4B:
-		case manakov_discretization_FTES4_suzuki:
                     degree1step = manakov_discretization_degree(discretization);
             if (degree1step == 0)
                 return E_INVALID_ARGUMENT(discretization);
@@ -385,6 +395,12 @@ INT fnft__manakov_discretization_phase_factor_b(const REAL eps_t, const UINT D, 
 //           *phase_factor_b = -2*(T[0]-eps_t*boundary_coeff);           // matlab expression
             return SUCCESS;
             break;
+
+		case manakov_discretization_FTES4_suzuki:
+//			*phase_factor_b = (-eps_t * D - (T[1] + eps_t * boundary_coeff) - (T[0] - eps_t * boundary_coeff));
+			*phase_factor_b = -(T[1] + eps_t * boundary_coeff) - (T[0] - eps_t * boundary_coeff) - eps_t * 7 * D / 3;
+			return SUCCESS;
+			break;
         
         case manakov_discretization_4SPLIT4A:
         case manakov_discretization_4SPLIT4B:
@@ -392,6 +408,12 @@ INT fnft__manakov_discretization_phase_factor_b(const REAL eps_t, const UINT D, 
             *phase_factor_b = -eps_t*(D+1) - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
             break;
+
+		case manakov_discretization_BO:		// TODO: check this
+		case manakov_discretization_CF4_2:	// TODO: check this
+			*phase_factor_b = -(T[1] + eps_t * boundary_coeff) - (T[0] - eps_t * boundary_coeff);
+			return SUCCESS;
+			break;
 
         default: // Unknown discretization
 
@@ -417,6 +439,8 @@ REAL fnft__manakov_discretization_boundary_coeff(manakov_discretization_t discre
         case manakov_discretization_FTES4_4A:
         case manakov_discretization_FTES4_4B:
 		case manakov_discretization_FTES4_suzuki:
+		case manakov_discretization_BO:
+		case manakov_discretization_CF4_2:
             return 0.5;
             
         default: // Unknown discretization

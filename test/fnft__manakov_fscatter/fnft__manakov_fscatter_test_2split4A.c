@@ -155,7 +155,7 @@ end
         
         // without normalization 
         ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, NULL, manakov_discretization);  // with kappa =1
-    
+    misc_print_buf(540,transfer_matrix,"TM_C");
         if (ret_code != SUCCESS){
             return E_SUBROUTINE(ret_code);
             goto leave_fun;
