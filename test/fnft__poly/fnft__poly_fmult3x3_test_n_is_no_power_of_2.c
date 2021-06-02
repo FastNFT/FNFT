@@ -37,9 +37,9 @@ static INT poly_fmult3x3_test_n_is_power_of_2(INT normalize_flag)
 % p11 = [p11_1(1) p11_1(0) p11_2(1) ... p11_4(0)]
 % where the subscript indicates the number of the matrix and (.) the
 % coefficient. So p11_4(1) is the coefficient in front of z^1 of the upper
-% left element of matrix 4. In C, we have the same, but put all pij in one
-% long vector: p = [p11 p12 ... p33] and have pointers *pij indicating the
-% memory address where each pij starts.
+% left element of matrix 4. In C, all these pij are collected in one
+% long vector: p = [p11 p12 ... p33]. Pointers *pij indicate the memory
+% address where each pij starts
 i = 0:7;
     p11 = sqrt(i+1).*(cos(i) + 1j*sin(-2*i));
     p12 = sqrt(i+1).*(cos(i+0.1) + 1j*sin(-2*i+0.1));
@@ -200,8 +200,6 @@ INT main(void)
         E_SUBROUTINE(ret_code);
         return EXIT_FAILURE;
     }
-
-    printf("Succes\n");
 
     return EXIT_SUCCESS;
 }

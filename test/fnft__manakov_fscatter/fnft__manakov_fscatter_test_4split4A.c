@@ -127,7 +127,7 @@ q2s = ifft(Qn(2,:));
 end
 */
 
-    COMPLEX result_exact[45] = {    //(for D = 4)
+    COMPLEX result_exact[45] = {    //(for D = 512)
         0.535312216834827 + 0.000000000000000*I,
  -0.876100554400375 + 0.000000000000189*I,
   1.488309514396944 - 0.177469655362891*I,
@@ -176,7 +176,7 @@ end
     };
         
         i = manakov_fscatter_numel(2*D, manakov_discretization);
-        if (i == 0) { // size D>=2, this means unknown discretization
+        if (i == 0) { 
             ret_code = E_INVALID_ARGUMENT(manakov_discretization);
             goto leave_fun;
         }
@@ -195,7 +195,7 @@ end
         
         
         // without normalization 
-        ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, NULL, manakov_discretization);  // with kappa =1
+        ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, NULL, manakov_discretization); 
     
         if (ret_code != SUCCESS){
             return E_SUBROUTINE(ret_code);
@@ -230,7 +230,7 @@ end
         
         // with normalization
         W_ptr = &W;
-        ret_code = manakov_fscatter(D, q1, q2, 1, eps_t, transfer_matrix, &deg, W_ptr, manakov_discretization); // with kappa = 1
+        ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, W_ptr, manakov_discretization); 
 
         if (ret_code != SUCCESS){
             return E_SUBROUTINE(ret_code);
@@ -244,7 +244,7 @@ end
         for (i=0; i<9*(deg+1); i++)
             transfer_matrix[i] *= scl;
         
-        for (i=0; i<9; i++){    // replaced 4 by 9
+        for (i=0; i<9; i++){   
             for (j=0; j<nz; j++)
                 result[i*nz+j] = z[j];
             
@@ -277,6 +277,5 @@ INT main()
     if (manakov_fscatter_test_4split4A() != SUCCESS)
         return EXIT_FAILURE;
     
-    printf("SUCCES");
     return EXIT_SUCCESS;
 }

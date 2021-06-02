@@ -29,7 +29,7 @@
 
 static INT manakov_fscatter_test_FTES4_4A()
 {
-    UINT i, j, D = 512, deg, nz = 5;      // Make sure to choose D high enough, otherwise the values on boundaries don't make sense. D is lower now for debugging
+    UINT i, j, D = 512, deg, nz = 5;
     INT W = 0, *W_ptr = NULL;
     REAL scl;
     INT ret_code;
@@ -99,7 +99,7 @@ E2 = expm(-eps_t^2*Q1/12 + eps_t^3*Q2/48);
 end
 */
 
-    COMPLEX result_exact[45] = {    //(for D = 4)
+    COMPLEX result_exact[45] = {    //(for D = 512)
         0.535312216834839 + 0.000000000000000*I,
  -0.991215593863799 + 0.000000000000108*I,
   2.121479689834247 - 0.505365858408398*I,
@@ -148,7 +148,7 @@ end
     };
         
         i = manakov_fscatter_numel(D, manakov_discretization);
-        if (i == 0) { // size D>=2, this means unknown discretization
+        if (i == 0) { 
             ret_code = E_INVALID_ARGUMENT(manakov_discretization);
             goto leave_fun;
         }
@@ -167,7 +167,7 @@ end
         
         
         // without normalization 
-        ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, NULL, manakov_discretization);  // with kappa =1
+        ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, NULL, manakov_discretization); 
     
         if (ret_code != SUCCESS){
             return E_SUBROUTINE(ret_code);
@@ -216,7 +216,7 @@ end
         for (i=0; i<9*(deg+1); i++)
             transfer_matrix[i] *= scl;
         
-        for (i=0; i<9; i++){    // replaced 4 by 9
+        for (i=0; i<9; i++){ 
             for (j=0; j<nz; j++)
                 result[i*nz+j] = z[j];
             
@@ -249,6 +249,5 @@ INT main()
     if (manakov_fscatter_test_FTES4_4A() != SUCCESS)
         return EXIT_FAILURE;
     
-    printf("SUCCES");
     return EXIT_SUCCESS;
 }

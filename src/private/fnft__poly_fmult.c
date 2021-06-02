@@ -52,31 +52,11 @@ UINT poly_fmult3x3_numel(UINT deg, UINT n)
         return fft_wrapper_next_fft_length(n);
     else
         return 9*(deg+1)*misc_nextpowerof2(n);
-        // TODO: original: return 9*(deg+1)*misc_nextpowerof2(n)
 }
-
-/*
-// General case, NxN is the dimension of the AKNS system
-UINT poly_fmultNxN_numel(UINT deg, UINT n)
-{
-    return (N*N)*(deg+1)*misc_nextpowerof2(n);
-}
-*/
 
 inline UINT poly_fmult_two_polys_len(const UINT deg)
 {
-    //return 2*(deg + 1) - 1;
     return fft_wrapper_next_fft_length(2*(deg + 1) - 1);
-    /* Original code:
-    return fft_wrapper_next_fft_length(2*(deg + 1) - 1);
-    calls a function from the kiss_fft library and outputs the "next fast size"
-    which is the next number that can be written completely in factors of 2, 3 and 5
-    This is useful because the kiss_fft library calculates the fft more efficiently
-    in that case. However, this caused problems when the lenght of buf0 determined
-    by this function was >result_stride
-    TODO: set result_stride to appropriate length if this happens
-    */
-
 }
 
 inline INT poly_fmult_two_polys(
@@ -96,7 +76,7 @@ inline INT poly_fmult_two_polys(
     INT ret_code = SUCCESS;
 
     // Zero-pad polynomials
-    const UINT len = 2*(deg + 1) - 1;       // TODO: maybe try fft_wrapper_next_fft_length(2*(deg + 1) - 1);?
+    const UINT len = 2*(deg + 1) - 1;
     memset(&buf0[deg+1], 0, (len - (deg+1))*sizeof(COMPLEX));
 
     // FFT of first polynomial
@@ -119,26 +99,16 @@ inline INT poly_fmult_two_polys(
 
     if (mode == 2) {
 
-
         // Temporarily store product of FFT's in result
         memcpy(result, buf0, len*sizeof(COMPLEX));
 
-    } else if (mode == 3) {
+    } else if (mode == 3 || mode == 4) {
 
         // Add product of FFT's to previously stored product in result to
         // current product
         for (i = 0; i < len; i++)
             result[i] += buf0[i];
 
-    } else if (mode == 4) {
-
-        // Add product of FFT's to previously stored product in result to
-        // current product
-        for (i = 0; i < len; i++)
-            result[i] += buf0[i];
-
-        // Temporarily store the fft of the final answer (result) in buf0 (not needed?)
-        // memcpy(buf0, result, len*sizeof(COMPLEX));
     }
 
 
@@ -159,9 +129,6 @@ inline INT poly_fmult_two_polys(
 
         for (i = 0; i < 2*deg + 1; i++)
             result[i] += buf0[i]/len;
-    }
-    
-    if (mode ==3){
     }
 
 leave_fun:
@@ -376,7 +343,7 @@ leave_fun:
 }
 
 
-// My code, adjusted for 3x3 case
+// 3x3 case
 inline INT poly_fmult_two_polys3x3(const UINT deg,
     COMPLEX const * const p1_11,
     const UINT p1_stride,
@@ -402,49 +369,6 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
     COMPLEX const * const p1_31 = p1_23 + p1_stride;
     COMPLEX const * const p1_32 = p1_31 + p1_stride;
     COMPLEX const * const p1_33 = p1_32 + p1_stride;
-
-    // Printing coefficients of first matrix to be multiplied
-/*   printf("coeffs of first matrix in fmult_two_polys3x3\n");
-   UINT j;
-    
-    printf("p1_11 = \n");
-    for (j = 0; j<9; j++)
-        printf("%f + i%f\n", creal(p1_11[j]), cimag(p1_11[j]));
-
-    printf("p1_12 = \n");
-    for (j = 0; j<9; j++)
-        printf("%f + i%f\n", creal(p1_12[j]), cimag(p1_12[j]));
-
-    printf("p1_13 = \n");
-    for (j = 0; j<9; j++)
-        printf("%f + i%f\n", creal(p1_13[j]), cimag(p1_13[j]));
-    
-    printf("p1_21 = \n");
-    for (j = 0; j<9; j++)
-        printf("%f + i%f\n", creal(p1_21[j]), cimag(p1_21[j]));
-
-    printf("p1_22 = \n");
-    for (j = 0; j<9; j++)
-        printf("%f + i%f\n", creal(p1_22[j]), cimag(p1_22[j]));
-
-    printf("p1_23 = \n");
-    for (j = 0; j<9; j++)
-        printf("%f + i%f\n", creal(p1_23[j]), cimag(p1_23[j]));
-
-    printf("p1_31 = \n");
-    for (j = 0; j<9; j++)
-        printf("%f + i%f\n", creal(p1_31[j]), cimag(p1_31[j]));
-
-    printf("p1_32 = \n");
-    for (j = 0; j<9; j++)
-        printf("%f + i%f\n", creal(p1_32[j]), cimag(p1_32[j]));
-
-    printf("p1_33 = \n");
-    for (j = 0; j<9; j++)
-        printf("%f + i%f\n", creal(p1_33[j]), cimag(p1_33[j]));*/
-    
-    
-
     
     COMPLEX const * const p2_12 = p2_11 + p2_stride;
     COMPLEX const * const p2_13 = p2_12 + p2_stride;
@@ -454,44 +378,6 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
     COMPLEX const * const p2_31 = p2_23 + p2_stride;
     COMPLEX const * const p2_32 = p2_31 + p2_stride;
     COMPLEX const * const p2_33 = p2_32 + p2_stride;
-/*
-   printf("coeffs of second matrix in fmult_two_polys3x3\n");
-    
-    printf("p2_11 = \n");
-    for (j = 0; j<9; j++)
-        printf("%f + i%f\n", creal(p2_11[j]), cimag(p2_11[j]));
-
-    printf("p2_12 = \n");
-    for (j = 0; j<9; j++)
-        printf("%f + i%f\n", creal(p2_12[j]), cimag(p2_12[j]));
-
-    printf("p2_13 = \n");
-    for (j = 0; j<9; j++)
-        printf("%f + i%f\n", creal(p2_13[j]), cimag(p2_13[j]));
-    
-    printf("p2_21 = \n");
-    for (j = 0; j<9; j++)
-        printf("%f + i%f\n", creal(p2_21[j]), cimag(p2_21[j]));
-
-    printf("p2_22 = \n");
-    for (j = 0; j<9; j++)
-        printf("%f + i%f\n", creal(p2_22[j]), cimag(p2_22[j]));
-
-    printf("p2_23 = \n");
-    for (j = 0; j<9; j++)
-        printf("%f + i%f\n", creal(p2_23[j]), cimag(p2_23[j]));
-
-    printf("p2_31 = \n");
-    for (j = 0; j<9; j++)
-        printf("%f + i%f\n", creal(p2_31[j]), cimag(p2_31[j]));
-
-    printf("p2_32 = \n");
-    for (j = 0; j<9; j++)
-        printf("%f + i%f\n", creal(p2_32[j]), cimag(p2_32[j]));
-
-    printf("p2_33 = \n");
-    for (j = 0; j<9; j++)
-        printf("%f + i%f\n", creal(p2_33[j]), cimag(p2_33[j]));*/
 
     COMPLEX * const result_12 = result_11 + result_stride;
     COMPLEX * const result_13 = result_12 + result_stride;
@@ -504,24 +390,20 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
 
     // We compute the matrix product
     //
-    //  [a b ; c d][e f ; g h]=[ae af ; ce cf]+[bg bh ; dg dh],
-    //
+    //  [a b c; d e f; g h i][j k l; m n o; p q r] = [aj ak al; dj dk dl; gj gk gl]+
+    //      [bm bn bo; em en eo; hm hn ho] + [cp cq cr; fp fq fr; ip iq ir],
     // where a=p1_11, b=p1_12, etc.
 
     UINT mode = mode_offset;
 
     // If mode_offset==0:
     //
-    //   Store ae, af, ce and cf in result_11, result_12, result_21 and
-    //   result_22, respectively
+    //   Store values of [aj ak al; dj dk dl; gj gk gl] in result_11, result_12, result_13... result_33
     //
     // If mode_offset==2:
     //
-    //   Store FFT's of ae, af, ce and cf in result_11, result_12, result_21 and
-    //   result_22, respectively. This saves us performing some inverse FFT's,
-    //   but since the polynomials are zero-padded before the FFT is taken, it
-    //   is only possible if the result_* arrays are larger than strictly
-    //   necessary. See the doc of this fun.
+    //   Store FFT's of [aj ak al; dj dk dl; gj gk gl] in result_11, result_12, result_13... result_33
+
     ret_code = poly_fmult_two_polys(deg, p1_11, p2_11, result_11,
                                     plan_fwd, plan_inv, buf0, buf1, buf2, mode);
     CHECK_RETCODE(ret_code, leave_fun);
@@ -555,16 +437,6 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
                                 // not calculating 1st term, but also not calculating last term,
                                 // so add result to previous result but don't take inverse fft yet
 
-    // If mode_offset==0:
-    //
-    //   Add bg, bh, dg and dg to result_11, result_12, result_21 and
-    //   result_22, respectively
-    //
-    // If mode_offset==2:
-    //
-    //   Add result_11, result_12, result_21 and result_22 to the FFT's of ae,
-    //   af, ce and cf, respectively, and perform inverse FFT's.
-
     // add 2nd term
     ret_code = poly_fmult_two_polys(deg, p1_12, p2_21, result_11,
                                     plan_fwd, plan_inv, buf0, buf1, buf2, mode);
@@ -596,7 +468,7 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
 
     // add 3rd term
     mode = mode - 1;        // We are now switching to the mode:
-                            // caluclating last term. Add to previous result AND take inverse fft
+                            // calculating last term. Add to previous result AND take inverse fft
                             // (mode 1 or 3)
 
         ret_code = poly_fmult_two_polys(deg, p1_13, p2_31, result_11,
@@ -933,7 +805,7 @@ release_mem:
 }
 
 
-// My code, for 3x3 case %
+// 3x3 multiplication
 INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
     COMPLEX * const result, INT * const W_ptr)
 {
@@ -1045,7 +917,7 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
     }
     
     // Allocate memory for calls to poly_fmult_two_polys3x3
-    lenmem = poly_fmult_two_polys_len(deg * n/2) * sizeof(COMPLEX); //TODO: change how buf0 is allocated here?
+    lenmem = poly_fmult_two_polys_len(deg * n/2) * sizeof(COMPLEX);
     buf0 = fft_wrapper_malloc(lenmem);
     buf1 = fft_wrapper_malloc(lenmem);
     buf2 = fft_wrapper_malloc(lenmem);
@@ -1060,8 +932,7 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
     while (n >= 2) {
 
         // Create FFT and IFFT config (computes twiddle factors, so reuse)
-        len = 2*(deg + 1) - 1;    // TODO: this is the alternative code. This makes the code work, but is less efficient
-//        len = poly_fmult_two_polys_len(deg);    // original code
+        len = 2*(deg + 1) - 1;
         ret_code = fft_wrapper_create_plan(&plan_fwd, len, buf0, buf1, -1);
         CHECK_RETCODE(ret_code, release_mem);
         ret_code = fft_wrapper_create_plan(&plan_inv, len, buf0, buf2, 1);
@@ -1073,17 +944,10 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
         or = 0;
 
         // Setup pointers to the individual polynomials in result
-        // TODO: check this, maybe use next_fast_size
-              // Alternative code
         UINT r_stride_temp = (n/2)*(2*deg+1);
         if (r_stride_temp < len)
             r_stride_temp = len;
         const UINT r_stride = r_stride_temp;
-                  
-  //      const UINT r_stride = poly_fmult_two_polys_len(deg*n/2);
-        // If we use the original code for getting len, both the code with r_stride_temp 
-        // and poly_fmult_two_polys give r_stride >= len
-        
 
         r11 = result;
         r12 = r11 + r_stride;
@@ -1095,52 +959,10 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
         r32 = r31 + r_stride;
         r33 = r32 + r_stride;
 
-
-        // Printing results
-/*    printf("result before starting treewise multiplication\n");
-    printf("r11 = \n");
-    for (j = 0; j<26; j++)
-        printf("%f + i%f\n", creal(r11[j]), cimag(r11[j]));
-
-    printf("r12 = \n");
-    for (j = 0; j<26; j++)
-        printf("%f + i%f\n", creal(r12[j]), cimag(r12[j]));
-
-    printf("r13 = \n");
-    for (j = 0; j<26; j++)
-        printf("%f + i%f\n", creal(r13[j]), cimag(r13[j]));
-    
-    printf("r21 = \n");
-    for (j = 0; j<26; j++)
-        printf("%f + i%f\n", creal(r21[j]), cimag(r21[j]));
-
-    printf("r22 = \n");
-    for (j = 0; j<26; j++)
-        printf("%f + i%f\n", creal(r22[j]), cimag(r22[j]));
-
-    printf("r23 = \n");
-    for (j = 0; j<26; j++)
-        printf("%f + i%f\n", creal(r23[j]), cimag(r23[j]));
-
-    printf("r31 = \n");
-    for (j = 0; j<26; j++)
-        printf("%f + i%f\n", creal(r31[j]), cimag(r31[j]));
-
-    printf("r32 = \n");
-    for (j = 0; j<26; j++)
-        printf("%f + i%f\n", creal(r32[j]), cimag(r32[j]));
-
-    printf("r33 = \n");
-    for (j = 0; j<26; j++)
-        printf("%f + i%f\n", creal(r33[j]), cimag(r33[j]));*/
-
-
         // Multiply all pairs of polynomials, normalize if desired
         for (i=0; i<n; i+=2) {
 
             const UINT mode_offset  = r_stride - or < len ? 0 : 2;
-            // Maybe this line causes problems? It becomes 0 sometimes if we use original code, 
-//            const UINT mode_offset = 2;     // See if code works when we force mode_offset = 2. Answer: no
             ret_code = poly_fmult_two_polys3x3(deg, p+o1, p_stride, p+o2,
                                                p_stride, result+or, r_stride,
                                                plan_fwd, plan_inv, buf0, buf1,
@@ -1185,44 +1007,6 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
             memcpy(p33, r33, n*(deg+1)*sizeof(COMPLEX));
         }
     }
-/*
-    printf("result after treewise multiplication\n");
-    printf("r11 = \n");
-    for (UINT j = 0; j<26; j++)
-        printf("%f + i%f\n", creal(r11[j]), cimag(r11[j]));
-
-    printf("r12 = \n");
-    for (j = 0; j<26; j++)
-        printf("%f + i%f\n", creal(r12[j]), cimag(r12[j]));
-
-    printf("r13 = \n");
-    for (j = 0; j<26; j++)
-        printf("%f + i%f\n", creal(r13[j]), cimag(r13[j]));
-    
-    printf("r21 = \n");
-    for (j = 0; j<26; j++)
-        printf("%f + i%f\n", creal(r21[j]), cimag(r21[j]));
-
-    printf("r22 = \n");
-    for (j = 0; j<26; j++)
-        printf("%f + i%f\n", creal(r22[j]), cimag(r22[j]));
-
-    printf("r23 = \n");
-    for (j = 0; j<26; j++)
-        printf("%f + i%f\n", creal(r23[j]), cimag(r23[j]));
-
-    printf("r31 = \n");
-    for (j = 0; j<26; j++)
-        printf("%f + i%f\n", creal(r31[j]), cimag(r31[j]));
-
-    printf("r32 = \n");
-    for (j = 0; j<26; j++)
-        printf("%f + i%f\n", creal(r32[j]), cimag(r32[j]));
-
-    printf("r33 = \n");
-    for (j = 0; j<26; j++)
-        printf("%f + i%f\n", creal(r33[j]), cimag(r33[j]));
-*/
 
     // If padding was applied, reduce degree of the result
     if (n_excess > 0) {

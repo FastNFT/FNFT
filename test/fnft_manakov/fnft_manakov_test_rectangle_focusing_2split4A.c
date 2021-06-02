@@ -26,18 +26,17 @@ INT main()
     INT ret_code, i;
     fnft_manakov_opts_t opts;
     UINT D = 1024;
-    const manakov_testcases_t tc = manakov_testcases_SECH_FOCUSING;
-// const manakov_testcases_t tc = manakov_testcases_SECH_DEFOCUSING;
+    const manakov_testcases_t tc = manakov_testcases_RECTANGLE_FOCUSING;
     REAL error_bounds[5] = { 
-        2.2e-4,     // reflection coefficient 1
-        2.2e-4,     // reflection coefficient 2
-        3.2e-4,     // a
-        1.7e-4,     // b1
-        1.7e-4     // b2
+        1.1e-1,     // reflection coefficient 1
+        1.1e-1,     // reflection coefficient 2
+        4.7e-2,     // a
+        1.4e-2,     // b1
+        1.4e-2     // b2
     };
 
     opts = fnft_manakov_default_opts();
-    opts.discretization = manakov_discretization_FTES4_4A;
+    opts.discretization = manakov_discretization_2SPLIT4A;
 
 
     ret_code = manakov_testcases_test_fnft(tc, D, error_bounds, &opts);
@@ -50,16 +49,15 @@ INT main()
     ret_code = manakov_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
-/*
-    // Check for 4th order error decay.
-    // For this to make sense the error bounds have to be pretty tight. Also, this only checks if the error decay is 
-    // at least 4th order, not if the order of error decay is >4
-    D *= 2;
-    for (i=0; i<5; i++)
-        error_bounds[i] /= 16.0;
+    // with Richardson extrapolation
+    // The 2split methods start displaying 2nd order error decay only for small values of eps_t,
+    // so we choose a bigger D here
+    D = 4*512;
+    opts.richardson_extrapolation_flag = 1;
+
     ret_code = manakov_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-*/
+
 
 leave_fun:
     if (ret_code != SUCCESS)

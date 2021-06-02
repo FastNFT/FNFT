@@ -142,14 +142,10 @@ end
     }
 
     ret_code = manakov_scatter_matrix(D, q1, q2, eps_t, 2, lam, kappa, result, manakov_discretization_CF4_2);
-    for (i=0; i<18; i++){
-        printf("result[%d] = %f + i%f, result_exact[%d] = %f+i%f\n", i, creal(result[i]), cimag(result[i]), i, creal(result_exact[i]), cimag(result_exact[i]));
-    }
 
     if (ret_code != SUCCESS)
         return E_SUBROUTINE(ret_code);
     if (misc_rel_err(18, result, result_exact) > 1000*EPSILON){      // Using 1000*EPSILON instread of 10*EPSILON because we copied the resampled q values with less decimals
-        printf("rel_err = %f\n",misc_rel_err(18, result, result_exact));
         return E_TEST_FAILED;
     }
     return SUCCESS;

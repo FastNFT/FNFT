@@ -13,9 +13,8 @@
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
-* Contributors:
-* Sander Wahls (TU Delft) 2017.
-* Shrinivas Chimmalgi (TU Delft) 2019-2020.
+* Contributor:
+* Lianne de Vries (TU Delft) 2021.
 */
 
 /**
@@ -24,7 +23,7 @@
  * @ingroup fnft
  */
 
-#ifndef FNFT__MANAKOV_DISCRETIZATION_T_H    //header guard
+#ifndef FNFT__MANAKOV_DISCRETIZATION_T_H    
 #define FNFT__MANAKOV_DISCRETIZATION_T_H
 
 #include "fnft.h"
@@ -51,20 +50,30 @@
  * <a href="https://doi.org/10.1109/ICASSP.2018.8461708">&quot;
  * Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot;
  * </a>Proc. ICASSP 2018, pp. 4524-4528. `B` type of splitting are the same as `A` with the positions of the 
- * two terms in the splitting interchanged.
+ * two terms in the splitting interchanged.\n
+ * FTES4_suzuki is the FTES4 method where suzuki factorization (<a href="https://journals.jps.jp/doi/10.1143/JPSJ.61.3015"> J. Phys. Soc. Jpn. (1992))
+ * was used to split the exponential term, as carried out by Medvedev, Chekhovskoy, Vaseva and Fedoruk in <a href="https://www.osapublishing.org/ol/abstract.cfm?uri=ol-45-7-2082">\n
  * In general, discretizations with a lower degree are faster, while those with
  * a highter order of accuracy are more accurate. Therefore, the best choice is
- * normally among `-2A`, `-2B`, `-4B`, `-6B` and `-8B`.
- * The choice between these is a trade-off between speed and accuracy.
+ * normally among `-2A`, `-2B`, `-4B`, `-6B`.
+ * The choice between these is a trade-off between speed and accuracy.\n
  *
- * `fnft_nse_discretization_2SPLIT3A`: Order of base method = 2, Degree = 6, Order of accuracy of splitting-scheme = 3\n
- * `fnft_nse_discretization_2SPLIT3B`: Order of base method = 2, Degree = 6, Order of accuracy of splitting-scheme = 3\n
- * `fnft_nse_discretization_2SPLIT4A`: Order of base method = 2, Degree = 8, Order of accuracy of splitting-scheme = 4\n
- * `fnft_nse_discretization_2SPLIT4B`: Order of base method = 2, Degree = 4, Order of accuracy of splitting-scheme = 4\n
- * `fnft_nse_discretization_4SPLIT4A`: Order of base method = 4, Degree = 8, Order of accuracy of splitting-scheme = 4\n
- * `fnft_nse_discretization_4SPLIT4B`: Order of base method = 4, Degree = 4, Order of accuracy of splitting-scheme = 4\n
- * `fnft_nse_discretization_4SPLIT6A`: Order of base method = 4, Degree = 12, Order of accuracy of splitting-scheme = 6\n
- * `fnft_nse_discretization_4SPLIT6B`: Order of base method = 4, Degree = 12, Order of accuracy of splitting-scheme = 6\n
+ * Fast discretizations implemented for the Manakov equation: (degree denotes the polynomial degree of a single transition matrix)\n
+ * `fnft_manakov_discretization_2SPLIT3A`: Order of base method = 2, Degree = 6, Order of accuracy splitting-scheme = 3\n
+ * `fnft_manakov_discretization_2SPLIT3B`: Order of base method = 2, Degree = 6, Order of accuracy splitting-scheme = 3\n
+ * `fnft_manakov_discretization_2SPLIT4A`: Order of base method = 2, Degree = 8, Order of accuracy splitting-scheme = 4\n
+ * `fnft_manakov_discretization_2SPLIT4B`: Order of base method = 2, Degree = 4, Order of accuracy splitting-scheme = 4\n
+ * `fnft_manakov_discretization_2SPLIT6B`: Order of base method = 2, Degree = 12, Order of accuracy splitting-scheme = 6\n
+ * `fnft_manakov_discretization_4SPLIT4A`: Order of base method = 4, Degree = 8, Order of accuracy splitting-scheme = 4\n
+ * `fnft_manakov_discretization_4SPLIT4B`: Order of base method = 4, Degree = 4, Order of accuracy splitting-scheme = 4\n
+ * `fnft_manakov_discretization_4SPLIT6B`: Order of base method = 4, Degree = 12, Order of accuracy splitting-scheme = 6\n
+ * `fnft_manakov_discretization_FTES4_4A`: Order of base method = 4, Degree = 8, Order of accuracy splitting-scheme = 4\n
+ * `fnft_manakov_discretization_FTES4_4B`: Order of base method = 4, Degree = 8, Order of accuracy splitting-scheme = 4\n
+ * `fnft_manakov_discretization_FTES4_suzuki`: Order of base method = 4, Degree = 14, Order of accuracy splitting-scheme = 4\n
+ * 
+ * Slow methods implemented for the Manakov equation:\n
+ * `fnft_manakov_discretization_CF4_2`: base method for the 4SPLITYZ methods\n
+ * `fnft_manakov_discretization_BO`: base method for the 2SPLITYZ methods\n
  *
  * Used in \link fnft_manakov_opts_t \endlink.
  *
@@ -86,7 +95,6 @@ typedef enum {
     fnft_manakov_discretization_CF4_2,
     fnft_manakov_discretization_BO,
 } fnft_manakov_discretization_t;
-// This list only includes the enums for discretizations that have been implemented already. Update when new discretizations are implemented
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define manakov_discretization_t fnft_manakov_discretization_t

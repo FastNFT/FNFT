@@ -26,9 +26,6 @@
 #include "fnft__misc.h"
 #include "fnft__errwarn.h"
 
-// For now: using this file to check if misc_matrix_mult works as I think it does
-
-
 static INT manakov_fscatter_test_FTES4_suzuki()
 {
     UINT i, j, D = 512, deg, nz = 5;
@@ -43,8 +40,53 @@ static INT manakov_fscatter_test_FTES4_suzuki()
     COMPLEX result[45];
     const REAL err_bnd = 3*1000*EPSILON;
     UINT kappa = 1;
-    // TODO: adjust matlab and result
-    /* %% Exact answer for test file:
+    /*
+%% Matlab file to get the polynomial coefficients for FTES4
+% also to generate results for the test file
+
+syms q1 q2 l kappa h z...
+
+A = [-1i*l,0,0;0,1i*l,0;0,0,1i*l];
+B = [0,q1,q2;-kappa*conj(q1),0,0;-kappa*conj(q2),0,0];
+% Let AE = expm(A*h) and BE = expm(B*h)
+% Set z = exp(j lambda h/3) such that
+AE = [1/z^3,0,0;0,z^3,0;0,0,z^3];
+BE = sym('BE',[3,3]);
+% CE=expm((A+B)*h)
+% Let CE_approx be approximation of CE after application of splitting
+% scheme
+% AE_1_3 = expm(A*h/3)
+AE_1_3 = [1/z,0,0;0,z,0;0,0,z];
+AE_m1_3 = [z, 0, 0; 0, 1/z, 0; 0, 0, 1/z];
+BE7_48_ = sym('BE7_48_',[3,3]);
+BE3_8_ = sym('BE3_8_',[3,3]);
+BEm1_48_ = sym('BEm1_48_',[3,3]);
+E1 = sym('E1',[3,3]);
+E2 = sym('E2',[3,3]);
+
+CE_approx = E1*(BE7_48_*AE_1_3*BE3_8_*AE_m1_3*BEm1_48_*...
+    AE*BEm1_48_*AE_m1_3*BE3_8_*AE_1_3*BE7_48_)*E2;
+
+% Dividing throughout by z^-7 (z^-7 is the lowest power of z found in the
+% polynomial)
+CE_approx_pos = expand(CE_approx*z^7);
+
+% We can now look at coefficients of individual polynomials. Here c gives
+% the coefficients of the element specified by (i,j) in CE_approx_pos(i,j)
+% and t gives which power of z the coefficients belong to
+[c11,t11] = coeffs(CE_approx_pos(1,1),z);
+[c12,t12] = coeffs(CE_approx_pos(1,2),z);
+[c13,t13] = coeffs(CE_approx_pos(1,3),z);
+
+[c21,t21] = coeffs(CE_approx_pos(2,1),z);
+[c22,t22] = coeffs(CE_approx_pos(2,2),z);
+[c23,t23] = coeffs(CE_approx_pos(2,3),z);
+
+[c31,t31] = coeffs(CE_approx_pos(3,1),z);
+[c32,t32] = coeffs(CE_approx_pos(3,2),z);
+[c33,t33] = coeffs(CE_approx_pos(3,3),z);
+
+%% Computing values for the test file
 eps_t = 0.13;
 kappa = 1;
 D=512;
@@ -52,50 +94,49 @@ q1 = 0.92*sech((-(D-1)*eps_t/2):eps_t:((D-1)*eps_t/2));
 q2 = 2.13*sech((-(D-1)*eps_t/2):eps_t:((D-1)*eps_t/2));
 zlist = exp(1i*[0,pi/4,9*pi/14,4*pi/3,-pi/5]);
 result_exact = zeros(45,1);
-c1 = 0.5-sqrt(3)/6;
-c2 = 0.5+sqrt(3)/6;
-a1  = 0.25 + sqrt(3)/6;
-a2  = 0.25 - sqrt(3)/6;
-
-% getting the non-equidistant samples
-[q1_c1, q2_c1] =  bandlimited_interpolation(eps_t,...
-                                    [q1; q2],c1*eps_t);
-[q1_c2, q2_c2] = bandlimited_interpolation(eps_t,...
-                                    [q1; q2],c2*eps_t);
-
-%%
-% Interlacing the samples:
-qeff = zeros(2,2*D);
-reff = zeros(2,2*D);
-
-qeff(1,2:2:end)=a2*q1_c1+a1*q1_c2;
-qeff(2,2:2:end)=a2*q2_c1+a1*q2_c2;
-reff(1,2:2:end)=-kappa*(a2*conj(q1_c1)+a1*conj(q1_c2));
-reff(2,2:2:end)=-kappa*(a2*conj(q2_c1)+a1*conj(q2_c2));
-
-qeff(1,1:2:end)=a1*q1_c1+a2*q1_c2;
-qeff(2,1:2:end)=a1*q2_c1+a2*q2_c2;
-reff(1,1:2:end)=-kappa*(a1*conj(q1_c1)+a2*conj(q1_c2));
-reff(2,1:2:end)=-kappa*(a1*conj(q2_c1)+a2*conj(q2_c2));
-
 for i = 1:1:5
     z = zlist(i);
     S = eye(3);
-    for n=1:2*D
-        % Eq. 19 in P. J. Prins and S. Wahls, Higher order exponential
-        % splittings for the fast non-linear Fourier transform of the KdV
-        % equation, to appear in Proc. of IEEE ICASSP 2018, Calgary, April 2018.
-        eA_4 = [1/z 0 0; 0 z 0; 0 0 z];
-        B = [0, qeff(1,n), qeff(2,n);...
-             reff(1,n), 0, 0;
-             reff(2,n), 0, 0];
-        eB = expm(B*eps_t);
-        eB_1_2 = expm(B*eps_t/2);
-        U = (4/3)*eA_4*eB_1_2*eA_4*eA_4*eB_1_2*eA_4+...
-            -(1/3)*eA_4*eA_4*eB*eA_4*eA_4;
+    for n=1:D
+        if n == 1
+    Q1 = [0                                 q1(2)-q1(1) q2(2)-q2(1);
+          -kappa*(conj(q1(2))-conj(q1(1)))  0           0;
+          -kappa*(conj(q2(2))-conj(q2(1)))  0           0]/(2*eps_t);
+    Q2 = [0         q1(2)-2*q1(1)+q1(1)       q2(2)-2*q2(1)+q2(1);
+          -kappa*(conj(q1(2))-2*conj(q1(1))+conj(q1(1)))    0 0;
+          -kappa*(conj(q2(2))-2*conj(q2(1))+conj(q2(1)))    0 0]/(eps_t^2);
+        elseif n == D
+    Q1 = [0                                 q1(n)-q1(n-1) q2(n)-q2(n-1);
+          -kappa*(conj(q1(n))-conj(q1(n-1)))  0           0;
+          -kappa*(conj(q2(n))-conj(q2(n-1)))  0           0]/(2*eps_t);
+    Q2 = [0         q1(n)-2*q1(n)+q1(n-1)       q2(n)-2*q2(n)+q2(n-1);
+          -kappa*(conj(q1(n))-2*conj(q1(n))+conj(q1(n-1)))    0 0;
+          -kappa*(conj(q2(n))-2*conj(q2(n))+conj(q2(n-1)))    0 0]/(eps_t^2);
+        else
+    Q1 = [0                                 q1(n+1)-q1(n-1) q2(n+1)-q2(n-1);
+          -kappa*(conj(q1(n+1))-conj(q1(n-1)))  0           0;
+          -kappa*(conj(q2(n+1))-conj(q2(n-1)))  0           0]/(2*eps_t);
+    Q2 = [0         q1(n+1)-2*q1(n)+q1(n-1)       q2(n+1)-2*q2(n)+q2(n-1);
+          -kappa*(conj(q1(n+1))-2*conj(q1(n))+conj(q1(n-1)))    0 0;
+          -kappa*(conj(q2(n+1))-2*conj(q2(n))+conj(q2(n-1)))    0 0]/(eps_t^2);
+        end
+  
+E1 = expm(eps_t^2*Q1/12 + eps_t^3*Q2/48);
+E2 = expm(-eps_t^2*Q1/12 + eps_t^3*Q2/48);
+        AE_1_3 = [1/z 0 0; 0 z 0; 0 0 z];
+        AE_m1_3 = [z 0 0; 0 1/z 0; 0 0 1/z];
+        AE = [1/z^3 0 0; 0 z^3 0; 0 0 z^3];
+        B = [0, q1(n), q2(n); -kappa*conj(q1(n)), 0, 0; -kappa*conj(q2(n)), 0, 0];
+        BE7_48_ = expm(7*B*eps_t/48);
+        BE3_8_ = expm(3*B*eps_t/8);
+        BEm1_48_ = expm(-B*eps_t/48);
+        U = E1*(BE7_48_*AE_1_3*BE3_8_*AE_m1_3*BEm1_48_*...
+        AE*BEm1_48_*AE_m1_3*BE3_8_*AE_1_3*BE7_48_)*E2;
+%        U = (BE7_48_*AE_1_3*BE3_8_*AE_m1_3*BEm1_48_*...
+%        AE*BEm1_48_*AE_m1_3*BE3_8_*AE_1_3*BE7_48_);
         S = U*S;
     end
-    S=S*z^(2*D*4);
+    S=S*z^(D*7);
     result_exact(i) = S(1,1);
     result_exact(5+i) = S(1,2);
     result_exact(10+i) = S(1,3);
@@ -105,28 +146,6 @@ for i = 1:1:5
     result_exact(30+i) = S(3,1);
     result_exact(35+i) = S(3,2);
     result_exact(40+i) = S(3,3);
-end
-
-%%
-function [q1s, q2s] = bandlimited_interpolation(eps_t, qn, ts)
-% implements bandlimited interpolation (interpolation using the time shift
-% property of the Fourier Transform)
-% 
-% inputs:
-% eps_t sampling period
-% qn    values of the samples of q taken at the points in vector tn
-% ts    desired shift of the samples
-% 
-% output: qs    the shifted vector of samples
-
-Qn = [fft(qn(1,:)); fft(qn(2,:))];
-N = length(qn(1,:));
-Np = floor(N/2);
-Nn = -floor((N-1)/2);
-Qn = [Qn(1,:).*exp(2i*pi*[0:Np, Nn:-1]*ts/(N*eps_t));...
-      Qn(2,:).*exp(2i*pi*[0:Np, Nn:-1]*ts/(N*eps_t))];
-q1s = ifft(Qn(1,:));
-q2s = ifft(Qn(2,:));
 end
 */
 
@@ -200,7 +219,7 @@ end
         
         
         // without normalization 
-        ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, NULL, manakov_discretization);  // with kappa =1
+        ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, NULL, manakov_discretization);
         misc_print_buf(540,transfer_matrix,"TM_C");
     
         if (ret_code != SUCCESS){
@@ -238,7 +257,7 @@ end
         
         // with normalization
         W_ptr = &W;
-        ret_code = manakov_fscatter(D, q1, q2, 1, eps_t, transfer_matrix, &deg, W_ptr, manakov_discretization); // with kappa = 1
+        ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, W_ptr, manakov_discretization); 
 
         if (ret_code != SUCCESS){
             return E_SUBROUTINE(ret_code);
@@ -283,22 +302,8 @@ end
 INT main()
 {
 
-    // Trying out misc_matrix_mult
-    COMPLEX A[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-    COMPLEX B[9] = {7, 8, 9, 1, 2, 3, 4, 5, 6};
-    COMPLEX C[9];
-
-    fnft__misc_matrix_mult(3,3,3,&A[0],&B[0],&C[0]);
-    for (UINT i=0; i<9; i++){
-        printf("%f+i%f\n",creal(C[i]),cimag(C[i]));
-    }
-
-
-
-
     if (manakov_fscatter_test_FTES4_suzuki() != SUCCESS)
         return EXIT_FAILURE;
-    
-    printf("SUCCES");
+
     return EXIT_SUCCESS;
 }

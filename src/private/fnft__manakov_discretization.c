@@ -58,6 +58,7 @@ UINT fnft__manakov_discretization_degree(manakov_discretization_t
 
 /**
  * This routine returns the scaling for effective number of samples based on the discretization.
+ * Returns 0 for unknown discretization
  */
 UINT fnft__manakov_discretization_upsampling_factor(manakov_discretization_t discretization)
 {
@@ -104,9 +105,8 @@ UINT fnft__manakov_discretization_method_order(manakov_discretization_t discreti
     }
 }
 
-// This function does what nse_discretiation_preprocess_signal and akns_discretiation_preprocess_signal
-// do together in the NSE case: downsample if desired (needed for Richardson extrapolation) and 
-// get the required samples after interpolation if the chosen method need those.
+// This function downsamples if desired (needed for Richardson extrapolation) and 
+// gets the required samples after interpolation if needed for the chosen method.
 UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * const q1,
         COMPLEX const * const q2, REAL const eps_t, const INT kappa,
         UINT * const Dsub_ptr, COMPLEX **q1_preprocessed_ptr, COMPLEX **q2_preprocessed_ptr, 
@@ -114,9 +114,7 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
 
     UINT isub, i, D_effective;
 
-    printf("Goes into preprocess signal\n");
-
-            // Check inputs
+    // Check inputs
     if (D < 2)
         return E_INVALID_ARGUMENT(D);
     if (q1 == NULL)
@@ -130,7 +128,7 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
     if (q2_preprocessed_ptr == NULL)
         return E_INVALID_ARGUMENT(q2_preprocessed_ptr);
     if (eps_t <= 0.0)
-        return E_INVALID_ARGUMENT(esp_t);
+        return E_INVALID_ARGUMENT(eps_t);
     if (first_last_index == NULL)
         return E_INVALID_ARGUMENT(first_last_index);
 
@@ -151,7 +149,6 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
         ret_code =  E_INVALID_ARGUMENT(discretization);
         goto release_mem;
     }
-    //D_effective = Dsub * upsampling_factor;       // original code, from when we still did the interlacing as well in this file
     D_effective = Dsub;
     COMPLEX * const q1_preprocessed = malloc(D_effective * sizeof(COMPLEX));
     COMPLEX * const q2_preprocessed = malloc(D_effective * sizeof(COMPLEX));
@@ -168,7 +165,7 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
         goto release_mem;
     }
 
-    // actually getting the samples
+    // getting the samples
     switch (discretization){
         case manakov_discretization_2SPLIT3A:
         case manakov_discretization_2SPLIT3B:
@@ -196,32 +193,6 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
                 r1_preprocessed[isub] = conj(q1[i])*-1*kappa;
                 r2_preprocessed[isub] = conj(q2[i])*-1*kappa;
             }
-
-/*
-        // Getting bandlimited interpolated samples. First get the samples and 
-        // then subsampling
-            const REAL a1 = 0.25 + sqrt(3)/6;
-            const REAL a2 = 0.25 - sqrt(3)/6;
-            
-            // Getting non-equidistant samples. qci has sample points at T0+(n+ci)*eps_t,
-            // c1 = 0.5-sqrt(3)/6, c2 = 0.5+sqrt(3)/6
-            // Getting new samples:
-            misc_resample(D, eps_t, q1, (0.5-SQRT(3)/6)*eps_t*nskip_per_step, q1_c1);
-            misc_resample(D, eps_t, q1, (0.5+SQRT(3)/6)*eps_t*nskip_per_step, q1_c2);
-            misc_resample(D, eps_t, q2, (0.5-SQRT(3)/6)*eps_t*nskip_per_step, q2_c1);
-            misc_resample(D, eps_t, q2, (0.5+SQRT(3)/6)*eps_t*nskip_per_step, q2_c2);
-
-            // now select the right values:
-            for (isub=0, i=0; isub<D_effective; isub+=2, i+= nskip_per_step) {
-                q1_preprocessed[isub] = a1*q1_c1[i]+a2*q1_c2[i];
-                q2_preprocessed[isub] = a1*q2_c1[i]+a2*q2_c2[i];
-                q1_preprocessed[isub+1] = a2*q1_c1[i]+a1*q1_c2[i];
-                q2_preprocessed[isub+1] = a2*q2_c1[i]+a1*q2_c2[i];
-            }
-            for (i=0; i<D_effective; i++){
-                r1_preprocessed[i] =conj(q1_preprocessed[i])*-1*kappa;
-                r2_preprocessed[i] =conj(q2_preprocessed[i])*-1*kappa;
-            }*/
     }
             break;
 
@@ -236,7 +207,7 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
     *q2_preprocessed_ptr = q2_preprocessed;
     *Dsub_ptr = Dsub;
 
-    release_mem:        // TODO: free memory, do I need to take care of more variables?
+    release_mem:
         free(q1_c1);
         free(q1_c2);
         free(q2_c1);
@@ -253,11 +224,11 @@ INT fnft__manakov_discretization_lambda_to_z(const UINT n, const REAL eps_t,
         COMPLEX * const vals, manakov_discretization_t discretization)
 {
 	UINT i;
-	// For the XsplitYZ methods, 2/degree1step work out to be the term we should have in the exponent
-	// For the Suzuki factorization this is not the case, so it is treated separately
+	// For the XsplitYZ methods, the extra factor in the exponent is 2/degree1step
+	// For the Suzuki factorization this factor is 1/3 =/= 2/degree1step, so it is treated separately
 	if (discretization == manakov_discretization_FTES4_suzuki) {
 		for (i = 0; i < n; i++)
-			vals[i] = CEXP(I * vals[i] * eps_t/3);	// added 7*
+			vals[i] = CEXP(I * vals[i] * eps_t/3);
 	}
 	else {
 		REAL degree1step;
@@ -299,7 +270,7 @@ INT fnft__manakov_discretization_phase_factor_rho(const REAL eps_t, const REAL T
         case manakov_discretization_FTES4_4A:
         case manakov_discretization_FTES4_4B:
 		case manakov_discretization_FTES4_suzuki:
-		case manakov_discretization_BO:		// TODO: check this
+		case manakov_discretization_BO:
             *phase_factor_rho = -2.0*(T1 + eps_t*boundary_coeff);
             return SUCCESS;
         break;
@@ -307,14 +278,14 @@ INT fnft__manakov_discretization_phase_factor_rho(const REAL eps_t, const REAL T
         case manakov_discretization_4SPLIT4A:
         case manakov_discretization_4SPLIT4B:
         case manakov_discretization_4SPLIT6B:
-		case manakov_discretization_CF4_2:	// TODO: check this
+		case manakov_discretization_CF4_2:
             *phase_factor_rho = -2.0*(T1 + eps_t*boundary_coeff)-eps_t;
             return SUCCESS;
         break;
 
         default: // Unknown discretization
 
-            return E_INVALID_ARGUMENT(nse_discretization);
+            return E_INVALID_ARGUMENT(discretization);
     }
 
 }
@@ -344,7 +315,6 @@ INT fnft__manakov_discretization_phase_factor_a(const REAL eps_t, const UINT D, 
         case manakov_discretization_4SPLIT6B:
         case manakov_discretization_FTES4_4A:
         case manakov_discretization_FTES4_4B:
-//            *phase_factor_a =2*(T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);   // same as in matlab, does not give better results
             *phase_factor_a = -eps_t*D + (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
         break;
@@ -354,15 +324,15 @@ INT fnft__manakov_discretization_phase_factor_a(const REAL eps_t, const UINT D, 
 			return SUCCESS;
 		break;
 
-		case manakov_discretization_BO:		// TODO: check this
-		case manakov_discretization_CF4_2:	// TODO: check this
+		case manakov_discretization_BO:
+		case manakov_discretization_CF4_2:
 			*phase_factor_a = (T[1] + eps_t * boundary_coeff) - (T[0] - eps_t * boundary_coeff);
 			return SUCCESS;
 		break;
 
         default: // Unknown discretization
 
-            return E_INVALID_ARGUMENT(nse_discretization);
+            return E_INVALID_ARGUMENT(discretization);
     }
 }
 
@@ -390,14 +360,11 @@ INT fnft__manakov_discretization_phase_factor_b(const REAL eps_t, const UINT D, 
                     degree1step = manakov_discretization_degree(discretization);
             if (degree1step == 0)
                 return E_INVALID_ARGUMENT(discretization);
-//            *phase_factor_b =  - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
            *phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
-//           *phase_factor_b = -2*(T[0]-eps_t*boundary_coeff);           // matlab expression
             return SUCCESS;
             break;
 
 		case manakov_discretization_FTES4_suzuki:
-//			*phase_factor_b = (-eps_t * D - (T[1] + eps_t * boundary_coeff) - (T[0] - eps_t * boundary_coeff));
 			*phase_factor_b = -(T[1] + eps_t * boundary_coeff) - (T[0] - eps_t * boundary_coeff) - eps_t * 7 * D / 3;
 			return SUCCESS;
 			break;
@@ -409,15 +376,15 @@ INT fnft__manakov_discretization_phase_factor_b(const REAL eps_t, const UINT D, 
             return SUCCESS;
             break;
 
-		case manakov_discretization_BO:		// TODO: check this
-		case manakov_discretization_CF4_2:	// TODO: check this
+		case manakov_discretization_BO:
+		case manakov_discretization_CF4_2:
 			*phase_factor_b = -(T[1] + eps_t * boundary_coeff) - (T[0] - eps_t * boundary_coeff);
 			return SUCCESS;
 			break;
 
         default: // Unknown discretization
 
-            return E_INVALID_ARGUMENT(nse_discretization);
+            return E_INVALID_ARGUMENT(discretization);
     }
 }
 
@@ -447,8 +414,3 @@ REAL fnft__manakov_discretization_boundary_coeff(manakov_discretization_t discre
             return NAN;
     }
 }
-
-
-
-
-

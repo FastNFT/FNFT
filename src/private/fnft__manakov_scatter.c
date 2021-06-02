@@ -37,7 +37,6 @@ static inline void manakov_scatter_U_BO(COMPLEX const q1,       // calculates th
                                      INT const kappa,
                                      COMPLEX * const U)
 {
- //   U[0] = (lam*cexp(-eps_t*csqrt(lam*lam + kappa*q1*conj(q1) + kappa*q2*conj(q2))*I) - lam*cexp(eps_t*csqrt(lam*lam + kappa*q1*conj(q1) + kappa*q2*conj(q2))*I) + cexp(-eps_t*csqrt(lam*lam + kappa*q1*conj(q1) + kappa*q2*conj(q2))*I)*csqrt(lam*lam + kappa*q1*conj(q1) + kappa*q2*conj(q2)) + cexp(eps_t*csqrt(lam*lam + kappa*q1*conj(q1) + kappa*q2*conj(q2))*I)*csqrt(lam*lam + kappa*q1*conj(q1) + kappa*q2*conj(q2)))/csqrt(2*(lam*lam + kappa*q1*conj(q1) + kappa*q2*conj(q2)));
     COMPLEX x1 = CSQRT(lam*lam + kappa*q1*CONJ(q1) + kappa*q2*CONJ(q2));
     COMPLEX x2  = eps_t*x1*I;
     COMPLEX x3 = q1*CONJ(q1)+q2*CONJ(q2);
@@ -58,14 +57,11 @@ static inline void manakov_scatter_U_BO(COMPLEX const q1,       // calculates th
 
 
 /**
- * If derivative_flag=0 returns [S11 S12 S21 S22] in result where
- * S = [S11, S12; S21, S22] is the scattering matrix computed using the
- * chosen scheme.
- * If derivative_flag=1 returns [S11 S12 S21 S22 S11' S12' S21' S22'] in
- * result where S11' is the derivative of S11 w.r.t to lambda.
- * Result should be preallocated with size 4*K or 8*K accordingly.
+ * Returns [S11 S12 S13 S21 S22 S23 S31 S32 S33] in result where
+ * S = [S11, S12, S13; S21, S22, S23, S31, S32, S33] is the scattering
+ * matrix computed using the chosen scheme.
+ * result should be preallocated with size 9*K.
  */
-// TODO: desription
 INT manakov_scatter_matrix(UINT const D,
                         COMPLEX const * const q1,
                         COMPLEX const * const q2,
@@ -97,24 +93,12 @@ INT manakov_scatter_matrix(UINT const D,
     if (upsampling_factor == 0)
         return E_INVALID_ARGUMENT(discretization);
 
-    // Declare pointers that may or may not be used, depending on the discretization.
-    // We must do so before possibly jumping to leave_fun.
-    COMPLEX *tmp1 = NULL, *tmp2 = NULL; //*eps_t_scaled = NULL;
-
-    // Define stepsize constants that are often needed
-    REAL const eps_t_2 = eps_t * eps_t;
-    REAL const eps_t_3 = eps_t_2 * eps_t;
-
-    // Pre-computing weights required for higher-order CF methods that are
-    // independent of q, r and l.
-    // In the case of ES4 and TES4 computing values that are functions of
-    // q and r but not l.
         COMPLEX *q1_preprocessed = NULL;
         COMPLEX *q2_preprocessed = NULL;
             UINT D_eff = upsampling_factor*D;
     switch (discretization) {
-        case manakov_discretization_CF4_2:;         // commutator-free fourth-order. Semicolon added to resolve "a label can only be part of a statement and a declaration is not a statement" error
-            // Do the resampling here
+        case manakov_discretization_CF4_2:;         // commutator-free fourth-order.
+            // Allocation for resampling
             COMPLEX *q1_c1, *q1_c2, *q2_c1, *q2_c2;
             const REAL a1 = 0.25 + sqrt(3)/6;
             const REAL a2 = 0.25 - sqrt(3)/6;
@@ -125,33 +109,20 @@ INT manakov_scatter_matrix(UINT const D,
             q1_preprocessed = malloc(D_eff*sizeof(COMPLEX));
             q2_preprocessed = malloc(D_eff*sizeof(COMPLEX));
 
-            misc_print_buf(8,q1,"q1");
-            misc_print_buf(8,q2,"q2");
-            // Getting non-equidistant samples. qci has sample points at T0+(n+ci)*eps_t,
-            // c1 = 0.5-sqrt(3)/6, c2 = 0.5+sqrt(3)/6
+            // Getting non-equidistant samples. q1_ci, q2_ci have sample points at
+            // T0+(n+ci)*eps_t, where c1 = 0.5-sqrt(3)/6, c2 = 0.5+sqrt(3)/6
             // Getting new samples:
             misc_resample(D, eps_t, q1, (0.5-SQRT(3)/6)*eps_t, q1_c1);
             misc_resample(D, eps_t, q1, (0.5+SQRT(3)/6)*eps_t, q1_c2);
             misc_resample(D, eps_t, q2, (0.5-SQRT(3)/6)*eps_t, q2_c1);
             misc_resample(D, eps_t, q2, (0.5+SQRT(3)/6)*eps_t, q2_c2);
-                misc_print_buf(8,q1_c1,"q1_c1");
-                misc_print_buf(8,q1_c2,"q1_c2");
-                misc_print_buf(8,q2_c1,"q2_c1");
-                misc_print_buf(8,q2_c2,"q2_c2");
             for (UINT i=0; i<D; i++){
                 q1_preprocessed[2*i] = a1*q1_c1[i]+a2*q1_c2[i];
                 q2_preprocessed[2*i] = a1*q2_c1[i]+a2*q2_c2[i];
                 q1_preprocessed[2*i+1] = a2*q1_c1[i]+a1*q1_c2[i];
                 q2_preprocessed[2*i+1] = a2*q2_c1[i]+a1*q2_c2[i];
             }
-                misc_print_buf(16,q1_preprocessed,"q1_preprocessed");
-                misc_print_buf(16,q2_preprocessed,"q2_preprocessed");                        
 
-/*            UINT first_last_index[2] = {0};     // not using this somewhere after this, maybe leave out? TODO
-            misc_print_buf(8,q1,'q1');
-            manakov_discretization_preprocess_signal(D, q1, q2, eps_t, kappa,
-                    &D, &q1_preprocessed, &q2_preprocessed, first_last_index, discretization);
-            misc_print_buf(8,q1_preprocessed,'q1_preprocessed');*/
         break;
         case manakov_discretization_BO:            // bofetta-osborne scheme
             q1_preprocessed = q1;
@@ -163,19 +134,17 @@ INT manakov_scatter_matrix(UINT const D,
             CHECK_RETCODE(ret_code, leave_fun);
     }
 
-//    for (UINT n=0; n<upsampling_factor; n++ )       // TODO: check if this is ok.
-//                eps_t_scaled[n] *= eps_t;
-        // Calculate the scattering matrix without lambda-derivative
+        // Calculate the scattering matrix
         for (UINT i = 0; i < K; i++) { // iterate over lambda
             // Initialize scattering matrix
             COMPLEX l_curr = lambda[i];
             COMPLEX H[2][3][3] = { {{1,0,0}, {0,1,0}, {0,0,1}} }; // Initialize transfer matrix
-            COMPLEX U[3][3];        // TM for current timestep
+            COMPLEX U[3][3];        // transfer matrix for current timestep
             UINT current = 0;
 
             switch (discretization) {
                 case manakov_discretization_CF4_2:
-                l_curr /=2;     // because we are doing BO with 2* the original number of samples,. Intentional fall through
+                l_curr /=2;     // because we are doing BO with 2* the original number of samples. Intentional fall through
                 case manakov_discretization_BO:
                     for (UINT n = 0; n < D_eff; n++){
                         manakov_scatter_U_BO(q1_preprocessed[n],q2_preprocessed[n],l_curr,eps_t,kappa,*U);
@@ -195,10 +164,6 @@ INT manakov_scatter_matrix(UINT const D,
     
     
 leave_fun:
-//    free(eps_t_scaled);
-// TODO: should probably do something (free variables?) here
-leave_fun_no_eps_t_scaled:
-    free(tmp1);
     return ret_code;
 }
 

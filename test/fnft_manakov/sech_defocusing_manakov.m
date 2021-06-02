@@ -1,4 +1,4 @@
-%% File to determine the exact NFT spectrum of focusing sech potential
+%% File to determine the exact NFT spectrum of defocusing sech potential
 % potential function: q = [A1*sech(t); A2*sech(t)]
 
 A1 = sym(0.8);

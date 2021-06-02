@@ -81,9 +81,6 @@ INT manakov_scatter_matrix_test_defocusing_bo()
     }
 
     ret_code = manakov_scatter_matrix(D, q1, q2, eps_t, 2, lam, kappa, result, manakov_discretization_BO);
-    for (i=0; i<18; i++){
-        printf("result[%d] = %f + i%f\n", i, creal(result[i]), cimag(result[i]));
-    }
 
     if (ret_code != SUCCESS)
         return E_SUBROUTINE(ret_code);

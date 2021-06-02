@@ -177,7 +177,7 @@ end
     };
         
         i = manakov_fscatter_numel(2*D, manakov_discretization);
-        if (i == 0) { // size D>=2, this means unknown discretization
+        if (i == 0) { 
             ret_code = E_INVALID_ARGUMENT(manakov_discretization);
             goto leave_fun;
         }
@@ -190,17 +190,13 @@ end
         }
         
         for (i=0; i<D; i++){
-//            q1[i] = (0.41*COS(2*i+1) + 0.59*I*SIN(0.28*(2*i+1)))*50;
-  //          q2[i] = (0.41*COS(2*(i+1)) + 0.59*I*SIN(0.28*(2*(i+1))))*50;
-//            q1[i] = (0.41*cos(0.012*(2*i+1))+0.59*I*sin(0.08*(2*i+1)))*50;
-  //          q2[i] = (0.41*cos(0.012*(2*(i+1)))+0.59*I*sin(0.08*(2*(i+1))))*50;
             q1[i] = 0.92*1/COSH(i*eps_t-(D-1)*eps_t*0.5);
             q2[i] = 2.13*1/COSH(i*eps_t-(D-1)*eps_t*0.5);
         }
         
         
         // without normalization 
-        ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, NULL, manakov_discretization);  // with kappa =1
+        ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, NULL, manakov_discretization);  
     
         if (ret_code != SUCCESS){
             return E_SUBROUTINE(ret_code);
@@ -235,7 +231,7 @@ end
         
         // with normalization
         W_ptr = &W;
-        ret_code = manakov_fscatter(D, q1, q2, 1, eps_t, transfer_matrix, &deg, W_ptr, manakov_discretization); // with kappa = 1
+        ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, W_ptr, manakov_discretization); 
 
         if (ret_code != SUCCESS){
             return E_SUBROUTINE(ret_code);
@@ -249,7 +245,7 @@ end
         for (i=0; i<9*(deg+1); i++)
             transfer_matrix[i] *= scl;
         
-        for (i=0; i<9; i++){    // replaced 4 by 9
+        for (i=0; i<9; i++){    
             for (j=0; j<nz; j++)
                 result[i*nz+j] = z[j];
             
@@ -282,6 +278,5 @@ INT main()
     if (manakov_fscatter_test_4split4B() != SUCCESS)
         return EXIT_FAILURE;
     
-    printf("SUCCES");
     return EXIT_SUCCESS;
 }

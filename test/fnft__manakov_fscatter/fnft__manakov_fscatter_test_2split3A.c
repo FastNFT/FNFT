@@ -124,14 +124,12 @@ end
     };
         
         i = manakov_fscatter_numel(D, manakov_discretization);
-        if (i == 0) { // size D>=2, this means unknown discretization
+        if (i == 0) {
             ret_code = E_INVALID_ARGUMENT(manakov_discretization);
             goto leave_fun;
-        }
-        printf("i (length of tf = result) = %d\n",i);
-        
+        }        
 
-        transfer_matrix = malloc(i*sizeof(COMPLEX)); //problems are not caused by too small array allocated for transfer_matrix, tried array 5x the size and problems after changing line 1065 in poly_fmult to len = poly_fmult_two_polys_len(deg); persisted
+        transfer_matrix = malloc(i*sizeof(COMPLEX));
         if (transfer_matrix == NULL) {
             ret_code = E_NOMEM;
             goto leave_fun;
@@ -144,7 +142,7 @@ end
         
         
         // without normalization 
-        ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, NULL, manakov_discretization);  // with kappa =1
+        ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, NULL, manakov_discretization);
     
         if (ret_code != SUCCESS){
             return E_SUBROUTINE(ret_code);
@@ -173,19 +171,13 @@ end
             }
 #endif  // DEBUG
 
-        /*Note: For z[0], z[1] and z[3] result and result_exact match, but the values for z[2] and z[4] are different.
-        If we change D, some of the other values with z=z[i] match but not all.
-        The values for z an p passed to poly_eval are okay, and when evaluating using horners method in matlab
-        result and result_exact do agree, so there is probably a mistake in the matlab test file
-        */
         if (misc_rel_err(9*nz, result, result_exact) > err_bnd)
             return E_TEST_FAILED;
         
         
-        
         // with normalization
         W_ptr = &W;
-        ret_code = manakov_fscatter(D, q1, q2, 1, eps_t, transfer_matrix, &deg, W_ptr, manakov_discretization); // with kappa = 1
+        ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, W_ptr, manakov_discretization);
 
         if (ret_code != SUCCESS){
             return E_SUBROUTINE(ret_code);
@@ -197,9 +189,9 @@ end
         }
         scl = POW(2.0, W);
         for (i=0; i<9*(deg+1); i++)
-            transfer_matrix[i] *= scl;  // replaced 4 by 9. TODO: also do this in the other test files
+            transfer_matrix[i] *= scl;
         
-        for (i=0; i<9; i++){    // replaced 4 by 9
+        for (i=0; i<9; i++){
             for (j=0; j<nz; j++)
                 result[i*nz+j] = z[j];
             
@@ -232,7 +224,6 @@ INT main()
 
     if (manakov_fscatter_test_2split3A() != SUCCESS)
         return EXIT_FAILURE;
-    
-    printf("SUCCES");
+        
     return EXIT_SUCCESS;
 }

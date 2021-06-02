@@ -80,26 +80,16 @@ INT manakov_testcases(manakov_testcases_t tc, const UINT D,
             *K_ptr = 3;
             break;
             
-        case manakov_testcases_SECH_FOCUSING2:
-            *M_ptr = 16;
-            *K_ptr = 5;
-            break;
-            
-        case manakov_testcases_SECH_FOCUSING_CONTSPEC:
-            *M_ptr = 16;
-            *K_ptr = 0;
-            break;
-            
         case manakov_testcases_SECH_DEFOCUSING:
             *M_ptr = 16;
             *K_ptr = 0;
             break;
-            
-        case manakov_testcases_TRUNCATED_SOLITON:
+
+        case manakov_testcases_RECTANGLE_FOCUSING:
             *M_ptr = 16;
             *K_ptr = 0;
             break;
-            
+                        
         default:
             return E_INVALID_ARGUMENT(tc);
     }
@@ -126,28 +116,6 @@ INT manakov_testcases(manakov_testcases_t tc, const UINT D,
         *contspec_ptr = NULL;
         *ab_ptr = NULL;
     }
-/*    if (*K_ptr > 0) {
-        *bound_states_ptr = malloc((*K_ptr) * sizeof(COMPLEX));
-        if (*bound_states_ptr == NULL) {
-            ret_code = E_NOMEM;
-            goto release_mem_4;
-        }
-        *normconsts_ptr = malloc((*K_ptr) * sizeof(COMPLEX));
-        if (*normconsts_ptr == NULL) {
-            ret_code = E_NOMEM;
-            goto release_mem_5;
-        }
-        *residues_ptr = malloc((*K_ptr) * sizeof(COMPLEX));
-        if (*residues_ptr == NULL) {
-            ret_code = E_NOMEM;
-            goto release_mem_6;
-        }
-    } else {
-        *bound_states_ptr = NULL;
-        *normconsts_ptr = NULL;
-        *residues_ptr = NULL;
-    }
-*/
     // generate test case
     switch (tc) {
 
@@ -182,7 +150,7 @@ contspec = vpa([(b1(xi)./a(xi)) (b2(xi)./a(xi))]).'
 ab = vpa([a(xi) b1(xi) b2(xi)])'
         */
 
-        // Time domain. sech(20) = 4.1*10^-9, so outside these boundaries the potential is small
+        // Time domain. sech(25) = sech(-25) = 2.7*10^-11. Outside these boundaries the potential is smaller still, so T domain sufficiently large
         T[0] = -25.0;
         T[1] = 25.0;
 
@@ -283,35 +251,18 @@ ab = vpa([a(xi) b1(xi) b2(xi)])'
     (*ab_ptr)[46] =    0.005922399120320578463955937515864663332921;
     (*ab_ptr)[47] =    0.002700283448752345010798519820775998999905;
 
-/*        // Discrete spectrum
-        (*bound_states_ptr)[0] = 7.0*I / 10.0;
-        (*bound_states_ptr)[1] = 17.0*I / 10.0;
-        (*bound_states_ptr)[2] = 27*I / 10.0;
-        (*normconsts_ptr)[0] = 1.0*I;
-        (*normconsts_ptr)[1] = -1.0*I;
-        (*normconsts_ptr)[2] = 1.0*I;
-        (*residues_ptr)[0] = -1428.0 * GAMMA(2.0/5.0) \
-            / ( 25.0 * CPOW(GAMMA(1.0/5.0), 2.0) );
-        (*residues_ptr)[1] = -5236.0 * GAMMA(2.0/5.0) \
-            / ( 15.0 * CPOW(GAMMA(1.0/5.0), 2.0) );
-        (*residues_ptr)[2] = -4284.0 * GAMMA(2.0/5.0) \
-            / (11.0 * CPOW(GAMMA(1.0/5.0), 2.0) );
-            */
-
         *kappa_ptr = +1;
 
         break;
 
         case manakov_testcases_SECH_DEFOCUSING:
 
-        // TODO: matlab code
-
         // This test case can be found in J. Satsuma & N. Yajima, Prog. Theor.
         // Phys. Suppl., No. 55, p. 284ff, 1974.
 
         // The following MATLAB code has been used to compute the values below.
         /*
-%% File to determine the exact NFT spectrum of focusing sech potential
+%% File to determine the exact NFT spectrum of defocusing sech potential
 % potential function: q = [A1*sech(t); A2*sech(t)]
 
 A1 = sym(0.8);
@@ -333,12 +284,9 @@ xi = (-sym(7):sym(8))/4;        % xi has 16 elements, M = 16
 XI = [xi(1) xi(end)]
 digits(40);
 contspec = vpa([(b1(xi)./a(xi)) (b2(xi)./a(xi))]).'
-ab = vpa([a(xi) b1(xi) b2(xi)]).'
-        
-        
+ab = vpa([a(xi) b1(xi) b2(xi)]).'        
         */
 
-        // Time domain. sech(20) = 4.1*10^-9, so outside these boundaries the potential is small
         T[0] = -25.0;
         T[1] = 25.0;
 
@@ -439,26 +387,173 @@ ab = vpa([a(xi) b1(xi) b2(xi)]).'
 (*ab_ptr)[46] =                                                61021.38172497437738135505228903563665391;
 (*ab_ptr)[47] =                                                27822.34424670586658764949926880778975314;
 
-/*        // Discrete spectrum
-        (*bound_states_ptr)[0] = 7.0*I / 10.0;
-        (*bound_states_ptr)[1] = 17.0*I / 10.0;
-        (*bound_states_ptr)[2] = 27*I / 10.0;
-        (*normconsts_ptr)[0] = 1.0*I;
-        (*normconsts_ptr)[1] = -1.0*I;
-        (*normconsts_ptr)[2] = 1.0*I;
-        (*residues_ptr)[0] = -1428.0 * GAMMA(2.0/5.0) \
-            / ( 25.0 * CPOW(GAMMA(1.0/5.0), 2.0) );
-        (*residues_ptr)[1] = -5236.0 * GAMMA(2.0/5.0) \
-            / ( 15.0 * CPOW(GAMMA(1.0/5.0), 2.0) );
-        (*residues_ptr)[2] = -4284.0 * GAMMA(2.0/5.0) \
-            / (11.0 * CPOW(GAMMA(1.0/5.0), 2.0) );
-            */
-
         *kappa_ptr = -1;
 
         break;
 
-        // TODO: all other cases, line 294 - 705 in fnft__nsev_testcases.c that follow below
+    case manakov_testcases_RECTANGLE_FOCUSING:
+
+    // For this tescase the MZS matrix P is piecewise constant and the solution is easily found:
+        // The following MATLAB code has been used to compute the values below.
+        /*
+%% File to determine the exact NFT spectrum of rectangle potential focusing manakov equation
+% potential function: q = [A1; A2] for L(1)<t<L(2), q = [0; 0] otherwise
+
+A1 = sym(0.8);
+A2 = sym(5.2);
+L = [-2 3];
+kappa = sym(1);
+XI_vector = (-sym(7):sym(8))/4;        % xi has 16 elements, M = 16
+
+a=zeros(1,length(XI_vector));
+b1=zeros(1,length(XI_vector));
+b2=zeros(1,length(XI_vector));
+for i=1:length(XI_vector)
+    L1 = L(1); L2 = L(2);
+    lam = XI_vector(i);
+    P0 = [-1j*lam, 0, 0;
+          0, 1j*lam, 0;
+          0, 0, 1j*lam];
+    PL = [-1j*lam, A1, A2;
+          -kappa*conj(A1), 1j*lam, 0;
+          -kappa*conj(A2), 0, 1j*lam];
+    
+      % For the first part -inf<t<L1, we have v = [exp(j*lam*t); 0; 0]
+      % From this we get the BC at L1:
+      v_L1 = [exp(-1j*lam*L1); 0; 0];
+      
+      % L1<t<L2, v=exp(PL*t)*c2 where we get the constant c2 from v_L1
+      c2 = expm(PL*L1)\v_L1;
+      v_L2 = expm(PL*L2)*c2;
+      
+      % L2<t, v = exp(P0*t)*c2 where we get c3 from v_L2
+      c3 = expm(P0*L2)\v_L2;
+%      v_fun = @(t)expm(PL*t)*c3;
+%       v_end = expm(P0*t)*c3;
+%       ab(1) = v_end(1)*exp(1j*lam*t);
+%       ab(2) = v_end(2)*exp(-1j*lam*t);
+%       ab(3) = v_end(3)*exp(-1j*lam*t);
+% expm(P0*t)*[epx(j*lam*t); epx(-j*lam*t); epx(-j*lam*t)] cancel against
+% each other (becomes [1; 1; 1], so we do not need ot specify at which t
+% and we just get c3 as the answer
+    a(i) = c3(1);
+    b1(i) = c3(2);
+    b2(i) = c3(3);
+end
+contspec = vpa([(b1./a) (b2./a)]).'
+ab = vpa([a b1 b2]).'
+        */
+
+        // Time domain. q1,2(t) = 0 for L(1)<t<L(2), so choose T[0]<L(1) and T[1]>L(2)
+        T[0] = -5.0;
+        T[1] = 5.0;
+        REAL L[2] = {-2.0, 3.0};
+        REAL eps_t = (T[1]-T[0])/(D-1);
+
+        // Test signal: q = [A1; A2] for L(1)<t<L(2), q = [0; 0] otherwise
+        for (i=0; i<D; i++){
+            if (T[0]+i*eps_t>=L[0] && T[0]+i*eps_t<=L[1]){
+            (*q1_ptr)[i] = 0.8;
+            (*q2_ptr)[i] = 5.2;
+            }
+            else{
+            (*q1_ptr)[i] = 0.0;
+            (*q2_ptr)[i] = 0.0;
+            }
+        }
+        // Nonlinear spectral domain
+        XI[0] = -7.0 / 4.0;
+        XI[1] = 8.0 / 4.0;
+
+        // Reflection coeffcient [b1(xi)/a(xi) b2(xi)/a(xi)] (correct up to 40 digits)
+(*contspec_ptr)[0] =- 0.026062734927461455453068239762615 - 0.083118540185744507753362597668456*I;
+(*contspec_ptr)[1] = - 0.18017636533205713678107429132069 + 0.014271311686288888631590765498913*I;
+(*contspec_ptr)[2] = - 0.081717097538348423824139388216281 + 0.34476662876851466021932424155239*I;
+(*contspec_ptr)[3] =     0.4552421404279109462542862729606 + 0.58906635331663270704893875517882*I;
+(*contspec_ptr)[4] =     0.66651666775858309232916099063004 + 0.4007723270173131346894024318317*I;
+(*contspec_ptr)[5] =    0.44932281393344897235664348045248 - 0.22286308263152837527698579833668*I;
+(*contspec_ptr)[6] = - 0.075113760364707085614988102406642 - 0.38374043607692320811963782034582*I;
+(*contspec_ptr)[7] =                                         -0.36202399287992614862474738401943;
+(*contspec_ptr)[8] = - 0.075113760364707085614988102406642 + 0.38374043607692320811963782034582*I;
+(*contspec_ptr)[9] =    0.44932281393344897235664348045248 + 0.22286308263152837527698579833668*I;
+(*contspec_ptr)[10] =     0.66651666775858309232916099063004 - 0.4007723270173131346894024318317*I;
+(*contspec_ptr)[11] =     0.4552421404279109462542862729606 - 0.58906635331663270704893875517882*I;
+(*contspec_ptr)[12] = - 0.081717097538348423824139388216281 - 0.34476662876851466021932424155239*I;
+(*contspec_ptr)[13] = - 0.18017636533205713678107429132069 - 0.014271311686288888631590765498913*I;
+(*contspec_ptr)[14] =- 0.026062734927461455453068239762615 + 0.083118540185744507753362597668456*I;
+(*contspec_ptr)[15] = 0.016345346761064319385248211347061 + 0.0093432109285461941577954902982128*I;
+(*contspec_ptr)[16] =  - 0.16940777702849943442409141880489 - 0.54027051120733926570238736530882*I;
+(*contspec_ptr)[17] =  - 1.1711463746583714584659219326568 + 0.092763525960877751819211312067637*I;
+(*contspec_ptr)[18] =   - 0.53116113399926467852907308042631 + 2.2409830869953455412257881107507*I;
+(*contspec_ptr)[19] =       2.9590739127814211784084363898728 + 3.828931296558113039907311758725*I;
+(*contspec_ptr)[20] =      4.3323583404307894895168828952592 + 2.6050201256125355975257207319373*I;
+(*contspec_ptr)[21] =       2.920598290567417709695519079105 - 1.4486100371049344115448320735595*I;
+(*contspec_ptr)[22] =    - 0.4882394423705959662918019148492 - 2.4943128345000005197107384447008*I;
+(*contspec_ptr)[23] =                                          -2.3531559537195194664604969148058;
+(*contspec_ptr)[24] =    - 0.4882394423705959662918019148492 + 2.4943128345000005197107384447008*I;
+(*contspec_ptr)[25] =       2.920598290567417709695519079105 + 1.4486100371049344115448320735595*I;
+(*contspec_ptr)[26] =      4.3323583404307894895168828952592 - 2.6050201256125355975257207319373*I;
+(*contspec_ptr)[27] =       2.9590739127814211784084363898728 - 3.828931296558113039907311758725*I;
+(*contspec_ptr)[28] =   - 0.53116113399926467852907308042631 - 2.2409830869953455412257881107507*I;
+(*contspec_ptr)[29] =  - 1.1711463746583714584659219326568 - 0.092763525960877751819211312067637*I;
+(*contspec_ptr)[30] =  - 0.16940777702849943442409141880489 + 0.54027051120733926570238736530882*I;
+(*contspec_ptr)[31] =   0.10624475394691809682079508547758 + 0.060730871035550262893032424926787*I;
+
+        // a(xi)
+(*ab_ptr)[0] =        0.76842151850790341161001606451464 + 0.40303701190105989393686058974708*I;
+(*ab_ptr)[1] =- 0.0053085791801664762579182621493601 + 0.64375338202718679347924535250058*I;
+(*ab_ptr)[2] =   - 0.33548292877868279848740939996787 + 0.2073160938127976138378727455347*I;
+(*ab_ptr)[3] = - 0.19935631425978672659482526796637 - 0.017418064471645532120813726351116*I;
+(*ab_ptr)[4] =  - 0.1877204314188311018440913358063 - 0.039742357177227530251606424371857*I;
+(*ab_ptr)[5] =  - 0.16629080878327068271360644757806 - 0.23774563516814151142853006604128*I;
+(*ab_ptr)[6] =    0.15545410698654801850970841314847 - 0.32739956195514313685990259727987*I;
+(*ab_ptr)[7] =                                          0.38724787039322466908330966361973;
+(*ab_ptr)[8] =    0.15545410698654801850970841314847 + 0.32739956195514313685990259727987*I;
+(*ab_ptr)[9] =  - 0.16629080878327068271360644757806 + 0.23774563516814151142853006604128*I;
+(*ab_ptr)[10] =  - 0.1877204314188311018440913358063 + 0.039742357177227530251606424371857*I;
+(*ab_ptr)[11] = - 0.19935631425978672659482526796637 + 0.017418064471645532120813726351116*I;
+(*ab_ptr)[12] =   - 0.33548292877868279848740939996787 - 0.2073160938127976138378727455347*I;
+(*ab_ptr)[13] =- 0.0053085791801664762579182621493601 - 0.64375338202718679347924535250058*I;
+(*ab_ptr)[14] =    0.76842151850790341161001606451464 - 0.40303701190105989393686058974708*I;
+(*ab_ptr)[15] =    0.80637785454689814290674121366465 + 0.57849423805943522847172744150157*I;
+
+        // [b1(x*I;) b2(x*I;)]
+(*ab_ptr)[16] =  0.013472681720611728514724880767517 - 0.074374321672823442974653573855903*I;
+(*ab_ptr)[17] = - 0.0082307246622527578672201542531184 - 0.1160649049319692482917787401675*I;
+(*ab_ptr)[18] =  - 0.04406097953983694609503274364215 - 0.13260458782378395370393775465345*I;
+(*ab_ptr)[19] = - 0.080494999491298332983113539285114 - 0.12536353400384045442272906711878*I;
+(*ab_ptr)[20] =  - 0.10919115945241222864758867672208 - 0.10172209760305597758822671039525*I;
+(*ab_ptr)[21] = - 0.12770297926953097511493240290292 - 0.069764455535414729436816116958653*I;
+(*ab_ptr)[22] = - 0.13731319321595736315799740623333 - 0.035061814564757910750447678083219*I;
+(*ab_ptr)[23] =                                         -0.14019302027400332155693263302965;
+(*ab_ptr)[24] = - 0.13731319321595736315799740623333 + 0.035061814564757910750447678083219*I;
+(*ab_ptr)[25] = - 0.12770297926953097511493240290292 + 0.069764455535414729436816116958653*I;
+(*ab_ptr)[26] =  - 0.10919115945241222864758867672208 + 0.10172209760305597758822671039525*I;
+(*ab_ptr)[27] = - 0.080494999491298332983113539285114 + 0.12536353400384045442272906711878*I;
+(*ab_ptr)[28] =  - 0.04406097953983694609503274364215 + 0.13260458782378395370393775465345*I;
+(*ab_ptr)[29] = - 0.0082307246622527578672201542531184 + 0.1160649049319692482917787401675*I;
+(*ab_ptr)[30] =  0.013472681720611728514724880767517 + 0.074374321672823442974653573855903*I;
+(*ab_ptr)[31] = 0.0077755319658742196031742111017593 + 0.016989847303499373831758845199147*I;
+(*ab_ptr)[32] =   0.087572431183976229274179559070035 - 0.48343309087335234464077871052723*I;
+(*ab_ptr)[33] = - 0.053499710304642920932760574714848 - 0.75442188205780014165213742671767*I;
+(*ab_ptr)[34] =  - 0.28639636700894016696494759344205 - 0.86192982085459568519780759743298*I;
+(*ab_ptr)[35] =  - 0.52321749669343919908470752488938 - 0.81486297102496296762552674408653*I;
+(*ab_ptr)[36] =  - 0.70974253644067952784268982213689 - 0.66119363441986389595683704101248*I;
+(*ab_ptr)[37] =  - 0.83006936525195129661369719542563 - 0.45346896098019573440041085632402*I;
+(*ab_ptr)[38] =  - 0.89253575590372280501583190925885 - 0.22790179467092644416403857121622*I;
+(*ab_ptr)[39] =                                         -0.91125463178102150685333526780596;
+(*ab_ptr)[40] =  - 0.89253575590372280501583190925885 + 0.22790179467092644416403857121622*I;
+(*ab_ptr)[41] =  - 0.83006936525195129661369719542563 + 0.45346896098019573440041085632402*I;
+(*ab_ptr)[42] =  - 0.70974253644067952784268982213689 + 0.66119363441986389595683704101248*I;
+(*ab_ptr)[43] =  - 0.52321749669343919908470752488938 + 0.81486297102496296762552674408653*I;
+(*ab_ptr)[44] =  - 0.28639636700894016696494759344205 + 0.86192982085459568519780759743298*I;
+(*ab_ptr)[45] = - 0.053499710304642920932760574714848 + 0.75442188205780014165213742671767*I;
+(*ab_ptr)[46] =   0.087572431183976229274179559070035 + 0.48343309087335234464077871052723*I;
+(*ab_ptr)[47] =    0.050540957778182425685908896184628 + 0.1104340074727459403147733496553*I;
+
+        *kappa_ptr = +1;
+
+        break;
 
     default: // unknown test case
         printf("unknown test case");
@@ -470,12 +565,8 @@ ab = vpa([a(xi) b1(xi) b2(xi)]).'
 
     // the code below is only executed if an error occurs
 
-release_mem_6:
-    free(*residues_ptr);
 release_mem_5:
     free(*normconsts_ptr);
-release_mem_4:
-    free(*bound_states_ptr);
 release_mem_3:
     free(*ab_ptr);
 release_mem_2:
@@ -523,7 +614,7 @@ static INT manakov_compare_nfs(const UINT M, const UINT K1, const UINT K2,
         }
         if (nrm > 0)
             dists[0] /= nrm;
-        // dist. refelction coef 1
+        // dist. refelction coef 2
         dists[1] = 0.0;
         nrm = 0.0;
         for (i=M; !(i>=2*M); i++) {
@@ -570,61 +661,6 @@ static INT manakov_compare_nfs(const UINT M, const UINT K1, const UINT K2,
         if (nrm > 0)
             dists[4] /= nrm;
     }
-    // TODO: remove this? It only relates to disc. spec.
-    /*
-    if (K1 == 0 && K2 == 0) {
-        dists[3] = 0.0;
-        dists[4] = 0.0;
-        dists[5] = 0.0;
-    } else if (bound_states_1 == NULL || bound_states_2 == NULL || K1 == 0
-    || K2 == 0) {
-        dists[3] = NAN;
-    } else {
-        dists[3] = misc_hausdorff_dist(K1, bound_states_1, K2, bound_states_2);
-
-        if (normconsts_1 == NULL || normconsts_2 == NULL)
-            dists[4] = NAN;
-        else {
-            dists[4] = 0.0;
-            nrm = 0.0;
-            for (i=0; !(i>=K1); i++) {
-                min_dist = INFINITY;
-                for (j=0; !(j>=K2); j++) {
-                    dist = CABS(bound_states_1[i] - bound_states_2[j]);
-                    if (dist < min_dist) {
-                        min_dist = dist;
-                        min_j = j;
-                    }
-                }
-
-                dists[4] += CABS(normconsts_1[i] - normconsts_2[min_j]);
-                nrm += CABS(normconsts_2[i]);
-           }
-            if (nrm > 0)
-                dists[4] /= nrm;
-        }
-
-        if (residues_1 == NULL || residues_2 == NULL)
-            dists[5] = NAN;
-        else {
-            dists[5] = 0.0;
-            nrm = 0.0;
-            for (i=0; !(i>=K1); i++) {
-                min_dist = INFINITY;
-                for (j=0; !(j>=K2); j++) {
-                    dist = CABS(bound_states_1[i] - bound_states_2[j]);
-                    if (dist < min_dist) {
-                        min_dist = dist;
-                        min_j = j;
-                    }
-                }
-                dists[5] += CABS(residues_1[i] - residues_2[min_j]);
-                nrm += CABS(residues_2[i]);
-            }
-            if (nrm > 0)
-                dists[5] /= nrm;
-        }
-    }*/
 
     return SUCCESS;
 }
@@ -708,26 +744,6 @@ const REAL error_bounds[5], fnft_manakov_opts_t * const opts) {
             (int)i, errs[i], error_bounds[i]);
     misc_print_buf(3*M, contspec+2*M, "ab_num");
     misc_print_buf(3*M, ab_exact, "ab_exact");
-//    misc_print_buf(2*M, contspec, "contspec_num");
-//    misc_print_buf(2*M, contspec_exact, "contspec_exact");
-
-// Printing for error checking      TODO: remove
-printf("contspec_num and contspec_exact\n");
-for (UINT i =0; i<32; i++){
-    printf("%f + i%f,     %f + i%f\n",creal(contspec[i]), cimag(contspec[i]), creal(contspec_exact[i]), cimag(contspec_exact[i]));
-}
-printf("a_num and a_exact\n");
-for (UINT i =0; i<16; i++){
-    printf("%f + i%f,     %f + i%f\n",creal(contspec[2*M+i]), cimag(contspec[2*M+i]), creal(ab_exact[i]), cimag(ab_exact[i]));
-}
-printf("b1_num and b1_exact\n");
-for (UINT i =0; i<16; i++){
-    printf("%f + i%f,     %f + i%f\n",creal(contspec[3*M+i]), cimag(contspec[3*M+i]), creal(ab_exact[M+i]), cimag(ab_exact[M+i]));
-}
-printf("b2_num and b2_exact\n");
-for (UINT i =0; i<16; i++){
-    printf("%f + i%f,     %f + i%f\n",creal(contspec[4*M+i]), cimag(contspec[4*M+i]), creal(ab_exact[2*M+i]), cimag(ab_exact[2*M+i]));
-}
 
 printf("errors\n");
 for (UINT i = 0; i<5; i++){
