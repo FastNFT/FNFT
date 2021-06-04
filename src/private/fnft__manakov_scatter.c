@@ -37,6 +37,17 @@ static inline void manakov_scatter_U_BO(COMPLEX const q1,       // calculates th
                                      INT const kappa,
                                      COMPLEX * const U)
 {
+    if(CABS(q1)<EPSILON && CABS(q2)<EPSILON){
+		U[0] = CEXP(-I*lam*eps_t);
+		U[1] = 0;
+		U[2] = 0;
+		U[3] = 0;
+		U[4] = CEXP(I*lam*eps_t);
+		U[5] = 0;
+		U[6] = 0;
+		U[7] = 0;
+		U[8] = CEXP(I*lam*eps_t);
+	}else{
     COMPLEX x1 = CSQRT(lam*lam + kappa*q1*CONJ(q1) + kappa*q2*CONJ(q2));
     COMPLEX x2  = eps_t*x1*I;
     COMPLEX x3 = q1*CONJ(q1)+q2*CONJ(q2);
@@ -52,6 +63,7 @@ static inline void manakov_scatter_U_BO(COMPLEX const q1,       // calculates th
         U[6] = (I*kappa*CONJ(q2)/x1)*CSINH(x2);
         U[7] = (q1*CONJ(q2)/x3)*(CCOSH(x2) - CEXP(eps_t*lam*I) + (lam/x1)*CSINH(x2));
         U[8] = (q2*CONJ(q2)/x3)*(CCOSH(x2) + (lam/x1)*CSINH(x2)) + q1*CONJ(q1)*CEXP(eps_t*lam*I)/x3;
+    }
 
 }
 

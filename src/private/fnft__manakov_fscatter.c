@@ -49,7 +49,7 @@ static inline void manakov_fscatter_zero_freq_scatter_matrix(COMPLEX* const M,
 	//   If r=-conj(q), we have M21 = -conj(M12), M31 = -conj(M13), M32 = conj(M23)
 	// When q1 and q2 are 0, the general epressions result in /0 so we need to treat this separately
 
-	if(CABS(q1)<1.0E-15 && CABS(q2)<1.0E-15){
+	if(CABS(q1)<EPSILON && CABS(q2)<EPSILON){
 		M[0] = 1;
 		M[1] = 0;
 		M[2] = 0;
@@ -82,7 +82,7 @@ static inline void manakov_fscatter_zero_freq_scatter_matrix(COMPLEX* const M,
 static inline void manakov_fscatter_get_E(COMPLEX* const M,
 	const COMPLEX s1, const COMPLEX s2, const COMPLEX t1, const COMPLEX t2)
 {
-	if(CABS(s1)<1.0E-15 && CABS(s2)<1.0E-15 && CABS(t1)<1.0E-15 && CABS(t2)<1.0E-15){
+	if(CABS(s1)<EPSILON && CABS(s2)<EPSILON && CABS(t1)<EPSILON && CABS(t2)<EPSILON){
 		M[0] = 1;
 		M[1] = 0;
 		M[2] = 0;

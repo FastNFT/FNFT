@@ -21,6 +21,7 @@
 !/test/fnft__manakov_fscatter/
 !/test/fnft_manakov/
 !/test/fnft__manakov_scatter/
+!/analysis/
 
 
 # Ignore MacOS hidden files in subdirectories
