@@ -149,18 +149,17 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
         ret_code =  E_INVALID_ARGUMENT(discretization);
         goto release_mem;
     }
-    D_effective = Dsub;
+    D_effective = Dsub*upsampling_factor;
     COMPLEX * const q1_preprocessed = malloc(D_effective * sizeof(COMPLEX));
     COMPLEX * const q2_preprocessed = malloc(D_effective * sizeof(COMPLEX));
-    COMPLEX * const r1_preprocessed = malloc(D_effective * sizeof(COMPLEX));
-    COMPLEX * const r2_preprocessed = malloc(D_effective * sizeof(COMPLEX));
-    COMPLEX *q1_c1, *q1_c2, *q2_c1, *q2_c2;
-            q1_c1 = malloc(D*sizeof(COMPLEX));
-            q2_c1 = malloc(D*sizeof(COMPLEX));
-            q1_c2 = malloc(D*sizeof(COMPLEX));
-            q2_c2 = malloc(D*sizeof(COMPLEX));
-    if (q1_preprocessed == NULL || q2_preprocessed == NULL || 
-            r1_preprocessed == NULL || r2_preprocessed == NULL ) {
+    COMPLEX *q1_c1, *q1_c2, *q2_c1, *q2_c2, *q1_sub, *q2_sub;
+            q1_c1 = malloc(Dsub*sizeof(COMPLEX));
+            q2_c1 = malloc(Dsub*sizeof(COMPLEX));
+            q1_c2 = malloc(Dsub*sizeof(COMPLEX));
+            q2_c2 = malloc(Dsub*sizeof(COMPLEX));
+            q1_sub = malloc(Dsub * sizeof(COMPLEX));
+	    	q2_sub = malloc(Dsub * sizeof(COMPLEX));
+    if (q1_preprocessed == NULL || q2_preprocessed == NULL) {
         ret_code = E_NOMEM;
         goto release_mem;
     }
@@ -175,11 +174,12 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
         case manakov_discretization_FTES4_4B:
         case manakov_discretization_2SPLIT6B:
 		case manakov_discretization_FTES4_suzuki:
+        case manakov_discretization_BO:
             for (isub=0, i=0; isub<D_effective; isub++, i += nskip_per_step) {  // downsampling
                 q1_preprocessed[isub] = q1[i];
                 q2_preprocessed[isub] = q2[i];
-                r1_preprocessed[isub] = conj(q1[i])*-1*kappa;
-                r2_preprocessed[isub] = conj(q2[i])*-1*kappa;
+//                r1_preprocessed[isub] = conj(q1[i])*-1*kappa;
+//                r2_preprocessed[isub] = conj(q2[i])*-1*kappa;
             }
             break;
         case manakov_discretization_4SPLIT4A:
@@ -187,12 +187,44 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
         case manakov_discretization_4SPLIT6B:
         case manakov_discretization_CF4_2:
     {
-        for (isub=0, i=0; isub<D_effective; isub++, i += nskip_per_step) {  // downsampling
-                q1_preprocessed[isub] = q1[i];
-                q2_preprocessed[isub] = q2[i];
-                r1_preprocessed[isub] = conj(q1[i])*-1*kappa;
-                r2_preprocessed[isub] = conj(q2[i])*-1*kappa;
+        for (isub=0, i=0; isub<Dsub; isub++, i += nskip_per_step) {  // downsampling
+                q1_sub[isub] = q1[i];
+                q2_sub[isub] = q2[i];
             }
+        misc_print_buf(50, q1_sub, "subsampled_q1_new");
+        
+        const REAL a1 = 0.25 + sqrt(3) / 6;
+	    const REAL a2 = 0.25 - sqrt(3) / 6;
+        // Getting non-equidistant samples. qci has sample points at T0+(n+ci)*eps_t,
+		// c1 = 0.5-sqrt(3)/6, c2 = 0.5+sqrt(3)/6
+		// Getting new samples:
+		misc_resample(Dsub, (eps_t/nskip_per_step), q1_sub, (0.5 - SQRT(3) / 6) * (eps_t/nskip_per_step), q1_c1);
+		misc_resample(Dsub, (eps_t/nskip_per_step), q1_sub, (0.5 + SQRT(3) / 6) * (eps_t/nskip_per_step), q1_c2);
+		misc_resample(Dsub, (eps_t/nskip_per_step), q2_sub, (0.5 - SQRT(3) / 6) * (eps_t/nskip_per_step), q2_c1);
+		misc_resample(Dsub, (eps_t/nskip_per_step), q2_sub, (0.5 + SQRT(3) / 6) * (eps_t/nskip_per_step), q2_c2);
+
+        /* old
+        misc_resample(Dsub, eps_t, q1_sub, (0.5 - SQRT(3) / 6) * (eps_t/nskip_per_step), q1_c1);
+		misc_resample(Dsub, eps_t, q1_sub, (0.5 + SQRT(3) / 6) * (eps_t/nskip_per_step), q1_c2);
+		misc_resample(Dsub, eps_t, q2_sub, (0.5 - SQRT(3) / 6) * (eps_t/nskip_per_step), q2_c1);
+		misc_resample(Dsub, eps_t, q2_sub, (0.5 + SQRT(3) / 6) * (eps_t/nskip_per_step), q2_c2);
+        
+        Other option:
+        misc_resample(Dsub, eps_t, q1_sub, (0.5 - SQRT(3) / 6) * eps_t, q1_c1);
+		misc_resample(Dsub, eps_t, q1_sub, (0.5 + SQRT(3) / 6) * eps_t, q1_c2);
+		misc_resample(Dsub, eps_t, q2_sub, (0.5 - SQRT(3) / 6) * eps_t, q2_c1);
+		misc_resample(Dsub, eps_t, q2_sub, (0.5 + SQRT(3) / 6) * eps_t, q2_c2);
+
+        But not this "mixed case" using eps_t AND eps_t/nskip_per_step!
+
+        */
+
+		for (i = 0; i < Dsub; i++) {
+			q1_preprocessed[2 * i] = a1 * q1_c1[i] + a2 * q1_c2[i];
+			q2_preprocessed[2 * i] = a1 * q2_c1[i] + a2 * q2_c2[i];
+			q1_preprocessed[2 * i + 1] = a2 * q1_c1[i] + a1 * q1_c2[i];
+			q2_preprocessed[2 * i + 1] = a2 * q2_c1[i] + a1 * q2_c2[i];
+		}
     }
             break;
 
@@ -212,6 +244,8 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
         free(q1_c2);
         free(q2_c1);
         free(q2_c2);
+        free(q1_sub);
+        free(q2_sub);
         return ret_code;
 }
 

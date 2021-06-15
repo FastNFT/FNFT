@@ -7,11 +7,11 @@ close all;
 
 signal = 'rect';    % potential function: sech or rect
 T = [-5, 5];      % location of the 1st and last sample in the time domain
-D_values = [128 300 512 1000 1500 2000 2500];        % number of samples
+D_values = [50 60 80 70 90 128 300 512 1000 1500 2000 2500];        % number of samples
 XI = [-7/4, 8/4];   % location of the 1st and last sample in the xi-domain
 kappa = +1;     % focusing nonlinear Schroedinger equation
-L = [-2,3];     % support of rectangle potential
-discretization = 'discr_BO';    % see help mex_fnft_manakov for list of supported discretizations
+L = [-2,2];     % support of rectangle potential
+discretization = 'discr_2split3A';    % see help mex_fnft_manakov for list of supported discretizations
 A1 = 0.8; A2 = 5.2;     % amplitudes of signal q1 and q2
 M=100;          % number of lambda for which we determine the spectrum
 XI_vector = linspace(XI(1),XI(2),M);

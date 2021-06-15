@@ -25,6 +25,7 @@
 
 #include "fnft__manakov_scatter.h"
 #include "fnft__misc.h"
+#include "fnft__manakov_discretization.h"
 
 
 /**
@@ -111,7 +112,7 @@ INT manakov_scatter_matrix(UINT const D,
     switch (discretization) {
         case manakov_discretization_CF4_2:;         // commutator-free fourth-order.
             // Allocation for resampling
-            COMPLEX *q1_c1, *q1_c2, *q2_c1, *q2_c2;
+/*            COMPLEX *q1_c1, *q1_c2, *q2_c1, *q2_c2;
             const REAL a1 = 0.25 + sqrt(3)/6;
             const REAL a2 = 0.25 - sqrt(3)/6;
             q1_c1 = malloc(D*sizeof(COMPLEX));
@@ -134,6 +135,12 @@ INT manakov_scatter_matrix(UINT const D,
                 q1_preprocessed[2*i+1] = a2*q1_c1[i]+a1*q1_c2[i];
                 q2_preprocessed[2*i+1] = a2*q2_c1[i]+a1*q2_c2[i];
             }
+*/
+            UINT Dsub = D;
+            UINT first_last_index[2] = { 0 };
+	        ret_code = manakov_discretization_preprocess_signal(D, q1, q2, eps_t, kappa, &Dsub, &q1_preprocessed, &q2_preprocessed,
+			first_last_index, manakov_discretization_CF4_2);
+	        CHECK_RETCODE(ret_code, leave_fun);
 
         break;
         case manakov_discretization_BO:            // bofetta-osborne scheme

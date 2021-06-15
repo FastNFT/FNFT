@@ -37,7 +37,7 @@ static fnft_manakov_opts_t default_opts = {
 };
 
 /**
- * Creates a new options variable for fnft_nsev with default settings.
+ * Creates a new options variable for fnft_manakov with default settings.
  * See the header file for a detailed description.
  */
 fnft_manakov_opts_t fnft_manakov_default_opts()
@@ -50,14 +50,14 @@ fnft_manakov_opts_t fnft_manakov_default_opts()
  * fnft_manakov. See header file for details.
  */
  // NOTE: this is degree * number of samples. Makes sense, this gives the degree of the resulting polynomial, so the max. amount of roots.
-UINT fnft_mankov_max_K(const UINT D, fnft_manakov_opts_t const* const opts)
+/*UINT fnft_mankov_max_K(const UINT D, fnft_manakov_opts_t const* const opts)
 {
 	if (opts != NULL)
 		return manakov_discretization_degree(opts->discretization) * D;
 	else
 		return manakov_discretization_degree(default_opts.discretization) * D;
 }
-
+*/
 /**
  * Declare auxiliary routines used by the main routine fnft_manakov.
  * Their bodies follow below.
@@ -127,7 +127,7 @@ static inline INT manakov_refine_bound_states_newton(const UINT D,
 		REAL const * const bounding_box);
 */
 /**
- * Fast nonlinear Fourier transform for the nonlinear Schroedinger
+ * Fast nonlinear Fourier transform for the Manakov
  * equation with vanishing boundary conditions.
  * This function takes care of the necessary preprocessing (for example
  * signal resampling or subsampling) based on the options before calling
@@ -135,7 +135,6 @@ static inline INT manakov_refine_bound_states_newton(const UINT D,
  * calls fnft_manakov_base with half of the samples and then performs
  * Richardson extrapolation on the spectrum.
  */
- // TODO: change description
 INT fnft_manakov(
 	const UINT D,
 	COMPLEX const* const q1,
@@ -243,8 +242,6 @@ INT fnft_manakov(
 		goto leave_fun;
 	}
 
-	D_effective = D * upsampling_factor;
-
 	// Determine step size
 	const REAL eps_t = (T[1] - T[0]) / (D - 1);
 
@@ -285,8 +282,14 @@ INT fnft_manakov(
 	ret_code = nse_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &q_preprocessed, &r_preprocessed,
 			first_last_index, opts->discretization);
 	CHECK_RETCODE(ret_code, leave_fun);
+
 	*/
 	// TODO: this is now done in manakov_fscatter. Maybe move it out of fscatter and put it here to prevent code duplicates.
+
+	Dsub = D;
+	ret_code = manakov_discretization_preprocess_signal(D, q1, q2, eps_t, kappa, &Dsub, &q1sub_preprocessed, &q2sub_preprocessed,
+			first_last_index, opts->discretization);
+	CHECK_RETCODE(ret_code, leave_fun);
 
 	if (kappa == +1 && bound_states != NULL && opts->bound_state_localization == manakov_bsloc_SUBSAMPLE_AND_REFINE) {
 		// the mixed method gets special treatment
@@ -318,7 +321,7 @@ INT fnft_manakov(
 		// Second step: Refine the found bound states using Newton's method
 		// on the full signal and compute continuous spectrum
 		opts->bound_state_localization = manakov_bsloc_NEWTON;
-		ret_code = fnft_manakov_base(D_effective, q1, q2, T, M, contspec, XI, K_ptr,
+		ret_code = fnft_manakov_base(D*upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, T, M, contspec, XI, K_ptr,
 			bound_states, normconsts_or_residues_reserve, kappa, opts);     // This line computes cont. spec.
 		CHECK_RETCODE(ret_code, leave_fun);
 
@@ -326,7 +329,7 @@ INT fnft_manakov(
 		opts->bound_state_localization = manakov_bsloc_SUBSAMPLE_AND_REFINE;
 	}
 	else {
-		ret_code = fnft_manakov_base(D_effective, q1, q2, T, M, contspec, XI, K_ptr,
+		ret_code = fnft_manakov_base(D*upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, T, M, contspec, XI, K_ptr,
 			bound_states, normconsts_or_residues, kappa, opts);
 		CHECK_RETCODE(ret_code, leave_fun);
 	}
@@ -408,8 +411,9 @@ INT fnft_manakov(
 		// Calling fnft_manakov_base with subsampled signal
 		bs_loc_opt = opts->bound_state_localization;
 		opts->bound_state_localization = manakov_bsloc_NEWTON;
-		ret_code = fnft_manakov_base(Dsub * upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, Tsub, M, contspec_sub, XI, &K_sub,
+		ret_code = fnft_manakov_base(Dsub*upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, Tsub, M, contspec_sub, XI, &K_sub,
 			bound_states_sub, normconsts_or_residues_sub, kappa, opts);
+		misc_print_buf(100, contspec_sub, "contspec_sub");
 		CHECK_RETCODE(ret_code, leave_fun);
 		opts->bound_state_localization = bs_loc_opt;
 		opts->discspec_type = ds_type_opt;
@@ -559,7 +563,8 @@ static inline INT fnft_manakov_base(
 					printf("eps_t = %f\n", eps_t);
 					misc_print_buf(16,transfer_matrix,"first_16_entries_transfer_matrix");
 					*/
-		ret_code = manakov_fscatter(D_given, q1, q2, kappa, eps_t, transfer_matrix, &deg, W_ptr,
+		misc_print_buf(100,q1,"q1_new");
+		ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, W_ptr,
 			opts->discretization);  // NOTE: changed D to D_given
 		CHECK_RETCODE(ret_code, leave_fun);
 	}

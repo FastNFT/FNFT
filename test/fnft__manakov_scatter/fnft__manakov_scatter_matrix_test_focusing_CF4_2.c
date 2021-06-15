@@ -156,5 +156,6 @@ INT main()
     if (manakov_scatter_matrix_test_focusing_CF4_2() != SUCCESS)
         return EXIT_FAILURE;
 
+    printf("succes");
     return EXIT_SUCCESS;
 }

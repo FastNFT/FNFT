@@ -211,14 +211,14 @@ INT manakov_fscatter(const UINT D, COMPLEX const* const q1, COMPLEX const* const
 	}
 	const UINT deg = *deg_ptr;
 	p11 = p;
-	p12 = p11 + D_eff * (deg + 1);
-	p13 = p12 + D_eff * (deg + 1);
-	p21 = p13 + D_eff * (deg + 1);
-	p22 = p21 + D_eff * (deg + 1);
-	p23 = p22 + D_eff * (deg + 1);
-	p31 = p23 + D_eff * (deg + 1);
-	p32 = p31 + D_eff * (deg + 1);
-	p33 = p32 + D_eff * (deg + 1);
+	p12 = p11 + D * (deg + 1);
+	p13 = p12 + D * (deg + 1);
+	p21 = p13 + D * (deg + 1);
+	p22 = p21 + D * (deg + 1);
+	p23 = p22 + D * (deg + 1);
+	p31 = p23 + D * (deg + 1);
+	p32 = p31 + D * (deg + 1);
+	p33 = p32 + D * (deg + 1);
 
 	switch (discretization) {
 
@@ -409,12 +409,12 @@ INT manakov_fscatter(const UINT D, COMPLEX const* const q1, COMPLEX const* const
 			p33 += 7;
 		}
 		break;
-
+	case manakov_discretization_4SPLIT4A:		// intentional fall through
 	case manakov_discretization_2SPLIT4A:
 		e_1_2B = &e_Bstorage[0];    // exp(Bh/2)
 		e_B = &e_Bstorage[9];    // exp(Bh)
 
-		for (i = D_eff; i-- > 0;) {
+		for (i = D; i-- > 0;) {
 
 			manakov_fscatter_zero_freq_scatter_matrix(e_1_2B, eps_t / 2, q1[i], q2[i], kappa);
 			manakov_fscatter_zero_freq_scatter_matrix(e_B, eps_t, q1[i], q2[i], kappa);
@@ -521,11 +521,12 @@ INT manakov_fscatter(const UINT D, COMPLEX const* const q1, COMPLEX const* const
 		}
 		break;
 
+	case manakov_discretization_4SPLIT4B:
 	case manakov_discretization_2SPLIT4B:
 		e_1_2B = &e_Bstorage[0];    // exp(Bh/2)
 		e_1_4B = &e_Bstorage[9];    // exp(Bh/4)
 
-		for (i = D_eff; i-- > 0;) {
+		for (i = D; i-- > 0;) {
 
 			manakov_fscatter_zero_freq_scatter_matrix(e_1_2B, eps_t / 2, q1[i], q2[i], kappa);
 			manakov_fscatter_zero_freq_scatter_matrix(e_1_4B, eps_t / 4, q1[i], q2[i], kappa);
@@ -596,13 +597,14 @@ INT manakov_fscatter(const UINT D, COMPLEX const* const q1, COMPLEX const* const
 		}
 		break;
 
+	case manakov_discretization_4SPLIT6B:
 	case manakov_discretization_2SPLIT6B:
 		e_1_2B = &e_Bstorage[0];    // exp(Bh/2)
 		e_1_3B = &e_Bstorage[9];    // exp(Bh/2)
 		e_1_4B = &e_Bstorage[18];    // exp(Bh/2)
 		e_1_6B = &e_Bstorage[27];    // exp(Bh/2)
 
-		for (i = D_eff; i-- > 0;) {
+		for (i = D; i-- > 0;) {
 			manakov_fscatter_zero_freq_scatter_matrix(e_1_2B, eps_t / 2, q1[i], q2[i], kappa);
 			manakov_fscatter_zero_freq_scatter_matrix(e_1_3B, eps_t / 3, q1[i], q2[i], kappa);
 			manakov_fscatter_zero_freq_scatter_matrix(e_1_4B, eps_t / 4, q1[i], q2[i], kappa);
@@ -746,7 +748,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const* const q1, COMPLEX const* const
 
 		}
 		break;
-
+/*
 	case manakov_discretization_4SPLIT4A:
 		e_1_2B = &e_Bstorage[0];    // exp(Bh/2)
 		e_B = &e_Bstorage[9];    // exp(Bh)
@@ -1151,7 +1153,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const* const q1, COMPLEX const* const
 			p33 += 13;
 		}
 		break;
-
+*/
 
 
 
@@ -1659,7 +1661,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const* const q1, COMPLEX const* const
 	}
 
 	// Multiply the individual scattering matrices
-	ret_code = poly_fmult3x3(deg_ptr, D_eff, p, result, W_ptr); // using D_eff instead of D because some methods are better 
+	ret_code = poly_fmult3x3(deg_ptr, D, p, result, W_ptr); // using D_eff instead of D because some methods are better 
 																// implemented "as if" there are 2*D samples
 
 	CHECK_RETCODE(ret_code, release_mem);
