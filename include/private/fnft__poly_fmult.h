@@ -78,7 +78,10 @@ FNFT_UINT fnft__poly_fmult_two_polys_len(const FNFT_UINT deg);
  *   FFT is applied to these values, and the outcome is finally stored in
  *   result. If mode ==4, the FFT of the two (zero-padded)
  *   polynomials is added to the values currently stored in result, but the inverse FFT 
- *   is not applied to those values yet. IMPORTANT: The modes 3 and 4 require that the array result is large
+ *   is not applied to those values yet. 
+ *   mode==5 is the same as mode==3, with the difference that the inverse fft is stored in buf0 such that
+ *   buf1 can be re-used. This adds one extra step of copying the values from buf0 to result.
+ *   IMPORTANT: The modes 3, 4 and 5 require that the array result is large
  *   enough to store an FFT of the size given above.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
@@ -93,7 +96,8 @@ FNFT_INT fnft__poly_fmult_two_polys(
     FNFT_COMPLEX * const buf0,
     FNFT_COMPLEX * const buf1,
     FNFT_COMPLEX * const buf2,
-    const FNFT_UINT mode);
+    const FNFT_UINT mode,
+	const FNFT_UINT dim);
 
 /**
  * @brief Multiplies two 2x2 matrices of polynomials.
@@ -135,6 +139,8 @@ FNFT_INT fnft__poly_fmult_two_polys(
  *   where n=0,1,2,3, are long enough to store the FFT's. This allows improve
  *   performance by storing some intermediate values there. Otherwise, set to 0.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
+ * @param [in] dim indicates if the function is being called from fnft__poly_fmult2x2
+ *  or fnft__poly_fmult3x3. This determines how we set len.
  *   defined in \link fnft_errwarn.h \endlink.
  */
 FNFT_INT fnft__poly_fmult_two_polys2x2(const FNFT_UINT deg,

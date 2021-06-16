@@ -302,7 +302,17 @@ INT manakov_fscatter(const UINT D, COMPLEX const* const q1, COMPLEX const* const
 			p33[4] = (9 * e_1_3B[0] * e_1_3B[2] * e_1_3B[6]) / 8 + (9 * e_1_3B[2] * e_1_3B[3] * e_1_3B[7]) / 8 + (9 * e_1_3B[2] * e_1_3B[6] * e_1_3B[8]) / 8;
 			p33[5] = 0.0;
 			p33[6] = 0.0;
-
+/*
+				misc_print_buf(7,p11,"p11");
+				misc_print_buf(7,p12,"p12");
+				misc_print_buf(7,p13,"p13");
+				misc_print_buf(7,p21,"p21");
+				misc_print_buf(7,p22,"p22");
+				misc_print_buf(7,p23,"p23");
+				misc_print_buf(7,p31,"p31");
+				misc_print_buf(7,p32,"p32");
+				misc_print_buf(7,p33,"p33");
+*/
 			p11 += 7;
 			p12 += 7;
 			p13 += 7;
@@ -1659,7 +1669,11 @@ INT manakov_fscatter(const UINT D, COMPLEX const* const q1, COMPLEX const* const
 		ret_code = E_INVALID_ARGUMENT(discretization);
 		goto release_mem;
 	}
-
+/*	printf("inputs to fmult3x3\n");
+	//printf("deg = %d\n",*deg_ptr);
+	printf("D = %d\n",D);
+	misc_print_buf(5,p,"p");
+	//printf("W_ptr = %d\n",*W_ptr);*/
 	// Multiply the individual scattering matrices
 	ret_code = poly_fmult3x3(deg_ptr, D, p, result, W_ptr); // using D_eff instead of D because some methods are better 
 																// implemented "as if" there are 2*D samples

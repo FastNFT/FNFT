@@ -186,7 +186,7 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
         case manakov_discretization_4SPLIT4B:
         case manakov_discretization_4SPLIT6B:
         case manakov_discretization_CF4_2:
-    {
+    
         for (isub=0, i=0; isub<Dsub; isub++, i += nskip_per_step) {  // downsampling
                 q1_sub[isub] = q1[i];
                 q2_sub[isub] = q2[i];
@@ -225,7 +225,7 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
 			q1_preprocessed[2 * i + 1] = a2 * q1_c1[i] + a1 * q1_c2[i];
 			q2_preprocessed[2 * i + 1] = a2 * q2_c1[i] + a1 * q2_c2[i];
 		}
-    }
+    
             break;
 
             default: // Unknown discretization for manakov

@@ -71,14 +71,21 @@ inline INT poly_fmult_two_polys(
     COMPLEX * const buf0,
     COMPLEX * const buf1,
     COMPLEX * const buf2,
-    const UINT mode)
+    const UINT mode,
+    const UINT dim)
 {
     UINT i;
     INT ret_code = SUCCESS;
-    printf("mode = %d\n",mode);
+    UINT len;
 
     // Zero-pad polynomials
-    const UINT len = poly_fmult_two_polys_len(deg);
+    if (dim==2){
+        len = poly_fmult_two_polys_len(deg);     // This line works for the 2x2 case
+    }
+    else if (dim==3){
+        len = 2*(deg + 1) - 1;                   // This line works for the 3x3 case
+    }
+
     memset(&buf0[deg+1], 0, (len - (deg+1))*sizeof(COMPLEX));
 
     // FFT of first polynomial
@@ -98,7 +105,6 @@ inline INT poly_fmult_two_polys(
     // Multiply FFT's
     for (i = 0; i < len; i++)
         buf0[i] = buf1[i] * buf2[i];
-misc_print_buf(4,buf0,"buf0 start two polys");
     if (mode == 2) {
 
         // Temporarily store product of FFT's in result
@@ -148,9 +154,6 @@ misc_print_buf(4,buf0,"buf0 start two polys");
             result[i] = buf0[i]/len;
     }
 
-    misc_print_buf(4,buf0,"buf0 end two polys");
-    misc_print_buf(4,buf1,"buf1 end two polys");
-    misc_print_buf(4,buf2,"buf2 end two polys");
 leave_fun:
     return ret_code;
 }
@@ -479,7 +482,7 @@ INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
         // Multiply all pairs of polynomials, normalize if desired
         for (i=0; i<n; i+=2) {
             ret_code = poly_fmult_two_polys(deg, p1, p2, result, plan_fwd,
-                plan_inv, buf0, buf1, buf2, 0);
+                plan_inv, buf0, buf1, buf2, 0, 2);      // TODO: check if the last entry (dim) should be 2 or 3
             CHECK_RETCODE(ret_code, release_mem);
 
             if (W_ptr != NULL)
@@ -565,16 +568,16 @@ inline INT poly_fmult_two_polys2x2(const UINT deg,
     //   necessary. See the doc of this fun.
 
     ret_code = poly_fmult_two_polys(deg, p1_11, p2_11, result_11,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 2);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p2_11*/, p1_21, result_21,
-                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode, 2);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p1_21*/, p2_12, result_22,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 2);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p2_12*/, p1_11, result_12,
-                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode, 2);
     CHECK_RETCODE(ret_code, leave_fun);
 
     mode = mode_offset + 1;
@@ -590,16 +593,16 @@ inline INT poly_fmult_two_polys2x2(const UINT deg,
     //   af, ce and cf, respectively, and perform inverse FFT's.
 
     ret_code = poly_fmult_two_polys(deg, p1_12, p2_21, result_11,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 2);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p2_21*/, p1_22, result_21,
-                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode, 2);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p1_22*/, p2_22, result_22,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 2);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p2_22*/, p1_12, result_12,
-                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode, 2);
     CHECK_RETCODE(ret_code, leave_fun);
 
 leave_fun:
@@ -668,39 +671,36 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
     //
     //   Store FFT's of [aj ak al; dj dk dl; gj gk gl] in result_11, result_12, result_13... result_33
 
+    misc_print_buf(4,p1_11,"p11 in");
+    misc_print_buf(4,p1_12,"p12 in");
+    misc_print_buf(4,p1_13,"p13 in");
     ret_code = poly_fmult_two_polys(deg, p1_11, p2_11, result_11,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
-    misc_print_buf(4,p1_11,"p1_11");
-    misc_print_buf(4,p2_12,"p2_12");
-    misc_print_buf(4,buf0,"buf0");
-    misc_print_buf(4,buf1,"buf1");
-    misc_print_buf(4,buf2,"buf2");
     ret_code = poly_fmult_two_polys(deg, NULL /*p1_11*/, p2_12, result_12,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p1_11*/, p2_13, result_13,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p2_13*/, p1_21, result_23,
-                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p1_21*/, p2_12, result_22,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p1_21*/, p2_11, result_21,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p2_11*/, p1_31, result_31,
-                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p1_31*/, p2_12, result_32,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p1_31*/, p2_13, result_33,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
-
     misc_print_buf(4,result_11,"result11 after 1st term calc");
     misc_print_buf(4,result_12,"result12 after 1st term calc");
     misc_print_buf(4,result_13,"result13 after 1st term calc");
@@ -711,33 +711,32 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
 
     // add 2nd term
     ret_code = poly_fmult_two_polys(deg, p1_12, p2_21, result_11,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p1_12*/, p2_22, result_12,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p1_12*/, p2_23, result_13,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p2_23*/, p1_22, result_23,
-                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p1_22*/, p2_22, result_22,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p1_22*/, p2_21, result_21,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p2_21*/, p1_32, result_31,
-                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p1_32*/, p2_22, result_32,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
     ret_code = poly_fmult_two_polys(deg, NULL /*p1_32*/, p2_23, result_33,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
-
     misc_print_buf(4,result_11,"result11 after 2nd term calc");
     misc_print_buf(4,result_12,"result12 after 2nd term calc");
     misc_print_buf(4,result_13,"result13 after 2nd term calc");
@@ -748,42 +747,39 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
                             // (mode 1 or 3)
 
         ret_code = poly_fmult_two_polys(deg, p1_13, p2_31, result_11,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
-    misc_print_buf(4,buf1,"buf1 before 3rd term calc");
-    misc_print_buf(4,result_12,"result_12 before 3rd term calc");
         ret_code = poly_fmult_two_polys(deg, NULL /*p1_13*/, p2_32, result_12,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
 
         ret_code = poly_fmult_two_polys(deg, NULL /*p1_13*/, p2_33, result_13,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
 
         ret_code = poly_fmult_two_polys(deg, NULL /*p2_33*/, p1_23, result_23,
-                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
 
         ret_code = poly_fmult_two_polys(deg, NULL /*p1_23*/, p2_32, result_22,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
 
         ret_code = poly_fmult_two_polys(deg, NULL /*p1_23*/, p2_31, result_21,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
 
         ret_code = poly_fmult_two_polys(deg, NULL /*p2_31*/, p1_33, result_31,
-                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode);
+                                    plan_fwd, plan_inv, buf0, buf2, buf1, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
 
         ret_code = poly_fmult_two_polys(deg, NULL /*p1_33*/, p2_32, result_32,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
 
         ret_code = poly_fmult_two_polys(deg, NULL /*p1_33*/, p2_33, result_33,
-                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode);
+                                    plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
-
     misc_print_buf(4,result_11,"result11 after 3rd term calc");
     misc_print_buf(4,result_12,"result12 after 3rd term calc");
     misc_print_buf(4,result_13,"result13 after 3rd term calc");
@@ -1103,7 +1099,7 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
     COMPLEX *buf0 = NULL, *buf1 = NULL, *buf2 = NULL;
     INT W = 0;
     INT ret_code;
-
+printf("n = %d\n",n);
     // Setup pointers to the individual polynomials in p
     deg = *d;
     p11 = p;
@@ -1238,6 +1234,8 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
         r31 = r23 + r_stride;
         r32 = r31 + r_stride;
         r33 = r32 + r_stride;
+        printf("p_stride = %d\n",p_stride);
+printf("r_stride = %d\n",r_stride);
 
         // Multiply all pairs of polynomials, normalize if desired
         for (i=0; i<n; i+=2) {
@@ -1248,6 +1246,14 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
                                                plan_fwd, plan_inv, buf0, buf1,
                                                buf2, mode_offset);
             CHECK_RETCODE(ret_code, release_mem);
+            if (i == 2){
+/*                misc_print_buf(4,(p+o1),"p+o1");
+                misc_print_buf(4,(p+o2),"p+o2");
+                misc_print_buf(4,(result+or),"result+or");
+                misc_print_buf(4,buf0,"buf0");
+                misc_print_buf(4,buf1,"buf1");
+                misc_print_buf(4,buf2,"buf2");*/
+            }
 
             // Normalize if desired
             if (W_ptr != NULL){
