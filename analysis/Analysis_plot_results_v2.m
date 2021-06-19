@@ -12,17 +12,21 @@ clear Test_results
 
 load('discr_BO_sech')     % discr_<method>_<signal>
 D_BO_sech = Test_results.params.D_values;
+exec_time_BO_sech = zeros(1,length(D_BO_sech));
 RMSE_a_BO_sech = zeros(1,length(Test_results.params.D_values));
 for i=1:length(Test_results.params.D_values)
     RMSE_a_BO_sech(i) = norm(Test_results.exact_sol.a-Test_results.(strcat('D_',num2str(Test_results.params.D_values(i)))).a)/norm(Test_results.exact_sol.a);
+    exec_time_BO_sech(i) = Test_results.(strcat('D_',num2str(Test_results.params.D_values(i)))).runtime;
 end
 clear Test_results
 
 load('discr_2split3A_sech')     % discr_<method>_<signal>
 D_2split3A_sech = Test_results.params.D_values;
 RMSE_a_2split3A_sech = zeros(1,length(Test_results.params.D_values));
+exec_time_2split3A_sech = zeros(1,length(D_2split3A_sech));
 for i=1:length(Test_results.params.D_values)
     RMSE_a_2split3A_sech(i) = norm(Test_results.exact_sol.a-Test_results.(strcat('D_',num2str(Test_results.params.D_values(i)))).a)/norm(Test_results.exact_sol.a);
+    exec_time_2split3A_sech(i) = Test_results.(strcat('D_',num2str(Test_results.params.D_values(i)))).runtime;
 end
 clear Test_results
 
@@ -90,11 +94,27 @@ title('RMSE a coefficient sech potential');
 xlabel('number of samples');
 ylabel('RMSE');
 
+figure;
+loglog(D_2split3A_sech, RMSE_a_2split3A_sech,'*-')
+hold on
+loglog(D_BO_sech, RMSE_a_BO_sech,'*-')
+grid on
+title('RMSE a coefficient sech potential');
+xlabel('number of samples');
+ylabel('RMSE');
+legend('2split3A','BO')
+
+figure;
+loglog(D_2split3A_sech, exec_time_2split3A_sech,'*-')
+hold on
+loglog(D_BO_sech, exec_time_BO_sech,'*-')
+grid on
+title('execution time');
+xlabel('number of samples');
+ylabel('time [s]');
+legend('2split3A','BO','Location','northwest')
 
 %% determining the order of a method
-RMSE = RMSE_a_BO_rect; % Change to determine order of a different coefficient
-D_sizes = D_BO_rect;
-
 % RMSE = RMSE_a_2split3A_rect; % Change to determine order of a different coefficient
 % D_sizes = D_2split3A_rect;
 % 
@@ -106,6 +126,9 @@ D_sizes = D_2split6B_sech;
 
 RMSE = RMSE_a_BO_sech; % Change to determine order of a different coefficient
 D_sizes = D_BO_sech;
+
+RMSE = RMSE_a_2split3A_sech; % Change to determine order of a different coefficient
+D_sizes = D_2split3A_sech;
 
 errors_divided = zeros(length(D_sizes)-1,1);
 D_divided = zeros(length(D_sizes)-1,1);

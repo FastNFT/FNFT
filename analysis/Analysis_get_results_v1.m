@@ -5,9 +5,9 @@ close all;
 
 %%% Setup parameters %%%
 
-signal = 'rect';    % potential function: sech or rect
-T = [-5, 5];      % location of the 1st and last sample in the time domain
-D_values = [50 60 80 70 90 128 300 512 1000 1500 2000 2500];        % number of samples
+signal = 'sech';    % potential function: sech or rect
+T = [-15, 15];      % location of the 1st and last sample in the time domain
+D_values = [50 60 70 80 90 128 300 512 1000 1500 2000 2500];        % number of samples
 XI = [-7/4, 8/4];   % location of the 1st and last sample in the xi-domain
 kappa = +1;     % focusing nonlinear Schroedinger equation
 L = [-2,2];     % support of rectangle potential
@@ -27,7 +27,7 @@ Test_results.params.D_values = D_values;
 
 %%% Setup the signal %%%
 for i =1:length(D_values)
-    D=D_values(i);
+    D=D_values(i)
 eps_t = (T(2) - T(1)) / (D - 1); % time domain step size
 t = T(1):eps_t:T(2);
 if strcmp(signal,'sech')

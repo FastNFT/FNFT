@@ -108,7 +108,8 @@ INT manakov_scatter_matrix(UINT const D,
 
         COMPLEX *q1_preprocessed = NULL;
         COMPLEX *q2_preprocessed = NULL;
-            UINT D_eff = upsampling_factor*D;
+//            UINT D_eff = upsampling_factor*D;
+UINT D_eff = D;
     switch (discretization) {
         case manakov_discretization_CF4_2:;         // commutator-free fourth-order.
             // Allocation for resampling
@@ -136,13 +137,13 @@ INT manakov_scatter_matrix(UINT const D,
                 q2_preprocessed[2*i+1] = a2*q2_c1[i]+a1*q2_c2[i];
             }
 */
-            UINT Dsub = D;
+/*            UINT Dsub = D;
             UINT first_last_index[2] = { 0 };
 	        ret_code = manakov_discretization_preprocess_signal(D, q1, q2, eps_t, kappa, &Dsub, &q1_preprocessed, &q2_preprocessed,
 			first_last_index, manakov_discretization_CF4_2);
-	        CHECK_RETCODE(ret_code, leave_fun);
+	        CHECK_RETCODE(ret_code, leave_fun);*/
 
-        break;
+//        break;
         case manakov_discretization_BO:            // bofetta-osborne scheme
             q1_preprocessed = q1;
             q2_preprocessed = q2;
