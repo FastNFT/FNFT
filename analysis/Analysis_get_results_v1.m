@@ -7,7 +7,13 @@ close all;
 
 signal = 'sech';    % potential function: sech or rect
 T = [-15, 15];      % location of the 1st and last sample in the time domain
-D_values = [50 60 70 80 90 128 300 512 1000 1500 2000 2500];        % number of samples
+D_values = [50 60 70 80 90 128 300 512 1000 1500 2000 2500 4000 6500 8200];        % number of samples
+
+D_values = zeros(1,12);
+for k=1:12
+    D_values(k) = 2^k;
+end
+
 XI = [-7/4, 8/4];   % location of the 1st and last sample in the xi-domain
 kappa = +1;     % focusing nonlinear Schroedinger equation
 L = [-2,2];     % support of rectangle potential
@@ -28,7 +34,11 @@ Test_results.params.D_values = D_values;
 %%% Setup the signal %%%
 for i =1:length(D_values)
     D=D_values(i)
-eps_t = (T(2) - T(1)) / (D - 1); % time domain step size
+    
+%    M = D;      % For checking if fast methods are asymptotically faster
+%    XI_vector = linspace(XI(1),XI(2),M);
+
+    eps_t = (T(2) - T(1)) / (D - 1); % time domain step size
 t = T(1):eps_t:T(2);
 if strcmp(signal,'sech')
     q1 = A1*sech(t);               % signal samples
@@ -74,7 +84,8 @@ Test_results.params.t = t;
 Test_results.params.q1 = q1;
 Test_results.params.q2 = q2;
 
-save(strcat(discretization,'_',signal),'Test_results')
+% save(strcat(discretization,'_',signal),'Test_results')
+save(strcat(discretization,'_',signal,'_D_powers_of_2'),'Test_results')
 
 
 

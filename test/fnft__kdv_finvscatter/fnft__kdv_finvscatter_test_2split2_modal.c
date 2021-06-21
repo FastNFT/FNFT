@@ -24,6 +24,7 @@ int main(void) {
 
     UINT D = 8;
     REAL error_bound = 5.0*FNFT_EPSILON;
+    printf("error bound = %e\n",error_bound);
     if (kdv_finvscatter_test(D, error_bound, discretization) != SUCCESS)
         return EXIT_FAILURE;
 
@@ -34,6 +35,7 @@ int main(void) {
 #else
         9.1e6*FNFT_EPSILON;
 #endif
+printf("error bound = %e\n",error_bound);
     if (kdv_finvscatter_test(D, error_bound, discretization) != SUCCESS)
         return EXIT_FAILURE;
 

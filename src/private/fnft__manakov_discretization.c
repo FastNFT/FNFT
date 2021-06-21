@@ -411,8 +411,12 @@ INT fnft__manakov_discretization_phase_factor_b(const REAL eps_t, const UINT D, 
             break;
 
 		case manakov_discretization_BO:
-		case manakov_discretization_CF4_2:
 			*phase_factor_b = -(T[1] + eps_t * boundary_coeff) - (T[0] - eps_t * boundary_coeff);
+			return SUCCESS;
+			break;
+        
+        case manakov_discretization_CF4_2:
+            *phase_factor_b = -(T[1] + eps_t * boundary_coeff) - (T[0] - eps_t * boundary_coeff) - eps_t;
 			return SUCCESS;
 			break;
 

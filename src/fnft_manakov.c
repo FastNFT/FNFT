@@ -886,6 +886,10 @@ static inline INT manakov_compute_contspec(
 		misc_print_buf(M, H21_vals, "H21");
 		misc_print_buf(M, H31_vals, "H31");
 
+/*		if (opts->discretization == manakov_discretization_CF4_2){
+		for (i = 0; i < M; i++)
+		xi[i] = (XI[0] + eps_xi * i)/2;
+		}*/
 
 	}
 	else {
