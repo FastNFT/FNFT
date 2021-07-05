@@ -1675,7 +1675,11 @@ INT manakov_fscatter(const UINT D, COMPLEX const* const q1, COMPLEX const* const
 	misc_print_buf(5,p,"p");
 	//printf("W_ptr = %d\n",*W_ptr);*/
 	// Multiply the individual scattering matrices
+//	return ret_code;		// To check the time it takes for building the polynomials
+//	printf("executes multiplication code");
 	ret_code = poly_fmult3x3(deg_ptr, D, p, result, W_ptr); // using D_eff instead of D because some methods are better 
+																// implemented "as if" there are 2*D samples
+//	ret_code = poly_fmult3x3(deg_ptr, 2, p, result, W_ptr); // using D_eff instead of D because some methods are better 
 																// implemented "as if" there are 2*D samples
 
 	CHECK_RETCODE(ret_code, release_mem);

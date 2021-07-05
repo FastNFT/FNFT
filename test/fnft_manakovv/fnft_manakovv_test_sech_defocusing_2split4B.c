@@ -18,49 +18,45 @@
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
-#include "fnft__manakov_testcases.h"
+#include "fnft__manakovv_testcases.h"
 #include "fnft__errwarn.h"
 
 INT main()
 {
     INT ret_code, i;
-    fnft_manakov_opts_t opts;
-//    UINT D = 128;       // for testing
-    UINT D = 512;     //original
-    const manakov_testcases_t tc = manakov_testcases_SECH_FOCUSING;
-// const manakov_testcases_t tc = manakov_testcases_SECH_DEFOCUSING;
-    REAL error_bounds[5] = { 
-        6.2e-6,     // reflection coefficient 1
-        6.2e-6,     // reflection coefficient 2
-        3.2e-5,     // a
-        5.7e-6,     // b1
-        5.7e-6     // b2
+    fnft_manakovv_opts_t opts;
+    UINT D = 512;
+    const manakovv_testcases_t tc = manakovv_testcases_SECH_DEFOCUSING;
+    REAL error_bounds[5] = {
+        7.6e-4,     // reflection coefficient 1
+        7.6e-4,     // reflection coefficient 2
+        3.0e-4,     // a
+        7.9e-5,     // b1
+        7.9e-5     // b2
     };
 
-    opts = fnft_manakov_default_opts();
-    opts.discretization = manakov_discretization_4SPLIT4A;
+    opts = fnft_manakovv_default_opts();
+    opts.discretization = manakov_discretization_2SPLIT4B;
 
 
-    ret_code = manakov_testcases_test_fnft(tc, D, error_bounds, &opts);
+    ret_code = manakovv_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    printf("test 1 ok\n");
 
     // Check the case where D is not a power of two. The error bounds have to
     // be tight but not too tight for this to make sense!
-    ret_code = manakov_testcases_test_fnft(tc, D+1, error_bounds, &opts);
+    ret_code = manakovv_testcases_test_fnft(tc, D+1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    printf("test 2 ok\n");
-    ret_code = manakov_testcases_test_fnft(tc, D-1, error_bounds, &opts);
+    ret_code = manakovv_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    printf("test 3 ok\n");
-    
 
     // with Richardson extrapolation
+    // The 2split methods start displaying 2nd order error decay only for small values of eps_t,
+    // so we choose a bigger D here
+    D = 4*512;
     opts.richardson_extrapolation_flag = 1;
-    ret_code = manakov_testcases_test_fnft(tc, D, error_bounds, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);
-    printf("test 4 ok\n");
 
+    ret_code = manakovv_testcases_test_fnft(tc, D, error_bounds, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
 
 leave_fun:
     if (ret_code != SUCCESS)

@@ -22,35 +22,35 @@
 
 #define FNFT_ENABLE_SHORT_NAMES
 
-#include "fnft_manakov.h"
+#include "fnft_manakovv.h"
 
-static fnft_manakov_opts_t default_opts = {
-	.bound_state_filtering = manakov_bsfilt_FULL,
-	.bound_state_localization = manakov_bsloc_SUBSAMPLE_AND_REFINE,
+static fnft_manakovv_opts_t default_opts = {
+	.bound_state_filtering = manakovv_bsfilt_FULL,
+	.bound_state_localization = manakovv_bsloc_SUBSAMPLE_AND_REFINE,
 	.niter = 10,
 	.Dsub = 0, // auto
-	.discspec_type = manakov_dstype_NORMING_CONSTANTS,
-	.contspec_type = manakov_cstype_REFLECTION_COEFFICIENT,
+	.discspec_type = manakovv_dstype_NORMING_CONSTANTS,
+	.contspec_type = manakovv_cstype_REFLECTION_COEFFICIENT,
 	.normalization_flag = 1,
 	.discretization = manakov_discretization_2SPLIT4B,
 	.richardson_extrapolation_flag = 0
 };
 
 /**
- * Creates a new options variable for fnft_manakov with default settings.
+ * Creates a new options variable for fnft_manakovv with default settings.
  * See the header file for a detailed description.
  */
-fnft_manakov_opts_t fnft_manakov_default_opts()
+fnft_manakovv_opts_t fnft_manakovv_default_opts()
 {
 	return default_opts;
 }
 
 /**
  * Returns the maximum number of bound states that can be detected by
- * fnft_manakov. See header file for details.
+ * fnft_manakovv. See header file for details.
  */
  // NOTE: this is degree * number of samples. Makes sense, this gives the degree of the resulting polynomial, so the max. amount of roots.
-/*UINT fnft_mankov_max_K(const UINT D, fnft_manakov_opts_t const* const opts)
+/*UINT fnft_mankov_max_K(const UINT D, fnft_manakovv_opts_t const* const opts)
 {
 	if (opts != NULL)
 		return manakov_discretization_degree(opts->discretization) * D;
@@ -59,12 +59,12 @@ fnft_manakov_opts_t fnft_manakov_default_opts()
 }
 */
 /**
- * Declare auxiliary routines used by the main routine fnft_manakov.
+ * Declare auxiliary routines used by the main routine fnft_manakovv.
  * Their bodies follow below.
  */
 
  /*
- static inline INT manakov_compute_boundstates(
+ static inline INT manakovv_compute_boundstates(
 		 UINT const D,
 		 COMPLEX const * const q,
 		 COMPLEX const * const r,
@@ -74,10 +74,10 @@ fnft_manakov_opts_t fnft_manakov_default_opts()
 		 const REAL eps_t,
 		 UINT * const K_ptr,
 		 COMPLEX * const bound_states,
-		 fnft_manakov_opts_t * const opts);
+		 fnft_manakovv_opts_t * const opts);
 		 */
 
-static inline INT fnft_manakov_base(
+static inline INT fnft_manakovv_base(
 	const UINT D,
 	COMPLEX const* const q1,
 	COMPLEX const* const q2,
@@ -89,9 +89,9 @@ static inline INT fnft_manakov_base(
 	COMPLEX* const bound_states,
 	COMPLEX* const normconsts_or_residues,
 	const INT kappa,
-	fnft_manakov_opts_t* opts);
+	fnft_manakovv_opts_t* opts);
 
-static inline INT manakov_compute_contspec(
+static inline INT manakovv_compute_contspec(
 	const UINT deg,
 	const INT W,
 	COMPLEX* const transfer_matrix,
@@ -103,10 +103,10 @@ static inline INT manakov_compute_contspec(
 	const UINT M,
 	COMPLEX* const result,
 	const INT kappa,
-	fnft_manakov_opts_t const* const opts);
+	fnft_manakovv_opts_t const* const opts);
 
 /*
-static inline INT manakov_compute_normconsts_or_residues(
+static inline INT manakovv_compute_normconsts_or_residues(
 		const UINT D,
 		COMPLEX const * const q,
 		COMPLEX const * const r,
@@ -114,9 +114,9 @@ static inline INT manakov_compute_normconsts_or_residues(
 		const UINT K,
 		COMPLEX * const bound_states,
 		COMPLEX * const normconsts_or_residues,
-		fnft_manakov_opts_t const * const opts);
+		fnft_manakovv_opts_t const * const opts);
 
-static inline INT manakov_refine_bound_states_newton(const UINT D,
+static inline INT manakovv_refine_bound_states_newton(const UINT D,
 		COMPLEX const * const q,
 		COMPLEX const * const r,
 		REAL const * const T,
@@ -131,11 +131,11 @@ static inline INT manakov_refine_bound_states_newton(const UINT D,
  * equation with vanishing boundary conditions.
  * This function takes care of the necessary preprocessing (for example
  * signal resampling or subsampling) based on the options before calling
- * fnft_manakov_base. If the richardson_extrapolation_flag is set, this function
- * calls fnft_manakov_base with half of the samples and then performs
+ * fnft_manakovv_base. If the richardson_extrapolation_flag is set, this function
+ * calls fnft_manakovv_base with half of the samples and then performs
  * Richardson extrapolation on the spectrum.
  */
-INT fnft_manakov(
+INT fnft_manakovv(
 	const UINT D,
 	COMPLEX const* const q1,
 	COMPLEX const* const q2,
@@ -147,7 +147,7 @@ INT fnft_manakov(
 	COMPLEX* const bound_states,
 	COMPLEX* const normconsts_or_residues,
 	const INT kappa,
-	fnft_manakov_opts_t* opts)
+	fnft_manakovv_opts_t* opts)
 {
 	COMPLEX* q1sub_preprocessed = NULL;
 	COMPLEX* q2sub_preprocessed = NULL;
@@ -159,8 +159,8 @@ INT fnft_manakov(
 	COMPLEX* bound_states_sub = NULL;
 	COMPLEX* normconsts_or_residues_sub = NULL;
 	COMPLEX* normconsts_or_residues_reserve = NULL;
-	fnft_manakov_bsloc_t bs_loc_opt = 0;
-	fnft_manakov_dstype_t ds_type_opt = 0;
+	fnft_manakovv_bsloc_t bs_loc_opt = 0;
+	fnft_manakovv_dstype_t ds_type_opt = 0;
 	INT ret_code = SUCCESS;
 	UINT i, j, upsampling_factor, D_effective, nskip_per_step;
 
@@ -218,7 +218,7 @@ INT fnft_manakov(
 			case akns_discretization_CF6_4:
 			case akns_discretization_ES4:
 			case akns_discretization_TES4:
-				if (opts->bound_state_localization != manakov_bsloc_NEWTON &&
+				if (opts->bound_state_localization != manakovv_bsloc_NEWTON &&
 						kappa == +1 && bound_states != NULL){
 					ret_code = E_INVALID_ARGUMENT(opts->bound_state_localization);
 					goto leave_fun;
@@ -260,8 +260,8 @@ INT fnft_manakov(
 	// Hence double the memory is necessary even if the user requests only residues.
 	if (opts->richardson_extrapolation_flag == 1) {
 		ds_type_opt = opts->discspec_type;
-		if (ds_type_opt == manakov_dstype_RESIDUES) {
-			opts->discspec_type = manakov_dstype_BOTH;
+		if (ds_type_opt == manakovv_dstype_RESIDUES) {
+			opts->discspec_type = manakovv_dstype_BOTH;
 			normconsts_or_residues_reserve = malloc(*K_ptr * 2 * sizeof(COMPLEX));
 			if (normconsts_or_residues_reserve == NULL) {
 				ret_code = E_NOMEM;
@@ -291,7 +291,7 @@ INT fnft_manakov(
 			first_last_index, opts->discretization);
 	CHECK_RETCODE(ret_code, leave_fun);
 
-	if (kappa == +1 && bound_states != NULL && opts->bound_state_localization == manakov_bsloc_SUBSAMPLE_AND_REFINE) {
+	if (kappa == +1 && bound_states != NULL && opts->bound_state_localization == manakovv_bsloc_SUBSAMPLE_AND_REFINE) {
 		// the mixed method gets special treatment
 
 		// First step: Find initial guesses for the bound states using the
@@ -320,16 +320,16 @@ INT fnft_manakov(
 
 		// Second step: Refine the found bound states using Newton's method
 		// on the full signal and compute continuous spectrum
-		opts->bound_state_localization = manakov_bsloc_NEWTON;
-		ret_code = fnft_manakov_base(D*upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, T, M, contspec, XI, K_ptr,
+		opts->bound_state_localization = manakovv_bsloc_NEWTON;
+		ret_code = fnft_manakovv_base(D*upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, T, M, contspec, XI, K_ptr,
 			bound_states, normconsts_or_residues_reserve, kappa, opts);     // This line computes cont. spec.
 		CHECK_RETCODE(ret_code, leave_fun);
 
 		// Restore original state of opts
-		opts->bound_state_localization = manakov_bsloc_SUBSAMPLE_AND_REFINE;
+		opts->bound_state_localization = manakovv_bsloc_SUBSAMPLE_AND_REFINE;
 	}
 	else {
-		ret_code = fnft_manakov_base(D*upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, T, M, contspec, XI, K_ptr,
+		ret_code = fnft_manakovv_base(D*upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, T, M, contspec, XI, K_ptr,
 			bound_states, normconsts_or_residues, kappa, opts);
 		CHECK_RETCODE(ret_code, leave_fun);
 	}
@@ -339,13 +339,13 @@ INT fnft_manakov(
 
 		if (contspec != NULL && M > 0) {
 			switch (opts->contspec_type) {
-			case manakov_cstype_BOTH:
+			case manakovv_cstype_BOTH:
 				contspec_len = 5 * M;
 				break;
-			case manakov_cstype_REFLECTION_COEFFICIENT:
+			case manakovv_cstype_REFLECTION_COEFFICIENT:
 				contspec_len = 2 * M;
 				break;
-			case manakov_cstype_AB:
+			case manakovv_cstype_AB:
 				contspec_len = 3 * M;
 				break;
 			default:
@@ -408,10 +408,10 @@ INT fnft_manakov(
 		Tsub[1] = T[0] + first_last_index[1] * eps_t;
 		const REAL eps_t_sub = (Tsub[1] - Tsub[0]) / (Dsub - 1);
 
-		// Calling fnft_manakov_base with subsampled signal
+		// Calling fnft_manakovv_base with subsampled signal
 		bs_loc_opt = opts->bound_state_localization;
-		opts->bound_state_localization = manakov_bsloc_NEWTON;
-		ret_code = fnft_manakov_base(Dsub*upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, Tsub, M, contspec_sub, XI, &K_sub,
+		opts->bound_state_localization = manakovv_bsloc_NEWTON;
+		ret_code = fnft_manakovv_base(Dsub*upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, Tsub, M, contspec_sub, XI, &K_sub,
 			bound_states_sub, normconsts_or_residues_sub, kappa, opts);
 		misc_print_buf(100, contspec_sub, "contspec_sub");
 		CHECK_RETCODE(ret_code, leave_fun);
@@ -481,10 +481,10 @@ leave_fun:      // TODO: check which variables we need to free
 	return ret_code;
 }
 
-// Auxiliary function: Base routine for fnft_manakov. fnft_manakov preprocesses the signals
+// Auxiliary function: Base routine for fnft_manakovv. fnft_manakovv preprocesses the signals
 // and calls this function with different options as needed. This prevents
 // code doubling while being efficient.
-static inline INT fnft_manakov_base(
+static inline INT fnft_manakovv_base(
 	const UINT D,
 	COMPLEX const* const q1,
 	COMPLEX const* const q2,
@@ -496,7 +496,7 @@ static inline INT fnft_manakov_base(
 	COMPLEX* const bound_states,
 	COMPLEX* const normconsts_or_residues,
 	const INT kappa,
-	fnft_manakov_opts_t* opts)
+	fnft_manakovv_opts_t* opts)
 {
 	COMPLEX* transfer_matrix = NULL;
 	UINT deg;
@@ -575,15 +575,15 @@ static inline INT fnft_manakov_base(
 		W = 0;
 	}
 
-	//        misc_print_buf(10, transfer_matrix, "tm before manakov_compute_contspec");
+	//        misc_print_buf(10, transfer_matrix, "tm before manakovv_compute_contspec");
 		// Compute the continuous spectrum
 	if (contspec != NULL && M > 0) {
-		ret_code = manakov_compute_contspec(deg, W, transfer_matrix, q1, q2, T, D, XI, M,
+		ret_code = manakovv_compute_contspec(deg, W, transfer_matrix, q1, q2, T, D, XI, M,
 			contspec, kappa, opts);
 		CHECK_RETCODE(ret_code, leave_fun);
 	}
 
-	//        misc_print_buf(10, transfer_matrix, "tm after manakov_compute_contspec");
+	//        misc_print_buf(10, transfer_matrix, "tm after manakovv_compute_contspec");
 
 		/* Code for disc. spec.
 		// Compute the discrete spectrum
@@ -793,7 +793,7 @@ leave_fun:
 */
 
 // Auxiliary function: Computes continuous spectrum on a frequency grid
-static inline INT manakov_compute_contspec(
+static inline INT manakovv_compute_contspec(
 	const UINT deg,
 	const INT W,
 	COMPLEX* const transfer_matrix,
@@ -805,7 +805,7 @@ static inline INT manakov_compute_contspec(
 	const UINT M,       // Desired number of xi for which we determine the cont spec
 	COMPLEX* const result,
 	const INT kappa,
-	fnft_manakov_opts_t const* const opts)
+	fnft_manakovv_opts_t const* const opts)
 {
 	//    misc_print_buf(deg*D,transfer_matrix,"transfer_matrix_in_contspec");
 	COMPLEX* H11_vals = NULL, * H21_vals = NULL, * H31_vals = NULL;
@@ -938,14 +938,14 @@ static inline INT manakov_compute_contspec(
 	// Compute the continuous spectrum
 	switch (opts->contspec_type) {
 
-	case manakov_cstype_BOTH:
+	case manakovv_cstype_BOTH:
 
 		offset = 2 * M;       // If we want both the reflection coefficient and the a an b coefficients, we put
 							// the reflection coefficient in result[0 : 2*M-1], so we have offset 2*M s.t. a=result[2*M : 3*M-1],
 							// b1 = result[3*M : 4*M-1], b2 = result[4*M : 5*M-1]
 
 	// fall through
-	case manakov_cstype_REFLECTION_COEFFICIENT:
+	case manakovv_cstype_REFLECTION_COEFFICIENT:
 
 		ret_code = manakov_discretization_phase_factor_rho(eps_t, T[1], &phase_factor_rho, opts->discretization);
 		CHECK_RETCODE(ret_code, leave_fun);
@@ -959,11 +959,11 @@ static inline INT manakov_compute_contspec(
 			result[M + i] = H31_vals[i] * CEXP(I * xi[i] * phase_factor_rho) / H11_vals[i];
 		}
 
-		if (opts->contspec_type == manakov_cstype_REFLECTION_COEFFICIENT)
+		if (opts->contspec_type == manakovv_cstype_REFLECTION_COEFFICIENT)
 			break;
 		// fall through
 
-	case manakov_cstype_AB:
+	case manakovv_cstype_AB:
 
 		scale = POW(2.0, W); // needed since the transfer matrix might
 		// have been scaled by manakov_fscatter. W == 0 for slow methods.

@@ -23,15 +23,15 @@
 
 #include "fnft__errwarn.h"
 #include "fnft__misc.h" // for misc_sech
-#include "fnft__manakov_testcases.h"
+#include "fnft__manakovv_testcases.h"
 #include "fnft__manakov_discretization.h"
-#include "fnft_manakov.h"
+#include "fnft_manakovv.h"
 #ifdef DEBUG
 #include <stdio.h>
 #include <string.h> // for memcpy
 #endif
 
-INT manakov_testcases(manakov_testcases_t tc, const UINT D,
+INT manakovv_testcases(manakovv_testcases_t tc, const UINT D,
     COMPLEX ** const q1_ptr, COMPLEX ** const q2_ptr,
     REAL * const T,
     UINT * const M_ptr, COMPLEX ** const contspec_ptr,
@@ -75,17 +75,17 @@ INT manakov_testcases(manakov_testcases_t tc, const UINT D,
 
     switch (tc) {
         
-        case manakov_testcases_SECH_FOCUSING:
+        case manakovv_testcases_SECH_FOCUSING:
             *M_ptr = 16;
             *K_ptr = 3;
             break;
             
-        case manakov_testcases_SECH_DEFOCUSING:
+        case manakovv_testcases_SECH_DEFOCUSING:
             *M_ptr = 16;
             *K_ptr = 0;
             break;
 
-        case manakov_testcases_RECTANGLE_FOCUSING:
+        case manakovv_testcases_RECTANGLE_FOCUSING:
             *M_ptr = 16;
             *K_ptr = 0;
             break;
@@ -119,7 +119,7 @@ INT manakov_testcases(manakov_testcases_t tc, const UINT D,
     // generate test case
     switch (tc) {
 
-    case manakov_testcases_SECH_FOCUSING:
+    case manakovv_testcases_SECH_FOCUSING:
 
         // This test case can be found in J. Satsuma & N. Yajima, Prog. Theor.
         // Phys. Suppl., No. 55, p. 284ff, 1974.
@@ -255,7 +255,7 @@ ab = vpa([a(xi) b1(xi) b2(xi)])'
 
         break;
 
-        case manakov_testcases_SECH_DEFOCUSING:
+        case manakovv_testcases_SECH_DEFOCUSING:
 
         // This test case can be found in J. Satsuma & N. Yajima, Prog. Theor.
         // Phys. Suppl., No. 55, p. 284ff, 1974.
@@ -391,7 +391,7 @@ ab = vpa([a(xi) b1(xi) b2(xi)]).'
 
         break;
 
-    case manakov_testcases_RECTANGLE_FOCUSING:
+    case manakovv_testcases_RECTANGLE_FOCUSING:
 
     // For this tescase the MZS matrix P is piecewise constant and the solution is easily found:
         // The following MATLAB code has been used to compute the values below.
@@ -580,7 +580,7 @@ release_mem_1:{
 }
 
 // Compares computed with exact nonlinear Fourier spectrum.
-static INT manakov_compare_nfs(const UINT M, const UINT K1, const UINT K2,
+static INT manakovv_compare_nfs(const UINT M, const UINT K1, const UINT K2,
     COMPLEX const * const contspec_1,
     COMPLEX const * const contspec_2,
     COMPLEX const * const ab_1,
@@ -665,8 +665,8 @@ static INT manakov_compare_nfs(const UINT M, const UINT K1, const UINT K2,
     return SUCCESS;
 }
 
-INT manakov_testcases_test_fnft(manakov_testcases_t tc, UINT D,
-const REAL error_bounds[5], fnft_manakov_opts_t * const opts) {
+INT manakovv_testcases_test_fnft(manakovv_testcases_t tc, UINT D,
+const REAL error_bounds[5], fnft_manakovv_opts_t * const opts) {
     COMPLEX * q1 = NULL;
     COMPLEX * q2 = NULL;
     COMPLEX * contspec = NULL;
@@ -689,7 +689,7 @@ const REAL error_bounds[5], fnft_manakov_opts_t * const opts) {
         return E_INVALID_ARGUMENT(opts);
 
     // Load test case
-    ret_code = manakov_testcases(tc, D, &q1, &q2, T, &M, &contspec_exact, &ab_exact,
+    ret_code = manakovv_testcases(tc, D, &q1, &q2, T, &M, &contspec_exact, &ab_exact,
         XI, &K_exact,&bound_states_exact, &normconsts_exact, &residues_exact,
         &kappa);
     CHECK_RETCODE(ret_code, release_mem);
@@ -718,20 +718,20 @@ const REAL error_bounds[5], fnft_manakov_opts_t * const opts) {
             goto release_mem;
     }
     
-    if (opts->bound_state_localization == manakov_bsloc_NEWTON){
+    if (opts->bound_state_localization == manakovv_bsloc_NEWTON){
         memcpy(bound_states,bound_states_exact,K * sizeof(COMPLEX));
     }
     
 // Compute the NFT
-    opts->contspec_type = fnft_manakov_cstype_BOTH;
-    opts->discspec_type = fnft_manakov_dstype_BOTH;
+    opts->contspec_type = fnft_manakovv_cstype_BOTH;
+    opts->discspec_type = fnft_manakovv_dstype_BOTH;
 
-    ret_code = fnft_manakov(D, q1, q2, T, M, contspec, XI, &K, bound_states,
+    ret_code = fnft_manakovv(D, q1, q2, T, M, contspec, XI, &K, bound_states,
         normconsts_and_residues, kappa, opts);
     CHECK_RETCODE(ret_code, release_mem);
 
     // Compute the errors
-    ret_code = manakov_compare_nfs(M, K, K_exact, contspec, contspec_exact,
+    ret_code = manakovv_compare_nfs(M, K, K_exact, contspec, contspec_exact,
         contspec+2*M, ab_exact, bound_states, bound_states_exact,
         normconsts_and_residues, normconsts_exact, normconsts_and_residues+K,
         residues_exact, errs);
@@ -740,7 +740,7 @@ const REAL error_bounds[5], fnft_manakov_opts_t * const opts) {
 
 #ifdef DEBUG
     for (UINT i=0; i<5; i++)
-        printf("manakov_testcases_test_fnft: error_bounds[%i] = %2.1e <= %2.1e\n",
+        printf("manakovv_testcases_test_fnft: error_bounds[%i] = %2.1e <= %2.1e\n",
             (int)i, errs[i], error_bounds[i]);
     misc_print_buf(3*M, contspec+2*M, "ab_num");
     misc_print_buf(3*M, ab_exact, "ab_exact");

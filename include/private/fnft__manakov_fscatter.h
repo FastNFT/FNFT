@@ -36,7 +36,7 @@
  * @brief Returns the length of transfer_matrix to be allocated based on the number
  * of samples and discretization.
  *
- * @ingroup nse
+ * @ingroup manakov
  * This routine returns the length 9*misc_nextpowerof2(D)*(manakov_discretization_degree(discretization) + 1)
  * to be allocated based on the number
  * of samples and discretization of type discretization.

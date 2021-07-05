@@ -1,12 +1,12 @@
-% MEX_FNFT_MANAKOV Fast nonlinear Fourier transform for the nonlinear
+% MEX_FNFT_MANAKOVV Fast nonlinear Fourier transform for the nonlinear
 % Schroedinger equation with vanishing boundaries.
 %
-%   contspec = MEX_FNFT_MANAKOV(q1, q2, T, XI, kappa)
-%   contspec = MEX_FNFT_MANAKOV(q1, q2, T, XI, kappa,
+%   contspec = MEX_FNFT_MANAKOVV(q1, q2, T, XI, kappa)
+%   contspec = MEX_FNFT_MANAKOVV(q1, q2, T, XI, kappa,
 %       OPTIONAL INPUTS)
 %
 % DESCRIPTION
-%   Provides an interface to the C routine fnft_manakov.
+%   Provides an interface to the C routine fnft_manakovv.
 %
 % INPUTS
 %   q1              Complex row vector of length D>1

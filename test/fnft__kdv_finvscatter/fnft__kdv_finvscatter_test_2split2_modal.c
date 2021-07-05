@@ -31,9 +31,9 @@ int main(void) {
     D = 16384;
     error_bound =
 #ifdef HAVE_FFTW3
-        5.6e5*FNFT_EPSILON;
+        5.6e5*FNFT_EPSILON;     
 #else
-        9.1e6*FNFT_EPSILON;
+        9.5e6*FNFT_EPSILON;     // Was 9.1, error slightly higher on some machines
 #endif
 printf("error bound = %e\n",error_bound);
     if (kdv_finvscatter_test(D, error_bound, discretization) != SUCCESS)

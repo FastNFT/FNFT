@@ -25,7 +25,7 @@
 #include "mex.h"
 #include "matrix.h"
 //#include "fnft_manakov_discretization_t.h"
-#include "fnft_manakov.h"
+#include "fnft_manakovv.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
@@ -48,7 +48,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     double *re_q1, *im_q1, *re_q2, *im_q2;
     double *csr, *csi, *bsr, *bsi, *ncr, *nci;
     char msg[128]; // buffer for error messages
-    fnft_manakov_opts_t opts;
+    fnft_manakovv_opts_t opts;
     int ret_code;
 
     /* Check number of inputs to avoid computing results that have not been
@@ -96,9 +96,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if ( kappa != +1 && kappa != -1 )
         mexErrMsgTxt("Fifth input kappa should be +1.0 or -1.0.");
     
-    /* Default options for fnft_manakov */
+    /* Default options for fnft_manakovv */
 
-    opts = fnft_manakov_default_opts();
+    opts = fnft_manakovv_default_opts();
     
     /* Redirect FNFT error messages and warnings to Matlabs command window */
 
@@ -140,11 +140,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
         } else if ( strcmp(str, "cstype_ab") == 0 ) {
 
-            opts.contspec_type = fnft_manakov_cstype_AB;
+            opts.contspec_type = fnft_manakovv_cstype_AB;
 
         } else if ( strcmp(str, "cstype_both") == 0 ) {
 
-            opts.contspec_type = fnft_manakov_cstype_BOTH;
+            opts.contspec_type = fnft_manakovv_cstype_BOTH;
 
         } else if ( strcmp(str, "quiet") == 0 ) {
 
@@ -182,6 +182,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "discr_4split6B") == 0 ) {
 
             opts.discretization = fnft_manakov_discretization_4SPLIT6B;
+
+		}
+		else if (strcmp(str, "discr_FTES4_4A") == 0) {
+
+			opts.discretization = fnft_manakov_discretization_FTES4_4A;
+
+		}
+		else if (strcmp(str, "discr_FTES4_4B") == 0) {
+
+			opts.discretization = fnft_manakov_discretization_FTES4_4B;
 
         } else if ( strcmp(str, "discr_FTES4_suzuki") == 0 ) {
 
@@ -249,11 +259,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     */
 
-    if (opts.contspec_type == fnft_manakov_cstype_AB)
+    if (opts.contspec_type == fnft_manakovv_cstype_AB)
         contspec = mxMalloc(3*M*sizeof(COMPLEX));
-    else if (opts.contspec_type == fnft_manakov_cstype_REFLECTION_COEFFICIENT)
+    else if (opts.contspec_type == fnft_manakovv_cstype_REFLECTION_COEFFICIENT)
         contspec = mxMalloc(2*M*sizeof(COMPLEX));
-    else    // opts.contspec == fnft_manakov_cstype_BOTH
+    else    // opts.contspec == fnft_manakovv_cstype_BOTH
         contspec = mxMalloc(5*M*sizeof(COMPLEX));
     
     /* Convert input */
@@ -269,33 +279,33 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     
     /* Call the C routine */
     
-    ret_code = fnft_manakov(D, q1, q2, T, M, contspec, XI, &K, bound_states,
+    ret_code = fnft_manakovv(D, q1, q2, T, M, contspec, XI, &K, bound_states,
         normconsts_or_residuals, kappa, &opts); // TODO check: pass opts or &opts?
     if (ret_code != FNFT_SUCCESS) {
-        snprintf(msg, sizeof msg, "fnft_manakov failed (error code %i).",
+        snprintf(msg, sizeof msg, "fnft_manakovv failed (error code %i).",
                 ret_code);
         goto on_error;
     }
     
     /* Allocate memory for the outputs */
-    if (opts.contspec_type == fnft_manakov_cstype_AB)
+    if (opts.contspec_type == fnft_manakovv_cstype_AB)
         plhs[0] = mxCreateDoubleMatrix(1, 3*M, mxCOMPLEX);
-    else if (opts.contspec_type == fnft_manakov_cstype_REFLECTION_COEFFICIENT)
+    else if (opts.contspec_type == fnft_manakovv_cstype_REFLECTION_COEFFICIENT)
         plhs[0] = mxCreateDoubleMatrix(1, 2*M, mxCOMPLEX);
-    else    // opts.contspec == fnft_manakov_cstype_BOTH
+    else    // opts.contspec == fnft_manakovv_cstype_BOTH
         plhs[0] = mxCreateDoubleMatrix(1, 5*M, mxCOMPLEX);
     
     /* Allocate memory for outputs and convert results */
 
         csr = mxGetPr(plhs[0]);        // original: mxGetPr
         csi = mxGetPi(plhs[0]); // mxGetPi
-        if (opts.contspec_type == fnft_manakov_cstype_AB) {
+        if (opts.contspec_type == fnft_manakovv_cstype_AB) {
             for (i=0; i<3*M; i++) {
                 csr[i] = FNFT_CREAL(contspec[i]);
                 csi[i] = FNFT_CIMAG(contspec[i]);
             }
         }
-        else if (opts.contspec_type == fnft_manakov_cstype_REFLECTION_COEFFICIENT) {
+        else if (opts.contspec_type == fnft_manakovv_cstype_REFLECTION_COEFFICIENT) {
             for (i=0; i<2*M; i++) {
                 csr[i] = FNFT_CREAL(contspec[i]);
                 csi[i] = FNFT_CIMAG(contspec[i]);

@@ -16,6 +16,13 @@
 * Contributors:
 * Lianne de Vries (TU Delft) 2021
 */
+
+/**
+ * \file fnft__manakov_discretization.h
+ * @brief Properties of the discretization for the Manakov equation
+ * @ingroup manakov
+ */
+
 #ifndef FNFT__MANAKOV_DISCRETIZATION_H
 #define FNFT__MANAKOV_DISCRETIZATION_H
 

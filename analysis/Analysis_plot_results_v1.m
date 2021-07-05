@@ -1,7 +1,7 @@
 %% This script plots the results of a single method
 clear
 close all
-load('discr_4split6B_sech')     % discr_<method>_<signal>
+load('discr_FTES4_suzuki_sech')     % discr_<method>_<signal>
 
 % Plotting q1, q2 (for the last number of samples D in D_values)
 t = Test_results.params.t;

@@ -1,33 +1,33 @@
 /*
-File tesing the fnft_manakov_testcases function
+File tesing the fnft_manakovv_testcases function
 */
 
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include <stdio.h>
-#include "fnft__manakov_testcases.h"
-#include "fnft_manakov.h"
+#include "fnft__manakovv_testcases.h"
+#include "fnft_manakovv.h"
 
-// TODO: debugger was not able to find fnft__manakov_testcases.h, even though includePath was set to right folder.
-// fnft__manakov_testcases.h was copied to workspace folder. Should be removed.
+// TODO: debugger was not able to find fnft__manakovv_testcases.h, even though includePath was set to right folder.
+// fnft__manakovv_testcases.h was copied to workspace folder. Should be removed.
 
 INT main(){
     printf("Goes into main loop\n");
     #define DEBUG
 
-    manakov_testcases_t tc = manakov_testcases_SECH_FOCUSING;
+    manakovv_testcases_t tc = manakovv_testcases_SECH_FOCUSING;
     UINT D = 16;
     REAL error_bounds[7] = {200, 200, 200, 200, 200, 200, 200};
 //    REAL error_bounds[7] = {
 //        FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN };
-    fnft_manakov_opts_t opts = fnft_manakov_default_opts();
-    INT ret_code = manakov_testcases_test_fnft(tc, D, error_bounds, &opts);
+    fnft_manakovv_opts_t opts = fnft_manakovv_default_opts();
+    INT ret_code = manakovv_testcases_test_fnft(tc, D, error_bounds, &opts);
     printf("ret_code = %d\n",ret_code);    
   
 
 /*
-   // Check if segmentation fault is in manakov_testcases. answer: no
-   manakov_testcases_t tc = manakov_testcases_SECH_FOCUSING;
+   // Check if segmentation fault is in manakovv_testcases. answer: no
+   manakovv_testcases_t tc = manakovv_testcases_SECH_FOCUSING;
    UINT D = 16;
    COMPLEX * q1 = NULL;
     COMPLEX * q2 = NULL;
@@ -47,7 +47,7 @@ INT main(){
     INT ret_code;
 
 
-   ret_code = manakov_testcases(tc, D, &q1, &q2, T, &M, &contspec_exact, &ab_exact,
+   ret_code = manakovv_testcases(tc, D, &q1, &q2, T, &M, &contspec_exact, &ab_exact,
         XI, &K_exact,&bound_states_exact, &normconsts_exact, &residues_exact,
         &kappa);
 */
