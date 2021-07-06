@@ -50,24 +50,23 @@ fnft_manakovv_opts_t fnft_manakovv_default_opts()
  * fnft_manakovv. See header file for details.
  */
  // NOTE: this is degree * number of samples. Makes sense, this gives the degree of the resulting polynomial, so the max. amount of roots.
-/*UINT fnft_mankov_max_K(const UINT D, fnft_manakovv_opts_t const* const opts)
+UINT fnft_manakovv_max_K(const UINT D, fnft_manakovv_opts_t const* const opts)
 {
 	if (opts != NULL)
 		return manakov_discretization_degree(opts->discretization) * D;
 	else
 		return manakov_discretization_degree(default_opts.discretization) * D;
 }
-*/
+
 /**
  * Declare auxiliary routines used by the main routine fnft_manakovv.
  * Their bodies follow below.
  */
 
- /*
  static inline INT manakovv_compute_boundstates(
 		 UINT const D,
-		 COMPLEX const * const q,
-		 COMPLEX const * const r,
+		 COMPLEX const * const q1,
+		 COMPLEX const * const q2,
 		 const UINT deg,
 		 COMPLEX * const transfer_matrix,
 		 REAL const * const T,
@@ -75,7 +74,7 @@ fnft_manakovv_opts_t fnft_manakovv_default_opts()
 		 UINT * const K_ptr,
 		 COMPLEX * const bound_states,
 		 fnft_manakovv_opts_t * const opts);
-		 */
+		 
 
 static inline INT fnft_manakovv_base(
 	const UINT D,
@@ -234,8 +233,6 @@ INT fnft_manakovv(
 		// an equidistant grid. The upsampling_factor*D gives the effective
 		// number of samples for the chosen discretization. The effective number
 		// of samples is required for the auxiliary function calls.
-	//    upsampling_factor = nse_discretization_upsampling_factor(opts->discretization);
-			// TODO: move the resampling out of manakov_fscatter
 	upsampling_factor = manakov_discretization_upsampling_factor(opts->discretization);
 	if (upsampling_factor == 0) {
 		ret_code = E_INVALID_ARGUMENT(opts->discretization);
@@ -284,55 +281,20 @@ INT fnft_manakovv(
 	CHECK_RETCODE(ret_code, leave_fun);
 
 	*/
-	// TODO: this is now done in manakov_fscatter. Maybe move it out of fscatter and put it here to prevent code duplicates.
 
 	Dsub = D;
 	ret_code = manakov_discretization_preprocess_signal(D, q1, q2, eps_t, kappa, &Dsub, &q1sub_preprocessed, &q2sub_preprocessed,
 			first_last_index, opts->discretization);
 	CHECK_RETCODE(ret_code, leave_fun);
 
-	if (kappa == +1 && bound_states != NULL && opts->bound_state_localization == manakovv_bsloc_SUBSAMPLE_AND_REFINE) {
-		// the mixed method gets special treatment
-
-		// First step: Find initial guesses for the bound states using the
-		// fast eigenvalue method. To bound the complexity, a subsampled
-		// version of q, qsub, will be passed to the fast eigenroutine.
-		/* Code relating to disc. spectrum
-		Dsub = opts->Dsub;
-		if (Dsub == 0) // The user wants us to determine Dsub
-			Dsub = (UINT) SQRT(D * LOG2(D) * LOG2(D));
-		nskip_per_step = (UINT) ROUND((REAL)D / Dsub);
-		Dsub = (UINT) ROUND((REAL)D / nskip_per_step); // actual Dsub
-
-		ret_code = nse_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &qsub_preprocessed, &rsub_preprocessed,
-				first_last_index, opts->discretization);
-		CHECK_RETCODE(ret_code, leave_fun);
-
-		Tsub[0] = T[0] + first_last_index[0] * eps_t;
-		Tsub[1] = T[0] + first_last_index[1] * eps_t;
-
-		// Fixed bound states of qsub using the fast eigenvalue method
-		opts->bound_state_localization = nsev_bsloc_FAST_EIGENVALUE;
-		ret_code = fnft_nsev_base(Dsub * upsampling_factor, qsub_preprocessed, rsub_preprocessed, Tsub, 0, NULL, XI, K_ptr,
-				bound_states, NULL, kappa, opts);
-		CHECK_RETCODE(ret_code, leave_fun);
-		*/
-
-		// Second step: Refine the found bound states using Newton's method
-		// on the full signal and compute continuous spectrum
-		opts->bound_state_localization = manakovv_bsloc_NEWTON;
-		ret_code = fnft_manakovv_base(D*upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, T, M, contspec, XI, K_ptr,
-			bound_states, normconsts_or_residues_reserve, kappa, opts);     // This line computes cont. spec.
-		CHECK_RETCODE(ret_code, leave_fun);
-
-		// Restore original state of opts
-		opts->bound_state_localization = manakovv_bsloc_SUBSAMPLE_AND_REFINE;
+	// if kappa=-1 there are no discrete eigenvalues
+	if (kappa == -1){
+			WARN("No discrete eigenvalues exist for kappa=-1. Not calculating bound states");
 	}
-	else {
+		// use only the fast eigenvalue method to localize the bound states
 		ret_code = fnft_manakovv_base(D*upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, T, M, contspec, XI, K_ptr,
 			bound_states, normconsts_or_residues, kappa, opts);
 		CHECK_RETCODE(ret_code, leave_fun);
-	}
 	if (opts->richardson_extrapolation_flag == 1) {
 		// Allocating memory
 		UINT contspec_len = 0;
@@ -412,7 +374,7 @@ INT fnft_manakovv(
 		bs_loc_opt = opts->bound_state_localization;
 		opts->bound_state_localization = manakovv_bsloc_NEWTON;
 		ret_code = fnft_manakovv_base(Dsub*upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, Tsub, M, contspec_sub, XI, &K_sub,
-			bound_states_sub, normconsts_or_residues_sub, kappa, opts);
+			NULL, normconsts_or_residues_sub, kappa, opts);	// bound_states already calculated. Passing NULL for boundstates to avoid recalculating
 		misc_print_buf(100, contspec_sub, "contspec_sub");
 		CHECK_RETCODE(ret_code, leave_fun);
 		opts->bound_state_localization = bs_loc_opt;
@@ -585,30 +547,115 @@ static inline INT fnft_manakovv_base(
 
 	//        misc_print_buf(10, transfer_matrix, "tm after manakovv_compute_contspec");
 
-		/* Code for disc. spec.
 		// Compute the discrete spectrum
 		if (kappa == +1 && bound_states != NULL) {
 
 			// Compute the bound states
-			ret_code = nsev_compute_boundstates(D, q, r, deg, transfer_matrix, T,
+			ret_code = manakovv_compute_boundstates(D, q1, q2, deg, transfer_matrix, T,
 					eps_t, K_ptr, bound_states, opts);
 			CHECK_RETCODE(ret_code, leave_fun);
 
-			// Norming constants and/or residues)
+		/*	// Norming constants and/or residues)
 			if (normconsts_or_residues != NULL && *K_ptr != 0) {
 				ret_code = nsev_compute_normconsts_or_residues(D, q, r, T, *K_ptr,
 						bound_states, normconsts_or_residues, opts);
 				CHECK_RETCODE(ret_code, leave_fun);
 			}
 		} else if (K_ptr != NULL) {
-			*K_ptr = 0;
+			*K_ptr = 0;*/
 		}
-		*/
+		
 
 leave_fun:
 	free(transfer_matrix);
 	return ret_code;
 }
+
+static inline INT manakovv_compute_boundstates(
+		const UINT D,
+		COMPLEX const * const q,
+		COMPLEX const * const r,
+		const UINT deg,
+		COMPLEX * const transfer_matrix,
+		REAL const * const T,
+		const REAL eps_t,
+		UINT * const K_ptr,
+		COMPLEX * const bound_states,
+		fnft_manakovv_opts_t * const opts)
+{
+	REAL degree1step = 0.0 , map_coeff = 2.0;
+	UINT K, upsampling_factor, i, j, D_given;
+	REAL bounding_box[4] = { NAN };
+	COMPLEX * buffer = NULL;
+	INT ret_code = SUCCESS;
+	manakov_discretization_t discretization;
+/*
+	degree1step = manakov_discretization_degree(opts->discretization);
+	// degree1step == 0 here indicates a valid slow method. Incorrect
+	// discretizations should have been caught earlier.
+	upsampling_factor = manakov_discretization_upsampling_factor(opts->discretization);
+	if (upsampling_factor == 0) {
+		ret_code = E_INVALID_ARGUMENT(opts->discretization);
+		goto leave_fun;
+	}
+	if (degree1step != 0)
+		map_coeff = 2/(degree1step);
+	D_given = D/upsampling_factor;
+*/
+	// Set-up bounding_box, only eigenvalues in upper half complex plane
+		bounding_box[0] = -INFINITY;
+		bounding_box[1] = INFINITY;
+		bounding_box[2] = 0.0;
+		bounding_box[3] = INFINITY;
+
+	// Localize bound states ...
+			K = deg;
+			if (*K_ptr >= K) {
+				buffer = bound_states;
+			} else {
+				// Store intermediate results in unused part of transfer matrix.
+				// This buffer is large enough to store all deg roots of the
+				// polynomial, while bound_states provided by the user might be
+				// smaller. The latter only needs to store the bound states that
+				// survive the filtering.
+				buffer = transfer_matrix + (deg+1);
+			}
+
+			ret_code = poly_roots_fasteigen(deg, transfer_matrix, buffer);
+			CHECK_RETCODE(ret_code, leave_fun);
+			// Roots are returned in discrete-time domain -> coordinate
+			// transform (from discrete-time to continuous-time domain).
+			ret_code = manakov_discretization_z_to_lambda(K, eps_t, buffer, opts->discretization);
+			CHECK_RETCODE(ret_code, leave_fun);
+
+	// Filter bound states
+	if (opts->bound_state_filtering != manakovv_bsfilt_NONE) {
+
+		ret_code = misc_filter(&K, buffer, NULL, bounding_box);
+		CHECK_RETCODE(ret_code, leave_fun);
+
+		ret_code = misc_merge(&K, buffer, SQRT(EPSILON));
+		CHECK_RETCODE(ret_code, leave_fun);
+	}
+
+	// Copy result from buffer to user-supplied array (if not identical)
+	if (buffer != bound_states) {
+		if (*K_ptr < K) {
+			WARN("Found more than *K_ptr bound states. Returning as many as possible.");
+			K = *K_ptr;
+		}
+		memcpy(bound_states, buffer, K * sizeof(COMPLEX));
+	}
+
+	// Update number of bound states
+	*K_ptr = K;
+
+leave_fun:
+	return ret_code;
+}
+
+
+
 
 /* Code for disc. spec.
 // Auxiliary function for filtering: We assume that bound states must have

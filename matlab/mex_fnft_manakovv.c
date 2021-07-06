@@ -83,7 +83,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     XI = mxGetPr(prhs[3]);
     kappa = (int)mxGetScalar(prhs[4]);
     
-    /* Check values of first four inputs */
+    /* Check values of first five inputs */
 
     if ( D<2 )
         mexErrMsgTxt("Length of the first input q2 should be at least two.");
@@ -145,6 +145,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "cstype_both") == 0 ) {
 
             opts.contspec_type = fnft_manakovv_cstype_BOTH;
+
+        } else if ( strcmp(str, "skip_bs") == 0 ) {
+
+            skip_bound_states_flag = 1;
+            skip_normconsts_flag = 1; // since bound states are needed to
+                                      // compute norming constants
 
         } else if ( strcmp(str, "quiet") == 0 ) {
 
@@ -223,21 +229,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         goto on_error;
     }
    
-   /*
-    if (skip_contspec_flag == 0) {
-        if (opts.contspec_type == fnft_nsev_cstype_AB)
-            contspec = mxMalloc(2*M * sizeof(FNFT_COMPLEX));
-        else
-            contspec = mxMalloc(M * sizeof(FNFT_COMPLEX));      
-        if (contspec == NULL) {
-            snprintf(msg, sizeof msg, "Out of memory.");
-            goto on_error;
-        }
-    }
-
     if (skip_bound_states_flag == 0) {
         if (bound_states == NULL) {
-            K = fnft_nsev_max_K(D, &opts);
+            K = fnft_manakovv_max_K(D, &opts);
             if (K == 0) {
                 snprintf(msg, sizeof msg, "Discretization does not support the chosen bound state localization method.");
                 goto on_error;
@@ -245,6 +239,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             bound_states = mxMalloc(K * sizeof(FNFT_COMPLEX));
         }
         if (bound_states == NULL) {
+            snprintf(msg, sizeof msg, "Out of memory.");
+            goto on_error;
+        }
+    }
+
+   /*
+    if (skip_contspec_flag == 0) {
+        if (opts.contspec_type == fnft_nsev_cstype_AB)
+            contspec = mxMalloc(2*M * sizeof(FNFT_COMPLEX));
+        else
+            contspec = mxMalloc(M * sizeof(FNFT_COMPLEX));      
+        if (contspec == NULL) {
             snprintf(msg, sizeof msg, "Out of memory.");
             goto on_error;
         }
@@ -280,7 +286,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* Call the C routine */
     
     ret_code = fnft_manakovv(D, q1, q2, T, M, contspec, XI, &K, bound_states,
-        normconsts_or_residuals, kappa, &opts); // TODO check: pass opts or &opts?
+        normconsts_or_residuals, kappa, &opts);
     if (ret_code != FNFT_SUCCESS) {
         snprintf(msg, sizeof msg, "fnft_manakovv failed (error code %i).",
                 ret_code);
@@ -319,7 +325,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
 
 
-/*
     if (skip_bound_states_flag == 0) {
         plhs[1] = mxCreateDoubleMatrix(1, K, mxCOMPLEX);
         bsr = mxGetPr(plhs[1]);
@@ -331,7 +336,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     } else if (nlhs >= 2) {
         plhs[1] = mxCreateDoubleMatrix(0, 0, mxCOMPLEX);
     }
-
+/*
     if (skip_normconsts_flag == 0) {
         plhs[2] = mxCreateDoubleMatrix(1, K, mxCOMPLEX);
         ncr = mxGetPr(plhs[2]);

@@ -151,6 +151,21 @@ typedef struct {
 fnft_manakovv_opts_t fnft_manakovv_default_opts();
 
 /**
+ * @brief Returns the maximum number of bound states that can be detected by
+ * \link fnft_manakovv \endlink.
+ * @param[in] D number of samples
+ * @param[in] opts options for the fnft, used for getting the discretization method. 
+ * 		Should be of type \link fnft_manakovv_opts_t \endlink
+ * 
+ * @returns Returns the maximum number of bound states that can be detected by
+ * \link fnft_manakovv \endlink, based on the degree of the total transition matrix
+ * 
+ * @ingroup fnft
+ */
+FNFT_UINT fnft_manakovv_max_K(const FNFT_UINT D, fnft_manakovv_opts_t const* const opts);
+
+
+/**
  * @brief Nonlinear Fourier transform for the Manakov equation
  * with vanishing boundary conditions. Fast algorithms are used if the discretization supports it.
  *

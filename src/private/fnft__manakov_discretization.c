@@ -280,6 +280,36 @@ INT fnft__manakov_discretization_lambda_to_z(const UINT n, const REAL eps_t,
     return SUCCESS;
 }
 
+/**
+ * This routine maps z in the discrete-time domain to
+ * lambda in continuous-time domain based on the discretization.
+ */
+INT fnft__manakov_discretization_z_to_lambda(const UINT n, const REAL eps_t,
+        COMPLEX * const vals, manakov_discretization_t discretization)
+{
+	UINT i;
+	// For the XsplitYZ methods, the extra factor in the exponent is 2/degree1step
+	// For the Suzuki factorization this factor is 1/3 =/= 2/degree1step, so it is treated separately
+	if (discretization == manakov_discretization_FTES4_suzuki) {
+		for (i = 0; i < n; i++)
+            vals[i] = CLOG(vals[i])*3/(I*eps_t);
+	}
+	else {
+		REAL degree1step;
+		UINT upsampling_factor;
+		upsampling_factor = manakov_discretization_upsampling_factor(discretization);
+		if (upsampling_factor == 0)
+			return E_INVALID_ARGUMENT(discretization);
+		degree1step = manakov_discretization_degree(discretization);
+		if (degree1step == 0)
+			return E_INVALID_ARGUMENT(discretization);
+		degree1step = degree1step * upsampling_factor;
+		for (i = 0; i < n; i++)
+            vals[i] = CLOG(vals[i])*degree1step/(2*I*eps_t);
+	}
+    return SUCCESS;
+}
+
 
 /**
  * This routine returns the phase factor for reflection coefficient (rho).

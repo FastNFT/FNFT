@@ -82,6 +82,23 @@ FNFT_INT fnft__manakov_discretization_lambda_to_z(const FNFT_UINT n, const FNFT_
 	FNFT_COMPLEX* const vals, fnft_manakov_discretization_t discretization);
 
 /**
+ * @brief This routine maps z in the discrete-time domain to
+ * lambda in continuous-time domain based on the discretization.
+ * 
+ * @param[in] n Length of array vals (number of z)
+ * @param[in] eps_t timestep size
+ * @param[in, out] vals Pointer to first element of array of size n. Upon entry, this array contains the discrete-time
+ * values z. Upon exit, the array contains the corresponding continuous-time values \f$\lambda\f$.
+ * @param[in] discretization discretization Should be of type \link fnft_manakov_discretization_t \endlink
+ * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
+ *  defined in \link fnft_errwarn.h \endlink.
+ * 
+ * @ingroup manakov
+ */
+FNFT_INT fnft__manakov_discretization_z_to_lambda(const FNFT_UINT n, const FNFT_REAL eps_t,
+	FNFT_COMPLEX* const vals, fnft_manakov_discretization_t discretization);
+
+/**
  * @brief This routine returns the phase factor for reflection coefficient (rho).
  * It is required for applying boundary conditions to the transfer matrix values
  * based on the discretization.
@@ -180,6 +197,7 @@ FNFT_REAL fnft__manakov_discretization_boundary_coeff(fnft_manakov_discretizatio
 #define manakov_discretization_upsampling_factor(...) fnft__manakov_discretization_upsampling_factor(__VA_ARGS__)
 #define manakov_discretization_method_order(...) fnft__manakov_discretization_method_order(__VA_ARGS__)
 #define manakov_discretization_lambda_to_z(...) fnft__manakov_discretization_lambda_to_z(__VA_ARGS__)
+#define manakov_discretization_z_to_lambda(...) fnft__manakov_discretization_z_to_lambda(__VA_ARGS__)
 #define manakov_discretization_phase_factor_rho(...) fnft__manakov_discretization_phase_factor_rho(__VA_ARGS__)
 #define manakov_discretization_phase_factor_a(...) fnft__manakov_discretization_phase_factor_a(__VA_ARGS__)
 #define manakov_discretization_phase_factor_b(...) fnft__manakov_discretization_phase_factor_b(__VA_ARGS__)
