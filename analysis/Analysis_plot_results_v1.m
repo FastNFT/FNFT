@@ -1,7 +1,7 @@
 %% This script plots the results of a single method
-clear
+% clear
 close all
-load('discr_FTES4_suzuki_sech')     % discr_<method>_<signal>
+% load('discr_FTES4_suzuki_sech')     % discr_<method>_<signal>
 
 % Plotting q1, q2 (for the last number of samples D in D_values)
 t = Test_results.params.t;
@@ -22,7 +22,7 @@ xlabel('t');
 ylabel('q2(t)');
 legend('Real part', 'Imaginary part');
 
-%% Plotting the NFT coeffs and rho for multiple D's
+%% Plotting the rho for multiple D's
 xi = linspace(Test_results.params.XI(1),Test_results.params.XI(2),Test_results.params.M);
 figure;
 hold on
@@ -31,6 +31,23 @@ for i=1:length(Test_results.params.D_values)
 plot(xi, real(Test_results.(strcat('D_',num2str(Test_results.params.D_values(i)))).rho1));
 end
 title('Continuous spectrum, first element real part');
+xlabel('\xi');
+ylabel('r(\xi)');
+legend('Exact solution');
+for i=1:length(Test_results.params.D_values)
+old_legend=findobj(gcf, 'Type', 'Legend');
+legend([old_legend.String,(strcat('D = ',num2str(Test_results.params.D_values(i))))])
+end
+
+%% Plotting the NFT coeff a for multiple D's
+xi = linspace(Test_results.params.XI(1),Test_results.params.XI(2),Test_results.params.M);
+figure;
+hold on
+plot(xi, real(Test_results.exact_sol.a));
+for i=1:length(Test_results.params.D_values)
+plot(xi, real(Test_results.(strcat('D_',num2str(Test_results.params.D_values(i)))).a));
+end
+title('Continuous spectrum, a coefficient');
 xlabel('\xi');
 ylabel('r(\xi)');
 legend('Exact solution');
