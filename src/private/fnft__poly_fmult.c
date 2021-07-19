@@ -671,9 +671,9 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
     //
     //   Store FFT's of [aj ak al; dj dk dl; gj gk gl] in result_11, result_12, result_13... result_33
 
-    misc_print_buf(4,p1_11,"p11 in");
-    misc_print_buf(4,p1_12,"p12 in");
-    misc_print_buf(4,p1_13,"p13 in");
+//    misc_print_buf(4,p1_11,"p11 in");
+//    misc_print_buf(4,p1_12,"p12 in");
+//    misc_print_buf(4,p1_13,"p13 in");
     ret_code = poly_fmult_two_polys(deg, p1_11, p2_11, result_11,
                                     plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
@@ -701,9 +701,9 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
     ret_code = poly_fmult_two_polys(deg, NULL /*p1_31*/, p2_13, result_33,
                                     plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
-    misc_print_buf(4,result_11,"result11 after 1st term calc");
-    misc_print_buf(4,result_12,"result12 after 1st term calc");
-    misc_print_buf(4,result_13,"result13 after 1st term calc");
+//    misc_print_buf(4,result_11,"result11 after 1st term calc");
+  //  misc_print_buf(4,result_12,"result12 after 1st term calc");
+    //misc_print_buf(4,result_13,"result13 after 1st term calc");
 
     mode = mode_offset + 2;     // We are now switching to the mode:
                                 // not calculating 1st term, but also not calculating last term,
@@ -737,9 +737,9 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
     ret_code = poly_fmult_two_polys(deg, NULL /*p1_32*/, p2_23, result_33,
                                     plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
-    misc_print_buf(4,result_11,"result11 after 2nd term calc");
-    misc_print_buf(4,result_12,"result12 after 2nd term calc");
-    misc_print_buf(4,result_13,"result13 after 2nd term calc");
+//    misc_print_buf(4,result_11,"result11 after 2nd term calc");
+  //  misc_print_buf(4,result_12,"result12 after 2nd term calc");
+    //misc_print_buf(4,result_13,"result13 after 2nd term calc");
 
     // add 3rd term
     mode = mode + 1;        // We are now switching to the mode:
@@ -780,9 +780,9 @@ inline INT poly_fmult_two_polys3x3(const UINT deg,
         ret_code = poly_fmult_two_polys(deg, NULL /*p1_33*/, p2_33, result_33,
                                     plan_fwd, plan_inv, buf0, buf1, buf2, mode, 3);
     CHECK_RETCODE(ret_code, leave_fun);
-    misc_print_buf(4,result_11,"result11 after 3rd term calc");
-    misc_print_buf(4,result_12,"result12 after 3rd term calc");
-    misc_print_buf(4,result_13,"result13 after 3rd term calc");
+//    misc_print_buf(4,result_11,"result11 after 3rd term calc");
+  //  misc_print_buf(4,result_12,"result12 after 3rd term calc");
+    //misc_print_buf(4,result_13,"result13 after 3rd term calc");
 
 leave_fun:
     return ret_code;
@@ -1099,7 +1099,7 @@ INT fnft__poly_fmult3x3(UINT * const d, UINT n, COMPLEX * const p,
     COMPLEX *buf0 = NULL, *buf1 = NULL, *buf2 = NULL;
     INT W = 0;
     INT ret_code;
-printf("n = %d\n",n);
+// printf("n = %d\n",n);
     // Setup pointers to the individual polynomials in p
     deg = *d;
     p11 = p;
@@ -1148,7 +1148,7 @@ printf("n = %d\n",n);
         p33 = p33_pad + n*(deg + 1);
 
         for (i = 0; !(i >= n_excess); i++) {
-            // We pad with z^deg*[1 0; 0 1]
+            // We pad with z^deg*[1 0 0; 0 1 0; 0 0 1]
             p11[0] = 1.0;
             p12[0] = 0.0;
             p13[0] = 0.0;
@@ -1234,8 +1234,8 @@ printf("n = %d\n",n);
         r31 = r23 + r_stride;
         r32 = r31 + r_stride;
         r33 = r32 + r_stride;
-        printf("p_stride = %d\n",p_stride);
-printf("r_stride = %d\n",r_stride);
+//        printf("p_stride = %d\n",p_stride);
+// printf("r_stride = %d\n",r_stride);
 
         // Multiply all pairs of polynomials, normalize if desired
         for (i=0; i<n; i+=2) {
@@ -1246,14 +1246,6 @@ printf("r_stride = %d\n",r_stride);
                                                plan_fwd, plan_inv, buf0, buf1,
                                                buf2, mode_offset);
             CHECK_RETCODE(ret_code, release_mem);
-            if (i == 2){
-/*                misc_print_buf(4,(p+o1),"p+o1");
-                misc_print_buf(4,(p+o2),"p+o2");
-                misc_print_buf(4,(result+or),"result+or");
-                misc_print_buf(4,buf0,"buf0");
-                misc_print_buf(4,buf1,"buf1");
-                misc_print_buf(4,buf2,"buf2");*/
-            }
 
             // Normalize if desired
             if (W_ptr != NULL){

@@ -191,7 +191,7 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
                 q1_sub[isub] = q1[i];
                 q2_sub[isub] = q2[i];
             }
-        misc_print_buf(50, q1_sub, "subsampled_q1_new");
+//        misc_print_buf(50, q1_sub, "subsampled_q1_new");
         
         const REAL a1 = 0.25 + sqrt(3) / 6;
 	    const REAL a2 = 0.25 - sqrt(3) / 6;

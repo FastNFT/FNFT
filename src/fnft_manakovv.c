@@ -360,8 +360,8 @@ INT fnft_manakovv(
 		// required for obtaining a second approximation of the spectrum
 		// which will be used for Richardson extrapolation.
 		Dsub = (UINT)CEIL(D / 2);
-		printf("D for preprocess_signal = %d\n", D);
-		printf("Dsub for preprocess_signal = %d\n", Dsub);
+//		printf("D for preprocess_signal = %d\n", D);
+//		printf("Dsub for preprocess_signal = %d\n", Dsub);
 		ret_code = manakov_discretization_preprocess_signal(D, q1, q2, eps_t, kappa, &Dsub, &q1sub_preprocessed, &q2sub_preprocessed,
 			first_last_index, opts->discretization);
 		CHECK_RETCODE(ret_code, leave_fun);
@@ -375,7 +375,7 @@ INT fnft_manakovv(
 		opts->bound_state_localization = manakovv_bsloc_NEWTON;
 		ret_code = fnft_manakovv_base(Dsub*upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, Tsub, M, contspec_sub, XI, &K_sub,
 			NULL, normconsts_or_residues_sub, kappa, opts);	// bound_states already calculated. Passing NULL for boundstates to avoid recalculating
-		misc_print_buf(100, contspec_sub, "contspec_sub");
+//		misc_print_buf(100, contspec_sub, "contspec_sub");
 		CHECK_RETCODE(ret_code, leave_fun);
 		opts->bound_state_localization = bs_loc_opt;
 		opts->discspec_type = ds_type_opt;
@@ -525,7 +525,7 @@ static inline INT fnft_manakovv_base(
 					printf("eps_t = %f\n", eps_t);
 					misc_print_buf(16,transfer_matrix,"first_16_entries_transfer_matrix");
 					*/
-		misc_print_buf(100,q1,"q1_new");
+//		misc_print_buf(100,q1,"q1_new");
 		ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, W_ptr,
 			opts->discretization);  // NOTE: changed D to D_given
 		CHECK_RETCODE(ret_code, leave_fun);
@@ -906,19 +906,19 @@ static inline INT manakovv_compute_contspec(
 			goto leave_fun;
 		}
 
-		printf("Inputs to manakov_scatter_matrix\n");
-		printf("D=%d\n", D);
-		misc_print_buf(D, q1, "q1");
-		misc_print_buf(D, q2, "q2");
-		printf("eps_t=%f\n", eps_t);
-		printf("M=%d\n", M);
-		misc_print_buf(M, xi, "xi");
-		printf("kappa=%d\n", kappa);
+//		printf("Inputs to manakov_scatter_matrix\n");
+//		printf("D=%d\n", D);
+//		misc_print_buf(D, q1, "q1");
+//		misc_print_buf(D, q2, "q2");
+//		printf("eps_t=%f\n", eps_t);
+//		printf("M=%d\n", M);
+//		misc_print_buf(M, xi, "xi");
+//		printf("kappa=%d\n", kappa);
 		ret_code = manakov_scatter_matrix(D, q1, q2, eps_t, M, xi, kappa,
 			scatter_coeffs, opts->discretization);
 		CHECK_RETCODE(ret_code, leave_fun);
-		printf("scatter_coeffs after manakov_scatter_matrix\n");
-		misc_print_buf(9 * M, scatter_coeffs, "scatter_coeffs");
+//		printf("scatter_coeffs after manakov_scatter_matrix\n");
+//		misc_print_buf(9 * M, scatter_coeffs, "scatter_coeffs");
 
 		// This is necessary because nse_scatter_matrix to ensure
 		// boundary conditions can be applied using common code for slow
@@ -929,9 +929,9 @@ static inline INT manakovv_compute_contspec(
 			H31_vals[i] = scatter_coeffs[i * 9 + 6];
 		}
 		// Check if we have the right values stored in Hij:
-		misc_print_buf(M, H11_vals, "H11");
-		misc_print_buf(M, H21_vals, "H21");
-		misc_print_buf(M, H31_vals, "H31");
+//		misc_print_buf(M, H11_vals, "H11");
+//		misc_print_buf(M, H21_vals, "H21");
+//		misc_print_buf(M, H31_vals, "H31");
 
 /*		if (opts->discretization == manakov_discretization_CF4_2){
 		for (i = 0; i < M; i++)
@@ -1025,8 +1025,8 @@ static inline INT manakovv_compute_contspec(
 		// TODO: remove this second call, phase factor b2= phase factor b1
 		ret_code = manakov_discretization_phase_factor_b(eps_t, D_given, T, &phase_factor_b2, opts->discretization);
 		CHECK_RETCODE(ret_code, leave_fun);
-		printf("phase_factor a = %f\n", phase_factor_a);
-		printf("phase_factor b = %f\n", phase_factor_b1);
+//		printf("phase_factor a = %f\n", phase_factor_a);
+//		printf("phase_factor b = %f\n", phase_factor_b1);
 
 		for (i = 0; i < M; i++) {
 			result[offset + i] = H11_vals[i] * scale * CEXP(I * xi[i] * phase_factor_a);

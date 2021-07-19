@@ -51,7 +51,8 @@
 %   'discr_2split6B' O = 2; P = 6;   S=6.
 %   'discr_4split4A' O = 4; P = 4;   S=4.
 %   'discr_4split4B' O = 4; P = 2;   S=4.
-%   'discr_4split6B' O = 4; P = 2;   S=4.
+%   'discr_4split6B' O = 4; P = 7;   S=6.
+%   'discr_FTES4_suzuki' O = 4; P = 2;   S=4.
 %   TODO: check O, P, S
 % 
 %       The following options specify slow discretization schemes.
