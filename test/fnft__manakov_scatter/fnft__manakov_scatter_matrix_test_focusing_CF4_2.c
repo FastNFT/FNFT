@@ -23,7 +23,6 @@
 #include "fnft__misc.h"
 #include "fnft__errwarn.h"
 
-// TODO: update result_exact and matlab code
 INT manakov_scatter_matrix_test_focusing_CF4_2()
 {
     UINT i, D = 8;
@@ -156,6 +155,5 @@ INT main()
     if (manakov_scatter_matrix_test_focusing_CF4_2() != SUCCESS)
         return EXIT_FAILURE;
 
-    printf("succes");
     return EXIT_SUCCESS;
 }

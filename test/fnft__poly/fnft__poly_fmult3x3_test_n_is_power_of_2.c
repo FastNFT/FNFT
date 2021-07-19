@@ -167,7 +167,6 @@ i = 0:7;
     }
     #define DEBUG
     #ifdef DEBUG
-        printf("deg in test = %d\n", deg);
         printf("error = %2.1e < %2.1e\n",misc_rel_err(45, result, result_exact),100*EPSILON);
         printf("result and exact result\n");
         for (UINT j = 0; j<45; j++){

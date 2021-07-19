@@ -144,13 +144,6 @@ end
         
         // without normalization 
         ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, NULL, manakov_discretization);  // with kappa =1
-
-/*        for (i = 0; i<9; i++){
-                printf("transfer_matrix in manakov_fscatter_test (p%d)=\n",i);
-            for (UINT j = 0; j<25; j++){
-                printf("%f + i%f\n", creal(transfer_matrix[j+(i*25)]), cimag(transfer_matrix[j+(i*25)]));
-            }
-        }*/
     
         if (ret_code != SUCCESS){
             return E_SUBROUTINE(ret_code);
@@ -176,12 +169,6 @@ end
         for (UINT j = 0; j<45; j++){
                 printf("%f + i%f,    %f + i%f\n", creal(result[j]), cimag(result[j]), creal(result_exact[j]), cimag(result_exact[j]));
             }
-
-        /*Note: For z[0], z[1] and z[3] result and result_exact match, but the values for z[2] and z[4] are different.
-        If we change D, some of the other values with z=z[i] match but not all.
-        The values for z an p passed to poly_eval are okay, and when evaluating using horners method in matlab
-        result and result_exact do agree, so there is probably a mistake in the matlab test file
-        */
 
 #endif
         if (misc_rel_err(9*nz, result, result_exact) > err_bnd)

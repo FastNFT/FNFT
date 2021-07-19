@@ -213,22 +213,17 @@ end
         for (i=0; i<D; i++){
             q1[i] = 0.92*1/COSH(i*eps_t-(D-1)*eps_t*0.5);
             q2[i] = 2.13*1/COSH(i*eps_t-(D-1)*eps_t*0.5);
-        }
-        misc_print_buf(4,q1,"q1");
-        misc_print_buf(4,q2,"q2");
-        
+        }        
         
         // without normalization 
         ret_code = manakov_fscatter(D, q1, q2, kappa, eps_t, transfer_matrix, &deg, NULL, manakov_discretization);
-        misc_print_buf(540,transfer_matrix,"TM_C");
-    
+       
         if (ret_code != SUCCESS){
             return E_SUBROUTINE(ret_code);
             goto leave_fun;
         }
 
         
-        printf("deg=%d\n",deg);
         for (i=0; i<9; i++){
             for (j=0; j<nz; j++){
                 result[i*nz+j] = z[j];

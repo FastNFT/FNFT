@@ -736,7 +736,6 @@ const REAL error_bounds[5], fnft_manakovv_opts_t * const opts) {
         normconsts_and_residues, normconsts_exact, normconsts_and_residues+K,
         residues_exact, errs);
     CHECK_RETCODE(ret_code, release_mem);
-//    return E_INVALID_ARGUMENT(kappa);       // here to stop executing
 
 #ifdef DEBUG
     for (UINT i=0; i<5; i++)

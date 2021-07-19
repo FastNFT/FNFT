@@ -23,7 +23,6 @@
 #include "fnft__misc.h"
 #include "fnft__errwarn.h"
 
-// TODO: update result_exact and matlab code
 INT manakov_scatter_matrix_test_focusing_bo()
 {
     UINT i, D = 8;

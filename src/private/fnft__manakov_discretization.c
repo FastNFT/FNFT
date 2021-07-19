@@ -178,8 +178,6 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
             for (isub=0, i=0; isub<D_effective; isub++, i += nskip_per_step) {  // downsampling
                 q1_preprocessed[isub] = q1[i];
                 q2_preprocessed[isub] = q2[i];
-//                r1_preprocessed[isub] = conj(q1[i])*-1*kappa;
-//                r2_preprocessed[isub] = conj(q2[i])*-1*kappa;
             }
             break;
         case manakov_discretization_4SPLIT4A:
@@ -191,7 +189,6 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
                 q1_sub[isub] = q1[i];
                 q2_sub[isub] = q2[i];
             }
-//        misc_print_buf(50, q1_sub, "subsampled_q1_new");
         
         const REAL a1 = 0.25 + sqrt(3) / 6;
 	    const REAL a2 = 0.25 - sqrt(3) / 6;
@@ -202,22 +199,6 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
 		misc_resample(Dsub, (eps_t/nskip_per_step), q1_sub, (0.5 + SQRT(3) / 6) * (eps_t/nskip_per_step), q1_c2);
 		misc_resample(Dsub, (eps_t/nskip_per_step), q2_sub, (0.5 - SQRT(3) / 6) * (eps_t/nskip_per_step), q2_c1);
 		misc_resample(Dsub, (eps_t/nskip_per_step), q2_sub, (0.5 + SQRT(3) / 6) * (eps_t/nskip_per_step), q2_c2);
-
-        /* old
-        misc_resample(Dsub, eps_t, q1_sub, (0.5 - SQRT(3) / 6) * (eps_t/nskip_per_step), q1_c1);
-		misc_resample(Dsub, eps_t, q1_sub, (0.5 + SQRT(3) / 6) * (eps_t/nskip_per_step), q1_c2);
-		misc_resample(Dsub, eps_t, q2_sub, (0.5 - SQRT(3) / 6) * (eps_t/nskip_per_step), q2_c1);
-		misc_resample(Dsub, eps_t, q2_sub, (0.5 + SQRT(3) / 6) * (eps_t/nskip_per_step), q2_c2);
-        
-        Other option:
-        misc_resample(Dsub, eps_t, q1_sub, (0.5 - SQRT(3) / 6) * eps_t, q1_c1);
-		misc_resample(Dsub, eps_t, q1_sub, (0.5 + SQRT(3) / 6) * eps_t, q1_c2);
-		misc_resample(Dsub, eps_t, q2_sub, (0.5 - SQRT(3) / 6) * eps_t, q2_c1);
-		misc_resample(Dsub, eps_t, q2_sub, (0.5 + SQRT(3) / 6) * eps_t, q2_c2);
-
-        But not this "mixed case" using eps_t AND eps_t/nskip_per_step!
-
-        */
 
 		for (i = 0; i < Dsub; i++) {
 			q1_preprocessed[2 * i] = a1 * q1_c1[i] + a2 * q1_c2[i];

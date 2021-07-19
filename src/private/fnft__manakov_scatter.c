@@ -108,42 +108,9 @@ INT manakov_scatter_matrix(UINT const D,
 
         COMPLEX *q1_preprocessed = NULL;
         COMPLEX *q2_preprocessed = NULL;
-//            UINT D_eff = upsampling_factor*D;
 UINT D_eff = D;
     switch (discretization) {
-        case manakov_discretization_CF4_2:;         // commutator-free fourth-order.
-            // Allocation for resampling
-/*            COMPLEX *q1_c1, *q1_c2, *q2_c1, *q2_c2;
-            const REAL a1 = 0.25 + sqrt(3)/6;
-            const REAL a2 = 0.25 - sqrt(3)/6;
-            q1_c1 = malloc(D*sizeof(COMPLEX));
-            q2_c1 = malloc(D*sizeof(COMPLEX));
-            q1_c2 = malloc(D*sizeof(COMPLEX));
-            q2_c2 = malloc(D*sizeof(COMPLEX));
-            q1_preprocessed = malloc(D_eff*sizeof(COMPLEX));
-            q2_preprocessed = malloc(D_eff*sizeof(COMPLEX));
-
-            // Getting non-equidistant samples. q1_ci, q2_ci have sample points at
-            // T0+(n+ci)*eps_t, where c1 = 0.5-sqrt(3)/6, c2 = 0.5+sqrt(3)/6
-            // Getting new samples:
-            misc_resample(D, eps_t, q1, (0.5-SQRT(3)/6)*eps_t, q1_c1);
-            misc_resample(D, eps_t, q1, (0.5+SQRT(3)/6)*eps_t, q1_c2);
-            misc_resample(D, eps_t, q2, (0.5-SQRT(3)/6)*eps_t, q2_c1);
-            misc_resample(D, eps_t, q2, (0.5+SQRT(3)/6)*eps_t, q2_c2);
-            for (UINT i=0; i<D; i++){
-                q1_preprocessed[2*i] = a1*q1_c1[i]+a2*q1_c2[i];
-                q2_preprocessed[2*i] = a1*q2_c1[i]+a2*q2_c2[i];
-                q1_preprocessed[2*i+1] = a2*q1_c1[i]+a1*q1_c2[i];
-                q2_preprocessed[2*i+1] = a2*q2_c1[i]+a1*q2_c2[i];
-            }
-*/
-/*            UINT Dsub = D;
-            UINT first_last_index[2] = { 0 };
-	        ret_code = manakov_discretization_preprocess_signal(D, q1, q2, eps_t, kappa, &Dsub, &q1_preprocessed, &q2_preprocessed,
-			first_last_index, manakov_discretization_CF4_2);
-	        CHECK_RETCODE(ret_code, leave_fun);*/
-
-//        break;
+        case manakov_discretization_CF4_2:;         // commutator-free fourth-order. Fall through
         case manakov_discretization_BO:            // bofetta-osborne scheme
             q1_preprocessed = q1;
             q2_preprocessed = q2;
@@ -164,7 +131,7 @@ UINT D_eff = D;
 
             switch (discretization) {
                 case manakov_discretization_CF4_2:
-                l_curr /=2;     // because we are doing BO with 2* the original number of samples. Intentional fall through
+                l_curr /=2;
                 case manakov_discretization_BO:
                     for (UINT n = 0; n < D_eff; n++){
                         manakov_scatter_U_BO(q1_preprocessed[n],q2_preprocessed[n],l_curr,eps_t,kappa,*U);

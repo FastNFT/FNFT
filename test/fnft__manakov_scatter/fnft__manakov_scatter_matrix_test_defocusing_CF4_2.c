@@ -23,7 +23,6 @@
 #include "fnft__misc.h"
 #include "fnft__errwarn.h"
 
-// TODO: update result_exact and matlab code
 INT manakov_scatter_matrix_test_defocusing_CF4_2()
 {
     UINT i, D = 8;
@@ -33,7 +32,6 @@ INT manakov_scatter_matrix_test_defocusing_CF4_2()
     COMPLEX q1[8], q2[8];
     COMPLEX result[18];
     COMPLEX lam[2] = {2, 1+0.5*I};
-    // TODO: update matlab code and result
     COMPLEX result_exact[18] = { -0.360589966187354 -      1.17028981468031*I,
         -0.0241956711020656 +     0.403833944944134*I,
          -0.169329555844066 +     0.554313620604708*I,

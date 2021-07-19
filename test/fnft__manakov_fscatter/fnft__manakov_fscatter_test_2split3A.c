@@ -128,7 +128,6 @@ end
             ret_code = E_INVALID_ARGUMENT(manakov_discretization);
             goto leave_fun;
         }        
-printf("i = %d\n",i);
         transfer_matrix = malloc(i*sizeof(COMPLEX));
         if (transfer_matrix == NULL) {
             ret_code = E_NOMEM;
