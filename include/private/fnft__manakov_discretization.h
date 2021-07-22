@@ -176,8 +176,8 @@ FNFT_INT fnft__manakov_discretization_phase_factor_b(const FNFT_REAL eps_t, cons
  * 
  * @ingroup manakov
  */
-FNFT_UINT fnft__manakov_discretization_preprocess_signal(const FNFT_UINT D, FNFT_COMPLEX const* const q1,
-		FNFT_COMPLEX const* const q2, FNFT_REAL const eps_t, const FNFT_INT kappa,
+FNFT_INT fnft__manakov_discretization_preprocess_signal(const FNFT_UINT D, FNFT_COMPLEX const* const q1,
+		FNFT_COMPLEX const* const q2, FNFT_REAL const eps_t,
 	FNFT_UINT* const Dsub_ptr, FNFT_COMPLEX** q1_preprocessed_ptr, FNFT_COMPLEX** q2_preprocessed_ptr,
 	FNFT_UINT* const first_last_index, manakov_discretization_t discretization);
 

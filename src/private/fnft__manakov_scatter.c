@@ -131,7 +131,7 @@ UINT D_eff = D;
 
             switch (discretization) {
                 case manakov_discretization_CF4_2:
-                l_curr /=2;
+                l_curr /=2;                     // Intional fall through
                 case manakov_discretization_BO:
                     for (UINT n = 0; n < D_eff; n++){
                         manakov_scatter_U_BO(q1_preprocessed[n],q2_preprocessed[n],l_curr,eps_t,kappa,*U);

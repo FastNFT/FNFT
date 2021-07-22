@@ -107,8 +107,8 @@ UINT fnft__manakov_discretization_method_order(manakov_discretization_t discreti
 
 // This function downsamples if desired (needed for Richardson extrapolation) and 
 // gets the required samples after interpolation if needed for the chosen method.
-UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * const q1,
-        COMPLEX const * const q2, REAL const eps_t, const INT kappa,
+INT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * const q1,
+        COMPLEX const * const q2, REAL const eps_t,
         UINT * const Dsub_ptr, COMPLEX **q1_preprocessed_ptr, COMPLEX **q2_preprocessed_ptr, 
         UINT * const first_last_index,  manakov_discretization_t discretization){
 
@@ -142,7 +142,7 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
         Dsub = D;
     const UINT nskip_per_step = (UINT) ROUND((REAL)D / Dsub);
     Dsub = (UINT) ROUND((REAL)D / nskip_per_step); // actual Dsub
-
+    
     UINT upsampling_factor = manakov_discretization_upsampling_factor(discretization);
     INT ret_code = SUCCESS;
     if (upsampling_factor == 0){
@@ -152,13 +152,12 @@ UINT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * cons
     D_effective = Dsub*upsampling_factor;
     COMPLEX * const q1_preprocessed = malloc(D_effective * sizeof(COMPLEX));
     COMPLEX * const q2_preprocessed = malloc(D_effective * sizeof(COMPLEX));
-    COMPLEX *q1_c1, *q1_c2, *q2_c1, *q2_c2, *q1_sub, *q2_sub;
-            q1_c1 = malloc(Dsub*sizeof(COMPLEX));
-            q2_c1 = malloc(Dsub*sizeof(COMPLEX));
-            q1_c2 = malloc(Dsub*sizeof(COMPLEX));
-            q2_c2 = malloc(Dsub*sizeof(COMPLEX));
-            q1_sub = malloc(Dsub * sizeof(COMPLEX));
-	    	q2_sub = malloc(Dsub * sizeof(COMPLEX));
+    COMPLEX *q1_c1 = malloc(Dsub*sizeof(COMPLEX));
+    COMPLEX *q2_c1 = malloc(Dsub*sizeof(COMPLEX));
+    COMPLEX *q1_c2 = malloc(Dsub*sizeof(COMPLEX));
+    COMPLEX *q2_c2 = malloc(Dsub*sizeof(COMPLEX));
+    COMPLEX *q1_sub = malloc(Dsub * sizeof(COMPLEX));
+	COMPLEX *q2_sub = malloc(Dsub * sizeof(COMPLEX));
     if (q1_preprocessed == NULL || q2_preprocessed == NULL) {
         ret_code = E_NOMEM;
         goto release_mem;

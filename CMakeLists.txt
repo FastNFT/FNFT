@@ -71,6 +71,23 @@ endif()
 # check if FFTW3 is available
 find_library(FFTW3_LIB fftw3)
 find_path(FFTW3_INCLUDE fftw3.h)
+
+# check if fftw3.h or library are found
+if (FFTW3_LIB)
+	message("FFTW3 library found")
+	endif()
+if (FFTW3_INCLUDE)
+	message("FFTW3 header found")
+	endif()
+
+if (NOT FFTW3_LIB)
+	message("FFTW3 library not found")
+	endif()
+if (NOT FFTW3_INCLUDE)
+	message("FFTW3 header not found")
+	endif()
+
+
 if (FFTW3_LIB AND FFTW3_INCLUDE)
     if (ENABLE_FFTW)
         message("++ FFTW3 found and enabled. Run cmake with \"-DENABLE_FFTW=OFF\" to disable.")

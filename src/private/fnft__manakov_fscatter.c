@@ -171,12 +171,6 @@ INT manakov_fscatter(const UINT D, COMPLEX const* const q1, COMPLEX const* const
 	}
 	D_eff = D * upsampling_factor;
 
-	// Declaring and defining some variables for 4split4 methods
-	COMPLEX* q1_c1, * q1_c2, * q2_c1, * q2_c2, * q1_eff, * q2_eff;
-	const REAL a1 = 0.25 + sqrt(3) / 6;
-	const REAL a2 = 0.25 - sqrt(3) / 6;
-
-
 	// Allocate buffers
 	len = manakov_fscatter_numel(D_eff, discretization);
 	if (len == 0) { // size D>0, this means unknown discretization

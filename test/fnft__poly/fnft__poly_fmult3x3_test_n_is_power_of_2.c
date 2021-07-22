@@ -174,8 +174,6 @@ i = 0:7;
             }
     #endif
     if (!(misc_rel_err(9*(deg+1), result, result_exact) <= 100*EPSILON)){
-        REAL err;
-        err = misc_rel_err(9*(deg+1), result, result_exact);
         return E_TEST_FAILED;
     }
 

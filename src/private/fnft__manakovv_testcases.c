@@ -587,14 +587,10 @@ static INT manakovv_compare_nfs(const UINT M, const UINT K1, const UINT K2,
     COMPLEX const * const ab_2,
     COMPLEX const * const bound_states_1,
     COMPLEX const * const bound_states_2,
-    COMPLEX const * const normconsts_1,
-    COMPLEX const * const normconsts_2,
-    COMPLEX const * const residues_1,
-    COMPLEX const * const residues_2,
     REAL dists[5])
 {
-    UINT i, j, min_j = 0;
-    REAL dist, min_dist, nrm;
+    UINT i;
+    REAL nrm;
 
     // Check last argument
     if (dists == NULL)
@@ -605,7 +601,7 @@ static INT manakovv_compare_nfs(const UINT M, const UINT K1, const UINT K2,
         dists[1] = NAN;
     }
     else {
-        // dist. refelction coef 1
+        // dist. reflection coef 1
         dists[0] = 0.0;
         nrm = 0.0;
         for (i=0; !(i>=M); i++) {
@@ -732,9 +728,7 @@ const REAL error_bounds[5], fnft_manakovv_opts_t * const opts) {
 
     // Compute the errors
     ret_code = manakovv_compare_nfs(M, K, K_exact, contspec, contspec_exact,
-        contspec+2*M, ab_exact, bound_states, bound_states_exact,
-        normconsts_and_residues, normconsts_exact, normconsts_and_residues+K,
-        residues_exact, errs);
+        contspec+2*M, ab_exact, bound_states, bound_states_exact, errs);
     CHECK_RETCODE(ret_code, release_mem);
 
 #ifdef DEBUG

@@ -40,13 +40,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     FNFT_COMPLEX * bound_states = NULL;
     FNFT_COMPLEX * normconsts_or_residuals = NULL;
     FNFT_INT kappa;
-    FNFT_INT skip_contspec_flag = 0;
     FNFT_INT skip_bound_states_flag = 0;
-    FNFT_INT skip_normconsts_flag = 0;
-    FNFT_UINT i, j;
+    FNFT_UINT i;
     FNFT_INT k;
     double *re_q1, *im_q1, *re_q2, *im_q2;
-    double *csr, *csi, *bsr, *bsi, *ncr, *nci;
+    double *csr, *csi, *bsr, *bsi;
     char msg[128]; // buffer for error messages
     fnft_manakovv_opts_t opts;
     int ret_code;
@@ -87,7 +85,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     if ( D<2 )
         mexErrMsgTxt("Length of the first input q2 should be at least two.");
-    if ( !mxGetNumberOfElements(prhs[1])==D )       // Check if q2 has same number of elements as q1
+    if ( !(mxGetNumberOfElements(prhs[1])==D) )       // Check if q2 has same number of elements as q1
         mexErrMsgTxt("Length of the second input q2 should be equal to length of q1.");
     if ( T[0] >= T[1] )
         mexErrMsgTxt("T(1) >= T(2).");
@@ -149,8 +147,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "skip_bs") == 0 ) {
 
             skip_bound_states_flag = 1;
-            skip_normconsts_flag = 1; // since bound states are needed to
-                                      // compute norming constants
 
         } else if ( strcmp(str, "quiet") == 0 ) {
 

@@ -23,7 +23,7 @@
 
 INT main()
 {
-    INT ret_code, i;
+    INT ret_code;
     fnft_manakovv_opts_t opts;
     UINT D = 512;     //original
     const manakovv_testcases_t tc = manakovv_testcases_SECH_FOCUSING;

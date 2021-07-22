@@ -191,7 +191,7 @@ INT fnft_manakovv(
 	// Preprocessing takes care of computing things which are required by all
 	// the auxiliary functions thus helping efficiency.
 	Dsub = D;
-	ret_code = manakov_discretization_preprocess_signal(D, q1, q2, eps_t, kappa, &Dsub, &q1sub_preprocessed, &q2sub_preprocessed,
+	ret_code = manakov_discretization_preprocess_signal(D, q1, q2, eps_t, &Dsub, &q1sub_preprocessed, &q2sub_preprocessed,
 			first_last_index, opts->discretization);
 	CHECK_RETCODE(ret_code, leave_fun);
 
@@ -241,7 +241,7 @@ INT fnft_manakovv(
 		// required for obtaining a second approximation of the spectrum
 		// which will be used for Richardson extrapolation.
 		Dsub = (UINT)CEIL(D / 2);
-		ret_code = manakov_discretization_preprocess_signal(D, q1, q2, eps_t, kappa, &Dsub, &q1sub_preprocessed, &q2sub_preprocessed,
+		ret_code = manakov_discretization_preprocess_signal(D, q1, q2, eps_t, &Dsub, &q1sub_preprocessed, &q2sub_preprocessed,
 			first_last_index, opts->discretization);
 		CHECK_RETCODE(ret_code, leave_fun);
 

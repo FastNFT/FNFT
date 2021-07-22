@@ -21,11 +21,9 @@
 #include "fnft__manakovv_testcases.h"
 #include "fnft__errwarn.h"
 
-// TODO: this one does not work now, just used for debugging
-
 INT main()
 {
-    INT ret_code, i;
+    INT ret_code;
     fnft_manakovv_opts_t opts;
     UINT D = 512;
     const manakovv_testcases_t tc = manakovv_testcases_SECH_FOCUSING;
