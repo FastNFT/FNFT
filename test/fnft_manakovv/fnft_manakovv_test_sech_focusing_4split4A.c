@@ -25,8 +25,7 @@ INT main()
 {
     INT ret_code, i;
     fnft_manakovv_opts_t opts;
-    UINT D = 4000;       // for testing
-//    UINT D = 512;     //original
+    UINT D = 512;     //original
     const manakovv_testcases_t tc = manakovv_testcases_SECH_FOCUSING;
     REAL error_bounds[5] = { 
         6.2e-6,     // reflection coefficient 1
@@ -42,24 +41,19 @@ INT main()
 
     ret_code = manakovv_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    printf("test 1 ok\n");
 
     // Check the case where D is not a power of two. The error bounds have to
     // be tight but not too tight for this to make sense!
     ret_code = manakovv_testcases_test_fnft(tc, D+1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    printf("test 2 ok\n");
     ret_code = manakovv_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    printf("test 3 ok\n");
     
 
     // with Richardson extrapolation
     opts.richardson_extrapolation_flag = 1;
     ret_code = manakovv_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-    printf("test 4 ok\n");
-
 
 leave_fun:
     if (ret_code != SUCCESS)

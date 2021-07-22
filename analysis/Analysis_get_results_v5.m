@@ -1,5 +1,7 @@
 %% Run tests and collect results to analyse performance of methods
-% Runs all methods at once, without computing bound states
+% Runs all methods at once, without computing bound states, WITH
+% richardson extrapolation
+% TODO: fix RE fix slow methods
 
 methods = ["discr_2split3A",
            "discr_2split3B",
@@ -10,20 +12,10 @@ methods = ["discr_2split3A",
            "discr_4split4B",
            "discr_4split6B",
            "discr_FTES4_suzuki"];
-       
-methods = ["discr_2split4B",
-           "discr_2split6B",
-           "discr_4split4B",
-           "discr_4split6B",
-           "discr_FTES4_suzuki"];
-
-methods = ["discr_4split4B",
-           "discr_BO",
-           "discr_CF4_2"];
-
+           
 methods = flip(methods);        
 
-for method_index = 1:3
+for method_index = 1:10
     
 clearvars -except method_index methods;
 close all;
@@ -36,7 +28,7 @@ signal = 'sech';    % potential function: sech or rect
 % xi, t, and dt
 T   = [-38.5, 38.5];      % location of the 1st and last sample in the time domain
 % D_values = [50 60 70 80 90 128 300 512 1000 1500 2000 2500 4000 6500 16000];        % number of samples
-D_values = zeros(1,13);
+D_values = zeros(1,12);
 for k=1:13
     D_values(k) = 2^(k+1);
 end
@@ -114,7 +106,7 @@ if strcmp(discretization,'discr_RK4')
     reflection_and_nft_coeffs = [b1./a, b2./a, a, b1, b2];
 else
 tStart = tic;
-[reflection_and_nft_coeffs] = mex_fnft_manakovv(complex(q1), complex(q2), T, XI, kappa, 'M', M, 'cstype_both', 'skip_bs', discretization);
+[reflection_and_nft_coeffs] = mex_fnft_manakovv(complex(q1), complex(q2), T, XI, kappa, 'M', M, 'cstype_both', 'skip_bs', discretization, 'RE');
 % mex_fnft_manakov has many options => run "help mex_fnft_manakov" to learn more
 tEnd = toc(tStart);
 end
@@ -163,7 +155,7 @@ Test_results.params.q2 = q2;
 % save(strcat(discretization,'_',signal,'_D_powers_of_2'),'Test_results')
 % save(strcat(discretization,'_',signal,'_powers_2_v2'),'Test_results')
 
-save(strcat(discretization,'_',signal,'15jul_v1'),'Test_results')
+save(strcat(discretization,'_',signal,'_20jul_v1'),'Test_results')
 
 end
 %% Auxiliary functions

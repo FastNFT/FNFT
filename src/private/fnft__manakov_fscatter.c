@@ -1237,8 +1237,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const* const q1, COMPLEX const* const
 		ret_code = E_INVALID_ARGUMENT(discretization);
 		goto release_mem;
 	}
-	ret_code = poly_fmult3x3(deg_ptr, D, p, result, W_ptr); // using D_eff instead of D because 4split methods are
-																// implemented "as if" there are 2*D samples
+	ret_code = poly_fmult3x3(deg_ptr, D, p, result, W_ptr);
 
 	CHECK_RETCODE(ret_code, release_mem);
 

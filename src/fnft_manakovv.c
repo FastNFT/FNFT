@@ -63,12 +63,8 @@ UINT fnft_manakovv_max_K(const UINT D, fnft_manakovv_opts_t const* const opts)
  */
 
  static inline INT manakovv_compute_boundstates(
-		 UINT const D,
-		 COMPLEX const * const q1,
-		 COMPLEX const * const q2,
 		 const UINT deg,
 		 COMPLEX * const transfer_matrix,
-		 REAL const * const T,
 		 const REAL eps_t,
 		 UINT * const K_ptr,
 		 COMPLEX * const bound_states,
@@ -85,7 +81,6 @@ static inline INT fnft_manakovv_base(
 	REAL const* const XI,
 	UINT* const K_ptr,
 	COMPLEX* const bound_states,
-	COMPLEX* const normconsts_or_residues,
 	const INT kappa,
 	fnft_manakovv_opts_t* opts);
 
@@ -133,13 +128,11 @@ INT fnft_manakovv(
 	UINT first_last_index[2] = { 0 };
 	UINT K_sub;
 	COMPLEX* contspec_sub = NULL;
-	COMPLEX* bound_states_sub = NULL;
-	COMPLEX* normconsts_or_residues_sub = NULL;
 	COMPLEX* normconsts_or_residues_reserve = NULL;
 	fnft_manakovv_bsloc_t bs_loc_opt = 0;
 	fnft_manakovv_dstype_t ds_type_opt = 0;
 	INT ret_code = SUCCESS;
-	UINT i, j, upsampling_factor, D_effective, nskip_per_step;
+	UINT i, j, upsampling_factor;
 
 	// Check inputs
 	if (D < 2)
@@ -178,7 +171,6 @@ INT fnft_manakovv(
 	// Determine step size
 	const REAL eps_t = (T[1] - T[0]) / (D - 1);
 
-	normconsts_or_residues_reserve = normconsts_or_residues;
 	if (opts->richardson_extrapolation_flag == 1) {
 		ds_type_opt = opts->discspec_type;
 		if (ds_type_opt == manakovv_dstype_RESIDUES) {
@@ -209,7 +201,7 @@ INT fnft_manakovv(
 	}
 		// use only the fast eigenvalue method to localize the bound states
 		ret_code = fnft_manakovv_base(D*upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, T, M, contspec, XI, K_ptr,
-			bound_states, normconsts_or_residues, kappa, opts);
+			bound_states, kappa, opts);
 		CHECK_RETCODE(ret_code, leave_fun);
 	if (opts->richardson_extrapolation_flag == 1) {
 		// Allocating memory
@@ -261,7 +253,7 @@ INT fnft_manakovv(
 		bs_loc_opt = opts->bound_state_localization;
 		opts->bound_state_localization = manakovv_bsloc_NEWTON;
 		ret_code = fnft_manakovv_base(Dsub*upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, Tsub, M, contspec_sub, XI, &K_sub,
-			NULL, normconsts_or_residues_sub, kappa, opts);	// bound_states already calculated. Passing NULL for boundstates to avoid recalculating
+			NULL, kappa, opts);	// bound_states already calculated. Passing NULL for boundstates to avoid recalculating
 		CHECK_RETCODE(ret_code, leave_fun);
 		opts->bound_state_localization = bs_loc_opt;
 		opts->discspec_type = ds_type_opt;
@@ -281,6 +273,9 @@ INT fnft_manakovv(
 	}
 
 leave_fun:
+	free(q1sub_preprocessed);
+	free(q2sub_preprocessed);
+	free(contspec_sub);
 	if (normconsts_or_residues_reserve != normconsts_or_residues)
 		free(normconsts_or_residues_reserve);
 	return ret_code;
@@ -299,7 +294,6 @@ static inline INT fnft_manakovv_base(
 	REAL const* const XI,
 	UINT* const K_ptr,
 	COMPLEX* const bound_states,
-	COMPLEX* const normconsts_or_residues,
 	const INT kappa,
 	fnft_manakovv_opts_t* opts)
 {
@@ -382,7 +376,7 @@ static inline INT fnft_manakovv_base(
 		if (kappa == +1 && bound_states != NULL) {
 
 			// Compute the bound states
-			ret_code = manakovv_compute_boundstates(D, q1, q2, deg, transfer_matrix, T,
+			ret_code = manakovv_compute_boundstates(deg, transfer_matrix,
 					eps_t, K_ptr, bound_states, opts);
 			CHECK_RETCODE(ret_code, leave_fun);
 
@@ -395,23 +389,17 @@ leave_fun:
 }
 
 static inline INT manakovv_compute_boundstates(
-		const UINT D,
-		COMPLEX const * const q,
-		COMPLEX const * const r,
 		const UINT deg,
 		COMPLEX * const transfer_matrix,
-		REAL const * const T,
 		const REAL eps_t,
 		UINT * const K_ptr,
 		COMPLEX * const bound_states,
 		fnft_manakovv_opts_t * const opts)
 {
-	REAL degree1step = 0.0 , map_coeff = 2.0;
-	UINT K, upsampling_factor, i, j, D_given;
+	UINT K;
 	REAL bounding_box[4] = { NAN };
 	COMPLEX * buffer = NULL;
 	INT ret_code = SUCCESS;
-	manakov_discretization_t discretization;
 	// Set-up bounding_box, only eigenvalues in upper half complex plane
 		bounding_box[0] = -INFINITY;
 		bounding_box[1] = INFINITY;
@@ -483,12 +471,10 @@ static inline INT manakovv_compute_contspec(
 	COMPLEX* H11_vals = NULL, * H21_vals = NULL, * H31_vals = NULL;
 	COMPLEX A, V;
 	REAL scale;
-	REAL phase_factor_rho, phase_factor_a, phase_factor_b1, phase_factor_b2;
+	REAL phase_factor_rho, phase_factor_a, phase_factor_b;
 	INT ret_code = SUCCESS;
 	UINT i, offset = 0, upsampling_factor, D_given;
 	COMPLEX* scatter_coeffs = NULL, * xi = NULL;
-	// defining different pointers to the different entries of transfer_matrix
-	COMPLEX* tm11_ptr, * tm12_ptr, * tm13_ptr, * tm21_ptr, * tm22_ptr, * tm23_ptr, * tm31_ptr, * tm32_ptr, * tm33_ptr;
 
 	// Determine step size
 	// D is interpolated number of samples but eps_t is the step-size
@@ -602,17 +588,13 @@ static inline INT manakovv_compute_contspec(
 		ret_code = manakov_discretization_phase_factor_a(eps_t, D_given, T, &phase_factor_a, opts->discretization);
 		CHECK_RETCODE(ret_code, leave_fun);
 
-		ret_code = manakov_discretization_phase_factor_b(eps_t, D_given, T, &phase_factor_b1, opts->discretization);
-		CHECK_RETCODE(ret_code, leave_fun);
-
-		// TODO: remove this second call, phase factor b2= phase factor b1
-		ret_code = manakov_discretization_phase_factor_b(eps_t, D_given, T, &phase_factor_b2, opts->discretization);
+		ret_code = manakov_discretization_phase_factor_b(eps_t, D_given, T, &phase_factor_b, opts->discretization);
 		CHECK_RETCODE(ret_code, leave_fun);
 
 		for (i = 0; i < M; i++) {
 			result[offset + i] = H11_vals[i] * scale * CEXP(I * xi[i] * phase_factor_a);
-			result[offset + M + i] = H21_vals[i] * scale * CEXP(I * xi[i] * phase_factor_b1);
-			result[offset + 2 * M + i] = H31_vals[i] * scale * CEXP(I * xi[i] * phase_factor_b2);
+			result[offset + M + i] = H21_vals[i] * scale * CEXP(I * xi[i] * phase_factor_b);
+			result[offset + 2 * M + i] = H31_vals[i] * scale * CEXP(I * xi[i] * phase_factor_b);
 		}
 		break;
 
