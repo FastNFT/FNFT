@@ -197,7 +197,6 @@ FNFT_UINT fnft_manakovv_max_K(const FNFT_UINT D, fnft_manakovv_opts_t const* con
  *       - fnft_manakov_discretization_4SPLIT4B
  * 	     - fnft_manakov_discretization_4SPLIT6B
  * 		 - fnft_manakov_discretization_FTES4_4A
- * 		 - fnft_manakov_discretization_FTES4_4B
  * 		 - fnft_manakov_discretization_FTES4_suzuki
  *
  * The following discretizations use classical algorithms which have a computational
@@ -239,7 +238,7 @@ FNFT_UINT fnft_manakovv_max_K(const FNFT_UINT D, fnft_manakovv_opts_t const* con
  *  bound_states. Upon return, *K_ptr contains the number of actually detected
  *  bound states. If the length of the array bound_states was not sufficient
  *  to store all of the detected bound states, a warning is printed and as many
- *  bound states as possible are returned instead. Note that in order to skip
+ *  bound states as possible are returned instead. Note that in order to skip_
  *  the computation of the bound states completely, it is not sufficient to pass
  *  *K_ptr==0. Instead, one needs to pass bound_states==NULL.
  * @param[in,out] bound_states Array. Upon entry, only if the option

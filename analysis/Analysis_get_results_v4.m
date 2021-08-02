@@ -2,34 +2,20 @@
 % Runs all methods at once, without computing bound states. Runs tests with
 % M=D
 
-methods = ["discr_2split4B",
-           "discr_2split6B",
-           "discr_4split4B",
-           "discr_4split6B",
-           "discr_FTES4_suzuki"];
-
-methods = ["discr_BO",
-           "discr_CF4_2",
+methods = ["discr_2split3A",
+           "discr_2split3B",
+           "discr_2split4A",
            "discr_2split4B",
            "discr_2split6B",
+           "discr_4split4A",
            "discr_4split4B",
            "discr_4split6B",
-           "discr_FTES4_suzuki"];
-       
-methods = ["discr_4split4B",
+           "discr_FTES4_suzuki",
            "discr_BO",
-           "discr_CF4_2"];
-       
+           "discr_CF4_2",
+           "discr_RK4"];
 
-%methods = flip(methods);
-% 
-% methods = ["discr_BO",
-%            "discr_CF4_2"];
-%        
-% methods = "discr_RK4";
-
-
-for method_index = 1:3
+for method_index = 11:length(methods)
     
 clearvars -except method_index methods;
 close all;
@@ -37,16 +23,29 @@ close all;
 %%% Setup parameters %%%
 % signal and method
 discretization = char(methods(method_index))    % see help mex_fnft_manakov for list of supported discretizations
-signal = 'sech';    % potential function: sech or rect or soliton
+signal = 'rect';    % potential function: sech or rect or soliton
 
 % xi, t, and dt
-T   = [-38.5, 38.5];      % location of the 1st and last sample in the time domain
 D_values = zeros(1,13);
-for k=1:16
+for k=1:14
     D_values(k) = 2^(k+1);
 end
-XI = [-pi, pi];   % location of the 1st and last sample in the xi-domain
+% D_values = (100:100:8000);
+XI = [-250, 250];   % location of the 1st and last sample in the xi-domain
 kappa = +1;     % focusing nonlinear Schroedinger equation
+
+% Setting location of the 1st and last sample in the time domain
+if strcmp(signal, 'sech')
+    T   = [-38.5, 38.5];
+end
+if strcmp(signal, 'rect')
+    T   = [-2, 2];
+end
+if strcmp(signal, 'single_soliton')
+    T   = [-31.5, 32.5];
+end
+
+avg_flag = 1;       % if == 1, perform fnft 3x and take compute average runtime
 
 % signal parameters rectangle and sech
 L = [-2,2];     % support of rectangle potential
@@ -84,8 +83,8 @@ for i =1:length(D_values)
 M = D;      % For checking if fast methods are asymptotically faster
 XI_vector = linspace(XI(1),XI(2),M);
 
-    eps_t = (T(2) - T(1)) / (D - 1); % time domain step size
-t = T(1):eps_t:T(2);
+eps_t = (T(2) - T(1)) / (D - 1); % time domain step size
+t = T(1)-0.5*eps_t:eps_t:T(2)-0.5*eps_t;
 if strcmp(signal,'sech')
     q1 = A1*sech(t);               % signal samples
     q2 = A2*sech(t);
@@ -113,10 +112,22 @@ if strcmp(discretization,'discr_RK4')
                             % methods use C routines
     reflection_and_nft_coeffs = [b1./a, b2./a, a, b1, b2];
 else
-tStart = tic;
-[reflection_and_nft_coeffs] = mex_fnft_manakovv(complex(q1), complex(q2), T, XI, kappa, 'M', M, 'cstype_both', 'skip_bs', discretization);
-% mex_fnft_manakov has many options => run "help mex_fnft_manakov" to learn more
-tEnd = toc(tStart);
+    
+    
+if (avg_flag ==1)
+    tEnd_for_avg = zeros(1,3);
+for ind = 1:3
+    tStart = tic;
+    [reflection_and_nft_coeffs] = mex_fnft_manakovv(complex(q1), complex(q2), T, XI, kappa, 'M', M, 'cstype_both', 'skip_bs', discretization);
+    tEnd_for_avg(ind) = toc(tStart);
+end
+    tEnd = sum(tEnd_for_avg)/3;
+else % not averaging over 3 runs
+    tStart = tic;
+    [reflection_and_nft_coeffs] = mex_fnft_manakovv(complex(q1), complex(q2), T, XI, kappa, 'M', M, 'cstype_both', 'skip_bs', discretization);
+    % mex_fnft_manakov has many options => run "help mex_fnft_manakov" to learn more
+    tEnd = toc(tStart);
+end
 end
 
 %%% Saving the data
@@ -155,7 +166,7 @@ Test_results.params.q2 = q2;
 % save(strcat(discretization,'_',signal,'_D_powers_of_2'),'Test_results')
 % save(strcat(discretization,'_',signal,'_powers_2_v2'),'Test_results')
 
-save(strcat(discretization,'_',signal,'_17jul_v3'),'Test_results')
+save(strcat(discretization,'_',signal,'_30jul_v1'),'Test_results')
 
 end
 %% Auxiliary functions

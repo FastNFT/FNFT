@@ -123,6 +123,8 @@ INT fnft_manakovv(
 {
 	COMPLEX* q1sub_preprocessed = NULL;
 	COMPLEX* q2sub_preprocessed = NULL;
+	COMPLEX* q1_preprocessed = NULL;
+	COMPLEX* q2_preprocessed = NULL;
 	UINT Dsub = 0;
 	REAL Tsub[2] = { 0.0 ,0.0 };
 	UINT first_last_index[2] = { 0 };
@@ -156,6 +158,31 @@ INT fnft_manakovv(
 	if (opts == NULL)
 		opts = &default_opts;
 
+	// This switch checks for incompatible bound_state_localization options
+    switch (opts->discretization) {
+        case manakov_discretization_2SPLIT3A:
+        case manakov_discretization_2SPLIT3B:
+        case manakov_discretization_2SPLIT4A:
+		case manakov_discretization_2SPLIT4B:
+        case manakov_discretization_2SPLIT6B:
+        case manakov_discretization_4SPLIT4A:
+        case manakov_discretization_4SPLIT4B:
+		case manakov_discretization_4SPLIT6B:
+		case manakov_discretization_FTES4_4A:
+		case manakov_discretization_FTES4_suzuki:
+            break;
+        case manakov_discretization_BO:
+		case manakov_discretization_CF4_2:
+            if (opts->bound_state_localization != manakovv_bsloc_NEWTON &&
+                    kappa == +1 && bound_states != NULL){
+                ret_code = E_INVALID_ARGUMENT(opts->bound_state_localization);
+                goto leave_fun;
+            }
+            break;
+        default: // Unknown discretization
+            return E_INVALID_ARGUMENT(opts->discretization);
+    }
+
 		// Some higher-order discretizations require samples on a non-equidistant grid
 		// while others require derivatives which are computed in the form of
 		// finite-differences. The input array q has D samples corresponding to
@@ -186,23 +213,44 @@ INT fnft_manakovv(
 	// Some higher-order discretizations require samples on a non-equidistant grid
 	// while others require derivatives. The preprocessing function computes
 	// the required non-equidistant samples using bandlimited interpolation and
-	// the required derivatives using finite differences. The nse_discretization_preprocess_signal
+	// the required derivatives using finite differences. The manakov_discretization_preprocess_signal
 	// function also performs some further discretization specific processing.
 	// Preprocessing takes care of computing things which are required by all
 	// the auxiliary functions thus helping efficiency.
 	Dsub = D;
-	ret_code = manakov_discretization_preprocess_signal(D, q1, q2, eps_t, &Dsub, &q1sub_preprocessed, &q2sub_preprocessed,
+	ret_code = manakov_discretization_preprocess_signal(D, q1, q2, eps_t, &Dsub, &q1_preprocessed, &q2_preprocessed,
 			first_last_index, opts->discretization);
 	CHECK_RETCODE(ret_code, leave_fun);
 
-	// if kappa=-1 there are no discrete eigenvalues
-	if (kappa == -1){
-			WARN("No discrete eigenvalues exist for kappa=-1. Not calculating bound states");
-	}
-		// use only the fast eigenvalue method to localize the bound states
-		ret_code = fnft_manakovv_base(D*upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, T, M, contspec, XI, K_ptr,
+	if (contspec != NULL){
+		ret_code = fnft_manakovv_base(D*upsampling_factor, q1_preprocessed, q2_preprocessed, T, M, NULL, XI, K_ptr,
 			bound_states, kappa, opts);
 		CHECK_RETCODE(ret_code, leave_fun);
+
+		ret_code = fnft_manakovv_base(D*upsampling_factor, q1_preprocessed, q2_preprocessed, T, M, contspec, XI, K_ptr,
+			NULL, kappa, opts);
+		CHECK_RETCODE(ret_code, leave_fun);
+	}
+
+	if (kappa == +1 && bound_states != NULL){
+		// computing bound states.
+		// use only the fast eigenvalue method to localize the bound states
+
+		Dsub = opts->Dsub;
+        if (Dsub == 0) // The user wants us to determine Dsub
+            Dsub = SQRT(D * LOG2(D) * LOG2(D));
+        UINT nskip_per_step = ROUND((REAL)D / Dsub);
+        Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
+
+		ret_code = manakov_discretization_preprocess_signal(D, q1, q2, eps_t, &Dsub, &q1sub_preprocessed, &q2sub_preprocessed,
+                first_last_index, opts->discretization);
+        CHECK_RETCODE(ret_code, leave_fun);
+
+		ret_code = fnft_manakovv_base(Dsub*upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, T, M, NULL, XI, K_ptr,
+			bound_states, kappa, opts);
+		CHECK_RETCODE(ret_code, leave_fun);
+	}
+
 	if (opts->richardson_extrapolation_flag == 1) {
 		// Allocating memory
 		UINT contspec_len = 0;
@@ -250,7 +298,7 @@ INT fnft_manakovv(
 		const REAL eps_t_sub = (Tsub[1] - Tsub[0]) / (Dsub - 1);
 
 		// Calling fnft_manakovv_base with subsampled signal
-		bs_loc_opt = opts->bound_state_localization;
+		bs_loc_opt = opts->bound_state_localization;		// TODO: maybe remove this and next line? Check.
 		opts->bound_state_localization = manakovv_bsloc_NEWTON;
 		ret_code = fnft_manakovv_base(Dsub*upsampling_factor, q1sub_preprocessed, q2sub_preprocessed, Tsub, M, contspec_sub, XI, &K_sub,
 			NULL, kappa, opts);	// bound_states already calculated. Passing NULL for boundstates to avoid recalculating
@@ -259,12 +307,12 @@ INT fnft_manakovv(
 		opts->discspec_type = ds_type_opt;
 
 		// Richardson extrapolation of the continuous spectrum
-		REAL const scl_num = POW(eps_t_sub / eps_t, method_order);     // TODO: order of method is known, but maybe it is a good idea to calculate it here and verify if it matches?
+		REAL const scl_num = POW(eps_t_sub / eps_t, method_order);
 		REAL const scl_den = scl_num - 1.0;
 		REAL const dxi = (XI[1] - XI[0]) / (M - 1);
 		if (contspec != NULL && M > 0) {
 			for (i = 0; i < M; i++) {
-				if (FABS(XI[0] + dxi * i) < 0.9 * PI / (2.0 * eps_t_sub)) {    // NOTE: What does this line do? (Nyquist-Shannon sampling theorem, outside these bounds we get aliasing)
+				if (FABS(XI[0] + dxi * i) < 0.9 * PI / (2.0 * eps_t_sub)) {
 					for (j = 0; j < contspec_len; j += M)
 						contspec[i + j] = (scl_num * contspec[i + j] - contspec_sub[i + j]) / scl_den;
 				}

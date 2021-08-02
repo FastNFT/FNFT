@@ -696,6 +696,7 @@ const REAL error_bounds[5], fnft_manakovv_opts_t * const opts) {
     
     // In every case other than that of slow discretization with no bound states
     // memory has to be alloted for the bound states
+    if (opts->discretization!=manakov_discretization_BO && opts->discretization!=manakov_discretization_CF4_2){
     if (!(K == 0 && K_exact == 0)){
         if (K == 0 && K_exact != 0)
             K = K_exact;        
@@ -708,6 +709,7 @@ const REAL error_bounds[5], fnft_manakovv_opts_t * const opts) {
             ret_code = E_NOMEM;
             goto release_mem;
         }
+    }
     }
     if ( q1 == NULL || q2 == NULL || contspec == NULL) {
             ret_code = E_NOMEM;

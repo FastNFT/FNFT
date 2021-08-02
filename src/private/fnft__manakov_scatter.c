@@ -106,20 +106,7 @@ INT manakov_scatter_matrix(UINT const D,
     if (upsampling_factor == 0)
         return E_INVALID_ARGUMENT(discretization);
 
-        COMPLEX *q1_preprocessed = NULL;
-        COMPLEX *q2_preprocessed = NULL;
-UINT D_eff = D;
-    switch (discretization) {
-        case manakov_discretization_CF4_2:;         // commutator-free fourth-order. Fall through
-        case manakov_discretization_BO:            // bofetta-osborne scheme
-            q1_preprocessed = q1;
-            q2_preprocessed = q2;
-        break;
-
-        default: // Unknown discretization
-            ret_code = E_INVALID_ARGUMENT(>discretization);
-            CHECK_RETCODE(ret_code, leave_fun);
-    }
+    UINT D_eff = D;
 
         // Calculate the scattering matrix
         for (UINT i = 0; i < K; i++) { // iterate over lambda
@@ -131,10 +118,11 @@ UINT D_eff = D;
 
             switch (discretization) {
                 case manakov_discretization_CF4_2:
-                l_curr /=2;                     // Intional fall through
+                l_curr /=2;
+                // Intentional fall through
                 case manakov_discretization_BO:
                     for (UINT n = 0; n < D_eff; n++){
-                        manakov_scatter_U_BO(q1_preprocessed[n],q2_preprocessed[n],l_curr,eps_t,kappa,*U);
+                        manakov_scatter_U_BO(q1[n],q2[n],l_curr,eps_t,kappa,*U);
                         misc_matrix_mult(3,3,3,&U[0][0],&H[current][0][0],&H[!current][0][0]);
                         current = !current;
                     }

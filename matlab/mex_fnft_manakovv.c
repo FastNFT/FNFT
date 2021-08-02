@@ -41,6 +41,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     FNFT_COMPLEX * normconsts_or_residuals = NULL;
     FNFT_INT kappa;
     FNFT_INT skip_bound_states_flag = 0;
+	FNFT_INT skip_contspec_flag = 0;
     FNFT_UINT i;
     FNFT_INT k;
     double *re_q1, *im_q1, *re_q2, *im_q2;
@@ -148,7 +149,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
             skip_bound_states_flag = 1;
 
-        } else if ( strcmp(str, "quiet") == 0 ) {
+        } else if (strcmp(str, "skip_contspec") == 0) {
+
+			skip_contspec_flag = 1;
+
+		} else if ( strcmp(str, "quiet") == 0 ) {
 
             fnft_errwarn_setprintf(NULL);
         
@@ -240,33 +245,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
     }
 
-   /*
+
     if (skip_contspec_flag == 0) {
-        if (opts.contspec_type == fnft_nsev_cstype_AB)
-            contspec = mxMalloc(2*M * sizeof(FNFT_COMPLEX));
-        else
-            contspec = mxMalloc(M * sizeof(FNFT_COMPLEX));      
-        if (contspec == NULL) {
+		if (opts.contspec_type == fnft_manakovv_cstype_AB)
+			contspec = mxMalloc(3 * M * sizeof(COMPLEX));
+		else if (opts.contspec_type == fnft_manakovv_cstype_REFLECTION_COEFFICIENT)
+			contspec = mxMalloc(2 * M * sizeof(COMPLEX));
+		else    // opts.contspec == fnft_manakovv_cstype_BOTH
+			contspec = mxMalloc(5 * M * sizeof(COMPLEX));
+/*        if (contspec == NULL) {
             snprintf(msg, sizeof msg, "Out of memory.");
             goto on_error;
-        }
-    }
+        }*/ // TODO: check this
+    }   
 
-    if (skip_normconsts_flag == 0) {
-        normconsts_or_residuals = mxMalloc(K * sizeof(FNFT_COMPLEX));
-        if (normconsts_or_residuals == NULL) {
-            snprintf(msg, sizeof msg, "Out of memory.");
-            goto on_error;
-        }
-    }
-    */
-
-    if (opts.contspec_type == fnft_manakovv_cstype_AB)
-        contspec = mxMalloc(3*M*sizeof(COMPLEX));
-    else if (opts.contspec_type == fnft_manakovv_cstype_REFLECTION_COEFFICIENT)
-        contspec = mxMalloc(2*M*sizeof(COMPLEX));
-    else    // opts.contspec == fnft_manakovv_cstype_BOTH
-        contspec = mxMalloc(5*M*sizeof(COMPLEX));
     
     /* Convert input */
 
@@ -298,7 +290,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         plhs[0] = mxCreateDoubleMatrix(1, 5*M, mxCOMPLEX);
     
     /* Allocate memory for outputs and convert results */
-
+    if (skip_contspec_flag == 0){
         csr = mxGetPr(plhs[0]);        // original: mxGetPr
         csi = mxGetPi(plhs[0]); // mxGetPi
         if (opts.contspec_type == fnft_manakovv_cstype_AB) {
@@ -319,6 +311,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 csi[i] = FNFT_CIMAG(contspec[i]);
             }
         }
+    } else {
+        plhs[0] = mxCreateDoubleMatrix(0, 0, mxCOMPLEX);
+    }
 
 
     if (skip_bound_states_flag == 0) {
