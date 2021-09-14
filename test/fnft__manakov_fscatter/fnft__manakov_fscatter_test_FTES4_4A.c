@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Lianne de Vries (TU Delft) 2021.
+ * Lianne de Vries (TU Delft student) 2021.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES

@@ -18,6 +18,7 @@
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Marius Brehler (TU Dortmund) 2018.
  * Peter J Prins (TU Delft) 2020.
+ * Lianne de Vries (TU Delft student) 2021.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES

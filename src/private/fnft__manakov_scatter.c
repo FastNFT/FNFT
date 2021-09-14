@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contibutor:
- * Lianne de Vries (TU Delft) 2021.
+* Lianne de Vries (TU Delft student) 2021.
  * 
  * Contributors original file:
  * Sander Wahls (TU Delft) 2017-2018.

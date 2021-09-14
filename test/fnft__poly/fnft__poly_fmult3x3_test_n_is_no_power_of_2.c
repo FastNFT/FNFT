@@ -15,7 +15,7 @@
  *
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018 (fmult2x2 test files).
- * Lianne de Vries (TU Delft) 2021.
+ * Lianne de Vries (TU Delft student) 2021.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
