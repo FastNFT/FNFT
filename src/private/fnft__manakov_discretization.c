@@ -113,6 +113,12 @@ INT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * const
         UINT * const first_last_index,  manakov_discretization_t discretization){
 
     UINT isub, i, D_effective;
+    COMPLEX *q1_c1 = NULL;
+    COMPLEX *q1_c2 = NULL;
+    COMPLEX *q2_c1 = NULL;
+    COMPLEX *q2_c2 = NULL;
+    COMPLEX *q1_sub = NULL;
+    COMPLEX *q2_sub = NULL;
 
     // Check inputs
     if (D < 2)
@@ -152,12 +158,12 @@ INT manakov_discretization_preprocess_signal(const UINT D, COMPLEX const * const
     D_effective = Dsub*upsampling_factor;
     COMPLEX * const q1_preprocessed = malloc(D_effective * sizeof(COMPLEX));
     COMPLEX * const q2_preprocessed = malloc(D_effective * sizeof(COMPLEX));
-    COMPLEX *q1_c1 = malloc(Dsub*sizeof(COMPLEX));
-    COMPLEX *q2_c1 = malloc(Dsub*sizeof(COMPLEX));
-    COMPLEX *q1_c2 = malloc(Dsub*sizeof(COMPLEX));
-    COMPLEX *q2_c2 = malloc(Dsub*sizeof(COMPLEX));
-    COMPLEX *q1_sub = malloc(Dsub * sizeof(COMPLEX));
-	COMPLEX *q2_sub = malloc(Dsub * sizeof(COMPLEX));
+    q1_c1 = malloc(Dsub*sizeof(COMPLEX));
+    q2_c1 = malloc(Dsub*sizeof(COMPLEX));
+    q1_c2 = malloc(Dsub*sizeof(COMPLEX));
+    q2_c2 = malloc(Dsub*sizeof(COMPLEX));
+    q1_sub = malloc(Dsub * sizeof(COMPLEX));
+	q2_sub = malloc(Dsub * sizeof(COMPLEX));
     if (q1_preprocessed == NULL || q2_preprocessed == NULL) {
         ret_code = E_NOMEM;
         goto release_mem;

@@ -75,7 +75,7 @@ inline INT poly_fmult_two_polys(
 {
     UINT i;
     INT ret_code = SUCCESS;
-    UINT len;
+    UINT len = 0;
 
     // Zero-pad polynomials
     if (dim==2){

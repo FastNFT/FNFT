@@ -140,7 +140,7 @@ INT manakov_fscatter(const UINT D, COMPLEX const* const q1, COMPLEX const* const
 	INT* const W_ptr, manakov_discretization_t const discretization)
 {
 	INT ret_code;
-	COMPLEX* p, * p11, * p12, * p13, * p21, * p22, * p23, * p31, * p32, * p33;
+	COMPLEX* p=NULL, * p11, * p12, * p13, * p21, * p22, * p23, * p31, * p32, * p33;
 	UINT i, j, len, D_eff, upsampling_factor;
 	COMPLEX e_Bstorage[36], E_storage[18];
 	// These variables are used to store the values of matrix exponentials

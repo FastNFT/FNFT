@@ -580,13 +580,11 @@ release_mem_1:{
 }
 
 // Compares computed with exact nonlinear Fourier spectrum.
-static INT manakovv_compare_nfs(const UINT M, const UINT K1, const UINT K2,
+static INT manakovv_compare_nfs(const UINT M,
     COMPLEX const * const contspec_1,
     COMPLEX const * const contspec_2,
     COMPLEX const * const ab_1,
     COMPLEX const * const ab_2,
-    COMPLEX const * const bound_states_1,
-    COMPLEX const * const bound_states_2,
     REAL dists[5])
 {
     UINT i;
@@ -729,8 +727,8 @@ const REAL error_bounds[5], fnft_manakovv_opts_t * const opts) {
     CHECK_RETCODE(ret_code, release_mem);
 
     // Compute the errors
-    ret_code = manakovv_compare_nfs(M, K, K_exact, contspec, contspec_exact,
-        contspec+2*M, ab_exact, bound_states, bound_states_exact, errs);
+    ret_code = manakovv_compare_nfs(M, contspec, contspec_exact,
+        contspec+2*M, ab_exact, errs);
     CHECK_RETCODE(ret_code, release_mem);
 
 #ifdef DEBUG
