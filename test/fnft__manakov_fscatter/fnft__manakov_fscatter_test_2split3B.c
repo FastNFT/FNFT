@@ -162,7 +162,7 @@ end
                 goto leave_fun;
             }
         }
-        #define DEBUG
+
 #ifdef DEBUG
         printf("error without normalization = %2.1e < %2.1e\n",misc_rel_err(9*nz, result, result_exact),err_bnd);
         printf("result and exact result\n");

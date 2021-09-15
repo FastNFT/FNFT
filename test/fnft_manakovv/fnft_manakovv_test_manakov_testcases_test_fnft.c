@@ -28,7 +28,6 @@
 
 INT main(){
     printf("Goes into main loop\n");
-    #define DEBUG
 
     manakovv_testcases_t tc = manakovv_testcases_SECH_FOCUSING;
     UINT D = 16;

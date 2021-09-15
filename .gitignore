@@ -6,7 +6,7 @@
 !Doxyfile
 
 # Unignore subdirectories
-#!/examples/
+!/examples/
 !/include/
 !/include/private/
 !/include/3rd_party/eiscor/

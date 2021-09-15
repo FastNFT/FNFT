@@ -165,7 +165,6 @@ i = 0:7;
         for (i=0; i<9*(deg+1); i++)
             result[i] *= scl;
     }
-    #define DEBUG
     #ifdef DEBUG
         printf("error = %2.1e < %2.1e\n",misc_rel_err(45, result, result_exact),100*EPSILON);
         printf("result and exact result\n");
