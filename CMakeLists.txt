@@ -24,17 +24,11 @@ set(FNFT_VERSION_MINOR 4)
 set(FNFT_VERSION_PATCH 1)
 set(FNFT_VERSION_SUFFIX "") # should not be longer than FNFT_SUFFIX_MAXLEN
 set(FNFT_VERSION ${FNFT_VERSION_MAJOR}.${FNFT_VERSION_MINOR}.${FNFT_VERSION_PATCH}${FNFT_VERSION_SUFFIX})
-set(FFTW_LIB_SEARCHPATH "C:/Program Files (x86)/fftw/bin")
 
 include(CheckIncludeFiles)
 include(CheckFunctionExists)
 include(CheckCSourceCompiles)
 include(CheckLanguage)
-
-list(APPEND CMAKE_LIBRARY_PATH "C:/Program Files (x86)/fftw/bin")
-list(APPEND CMAKE_LIBRARY_PATH "D:/TU Delft/FNFT_private/fftw-3.3.9")
-list(APPEND CMAKE_LIBRARY_PATH "D:/TU Delft/FNFT_private/fftw-3.3.9/api")
-
 
 # options
 option(DEBUG "Compile with debugging symbols" OFF)
@@ -75,29 +69,8 @@ if (NOT HAVE___THREAD)
 endif()
 
 # check if FFTW3 is available
-# find_library(FFTW3_LIB fftw3 PATH "D:/TU Delft/FNFT_private/fftw-3.3.9/build")
-# find_path(FFTW3_INCLUDE fftw3.h)
-set(FFTW3_INCLUDE "D:/TU Delft/FNFT_private/fftw-3.3.9/api")
-set(FFTW3_LIB "D:/TU Delft/FNFT_private/fftw-3.3.9/build/libfftw3.dll")
-
-# check if fftw3.h or library are found
-if (FFTW3_LIB)
-	message("FFTW3 library found")
-	message(${FFTW3_LIB})
-	endif()
-if (FFTW3_INCLUDE)
-	message("FFTW3 header found")
-	message(${FFTW3_INCLUDE})
-	endif()
-
-if (NOT FFTW3_LIB)
-	message("FFTW3 library not found")
-	endif()
-if (NOT FFTW3_INCLUDE)
-	message("FFTW3 header not found")
-	endif()
-
-
+find_library(FFTW3_LIB fftw3)
+find_path(FFTW3_INCLUDE fftw3.h)
 if (FFTW3_LIB AND FFTW3_INCLUDE)
     if (ENABLE_FFTW)
         message("++ FFTW3 found and enabled. Run cmake with \"-DENABLE_FFTW=OFF\" to disable.")
@@ -251,12 +224,3 @@ if (WITH_MATLAB)
     endforeach()
   endif()
 endif()
-
-# Copying dll file to test folders windows
-#add_custom_command(TARGET ./test/fnft_manakov_fscatter/fnft__manakov_fscatter_test_2split3A POST_BUILD	# TODO: make TARGET work for all test files	
-#					COMMAND message(STATUS "test")
-#	)
-	
-	#install(CODE "MESSAGE(\"Sample install message.\")")
-
-
