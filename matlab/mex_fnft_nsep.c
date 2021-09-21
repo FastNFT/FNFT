@@ -30,17 +30,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     double * T;
     double phase_shift = 0.0;
     size_t M;
-    double complex * main_spec;
+    double complex * main_spec = NULL;
+    double complex * main_spec_initial_guesses = NULL;
     size_t K;
     double complex * aux_spec = NULL;
+    double complex * aux_spec_initial_guesses = NULL;
     int * sheet_indices = NULL;
     int kappa;
     size_t upsampling_factor = 1;
-    size_t i;
+    size_t i, j;
     ptrdiff_t k;
     double *re, *im;
     double *msr, *msi, *asr, *asi;
-    char msg[128]; // buffer for error messages
+    char msg[256]; // buffer for error messages
     fnft_nsep_opts_t opts;
     int ret_code;
 
@@ -145,6 +147,49 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
             opts.localization = fnft_nsep_loc_SUBSAMPLE_AND_REFINE;
 
+        } else if ( strcmp(str, "loc_newton") == 0 ) {
+
+            opts.localization = fnft_nsep_loc_NEWTON;
+
+            /* Extract initial guesses for the main spectrum */
+            if ( k+1 == nrhs || !mxIsComplex(prhs[k+1])
+            || mxGetM(prhs[k+1]) < 1 || mxGetN(prhs[k+1]) < 1) {
+                snprintf(msg, sizeof msg, "'loc_newton' should be followed by two complex row vectors of initial guesses for the main and auxiliary spectrum, respectively. Try passing complex(...).");
+                goto on_error;
+            }
+            K = mxGetN(prhs[k+1]);
+            main_spec_initial_guesses = mxMalloc(K * sizeof(FNFT_COMPLEX));
+            if (main_spec_initial_guesses == NULL) {
+                snprintf(msg, sizeof msg, "Out of memory.");
+                goto on_error;
+            }
+            re = mxGetPr(prhs[k+1]);
+            im = mxGetPi(prhs[k+1]);
+            for (j=0; j<K; j++)
+                main_spec_initial_guesses[j] = re[j] + I*im[j];
+
+            /* Extract initial guesses for the aux spectrum */
+            if ( k+2 == nrhs || !mxIsComplex(prhs[k+2])
+                 || mxGetM(prhs[k+2]) < 1 || mxGetN(prhs[k+2]) < 1) {
+                snprintf(msg, sizeof msg, "'loc_newton' should be followed by two complex row vectors of initial guesses for the main and auxiliary spectrum, respectively. Try passing complex(...).");
+                goto on_error;
+            }
+            M = mxGetN(prhs[k+2]);
+            aux_spec_initial_guesses = mxMalloc(M * sizeof(FNFT_COMPLEX));
+            if (aux_spec_initial_guesses == NULL) {
+                snprintf(msg, sizeof msg, "Out of memory.");
+                goto on_error;
+            }
+            re = mxGetPr(prhs[k+2]);
+            im = mxGetPi(prhs[k+2]);
+            for (j=0; j<M; j++)
+                aux_spec_initial_guesses[j] = re[j] + I*im[j];
+
+            /* Increase k to account for the two vectors of initial guesses */
+            k += 2;
+
+            opts.discretization = fnft_nse_discretization_BO;
+
         } else if ( strcmp(str, "loc_gridsearch") == 0 ) {
 
             opts.localization = fnft_nsep_loc_GRIDSEARCH;
@@ -204,13 +249,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     /* Allocate memory */
     q = mxMalloc(D * sizeof(double complex));
-    K = (opts.points_per_spine)*upsampling_factor*D + 1;
-    M = upsampling_factor*D;
-    main_spec = mxMalloc(K * sizeof(double complex));
-    aux_spec = mxMalloc(M * sizeof(double complex));
-    sheet_indices = mxMalloc(M * sizeof(int));
-    if ( q == NULL || main_spec == NULL || aux_spec == NULL
-    || sheet_indices == NULL ) {
+    if (opts.localization != fnft_nsep_loc_NEWTON) {
+        K = (opts.points_per_spine)*upsampling_factor*D + 1;
+        M = upsampling_factor*D;
+        main_spec = mxMalloc(K * sizeof(double complex));
+        aux_spec = mxMalloc(M * sizeof(double complex));
+        sheet_indices = mxMalloc(M * sizeof(int));
+    } else { // NEWTON
+        if (K>0) {
+            main_spec = mxMalloc(K * opts.points_per_spine * sizeof(double complex));
+            for (j=0; j<opts.points_per_spine; j++)
+                memcpy(main_spec + j*K, main_spec_initial_guesses, K*sizeof(double complex));
+        }
+        if (M>0) {
+            aux_spec = mxMalloc(M * sizeof(double complex));
+            memcpy(aux_spec, aux_spec_initial_guesses, M*sizeof(double complex));
+            sheet_indices = mxMalloc(M * sizeof(int));
+        }
+    }
+    if ( q == NULL || (K>0 && main_spec == NULL) || (M > 0 && aux_spec == NULL)
+         || (M > 0 && sheet_indices == NULL) ) {
         snprintf(msg, sizeof msg, "Out of memory.");
         goto on_error;
     }
