@@ -48,7 +48,7 @@ phase_shift = angle(q_T2/q_T1); % This is the phase shift in q over
 
 Ng = 100;
 ig = -2 + rand(1, Ng) + 4j*rand(1, Ng);
-[main_spec2, aux_spec2] = mex_fnft_nsep(q, T, kappa, 'phase_shift', phase_shift, 'loc_newton', ig, ig, 'loc_tol', 1e-4);
+[main_spec2, aux_spec2] = mex_fnft_nsep(q, T, kappa, 'phase_shift', phase_shift, 'loc_newton', ig, ig);
 
 
 % %%% Compute the spines %%%

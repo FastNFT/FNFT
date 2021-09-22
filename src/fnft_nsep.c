@@ -410,6 +410,7 @@ static inline INT gridsearch(const UINT D,
         // Set number of points in the main spectrum
         K += K_filtered;
     }
+
     // Compute auxiliary spectrum (real line only)
     if (aux_spec != NULL) {
 
@@ -438,6 +439,7 @@ static inline INT gridsearch(const UINT D,
         }
         memcpy(aux_spec, roots, M * sizeof(COMPLEX));
     }
+
     // Update number of main spectrum points and auxiliary spectrum points
     *K_ptr = K;
     *M_ptr = M;
@@ -754,6 +756,13 @@ static inline INT newton(const UINT D,
     if (M_ptr != NULL)
         M = *M_ptr;
 
+    const UINT upsampling_factor = nse_discretization_upsampling_factor(opts_ptr->discretization);
+    if (upsampling_factor == 0) {
+        ret_code = E_INVALID_ARGUMENT(opts->discretization);
+        goto release_mem;
+    }
+    const UINT D_effective = D * upsampling_factor;
+
     // Determine step size
     const REAL eps_t = (T[1] - T[0])/D;
 
@@ -782,13 +791,6 @@ static inline INT newton(const UINT D,
     update_bounding_box_if_auto(eps_t, map_coeff, opts_ptr);
     tol_im = opts_ptr->bounding_box[1] - opts_ptr->bounding_box[0];
     tol_im /= oversampling_factor*(D - 1);
-    printf("eps_t = %g, map_coeff = %g -> bounding box = %g %g %g %g\n",
-           eps_t,
-           map_coeff,
-           opts_ptr->bounding_box[0],
-           opts_ptr->bounding_box[1],
-           opts_ptr->bounding_box[2],
-           opts_ptr->bounding_box[3]);
 
     // Refine main spectrum if desired
     if (main_spec != NULL) {
@@ -814,7 +816,7 @@ static inline INT newton(const UINT D,
             const REAL rhs = 2.0*(rhs_0 + nval*rhs_step);
 
             // Refine the initial guesses
-            ret_code = refine_mainspec(D, q_preprocessed, r_preprocessed, eps_t,
+            ret_code = refine_mainspec(D_effective, q_preprocessed, r_preprocessed, eps_t,
                                        K, initial_guesses, opts_ptr->max_evals,
                                        -rhs, refine_tol, kappa,
                                        opts_ptr->discretization, opts_ptr->bounding_box);
@@ -838,7 +840,7 @@ static inline INT newton(const UINT D,
     if (aux_spec != NULL) {
 
         // Refine the roots
-        ret_code = refine_auxspec(D, q_preprocessed, r_preprocessed, eps_t, M,
+        ret_code = refine_auxspec(D_effective, q_preprocessed, r_preprocessed, eps_t, M,
                                   aux_spec, opts_ptr->max_evals, refine_tol,
                                   kappa, opts_ptr->discretization, opts_ptr->bounding_box);
         CHECK_RETCODE(ret_code, release_mem);
@@ -858,6 +860,12 @@ static inline INT newton(const UINT D,
         return ret_code;
 }
 
+// Auxiliary function: Checks if a complex number is in a given box
+static INT in_box(const COMPLEX z, const REAL * box)
+{
+    return (CREAL(z) >= box[0]) && (CREAL(z) <= box[1]) &&
+           (CIMAG(z) >= box[2]) && (CIMAG(z) <= box[3]);
+}
 
 // Auxiliary function: Uses Newton's method for roots of higher order to refine the main spectrum.
 static inline INT refine_mainspec(
@@ -876,6 +884,7 @@ static inline INT refine_mainspec(
     INT ret_code;
     UINT m, best_m;
     const UINT max_m = 2; // roots might be single or double
+    INT warn_flag = 0;
 
     if (max_evals == 0)
         return SUCCESS;
@@ -901,13 +910,15 @@ static inline INT refine_mainspec(
         // are tested in a line search-like procedure. Per iteration, max_m
         // values of m are tested, leading to max_m monodromoy mat evaluations.
         for (nevals=1; nevals<=max_evals;) {
+
             // The current values of f and f' at lam = mainspec[k]
             f = next_f;
             f_prime = next_f_prime;
             if (f_prime == 0.0)
                 return E_DIV_BY_ZERO;
             incr = f / f_prime;
-            // Test different increments to deal with the many higher order
+
+	    // Test different increments to deal with the many higher order
             // roots (Newton's method for a root of order m is x<-x-m*f/f').
             min_abs = INFINITY;
             best_m = 1;
@@ -932,9 +943,10 @@ static inline INT refine_mainspec(
                 }
             }
             mainspec[k] -= best_m*incr; // Newton step
-            //printf("MAIN k=%zu, nevals=%zu: lam=%e+%ej, |f|=%e, |f_prime|=%e, |incr|=%e, best_m=%d\n", k, nevals, CREAL(mainspec[k]), CIMAG(mainspec[k]), CABS(f), CABS(f_prime),CABS(incr),best_m);
 
-            if ( min_abs < tol ) {
+	    //printf("MAIN k=%zu, nevals=%zu: lam=%e+%ej, |f|=%e, |f_prime|=%e, |incr|=%e, best_m=%d\n", k, nevals, CREAL(mainspec[k]), CIMAG(mainspec[k]), CABS(f), CABS(f_prime),CABS(incr),best_m);
+
+            if ( min_abs <= tol ) {
                 // We already know f and f_prime at the new mainspec[k], so
                 // let's use that for a final first-order Newton step.
                 if (next_f_prime == 0.0)
@@ -944,15 +956,19 @@ static inline INT refine_mainspec(
             }
 
             // stop refining the current value if it left the bounding box
-            if (!(CREAL(mainspec[k]) >= bounding_box[0]) ||
-                  !(CREAL(mainspec[k]) <= bounding_box[1]) ||
-                  !(CIMAG(mainspec[k]) >= bounding_box[2]) ||
-                !(CIMAG(mainspec[k]) <= bounding_box[3])) {
+            if (!in_box(mainspec[k], bounding_box))
                 break;
-            }
-        };
+        }
+
+	if (min_abs > tol && in_box(mainspec[k], bounding_box))
+		warn_flag = 1;
+
         //printf("==> used %zu evaluations\n", nevals);
     }
+
+    if (warn_flag)
+	WARN("Refinement of one or more main spectrum points did not converge. Try increasing max_evals or decreasing tol.")
+
     return SUCCESS;
 }
 
@@ -967,6 +983,7 @@ static inline INT refine_auxspec(
     UINT k, nevals;
     COMPLEX M[8];
     COMPLEX f, f_prime;
+    INT warn_flag = 0;
     INT ret_code;
 
     if (max_evals == 0)
@@ -989,20 +1006,23 @@ static inline INT refine_auxspec(
             //printf("AUX k=%zu, iter=%zu: lam=%g+%gj, |f|=%g, |f_prime|=%g\n", k, iter, CREAL(auxspec[k]), CIMAG(auxspec[k]), CABS(f), CABS(f_prime));
 
             auxspec[k] -= f / f_prime;
-            if ( CABS(f) < tol ) // Intentionally put after the previous line
+            if ( CABS(f) <= tol ) // Intentionally put after the previous line
                 // => we use the already known values for f and f_prime for a
                 // last Newton step even if already |f|<tol.
                 break;
 
             // stop refining the current value if it left the bounding box
-            if (!(CREAL(auxspec[k]) >= bounding_box[0]) ||
-                !(CREAL(auxspec[k]) <= bounding_box[1]) ||
-                !(CIMAG(auxspec[k]) >= bounding_box[2]) ||
-                !(CIMAG(auxspec[k]) <= bounding_box[3])) {
+            if (!in_box(auxspec[k], bounding_box))
                 break;
-            }
         }
+
+	if (CABS(f) > tol && in_box(auxspec[k], bounding_box))
+	    warn_flag = 1;
     }
+
+    if (warn_flag)
+	WARN("Refinement of one or more auxiliary spectrum points did not converge. Try increasing max_evals or decreasing tol.")
+
     return SUCCESS;
 }
 

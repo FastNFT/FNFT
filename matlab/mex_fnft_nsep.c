@@ -188,7 +188,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             /* Increase k to account for the two vectors of initial guesses */
             k += 2;
 
-            opts.discretization = fnft_nse_discretization_BO;
+            opts.discretization = fnft_nse_discretization_CF4_2;
 
         } else if ( strcmp(str, "loc_gridsearch") == 0 ) {
 
