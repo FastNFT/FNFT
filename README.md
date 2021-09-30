@@ -71,6 +71,7 @@ Please use the [issue tracker](https://github.com/FastNFT/FNFT/issues) to report
 * Shrinivas Chimmalgi, TU Delft
 * Peter J. Prins, TU Delft
 * Marius Brehler, TU Dortmund
+* Lianne de Vries, student TU Delft
 
 ## License
 
