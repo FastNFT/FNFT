@@ -96,8 +96,7 @@ FNFT_INT fnft__poly_fmult_two_polys(
     FNFT_COMPLEX * const buf0,
     FNFT_COMPLEX * const buf1,
     FNFT_COMPLEX * const buf2,
-    const FNFT_UINT mode,
-	const FNFT_UINT dim);
+    const FNFT_UINT mode);
 
 /**
  * @brief Multiplies two 2x2 matrices of polynomials.
@@ -139,8 +138,6 @@ FNFT_INT fnft__poly_fmult_two_polys(
  *   where n=0,1,2,3, are long enough to store the FFT's. This allows improve
  *   performance by storing some intermediate values there. Otherwise, set to 0.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
- * @param [in] dim indicates if the function is being called from fnft__poly_fmult2x2
- *  or fnft__poly_fmult3x3. This determines how we set len.
  *   defined in \link fnft_errwarn.h \endlink.
  */
 FNFT_INT fnft__poly_fmult_two_polys2x2(const FNFT_UINT deg,

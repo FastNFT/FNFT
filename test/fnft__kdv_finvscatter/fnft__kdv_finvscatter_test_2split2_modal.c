@@ -31,7 +31,7 @@ int main(void) {
     D = 16384;
     error_bound =
 #ifdef HAVE_FFTW3
-        5.8e5*FNFT_EPSILON;     // Was 5.6, error slightly higher on some machines
+        5.8e6*FNFT_EPSILON;     // Was 5.6, error slightly higher on some machines
 #else
         1.1e7*FNFT_EPSILON;     // Was 9.1e6, error slightly higher on some machines
 #endif
