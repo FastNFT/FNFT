@@ -29,10 +29,10 @@ INT main()
     const manakovv_testcases_t tc = manakovv_testcases_SECH_FOCUSING;
     REAL error_bounds[5] = { 
         2.4e-4,     // reflection coefficient 1
-        2.4e-4,     // reflection coefficient 2 TODO: determine suitable bound
+        2.4e-4,     // reflection coefficient 2
         5.8e-4,     // a
         5.4e-5,     // b1
-        5.4e-5     // b2   TODO: determine suitable bound
+        5.4e-5     // b2 
     };
 
     opts = fnft_manakovv_default_opts();

@@ -32,7 +32,7 @@ INT main()
         3.5e-4,     // reflection coefficient 2
         4.4e-3,     // a
         5.9e-4,     // b1
-        5.9e-4     // b2   TODO: determine suitable bound
+        5.9e-4     // b2
     };
 
     opts = fnft_manakovv_default_opts();

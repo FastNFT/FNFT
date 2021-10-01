@@ -49,17 +49,6 @@ INT main()
     ret_code = manakovv_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
-/*
-    // Check for 4th order error decay.
-    // For this to make sense the error bounds have to be pretty tight. Also, this only checks if the error decay is 
-    // at least 4th order, not if the order of error decay is >4
-    D *= 2;
-    for (i=0; i<5; i++)
-        error_bounds[i] /= 16.0;
-    ret_code = manakovv_testcases_test_fnft(tc, D, error_bounds, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);
-*/
-
 leave_fun:
     if (ret_code != SUCCESS)
         return EXIT_FAILURE;

@@ -173,10 +173,6 @@ end
 
 #ifdef DEBUG
         printf("error without normalization = %2.1e < %2.1e\n",misc_rel_err(9*nz, result, result_exact),err_bnd);
-        printf("result and exact result\n");
-        for (UINT j = 0; j<45; j++){
-                printf("%f + i%f,    %f + i%f\n", creal(result[j]), cimag(result[j]), creal(result_exact[j]), cimag(result_exact[j]));
-            }
 #endif  // DEBUG
 
         if (misc_rel_err(9*nz, result, result_exact) > err_bnd)
@@ -212,10 +208,6 @@ end
         
 #ifdef DEBUG
         printf("error with normalization = %2.1e < %2.1e\n",misc_rel_err(9*nz, result, result_exact),err_bnd);
-        printf("result and exact result\n");
-        for (UINT j = 0; j<45; j++){
-                printf("%f + i%f,    %f + i%f\n", creal(result[j]), cimag(result[j]), creal(result_exact[j]), cimag(result_exact[j]));
-            }
 #endif
         if (misc_rel_err(9*nz, result, result_exact) > err_bnd)
             return E_TEST_FAILED;

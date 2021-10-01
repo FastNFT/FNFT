@@ -165,13 +165,6 @@ i = 0:7;
         for (i=0; i<9*(deg+1); i++)
             result[i] *= scl;
     }
-    #ifdef DEBUG
-        printf("error = %2.1e < %2.1e\n",misc_rel_err(45, result, result_exact),100*EPSILON);
-        printf("result and exact result\n");
-        for (UINT j = 0; j<45; j++){
-                printf("%f + i%f,    %f + i%f\n", creal(result[j]), cimag(result[j]), creal(result_exact[j]), cimag(result_exact[j]));
-            }
-    #endif
     if (!(misc_rel_err(9*(deg+1), result, result_exact) <= 100*EPSILON)){
         return E_TEST_FAILED;
     }

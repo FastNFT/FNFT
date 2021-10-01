@@ -36,7 +36,7 @@ static INT manakov_fscatter_test_FTES4_suzuki()
     manakov_discretization_t manakov_discretization = manakov_discretization_FTES4_suzuki;
     const REAL eps_t = 0.13;
     COMPLEX z[5] = {1.0+0.0*I, CEXP(I*PI/4), CEXP(I*9*PI/14), CEXP(I*4*PI/3), CEXP(I*-PI/5)};
-    COMPLEX q1[512], q2[512];   // [D]
+    COMPLEX q1[512], q2[512];
     COMPLEX result[45];
     const REAL err_bnd = 3*1000*EPSILON;
     UINT kappa = 1;
@@ -238,11 +238,6 @@ end
 
 #ifdef DEBUG
         printf("error without normalization = %2.1e < %2.1e\n",misc_rel_err(9*nz, result, result_exact),err_bnd);
-        printf("result and exact result\n");
-        for (UINT j = 0; j<45; j++){
-                printf("%f + i%f,    %f + i%f\n", creal(result[j]), cimag(result[j]), creal(result_exact[j]), cimag(result_exact[j]));
-            }
-        misc_print_buf(45,result,"result_C");
 #endif  // DEBUG
 
         if (misc_rel_err(9*nz, result, result_exact) > err_bnd)
@@ -265,7 +260,7 @@ end
         for (i=0; i<9*(deg+1); i++)
             transfer_matrix[i] *= scl;
         
-        for (i=0; i<9; i++){    // replaced 4 by 9
+        for (i=0; i<9; i++){ 
             for (j=0; j<nz; j++)
                 result[i*nz+j] = z[j];
             
@@ -278,10 +273,6 @@ end
         
 #ifdef DEBUG
         printf("error with normalization = %2.1e < %2.1e\n",misc_rel_err(9*nz, result, result_exact),err_bnd);
-        printf("result and exact result\n");
-        for (UINT j = 0; j<45; j++){
-                printf("%f + i%f,    %f + i%f\n", creal(result[j]), cimag(result[j]), creal(result_exact[j]), cimag(result_exact[j]));
-            }
 #endif
         if (misc_rel_err(9*nz, result, result_exact) > err_bnd)
             return E_TEST_FAILED;

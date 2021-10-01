@@ -91,7 +91,7 @@ eps_t = 0.13;
 
     if (ret_code != SUCCESS)
         return E_SUBROUTINE(ret_code);
-    if (misc_rel_err(18, result, result_exact) > 1000*EPSILON){      // Using 1000*EPSILON instead of 10*EPSILON because we copied the resampled q values with less decimals
+    if (misc_rel_err(18, result, result_exact) > 1000*EPSILON){
         return E_TEST_FAILED;
     }
     return SUCCESS;

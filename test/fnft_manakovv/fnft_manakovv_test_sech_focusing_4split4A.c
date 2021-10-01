@@ -25,7 +25,7 @@ INT main()
 {
     INT ret_code;
     fnft_manakovv_opts_t opts;
-    UINT D = 512;     //original
+    UINT D = 512;
     const manakovv_testcases_t tc = manakovv_testcases_SECH_FOCUSING;
     REAL error_bounds[5] = { 
         6.2e-6,     // reflection coefficient 1
