@@ -27,7 +27,7 @@
 static fnft_nsep_opts_t default_opts = {
     .localization = fnft_nsep_loc_MIXED,
     .filtering = fnft_nsep_filt_AUTO,
-    .max_evals = 20,
+    .max_evals = 50,
     .bounding_box[0] = -FNFT_INF,
     .bounding_box[1] = FNFT_INF,
     .bounding_box[2] = -FNFT_INF,
@@ -564,7 +564,7 @@ static inline INT subsample_and_refine(const UINT D,
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
     map_coeff = 2/degree1step;
     update_bounding_box_if_auto(eps_t_sub, map_coeff, opts_ptr);
-    tol_im = opts_ptr->bounding_box[1] - opts_ptr->bounding_box[0];
+    tol_im = opts_ptr->bounding_box[3] - opts_ptr->bounding_box[2];
     tol_im /= oversampling_factor*(D - 1);
 
     // Use unused part of transfer matrix as buffer for the roots
@@ -878,7 +878,7 @@ static inline INT refine_mainspec(
 {
     UINT k;
     COMPLEX M[8];
-    COMPLEX lam, f, f_prime, incr, tmp, next_f, next_f_prime;
+    COMPLEX lam, f, f_prime, incr, tmp, next_f, next_f_prime, best_incr;
     REAL cur_abs, min_abs;
     UINT nevals;
     INT ret_code;
@@ -918,7 +918,7 @@ static inline INT refine_mainspec(
                 return E_DIV_BY_ZERO;
             incr = f / f_prime;
 
-	    // Test different increments to deal with the many higher order
+	        // Test different increments to deal with the many higher order
             // roots (Newton's method for a root of order m is x<-x-m*f/f').
             min_abs = INFINITY;
             best_m = 1;
@@ -942,11 +942,12 @@ static inline INT refine_mainspec(
                         break;
                 }
             }
-            mainspec[k] -= best_m*incr; // Newton step
+            best_incr = best_m*incr;
+            mainspec[k] -= best_incr; // Newton step
 
-	    //printf("MAIN k=%zu, nevals=%zu: lam=%e+%ej, |f|=%e, |f_prime|=%e, |incr|=%e, best_m=%d\n", k, nevals, CREAL(mainspec[k]), CIMAG(mainspec[k]), CABS(f), CABS(f_prime),CABS(incr),best_m);
+	        // printf("MAIN k=%zu, nevals=%zu: lam=%e+%ej, |f|=%e, |f_prime|=%e, |incr|=%e, best_m=%d\n", k, nevals, CREAL(mainspec[k]), CIMAG(mainspec[k]), CABS(f), CABS(f_prime),CABS(incr),best_m);
 
-            if ( min_abs <= tol ) {
+            if ( CABS(best_incr) <= tol ) {
                 // We already know f and f_prime at the new mainspec[k], so
                 // let's use that for a final first-order Newton step.
                 if (next_f_prime == 0.0)
@@ -960,14 +961,14 @@ static inline INT refine_mainspec(
                 break;
         }
 
-	if (min_abs > tol && in_box(mainspec[k], bounding_box))
-		warn_flag = 1;
+	    if (CABS(best_incr) > tol && in_box(mainspec[k], bounding_box))
+		    warn_flag = 1;
 
         //printf("==> used %zu evaluations\n", nevals);
     }
 
     if (warn_flag)
-	WARN("Refinement of one or more main spectrum points did not converge. Try increasing max_evals or decreasing tol.")
+    	WARN("Refinement of one or more main spectrum (or spine) points did not converge. Try increasing max_evals or tol, or manual filtering.")
 
     return SUCCESS;
 }
@@ -982,7 +983,7 @@ static inline INT refine_auxspec(
 {
     UINT k, nevals;
     COMPLEX M[8];
-    COMPLEX f, f_prime;
+    COMPLEX f, f_prime, incr;
     INT warn_flag = 0;
     INT ret_code;
 
@@ -1005,8 +1006,9 @@ static inline INT refine_auxspec(
 
             //printf("AUX k=%zu, iter=%zu: lam=%g+%gj, |f|=%g, |f_prime|=%g\n", k, iter, CREAL(auxspec[k]), CIMAG(auxspec[k]), CABS(f), CABS(f_prime));
 
-            auxspec[k] -= f / f_prime;
-            if ( CABS(f) <= tol ) // Intentionally put after the previous line
+            incr = f / f_prime;
+            auxspec[k] -= incr;
+            if ( CABS(incr) <= tol ) // Intentionally put after the previous line
                 // => we use the already known values for f and f_prime for a
                 // last Newton step even if already |f|<tol.
                 break;
@@ -1016,12 +1018,12 @@ static inline INT refine_auxspec(
                 break;
         }
 
-	if (CABS(f) > tol && in_box(auxspec[k], bounding_box))
-	    warn_flag = 1;
+    	if (CABS(incr) > tol && in_box(auxspec[k], bounding_box))
+    	    warn_flag = 1;
     }
 
     if (warn_flag)
-	WARN("Refinement of one or more auxiliary spectrum points did not converge. Try increasing max_evals or decreasing tol.")
+    	WARN("Refinement of one or more auxiliary spectrum points did not converge. Try increasing max_evals or tol, or manual filtering.")
 
     return SUCCESS;
 }
