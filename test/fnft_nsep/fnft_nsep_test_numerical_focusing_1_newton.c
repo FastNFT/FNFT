@@ -322,7 +322,7 @@ INT fnft_nsep_test_numerical_focusing_newton(fnft_nsep_opts_t opts, REAL error_b
 #ifdef DEBUG
     printf("dist(mainspec) = %g\n", dist);
 #endif
-    if (dist > 1.5e-4) {
+    if (dist > error_bounds[0]) {
 #ifdef DEBUG
         misc_print_buf(K, mainspec, "mainspec");
 #endif
@@ -333,7 +333,7 @@ INT fnft_nsep_test_numerical_focusing_newton(fnft_nsep_opts_t opts, REAL error_b
 #ifdef DEBUG
     printf("dist(auxspec) = %g\n", dist);
 #endif
-   if (dist > 1.3e-2) {
+   if (dist > error_bounds[1]) {
 #ifdef DEBUG
         misc_print_buf(M, auxspec, "auxspec");
 #endif
