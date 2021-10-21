@@ -947,7 +947,7 @@ static inline INT refine_mainspec(
 
 	        // printf("MAIN k=%zu, nevals=%zu: lam=%e+%ej, |f|=%e, |f_prime|=%e, |incr|=%e, best_m=%d\n", k, nevals, CREAL(mainspec[k]), CIMAG(mainspec[k]), CABS(f), CABS(f_prime),CABS(incr),best_m);
 
-            if ( CABS(best_incr) <= tol ) {
+            if ( CABS(best_incr) <= tol || CABS(f) <= tol ) {
                 // We already know f and f_prime at the new mainspec[k], so
                 // let's use that for a final first-order Newton step.
                 if (next_f_prime == 0.0)
@@ -961,7 +961,7 @@ static inline INT refine_mainspec(
                 break;
         }
 
-	    if (CABS(best_incr) > tol && in_box(mainspec[k], bounding_box))
+	    if (CABS(best_incr) > tol && CABS(f) > tol && in_box(mainspec[k], bounding_box))
 		    warn_flag = 1;
 
         //printf("==> used %zu evaluations\n", nevals);
@@ -1008,7 +1008,7 @@ static inline INT refine_auxspec(
 
             incr = f / f_prime;
             auxspec[k] -= incr;
-            if ( CABS(incr) <= tol ) // Intentionally put after the previous line
+            if ( CABS(incr) <= tol || CABS(f) <= tol ) // Intentionally put after the previous line
                 // => we use the already known values for f and f_prime for a
                 // last Newton step even if already |f|<tol.
                 break;
@@ -1018,7 +1018,7 @@ static inline INT refine_auxspec(
                 break;
         }
 
-    	if (CABS(incr) > tol && in_box(auxspec[k], bounding_box))
+    	if (CABS(incr) > tol && CABS(f) > tol && in_box(auxspec[k], bounding_box))
     	    warn_flag = 1;
     }
 

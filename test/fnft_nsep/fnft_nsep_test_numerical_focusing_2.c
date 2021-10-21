@@ -498,14 +498,16 @@ int main()
     opts.bounding_box[1] = 1;
     opts.bounding_box[2] = -10;
     opts.bounding_box[3] = 10;
-   
+
     opts.localization = fnft_nsep_loc_SUBSAMPLE_AND_REFINE;
-    if (fnft_nsep_test_numerical_focusing_2(opts) == SUCCESS)
-        return EXIT_FAILURE;
+    INT ret_code = fnft_nsep_test_numerical_focusing_2(opts);
+    CHECK_RETCODE(ret_code, on_failure);
 
     opts.localization = fnft_nsep_loc_MIXED;
-    if (fnft_nsep_test_numerical_focusing_2(opts) == SUCCESS)
-        return EXIT_FAILURE;
+    ret_code = fnft_nsep_test_numerical_focusing_2(opts);
+    CHECK_RETCODE(ret_code, on_failure);
 
     return EXIT_SUCCESS;
+on_failure:
+    return EXIT_FAILURE;
 }
