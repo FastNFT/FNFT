@@ -25,7 +25,7 @@
 #include "fnft_nsep.h"
 
 static fnft_nsep_opts_t default_opts = {
-    .localization = fnft_nsep_loc_MIXED,
+    .localization = fnft_nsep_loc_SUBSAMPLE_AND_REFINE,
     .filtering = fnft_nsep_filt_AUTO,
     .max_evals = 50,
     .bounding_box[0] = -FNFT_INF,
@@ -968,7 +968,7 @@ static inline INT refine_mainspec(
     }
 
     if (warn_flag)
-    	WARN("Refinement of one or more main spectrum (or spine) points did not converge. Try increasing max_evals or tol, or manual filtering.")
+    	WARN("Refinement of one or more main spectrum (or spine) points did not converge. Try manual filtering, or increase max_evals or tol.")
 
     return SUCCESS;
 }
@@ -1023,7 +1023,7 @@ static inline INT refine_auxspec(
     }
 
     if (warn_flag)
-    	WARN("Refinement of one or more auxiliary spectrum points did not converge. Try increasing max_evals or tol, or manual filtering.")
+    	WARN("Refinement of one or more auxiliary spectrum points did not converge. Try manual filtering, or increase max_evals or tol.")
 
     return SUCCESS;
 }

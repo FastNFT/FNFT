@@ -30,7 +30,7 @@
 // This test signal was constructed numerically using a squared
 // eigenfunctions approach (currently undocumented).
 
-INT fnft_nsep_test_numerical_focusing_1()
+INT fnft_nsep_test_numerical_focusing_1(fnft_nsep_opts_t opts)
 {
     INT ret_code = SUCCESS;
     COMPLEX q[257] = {
@@ -320,13 +320,6 @@ INT fnft_nsep_test_numerical_focusing_1()
     }
 
     // Compute main and auxiliary spectrum
-    fnft_nsep_opts_t opts = fnft_nsep_default_opts();
-    opts.filtering = fnft_nsep_filt_MANUAL;
-    opts.bounding_box[0] = -1;
-    opts.bounding_box[1] = 1;
-    opts.bounding_box[2] = -10;
-    opts.bounding_box[3] = 10;
-    
     REAL phase_shift = CARG(q[D-1]/q[0]);
     ret_code = fnft_nsep(D-1, q, T, phase_shift, &K, mainspec, &M, auxspec, NULL, +1, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
@@ -356,9 +349,14 @@ INT fnft_nsep_test_numerical_focusing_1()
 
         const COMPLEX lam = spines[k];
 
-        // Spines are imaginary in this example
-        if (FABS(CREAL(lam)) > 150*EPSILON)
-            return E_TEST_FAILED;
+        // Spines are imaginary or real in this example
+        if (FABS(CREAL(lam)) > 150*EPSILON && FABS(CIMAG(lam)) > 100*EPSILON) {
+#ifdef DEBUG
+            printf("lam = %g + %gj\n", CREAL(lam), CIMAG(lam));
+#endif
+            ret_code = E_TEST_FAILED;
+            goto leave_fun;
+        }
 
         const REAL lam_i = CIMAG(lam);
 
@@ -406,13 +404,25 @@ leave_fun:
     free(mainspec);
     free(auxspec);
     free(spines);
-    return SUCCESS;
+    return ret_code;
 }
 
 int main()
 {
-    if (fnft_nsep_test_numerical_focusing_1() == SUCCESS)
-        return EXIT_SUCCESS;
-    else
+    fnft_nsep_opts_t opts = fnft_nsep_default_opts();
+    opts.filtering = fnft_nsep_filt_MANUAL;
+    opts.bounding_box[0] = -1;
+    opts.bounding_box[1] = 1;
+    opts.bounding_box[2] = -10;
+    opts.bounding_box[3] = 10;
+
+    opts.localization = fnft_nsep_loc_SUBSAMPLE_AND_REFINE;
+    if (fnft_nsep_test_numerical_focusing_1(opts) != SUCCESS)
         return EXIT_FAILURE;
+ 
+    opts.localization = fnft_nsep_loc_MIXED;
+    if (fnft_nsep_test_numerical_focusing_1(opts) != SUCCESS)
+        return EXIT_FAILURE;
+ 
+    return EXIT_SUCCESS;
 }
