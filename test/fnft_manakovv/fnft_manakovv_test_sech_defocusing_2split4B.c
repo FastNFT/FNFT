@@ -14,8 +14,10 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributor:
-* Lianne de Vries (TU Delft student) 2021.
+* Lianne de Vries (TU Delft student) 2021
+* Sander Wahls (TU Delft) 2021
 */
+
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft__manakovv_testcases.h"

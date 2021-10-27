@@ -28,18 +28,25 @@ INT main()
     INT ret_code;
     fnft_manakovv_opts_t opts;
     UINT D = 512;
-    const manakovv_testcases_t tc = manakovv_testcases_SECH_DEFOCUSING;
-    REAL error_bounds[5] = {
-        1.9e-5,     // reflection coefficient 1
-        1.9e-5,     // reflection coefficient 2
-        1.0e-6,     // a
-        2.0e-6,     // b1
-        2.0e-6     // b2
+    const manakovv_testcases_t tc = manakovv_testcases_SECH_FOCUSING;
+    REAL error_bounds[5] = { 
+        6.2e-6,     // reflection coefficient 1
+        6.2e-6,     // reflection coefficient 2
+        3.2e-5,     // a
+        5.7e-6,     // b1
+        5.7e-6     // b2
     };
 
     opts = fnft_manakovv_default_opts();
-    opts.discretization = manakov_discretization_4SPLIT6B;
+    opts.discretization = manakov_discretization_4SPLIT4A;
 
+    // To ensure that Richardson actually helps, the bounds above are
+    // from the no Richardson case.
+    for (INT i=0; i<5; i++)
+        error_bounds[i] /= 2;
+
+    // with Richardson extrapolation
+    opts.richardson_extrapolation_flag = 1;
     ret_code = manakovv_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
@@ -48,6 +55,5 @@ leave_fun:
         return EXIT_FAILURE;
     else
 	    return EXIT_SUCCESS;
-    
 }
 

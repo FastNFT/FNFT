@@ -28,19 +28,23 @@ INT main()
     INT ret_code;
     fnft_manakovv_opts_t opts;
     UINT D = 512;
-    const manakovv_testcases_t tc = manakovv_testcases_SECH_DEFOCUSING;
+    const manakovv_testcases_t tc = manakovv_testcases_SECH_FOCUSING;
     REAL error_bounds[5] = {
-        1.9e-5,     // reflection coefficient 1
-        1.9e-5,     // reflection coefficient 2
-        1.0e-6,     // a
-        2.0e-6,     // b1
-        2.0e-6     // b2
+        3.5e-4,     // reflection coefficient 1
+        3.5e-4,     // reflection coefficient 2
+        4.4e-3,     // a
+        5.9e-4,     // b1
+        5.9e-4     // b2
     };
 
     opts = fnft_manakovv_default_opts();
-    opts.discretization = manakov_discretization_4SPLIT6B;
+    opts.discretization = manakov_discretization_2SPLIT3A;
 
-    ret_code = manakovv_testcases_test_fnft(tc, D, error_bounds, &opts);
+    // Check the case where D is not a power of two. The error bounds have to
+    // be tight but not too tight for this to make sense!
+    ret_code = manakovv_testcases_test_fnft(tc, D+1, error_bounds, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = manakovv_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
 leave_fun:
@@ -48,6 +52,5 @@ leave_fun:
         return EXIT_FAILURE;
     else
 	    return EXIT_SUCCESS;
-    
 }
 
