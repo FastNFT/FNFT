@@ -15,9 +15,8 @@
  *
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018, 2021.
- * Shrinivas Chimmalgi (TU Delft) 2017-2018.
+ * Shrinivas Chimmalgi (TU Delft) 2017.
  */
-
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft__nsev_testcases.h"
@@ -27,34 +26,34 @@ INT main()
 {
     INT ret_code, i;
     fnft_nsev_opts_t opts;
-    const nsev_testcases_t tc = nsev_testcases_SECH_DEFOCUSING;
     UINT D = 4096;
-    REAL error_bounds[6] = {
-        1.3e-4,     // reflection coefficient
-        INFINITY,   // a
-        INFINITY,   // b
-        0.0,        // bound states
-        0.0,        // norming constants
-        0.0         // residues
+    const nsev_testcases_t tc = nsev_testcases_SECH_FOCUSING;
+    
+    // Check for Richardson
+    D /= 2;
+    REAL error_bounds_RE[6] = {
+        2.7e-8,     // reflection coefficient
+        6.7e-8,     // a
+        2.4e-8,     // b
+        1.2e-9,     // bound states
+        5e-14,      // norming constants
+        4.5e-9      // residues
     };
-    
-    opts = fnft_nsev_default_opts();
-    opts.discretization = nse_discretization_2SPLIT4A;
-    
-    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
+    opts.richardson_extrapolation_flag = 1;
+    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
-    // Check for quadratic error decay
     D *= 2;
     for (i=0; i<6; i++)
-        error_bounds[i] /= 4.0;
-    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
+        error_bounds_RE[i] /= 16.0;
+    error_bounds_RE[4] *= 16.0;
+    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
-    leave_fun:
-        if (ret_code != SUCCESS)
-            return EXIT_FAILURE;
-        else
-            return EXIT_SUCCESS;
+leave_fun:
+    if (ret_code != SUCCESS)
+        return EXIT_FAILURE;
+    else
+        return EXIT_SUCCESS;
 }
 

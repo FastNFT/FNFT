@@ -15,8 +15,9 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018, 2021.
-* Shrinivas Chimmalgi (TU Delft) 2017-2018.
+* Shrnivas Chimmalgi (TU Delft) 2019-2020.
 */
+
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft__nsev_testcases.h"
@@ -26,36 +27,38 @@ INT main()
 {
     INT ret_code, i;
     fnft_nsev_opts_t opts;
-    UINT D = 4096;
-    const nsev_testcases_t tc = nsev_testcases_SECH_FOCUSING;
-    REAL error_bounds[6] = { 
-        3.4e-4,     // reflection coefficient
-        6.9e-4,     // a
-        3.2e-4,     // b
-        1.6e-5,     // bound states
-        5e-14,      // norming constants
-        2.1e-6      // residues 
-    };
+    const nsev_testcases_t tc = nsev_testcases_SECH_DEFOCUSING;
+    UINT D = 1024;
 
     opts = fnft_nsev_default_opts();
-    opts.discretization = nse_discretization_2SPLIT2S;
-
-    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
+    opts.discretization = nse_discretization_4SPLIT4A;
+   
+    // Check for at least 5th-order error decay on resulting from application
+    // of Richardson extrapolation to 4th-order method.
+    D /= 2;
+    REAL error_bounds_RE[6] = {
+        9.1e-9,     // reflection coefficient
+        INFINITY,   // a
+        INFINITY,   // b
+        0.0,        // bound states
+        0.0,        // norming constants
+        0.0         // residues
+    };
+    opts.richardson_extrapolation_flag = 1;
+    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
-
-    // Check for quadratic error decay (error_bounds[4] stays as it is because it is
-    // already close to machine precision)
+    
     D *= 2;
     for (i=0; i<6; i++)
-        error_bounds[i] /= 4.0;
-    error_bounds[4] *= 4.0;
-    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
+        error_bounds_RE[i] /= 32.0;
+    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
+    
 
 leave_fun:
     if (ret_code != SUCCESS)
         return EXIT_FAILURE;
     else
-	    return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
 
