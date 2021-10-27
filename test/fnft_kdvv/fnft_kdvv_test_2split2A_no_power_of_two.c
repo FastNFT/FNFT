@@ -26,15 +26,15 @@ INT main()
 {
     INT ret_code;
     fnft_kdvv_opts_t opts = fnft_kdvv_default_opts();
-    opts.discretization = kdv_discretization_2SPLIT3B_VANILLA;
+    opts.discretization = kdv_discretization_2SPLIT2A;
 
     // Test staircase potential
     kdvv_testcases_t tc = kdvv_testcases_NEGATIVE_RECT;
     UINT D = 3;
     REAL eb_rect[6] = {  // error bounds
-        1.2e-1,     // continuous spectrum
-        3.5e-2,     // a(xi)
-        4.0e-2,     // b(xi)
+        1.9e-1,     // continuous spectrum
+        5.9e-2,     // a(xi)
+        4.1e-2,     // b(xi)
         0,          // bound states
         0,          // norming constants
         0           // residues
@@ -44,19 +44,31 @@ INT main()
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Test smooth potential
-    tc = kdvv_testcases_SECH_SQUARED_LOW_BANDWIDTH;
-    D = 1024;
+    tc = kdvv_testcases_SECH_SQUARED;
+    D = 256;
     REAL eb[6] = {  // error bounds
-        1.4e-3,     // continuous spectrum
-        1.7e-4,     // a(xi)
-        3.5e-4,     // b(xi)
-        7.8e-5,     // bound states
-        1.3e-3,     // norming constants
-        1.3e-3      // residues
+        2.5e-3,     // continuous spectrum
+        1.3e-1,     // a(xi)
+        1.3e-3,     // b(xi)
+        1.3e-3,     // bound states
+        2.1e-2,     // norming constants
+        2.0e-2      // residues
     };
 
-    ret_code = kdvv_testcases_test_fnft(tc, D, eb, &opts);
+    ret_code = kdvv_testcases_test_fnft(tc, D+1, eb, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
+
+    ret_code = kdvv_testcases_test_fnft(tc, D-1, eb, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    // check for quadratic error decay
+    for (UINT n=0; n<3; n++){
+        D *= 2;
+        for (UINT i=0; i<6; i++)
+            eb[i] /= 4.0;
+        ret_code = kdvv_testcases_test_fnft(tc, D, eb, &opts);
+        CHECK_RETCODE(ret_code, leave_fun);
+    }
 
 leave_fun:
     if (ret_code != SUCCESS)
