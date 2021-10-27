@@ -11,16 +11,26 @@ FNFT is a software library for the numerical computation of (inverse) nonlinear 
 * Nonlinear Schroedinger equation
 
     * Vanishing boundary conditions
-      * Reflection coefficient and/or scattering coefficients (a and b)
-      * Bound states (eigenvalues)
-      * Norming constants and/or residues
+        * Reflection coefficient and/or scattering coefficients (a and b)
+        * Bound states (eigenvalues)
+        * Norming constants and/or residues
 
     * (Quasi-)Periodic boundary conditions
-      * Main spectrum
-      * Auxiliary spectrum
+        * Main spectrum
+        * Auxiliary spectrum
 
 * Korteweg-de Vries equation
-    * Vanishing boundary conditions (reflection coefficient only)
+
+    * Vanishing boundary conditions
+        * Reflection coefficient and/or scattering coefficients (a and b)
+        * Bound states (eigenvalues)
+        * Norming constants and/or residues
+
+* Manakov equation
+
+    * Vanishing boundary conditions
+        * Reflection coefficient and/or scattering coefficients (a, b1 and b2)
+        * Bound states (eigenvalues)
 
 ### Inverse Transforms
 
