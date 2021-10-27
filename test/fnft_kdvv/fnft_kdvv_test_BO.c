@@ -65,7 +65,7 @@ INT main()
     CHECK_RETCODE(ret_code, leave_fun);
 
     // check for quadratic error decay
-    for (UINT n=0; n<5; n++){
+    for (UINT n=0; n<2; n++){
         D *= 2;
         for (UINT i=0; i<6; i++)
             eb[i] /= 4.0;
@@ -95,7 +95,7 @@ INT main()
     CHECK_RETCODE(ret_code, leave_fun);
 
     // check for 3rd order error decay
-    for (UINT n=0; n<5; n++){
+    for (UINT n=0; n<2; n++){
         D *= 2;
         for (UINT i=0; i<4; i++)
             eb_RE[i] /= 8.0;
