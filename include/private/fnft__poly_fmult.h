@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2017-2018.
+ * Sander Wahls (TU Delft) 2017-2018, 2021.
  * Peter J Prins (TU Delft) 2020.
  * Lianne de Vries (TU Delft student) 2021.
  */
@@ -76,12 +76,10 @@ FNFT_UINT fnft__poly_fmult_two_polys_len(const FNFT_UINT deg);
  *   mode==3, then the FFT of the two (zero-padded)
  *   polynomials is added to the values currently stored in result, an inverse
  *   FFT is applied to these values, and the outcome is finally stored in
- *   result. If mode ==4, the FFT of the two (zero-padded)
+ *   result. If mode==4, the FFT of the two (zero-padded)
  *   polynomials is added to the values currently stored in result, but the inverse FFT 
- *   is not applied to those values yet. 
- *   mode==5 is the same as mode==3, with the difference that the inverse fft is stored in buf0 such that
- *   buf1 can be re-used. This adds one extra step of copying the values from buf0 to result.
- *   IMPORTANT: The modes 3, 4 and 5 require that the array result is large
+ *   is NOT applied to those values. 
+ *   IMPORTANT: The modes 2, 3, and 4 require that the array result is large
  *   enough to store an FFT of the size given above.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
