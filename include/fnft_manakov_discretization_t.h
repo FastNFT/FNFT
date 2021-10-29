@@ -15,6 +15,7 @@
 *
 * Contributor:
 * Lianne de Vries (TU Delft student) 2021.
+* Sander Wahls (TU Delft) 2021.
 */
 
 /**
@@ -35,13 +36,16 @@
  * Each discretization is always related to a particular numerical method and some
  * are additionally related to a splitting-scheme.\n
  * FTES4_YZ and XSPLITYZ are methods to which an exponential splitting scheme defined by
- * Prins and Wahls, <a href="https://doi.org/10.1109/ICASSP.2018.8461708">&quot; has been applied.\n
+ * Prins and Wahls, <a href="https://doi.org/10.1109/ICASSP.2018.8461708">&quot; Higher Order Exponential
+ * Splittings for the Fast Non-Linear Fourier Transform of the Korteweg-De Vries Equation &quot;</a>, Proc. ICASSP 2018,
+ * has been applied.\n
  * For FTES4_YZ, the base method is the TES4 method from Medvedev, Vaseva, Chekhovskoy and Fedoruk
- * <a href="https://doi.org/10.1364/OE.377140">&quot;.\n
+ * <a href="https://doi.org/10.1364/OE.377140">&quot; Exponential fourth order schemes for direct Zakharov-Shabat problem &quot;</a>, Optics Express 28(1) 2020.\n
  * For XSPLITYZ X denotes the order of the base method. For X=2 the second order method by Boffetta and Osborne
- * from <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot; has been chosen. For X=4 the base method
+ * from <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot;Computation of the direct scattering transform for the nonlinear Schroedinger equation &quot;</a>
+ * J. Comput. Phys. 102(2), 1992, has been chosen. For X=4 the base method
  * is the fourth order
- * method CF4_2 from Chimmalgi, Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2945480">&quot;\n
+ * method CF4_2 from Chimmalgi, Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2945480">&quot;Fast Nonlinear Fourier Transform Algorithms Using Higher Order Exponential Integrators&quot;</a>, IEEE Access (7) 2019.\n
  * For FTES4_YZ and XSPLITYZ, Y denotes the order of the chosen exponential splitting scheme from
  * Prins and Wahls, <a href="https://doi.org/10.1109/ICASSP.2018.8461708">&quot;
  * Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot;
@@ -51,8 +55,9 @@
  * Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot;
  * </a>Proc. ICASSP 2018, pp. 4524-4528. `B` type of splitting are the same as `A` with the positions of the 
  * two terms in the splitting interchanged.\n
- * FTES4_suzuki is the FTES4 method where suzuki factorization (<a href="https://journals.jps.jp/doi/10.1143/JPSJ.61.3015"> J. Phys. Soc. Jpn. (1992))
- * was used to split the exponential term, as carried out by Medvedev, Chekhovskoy, Vaseva and Fedoruk in <a href="https://www.osapublishing.org/ol/abstract.cfm?uri=ol-45-7-2082">\n
+ * FTES4_suzuki is the FTES4 method where suzuki factorization (<a href="https://journals.jps.jp/doi/10.1143/JPSJ.61.3015"> J. Phys. Soc. Jpn. (1992)</a>)
+ * was used to split the exponential term, as carried out by Medvedev, Chekhovskoy, Vaseva and Fedoruk in <a href="https://www.osapublishing.org/ol/abstract.cfm?uri=ol-45-7-2082">
+ * &quot; Conservative multi-exponential scheme for solving the direct Zakharov–Shabat scattering problem&quot;</a>, Optics Letters 45(7) 2020.\n
  * In general, discretizations with a lower degree are faster, while those with
  * a highter order of accuracy are more accurate. Therefore, the best choice is
  * normally among `-2A`, `-2B`, `-4B`, `-6B`.
@@ -75,7 +80,7 @@
  * `fnft_manakov_discretization_CF4_2`: base method for the 4SPLITYZ methods\n
  * `fnft_manakov_discretization_BO`: base method for the 2SPLITYZ methods\n
  *
- * Used in \link fnft_manakov_opts_t \endlink.
+ * Used in \link fnft_manakovv_opts_t \endlink.
  *
  * @ingroup data_types
  */

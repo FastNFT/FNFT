@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Lianne de Vries (TU Delft student) 2021.
+* Sander Wahls (TU Delft) 2021.
 */
 
 /**
@@ -157,17 +158,18 @@ FNFT_INT fnft__manakov_discretization_phase_factor_b(const FNFT_REAL eps_t, cons
  * Certain discretization types from \link fnft_manakov_discretization_t \endlink require
  * non-equidistant samples. In that case, band-limited Fourier interpolation is used after the optional downsampling to get the required samples.
  * Both the downsampling and interpolation step are combined in this function, resulting in a preprocessed array
- * of samples to be used by the other functions in \link fnft_manakov \endlink
+ * of samples to be used by the other functions in \link fnft_manakovv \endlink
  * 
  * @param[in] D the original number of samples
  * @param[in] q1 Pointer to complex array of size D containg the samples of the first element of the potential q1
  * @param[in] q2 Pointer to complex array of size D containg the samples of the second element of the potential q2
  * @param[in] eps_t timestep size
- * @param[in] kappa dispersion constant. kappa=-1 for normal dispersion and kappa=+1 for anomalous dispersion
  * @param[in, out] Dsub_ptr Pointer to the desired number of samples after subsampling. Upon exit, this contains the
  * actual number of samples after subsampling which ensures that the samples stay equidistant
  * @param[out] q1_preprocessed_ptr Pointer to a complex array of size Dsub*upsampling_factor containing the optionally downsampled and
- * interpolated (if the discretization required interpolation) samples
+ * interpolated (if the discretization required interpolation) samples of q1
+ * @param[out] q2_preprocessed_ptr Pointer to a complex array of size Dsub*upsampling_factor containing the optionally downsampled and
+ * interpolated (if the discretization required interpolation) samples of q2
  * @param[out] first_last_index Pointer to an integer array containing the index of the first and last index from the original samples
  * used in the preprocessed arrays
  * @param[in] discretization discretization Should be of type \link fnft_manakov_discretization_t \endlink

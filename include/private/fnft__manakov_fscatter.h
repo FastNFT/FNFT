@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Lianne de Vries (TU Delft student) 2021.
+* Sander Wahls (TU Delft) 2021.
 */
 
 /**
@@ -71,7 +72,7 @@ FNFT_UINT fnft__manakov_fscatter_numel(FNFT_UINT D,
  * with `malloc(manakov_fscatter_numel(D,discretization)*sizeof(COMPLEX))`.
  * @param[out] deg_ptr Pointer to variable containing degree of the discretization.
  * Determined based on discretization by \link fnft__manakov_discretization_degree \endlink.
- * @param[out] W_ptr Pointer to normalization flag \link fnft_manakov_opts_t::normalization_flag \endlink.
+ * @param[out] W_ptr Pointer to normalization flag \link fnft_manakovv_opts_t::normalization_flag \endlink.
  * @param[in] discretization The type of discretization to be used. Should be of type
  * \link fnft_nse_discretization_t \endlink. Not all fnft_manakov_discretization_t discretizations are supported.
  * Check \link fnft_manakov_discretization_t \endlink for list of supported types.

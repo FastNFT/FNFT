@@ -15,6 +15,7 @@
 *
 * Contributor:
 * Lianne de Vries (TU Delft student) 2021.
+* Sander Wahls (TU Delft) 2021.
 */
 
 #ifndef FNFT_MANAKOVV_H
@@ -35,20 +36,48 @@
 #include "fnft__poly_chirpz.h"
 #include "fnft_manakov_discretization_t.h"
 
-typedef enum{
+/**
+ * Enum that specifies how the bound states are filtered. Used in
+ * \link fnft_manakovv_opts_t \endlink.\n \n
+ * @ingroup data_types
+ *  fnft_nsev_bsfilt_NONE: All detected roots of \f$ a(\lambda) \f$ are returned. \n \n
+ *  fnft_nsev_bsfilt_BASIC: Only roots in the upper halfplane are returned and roots very close
+ *  to each other are merged. \n \n
+ *  fnft_nsev_bsfilt_FULL: NOT YET IMPLEMENTED.
+ */
+typedef enum {
     fnft_manakovv_bsfilt_NONE,
     fnft_manakovv_bsfilt_BASIC,
     fnft_manakovv_bsfilt_FULL
 } fnft_manakovv_bsfilt_t;
 
-
-typedef enum{
+/**
+ * Enum that specifies how the bound states are localized. Used in
+ * \link fnft_manakovv_opts_t \endlink. \n \n
+ * @ingroup data_types
+ *  fnft_nsev_bsloc_FAST_EIGENVALUE: A root finding routine due to Aurentz et al. (see
+ *  https://arxiv.org/abs/1611.02435 and https://github.com/eiscor/eiscor)
+ *  with \f$ O(D^2) \f$ complexity is used to detect the roots of
+ *  \f$ a(\lambda) \f$. (Note: FNFT incorporates a development version of this
+ *  routine as no release was available yet.) This method is relatively slow,
+ *  but very reliable. \n \n
+ *  fnft_nsev_bsloc_NEWTON: NOT YET IMPLEMENTED.
+ *  fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE: NOT YET IMPLEMENTED.
+ */
+typedef enum {
     fnft_manakovv_bsloc_FAST_EIGENVALUE,
     fnft_manakovv_bsloc_NEWTON,
     fnft_manakovv_bsloc_SUBSAMPLE_AND_REFINE
 } fnft_manakovv_bsloc_t;
 
-typedef enum{
+/**
+ * Enum that specifies the type of the discrete spectrum computed by the
+ * routine. Used in \link fnft_manakovv_opts_t \endlink. CURRENTLY NOT USED
+ * SINCE ONLY THE BOUND STATES THEMSELVES ARE COMPUTED AT THE MOMENT.
+ * @ingroup data_types
+ */
+
+typedef enum {
     fnft_manakovv_dstype_NORMING_CONSTANTS,
     fnft_manakovv_dstype_RESIDUES,
     fnft_manakovv_dstype_BOTH
@@ -197,8 +226,8 @@ FNFT_UINT fnft_manakovv_max_K(const FNFT_UINT D, fnft_manakovv_opts_t const* con
  * The main references are:
  *      - Wahls and Poor,<a href="http://dx.doi.org/10.1109/ICASSP.2013.6638772">&quot;Introducing the fast nonlinear Fourier transform,&quot;</a> Proc. ICASSP 2013.
  *      - Wahls and Poor, <a href="http://dx.doi.org/10.1109/TIT.2015.2485944">&quot;Fast numerical nonlinear Fourier transforms,&quot;</a> IEEE Trans. Inform. Theor. 61(12), 2015.
- *      - Prins and Wahls, <a href="https://doi.org/10.1109/ICASSP.2018.8461708">&quot; Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot; </a>Proc. ICASSP 2018, pp. 4524-4528
- * 		- Chimmalgi, Prins and Wahls, <a href="https://ieeexplore-ieee-org.tudelft.idm.oclc.org/abstract/document/8856211">&quot;Fast nonlinear Fourier transform algorithms using higher order exponential integrators,&quot; <a/>IEEE Access 7 (2019): 145161-145176
+ *      - Prins and Wahls, <a href="https://doi.org/10.1109/ICASSP.2018.8461708">&quot; Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot; </a>Proc. ICASSP 2018, pp. 4524-4528.
+ *      - Chimmalgi, Prins and Wahls, <a href="https://ieeexplore.ieee.org/abstract/document/8856211">&quot;Fast nonlinear Fourier transform algorithms using higher order exponential integrators,&quot; </a>IEEE Access 7 (2019): 145161-145176
  *
  * The routine also utilizes ideas from the following papers:
  *      - Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot;Computation of the direct scattering transform for the nonlinear Schroedinger equation,&quot;</a> J. Comput. Phys. 102(2), 1992.

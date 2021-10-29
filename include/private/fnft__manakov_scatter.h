@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Lianne de Vries (TU Delft student) 2021.
+* Sander Wahls (TU Delft) 2021.
 */
 
 /**
@@ -47,11 +48,12 @@
  * in ascending order (i.e., \f$ q2_0, q2_1, \dots, q2_{D-1} \f$).
  * @param[in] eps_t timestep size
  * @param[in] K Number of values of \f$\lambda\f$.
+ * @param[in] lambda Array with values of \f$\lambda\f$.
  * @param[in] kappa dispersion constant. kappa=-1 for normal dispersion, kappa=+1 for anomalous dispersion
  * @param[out] result Array of length 9*K containing S=[S11(lambda[0]) S12(lambda[0]) S13(lambda[0]) ... S33(lambda[K-1])]
  * upon exit where S = [S11, S12, S13; S21, S22, S23; S31, S32, S33] is the scattering matrix computes using the chosen discretization
- * @param[in] discretization Discretization to be used. Should be of type \link fnft__manakov_discretization_t \endlink.
- * Check \link fnft__manakov_discretization_t \endlink to see which discretizations correspond to slow methods
+ * @param[in] discretization Discretization to be used. Should be of type \link fnft_manakov_discretization_t \endlink.
+ * Check \link fnft_manakov_discretization_t \endlink to see which discretizations correspond to slow methods
  */
 FNFT_INT fnft__manakov_scatter_matrix(FNFT_UINT const D,
                         FNFT_COMPLEX const * const q1,
@@ -62,7 +64,6 @@ FNFT_INT fnft__manakov_scatter_matrix(FNFT_UINT const D,
                         FNFT_INT const kappa,
                         FNFT_COMPLEX * const result,
                         fnft_manakov_discretization_t const discretization);
-
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define manakov_scatter_matrix(...) fnft__manakov_scatter_matrix(__VA_ARGS__)
