@@ -24,7 +24,7 @@
 
 INT main()
 {
-    INT ret_code, i;
+    INT ret_code;
     fnft_nsev_opts_t opts;
     UINT D = 4096;
     const nsev_testcases_t tc = nsev_testcases_SECH_FOCUSING;
