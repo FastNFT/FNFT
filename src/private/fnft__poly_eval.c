@@ -21,7 +21,6 @@
 #include "fnft.h"
 #include "fnft__poly_eval.h"
 #include "fnft__errwarn.h"
-#include <stdio.h>
 
 INT poly_eval(const UINT deg, COMPLEX const * const p, const UINT nz, \
     COMPLEX * const z)
@@ -39,9 +38,8 @@ INT poly_eval(const UINT deg, COMPLEX const * const p, const UINT nz, \
         // Evaluate p(z) at z=z[i]
         if (FNFT_CABS(z[i]) <= 1.0) { // Horner's method
             tmp = p[0];
-            for (j=1; j<=deg; j++){
+            for (j=1; j<=deg; j++)
                 tmp = p[j] + tmp*z[i];
-            }
             z[i] = tmp;
         } else { // Apply Horner's method to reversed polynomial for stability
             tmp = p[deg];

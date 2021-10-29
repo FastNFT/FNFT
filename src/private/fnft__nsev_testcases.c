@@ -287,9 +287,7 @@ INT nsev_testcases(nsev_testcases_t tc, const UINT D,
         (*residues_ptr)[2] = -4284.0 * GAMMA(2.0/5.0) \
             / (11.0 * CPOW(GAMMA(1.0/5.0), 2.0) );
 
-        printf("kappa = %d before\n",*kappa_ptr);
         *kappa_ptr = +1;
-        printf("kappa = %d after \n",*kappa_ptr);
 
         break;
 

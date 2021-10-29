@@ -172,8 +172,6 @@ INT main()
 {
     if (akns_fscatter_test_2split1A() != SUCCESS)
         return EXIT_FAILURE;
-
-    printf("compile test 3\n");
     
     return EXIT_SUCCESS;
 }

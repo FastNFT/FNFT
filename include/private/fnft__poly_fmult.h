@@ -189,8 +189,8 @@ FNFT_INT fnft__poly_fmult_two_polys2x2(const FNFT_UINT deg,
  *   \endlink and \link fnft__fft_wrapper_free \endlink, respectively.
  * @param [in,out] buf1 See buf0.
  * @param [in,out] buf2 See buf0.
- * @param [in] mode_offset Set to 2 if the arrays result_11+n*result_stride,
- *   where n=0,1,2,3, are long enough to store the FFT's. This allows improve
+ * @param [in] sufficient_space_flag Set to 1 if the arrays result_11+n*result_stride,
+ *   where n=0,1,2,..,8 are long enough to store the FFT's. This allows improve
  *   performance by storing some intermediate values there. Otherwise, set to 0.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *   defined in \link fnft_errwarn.h \endlink.
@@ -207,7 +207,7 @@ FNFT_INT fnft__poly_fmult_two_polys3x3(const FNFT_UINT deg,
     FNFT_COMPLEX * const buf0,
     FNFT_COMPLEX * const buf1,
     FNFT_COMPLEX * const buf2,
-    const FNFT_UINT mode_offset);
+    const FNFT_UINT sufficient_space_flag);
 
 /**
  * @brief Number of elements that the input p to
