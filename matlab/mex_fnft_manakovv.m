@@ -1,5 +1,5 @@
-% MEX_FNFT_MANAKOVV Fast nonlinear Fourier transform for the nonlinear
-% Schroedinger equation with vanishing boundaries.
+% MEX_FNFT_MANAKOVV Fast nonlinear Fourier transform for the Manakov
+% equation with vanishing boundaries.
 %
 %   contspec = MEX_FNFT_MANAKOVV(q1, q2, T, XI, kappa)
 %   contspec = MEX_FNFT_MANAKOVV(q1, q2, T, XI, kappa,
@@ -43,9 +43,11 @@
 %                   interface functions, use MATLAB's warning and error
 %                   commands instead.)
 %
-%       The following options specify the use of fast discretization schemes,
-%       characterised by the Order of the base method (O), Polynomial degree per
-%       potential sample (P), and order of occuracy of the splitting scheme (S).
+%   The following options specify the use of fast discretization schemes,
+%   characterised by the Order of the base method (O), Polynomial degree per
+%   potential sample (P), and order of occuracy of the splitting scheme
+%   (S):
+%
 %   'discr_2split3A' O = 2; P = 6;   S=3.
 %   'discr_2split3B' O = 2; P = 6;   S=3.
 %   'discr_2split4A' O = 2; P = 8;   S=4.
@@ -57,7 +59,8 @@
 %   'discr_FTES4_4A' O = 4; P = 8;   S=4.
 %   'discr_FTES4_suzuki' O = 4; P = 14;   S=4.
 % 
-%       The following options specify slow discretization schemes.
+%   The following options specify slow discretization schemes:
+%
 %   'discr_BO'      Use the second-order method by Boffetta-Osborne.
 %                   Requires one matrix exponential per sample.
 %   'discr_CF4_2'   Use fourth-order commutator-free exponential integrator
@@ -83,3 +86,4 @@
 %
 % Contributor:
 % Lianne de Vries (TU Delft student) 2021.
+% Sander Wahls (TU Delft) 2021.

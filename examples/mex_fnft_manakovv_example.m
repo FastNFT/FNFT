@@ -13,46 +13,39 @@
 % along with this program. If not, see <http://www.gnu.org/licenses/>.
 %
 % Contributors:
-% Sander Wahls (TU Delft) 2017-2018.
+% Sander Wahls (TU Delft) 2017-2018, 2021.
 % Lianne de Vries (TU Delft student) 2021.
 
 % This examples demonstrates how the nonlinear Fourier transform with
-% respect to the nonlinear Schroedinger equation with vanishing boundary
-% conditions can be computed using mex_fnft_nsev. The signal is a sech
-% pulse as discussed in the paper https://doi.org/10.1143/PTPS.55.284
+% respect to the Manakov equation with vanishing boundary
+% conditions can be computed using mex_fnft_manakovv. The signal is a sech
+% pulse as discussed in 
+% http://resolver.tudelft.nl/uuid:0276e693-3408-4472-9749-b754c2114183
+
 
 clear all;
 close all;
 
 %%% Setup parameters %%%
 
-T = [-5, 5];  % location of the 1st and last sample in the time domain
-D = 512;       % number of samples
-XI = [-7/4, 8/4];   % location of the 1st and last sample in the xi-domain
+T = [-7, 7];    % location of the 1st and last sample in the time domain
+D = 512;        % number of samples
+XI = [-7/4, 8/4]; % location of the 1st and last sample in the xi-domain
 kappa = +1;     % focusing nonlinear Schroedinger equation
 
 %%% Setup the signal %%%
 
-eps_t = (T(2) - T(1)) / (D - 1); % time domain step size
+eps_t = (T(2) - T(1)) / (D - 1);    % time domain step size
 t = T(1):eps_t:T(2);
-q1 = 0.8*sech(t);               % signal samples
+q1 = 0.8*sech(t);                   % signal samples
 q2 = 5.2*sech(t);
-% q1 = sqrt(2)*sech(t);               % signal samples
-% q2 = sqrt(2)*sech(t);
-
-% xi = 4.869;     % parameter defining the velocity of the soliton. real number
-% eta = 0.56;     % parameter defining the amplitude of the soliton. real number
-% x = 0.1;          % x coordinate at which we get the potential q(x,t) = q(t)
-% S = [6, 1+5i];  % vector defining the polarization of both components of q
-% c = S/norm(S);      % normaliza vector c for polarization
-%     x0 = log(norm(S)^2)/(4*eta);
-%     q1 = conj(-2*eta*sech(2*eta*(t-x0)+8*xi*eta*x).*exp(2*1i*xi*t+4i*(xi^2-eta^2)*x)*c(1));
-%     q2 = conj(-2*eta*sech(2*eta*(t-x0)+8*xi*eta*x).*exp(2*1i*xi*t+4i*(xi^2-eta^2)*x)*c(2));
 
 %%% Compute the nonlinear Fourier transform %%%
 
-[contspec, bound_states] = mex_fnft_manakovv(complex(q1), complex(q2), T, XI, kappa);
-% mex_fnft_manakovv has many options => run "help mex_fnft_manakovv" to learn more
+[contspec, bound_states] = mex_fnft_manakovv(complex(q1), complex(q2), ...
+    T, XI, kappa);
+% mex_fnft_manakovv has many options => run "help mex_fnft_manakovv" to
+% learn more
 
 %%% Plot the results %%%
 
@@ -77,14 +70,16 @@ legend('Real part', 'Imaginary part');
 % contspec = [rho1; rho2]. If different inputs are chosen for cstype or M
 % plots should be adjusted
 figure;
-plot(xi, real(contspec(1:length(contspec)/2)), xi, imag(contspec(1:length(contspec)/2)));
+plot(xi, real(contspec(1:length(contspec)/2)), xi, ...
+    imag(contspec(1:length(contspec)/2)));
 title('Continuous spectrum, first element');
 xlabel('\xi');
 ylabel('r(\xi)');
 legend('Real part', 'Imaginary part');
 
 figure;
-plot(xi, real(contspec(length(contspec)/2+1:length(contspec))), xi, imag(contspec(length(contspec)/2+1:length(contspec))));
+plot(xi, real(contspec(length(contspec)/2+1:length(contspec))), xi, ...
+    imag(contspec(length(contspec)/2+1:length(contspec))));
 title('Continuous spectrum, second element');
 xlabel('\xi');
 ylabel('r(\xi)');
