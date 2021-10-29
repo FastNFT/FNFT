@@ -48,7 +48,7 @@ INT main()
     CHECK_RETCODE(ret_code, leave_fun);
 
     // check for 6th order error decay
-    for (UINT n=0; n<2; n++){
+    for (UINT n=0; n<1; n++){
         D *= 2;
         for (UINT i=0; i<5; i++)
             eb[i] /= 64.0;

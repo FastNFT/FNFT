@@ -92,6 +92,7 @@ INT main(void)
         E_SUBROUTINE(ret_code);
         return EXIT_FAILURE;
     }
+    printf("succes");
 
     return EXIT_SUCCESS;
 }

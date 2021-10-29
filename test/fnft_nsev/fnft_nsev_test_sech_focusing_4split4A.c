@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018, 2021.
 * Shrinivas Chimmalgi (TU Delft) 2017-2020.
 */
 #define FNFT_ENABLE_SHORT_NAMES
@@ -43,14 +43,6 @@ INT main()
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    // Check the case where D is not a power of two. The error bounds have to
-    // be tight but not too tight for this to make sense!
-    ret_code = nsev_testcases_test_fnft(tc, D+1, error_bounds, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = nsev_testcases_test_fnft(tc, D-1, error_bounds, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);
-
-
     // Check for fourth-order error decay (error_bounds[4] stays as it is because it is
     // already close to machine precision)
     D *= 2;
@@ -58,29 +50,6 @@ INT main()
         error_bounds[i] /= 16.0;
     error_bounds[4] *= 16.0;
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);
-    
-    // Check for at least 5th-order error decay on resulting from application
-    // of Richardson extrapolation to 4th-order method.(error_bounds[4] stays 
-    // as it is because it is already close to machine precision)
-    D = 512;
-    REAL error_bounds_RE[6] = {
-        4.4e-8, // reflection coefficient
-        5.6e-7, // a
-        1.1e-7, // b,
-        3.1e-9, // bound states
-        5e-14,  // norming constants
-        3.4e-9 // residues
-    };
-    opts.richardson_extrapolation_flag = 1;
-    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);
-    
-    UINT DN = 800;
-    for (i=0; i<6; i++)
-        error_bounds_RE[i] /= POW((REAL)DN/(REAL)D,5);
-    error_bounds_RE[4] *= POW((REAL)DN/(REAL)D,5);
-    ret_code = nsev_testcases_test_fnft(tc, DN, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
 leave_fun:

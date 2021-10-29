@@ -48,7 +48,7 @@ INT main()
     CHECK_RETCODE(ret_code, leave_fun);
 
     // check for 4th order error decay
-    for (UINT n=0; n<4; n++){
+    for (UINT n=0; n<2; n++){
         D *= 2;
         for (UINT i=0; i<6; i++)
             eb[i] /= 16.0;

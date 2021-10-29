@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018, 2021.
 */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -41,13 +41,6 @@ INT main()
     opts.discretization = nse_discretization_2SPLIT2A;
 
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    // Check the case where D is not a power of two. The error bounds have to
-    // be tight but not too tight for this to make sense!
-    ret_code = nsev_testcases_test_fnft(tc, D+1, error_bounds, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = nsev_testcases_test_fnft(tc, D-1, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Check for quadratic error decay

@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2017-2018.
+ * Sander Wahls (TU Delft) 2017-2018, 2021.
  * Shrinivas Chimmalgi (TU Delft) 2017-2018.
  */
 
@@ -44,39 +44,11 @@ INT main()
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
-    // Check the case where D is not a power of two. The error bounds have to
-    // be tight but not too tight for this to make sense!
-    ret_code = nsev_testcases_test_fnft(tc, D+1, error_bounds, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);
-    ret_code = nsev_testcases_test_fnft(tc, D-1, error_bounds, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);
-    
     // Check for quadratic error decay
     D *= 2;
     for (i=0; i<6; i++)
         error_bounds[i] /= 4.0;
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);
-    
-    // Check for at least 3rd-order error decay on resulting from application
-    // of Richardson extrapolation to 2nd-order method.
-    D /= 2;
-    REAL error_bounds_RE[6] = {
-        6.7e-8,     // reflection coefficient
-        INFINITY,   // a
-        INFINITY,   // b
-        0.0,        // bound states
-        0.0,        // norming constants
-        0.0         // residues
-    };
-    opts.richardson_extrapolation_flag = 1;
-    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);
-    
-    D *= 2;
-    for (i=0; i<6; i++)
-        error_bounds_RE[i] /= 8.0;
-    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
     
     leave_fun:

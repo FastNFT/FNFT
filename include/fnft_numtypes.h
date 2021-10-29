@@ -252,17 +252,20 @@ typedef size_t FNFT_UINT;
 #define FNFT_CCOSH(X) ccosh(X)
 
 /**
- * Complex hyperbolic sine of a \link FNFT_COMPLEX \endlink.
+ * Complex sine of a \link FNFT_COMPLEX \endlink.
+ * @ingroup numtype
  */
 #define FNFT_CSIN(X) csin(X)
 
 /**
- * Complex hyperbolic cosine of a \link FNFT_COMPLEX \endlink.
+ * Complex cosine of a \link FNFT_COMPLEX \endlink.
+ * @ingroup numtype
  */
 #define FNFT_CCOS(X) ccos(X)
 
 /**
  * Complex arc hyperbolic tangent of a \link FNFT_COMPLEX \endlink.
+ * @ingroup numtype
  */
 #define FNFT_ATANH(X) atanh(X)
 

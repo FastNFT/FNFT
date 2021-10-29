@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018, 2021.
 * Peter J Prins (TU Delft) 2020.
 */
 #define FNFT_ENABLE_SHORT_NAMES
@@ -58,15 +58,9 @@ INT main()
     ret_code = kdvv_testcases_test_fnft(tc, D, eb, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    ret_code = kdvv_testcases_test_fnft(tc, D+1, eb, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    ret_code = kdvv_testcases_test_fnft(tc, D-1, eb, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);
-
     // check for quadratic error decay
-    for (UINT n=0; n<2; n++){
-    D *= 2;
+    for (UINT n=0; n<1; n++){
+        D *= 2;
         for (UINT i=0; i<6; i++)
              eb[i] /= 4.0;
         ret_code = kdvv_testcases_test_fnft(tc, D, eb, &opts);

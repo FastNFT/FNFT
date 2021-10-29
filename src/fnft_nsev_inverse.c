@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2018, 2020.
+ * Sander Wahls (TU Delft) 2018, 2020-2021.
  * Shrinivas Chimmalgi (TU Delft) 2018.
  */
 
@@ -481,29 +481,29 @@ static inline INT
     if (iter == max_iter)
         WARN("Maximum number of iterations reached when constructing transfer matrix.")
 
-        // Build the transfer matrix
+    // Build the transfer matrix
 
-        for (i=0; i<D; i++) {
-            transfer_matrix[1 + i] = a_coeffs[i];
-            transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[D-1 - i]);
-            transfer_matrix[2*(deg+1) + 1 + i] = b_coeffs[i];
-            transfer_matrix[3*(deg+1) + i] = a_coeffs[D-1 - i];
-        }
-        transfer_matrix[0] = 0.0;
-        transfer_matrix[2*(deg+1) - 1] = 0.0;
-        transfer_matrix[2*(deg+1)] = 0.0;
-        transfer_matrix[4*(deg+1) - 1] = 0.0;
+    for (i=0; i<D; i++) {
+        transfer_matrix[1 + i] = a_coeffs[i];
+        transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[D-1 - i]);
+        transfer_matrix[2*(deg+1) + 1 + i] = b_coeffs[i];
+        transfer_matrix[3*(deg+1) + i] = a_coeffs[D-1 - i];
+    }
+    transfer_matrix[0] = 0.0;
+    transfer_matrix[2*(deg+1) - 1] = 0.0;
+    transfer_matrix[2*(deg+1)] = 0.0;
+    transfer_matrix[4*(deg+1) - 1] = 0.0;
 
 
-        leave_fun:
-            fft_wrapper_free(contspec_reordered);
-            fft_wrapper_free(fft_in);
-            fft_wrapper_free(fft_out);
-            fft_wrapper_free(a_coeffs);
-            fft_wrapper_free(b_coeffs);
-            fft_wrapper_destroy_plan(&plan_fwd);
-            fft_wrapper_destroy_plan(&plan_inv);
-            return ret_code;
+    leave_fun:
+        fft_wrapper_free(contspec_reordered);
+        fft_wrapper_free(fft_in);
+        fft_wrapper_free(fft_out);
+        fft_wrapper_free(a_coeffs);
+        fft_wrapper_free(b_coeffs);
+        fft_wrapper_destroy_plan(&plan_fwd);
+        fft_wrapper_destroy_plan(&plan_inv);
+        return ret_code;
 }
 
 // Auxiliary function. Calls the right method to build the transfer matrix
