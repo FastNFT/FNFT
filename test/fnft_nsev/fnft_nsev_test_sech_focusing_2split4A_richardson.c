@@ -28,9 +28,11 @@ INT main()
     fnft_nsev_opts_t opts;
     UINT D = 4096;
     const nsev_testcases_t tc = nsev_testcases_SECH_FOCUSING;
+ 
+    opts = fnft_nsev_default_opts();
+    opts.discretization = nse_discretization_2SPLIT4A;
     
     // Check for Richardson
-    D /= 2;
     REAL error_bounds_RE[6] = {
         2.7e-8,     // reflection coefficient
         6.7e-8,     // a
@@ -39,6 +41,7 @@ INT main()
         5e-14,      // norming constants
         4.5e-9      // residues
     };
+
     opts.richardson_extrapolation_flag = 1;
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);

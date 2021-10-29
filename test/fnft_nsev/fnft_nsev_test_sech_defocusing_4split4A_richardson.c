@@ -35,7 +35,6 @@ INT main()
    
     // Check for at least 5th-order error decay on resulting from application
     // of Richardson extrapolation to 4th-order method.
-    D /= 2;
     REAL error_bounds_RE[6] = {
         9.1e-9,     // reflection coefficient
         INFINITY,   // a
