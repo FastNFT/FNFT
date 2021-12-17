@@ -228,6 +228,21 @@ INT akns_scatter_matrix(UINT const D,
                         akns_scatter_U_BO(q[n],r[n],l_curr,h,1,*U);
                         misc_matrix_mult(4,4,4,&U[0][0],&H[current][0][0],&H[!current][0][0]);
                         current = !current;
+                        // Rescale phi to prevent exceeding the representable range of numbers
+                        REAL log2_scale_step =-ROUND(0.5*LOG2(CABS(H[current][0][0]))+log2(CABS(H[current][1][0])));
+                        REAL scale_step = POW(2.0,log2_scale_step);
+                        H[current][0][0] = scale_step * H[current][0][0];
+                        H[current][0][1] = scale_step * H[current][0][1];
+                        H[current][1][0] = scale_step * H[current][1][0];
+                        H[current][1][1] = scale_step * H[current][1][1];
+                        H[current][2][0] = scale_step * H[current][2][0];
+                        H[current][2][1] = scale_step * H[current][2][1];
+                        H[current][2][2] = scale_step * H[current][2][2];
+                        H[current][2][3] = scale_step * H[current][2][3];
+                        H[current][3][0] = scale_step * H[current][3][0];
+                        H[current][3][1] = scale_step * H[current][3][1];
+                        H[current][3][2] = scale_step * H[current][3][2];
+                        H[current][3][3] = scale_step * H[current][3][3];
                     }
                     break;
 
@@ -316,6 +331,13 @@ INT akns_scatter_matrix(UINT const D,
                         akns_scatter_U_BO(q[n],r[n],l_curr,h,0,*U);
                         misc_matrix_mult(2,2,2,&U[0][0],&H[current][0][0],&H[!current][0][0]);
                         current = !current;
+                        // Rescale phi to prevent exceeding the representable range of numbers
+                        REAL log2_scale_step =-ROUND(0.5*LOG2(CABS(H[current][0][0]))+log2(CABS(H[current][1][0])));
+                        REAL scale_step = POW(2.0,log2_scale_step);
+                        H[current][0][0] = scale_step * H[current][0][0];
+                        H[current][0][1] = scale_step * H[current][0][1];
+                        H[current][1][0] = scale_step * H[current][1][0];
+                        H[current][1][1] = scale_step * H[current][1][1];
                     }
                     break;
 
@@ -590,6 +612,16 @@ INT akns_scatter_bound_states(UINT const D,
                         akns_scatter_U_BO(q[n],r[n],l_curr,eps_t_scaled[count],1,*U);
                         misc_matrix_mult(4,4,1,&U[0][0],&phi_temp[current][0],&phi_temp[!current][0]);
                         current = !current;
+                        if (skip_b_flag == 1)
+                        {
+                            // Rescale phi to prevent exceeding the representable range of numbers
+                            REAL log2_scale_step =-ROUND(0.5*LOG2(CABS(phi_temp[current][0]))+log2(CABS(phi_temp[current][1])));
+                            REAL scale_step = POW(2.0,log2_scale_step);
+                            phi_temp[current][0] = scale_step * phi_temp[current][0];
+                            phi_temp[current][1] = scale_step * phi_temp[current][1];
+                            phi_temp[current][2] = scale_step * phi_temp[current][2];
+                            phi_temp[current][3] = scale_step * phi_temp[current][3];
+                        }
                     }
                     memcpy(&PHI[4*(n_given+1)], &phi_temp[current][0], 4 * sizeof(COMPLEX));
                 }
