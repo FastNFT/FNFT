@@ -62,7 +62,7 @@ static INT nse_finvscatter_test(const UINT D, const INT kappa,
 
     REAL error = misc_rel_err(D, q, q_exact);
 #ifdef DEBUG
-    printf("error = %g\n", error);
+    printf("error = %g, error_bound = %g\n", error, error_bound);
 #endif
     if (!(error < error_bound)) {
         ret_code = E_TEST_FAILED;

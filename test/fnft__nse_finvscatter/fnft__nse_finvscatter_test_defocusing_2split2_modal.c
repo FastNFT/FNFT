@@ -33,7 +33,7 @@ int main()
     D = 16384;
     error_bound
 #ifdef HAVE_FFTW3
-        = 483.0*FNFT_EPSILON;
+        = 520.0*FNFT_EPSILON;
 #else
         = 1253.0*FNFT_EPSILON;
 #endif
