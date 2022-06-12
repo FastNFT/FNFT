@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018, 2020.
+* Sander Wahls (TU Delft) 2017-2018, 2020-2021.
 * Shrinivas Chimmalgi (TU Delft) 2020.
 */
 
@@ -30,17 +30,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     double * T;
     double phase_shift = 0.0;
     size_t M;
-    double complex * main_spec;
+    double complex * main_spec = NULL;
     size_t K;
     double complex * aux_spec = NULL;
     int * sheet_indices = NULL;
     int kappa;
     size_t upsampling_factor = 1;
-    size_t i;
+    size_t i, j;
     ptrdiff_t k;
     double *re, *im;
     double *msr, *msi, *asr, *asi;
-    char msg[128]; // buffer for error messages
+    char msg[256]; // buffer for error messages
     fnft_nsep_opts_t opts;
     int ret_code;
 
@@ -145,6 +145,51 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
             opts.localization = fnft_nsep_loc_SUBSAMPLE_AND_REFINE;
 
+        } else if ( strcmp(str, "loc_newton") == 0 ) {
+
+            opts.localization = fnft_nsep_loc_NEWTON;
+
+            /* Extract initial guesses for the main spectrum */
+            if (k+1 == nrhs || 
+                    (!mxIsEmpty(prhs[k+1]) &&
+                        (!mxIsComplex(prhs[k+1]) || mxGetM(prhs[k+1]) != 1))) {
+                snprintf(msg, sizeof msg, "'loc_newton' should be followed by two complex row vectors of initial guesses for the main and auxiliary spectrum, respectively. Try passing complex(...).");
+                goto on_error;
+            }
+            K = mxGetN(prhs[k+1]);
+            main_spec = mxMalloc(K * sizeof(FNFT_COMPLEX));
+            if (K > 0 && main_spec == NULL) {
+                snprintf(msg, sizeof msg, "Out of memory.");
+                goto on_error;
+            }
+            re = mxGetPr(prhs[k+1]);
+            im = mxGetPi(prhs[k+1]);
+            for (j=0; j<K; j++)
+                main_spec[j] = re[j] + I*im[j];
+
+            /* Extract initial guesses for the aux spectrum */
+            if (k+2 == nrhs || 
+                    (!mxIsEmpty(prhs[k+2]) &&
+                        (!mxIsComplex(prhs[k+2]) || mxGetM(prhs[k+2]) != 1))) {
+                snprintf(msg, sizeof msg, "'loc_newton' should be followed by two complex row vectors of initial guesses for the main and auxiliary spectrum, respectively. Try passing complex(...).");
+                goto on_error;
+            }
+            M = mxGetN(prhs[k+2]);
+            aux_spec = mxMalloc(M * sizeof(FNFT_COMPLEX));
+            if (M > 0 && aux_spec == NULL) {
+                snprintf(msg, sizeof msg, "Out of memory.");
+                goto on_error;
+            }
+            re = mxGetPr(prhs[k+2]);
+            im = mxGetPi(prhs[k+2]);
+            for (j=0; j<M; j++)
+                aux_spec[j] = re[j] + I*im[j];
+
+            /* Increase k to account for the two vectors of initial guesses */
+            k += 2;
+
+            opts.discretization = fnft_nse_discretization_BO;
+
         } else if ( strcmp(str, "loc_gridsearch") == 0 ) {
 
             opts.localization = fnft_nsep_loc_GRIDSEARCH;
@@ -204,13 +249,24 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     /* Allocate memory */
     q = mxMalloc(D * sizeof(double complex));
-    K = (opts.points_per_spine)*upsampling_factor*D + 1;
-    M = upsampling_factor*D;
-    main_spec = mxMalloc(K * sizeof(double complex));
-    aux_spec = mxMalloc(M * sizeof(double complex));
-    sheet_indices = mxMalloc(M * sizeof(int));
-    if ( q == NULL || main_spec == NULL || aux_spec == NULL
-    || sheet_indices == NULL ) {
+    if (M > 0)
+        sheet_indices = mxMalloc(M * sizeof(int));
+    if (opts.localization != fnft_nsep_loc_NEWTON) { /* Not Newton */
+        K = (opts.points_per_spine)*upsampling_factor*D + 1;
+        M = upsampling_factor*D;
+        main_spec = mxMalloc(K * sizeof(double complex));
+        aux_spec = mxMalloc(M * sizeof(double complex));
+    } else { /* Newton */
+        if (K%opts.points_per_spine != 0) {
+            snprintf(msg, sizeof msg, "The lengths of the first initial guess vector for Newton localization has to be a multiple of points_per_spine (=%u).",
+                (unsigned int)opts.points_per_spine);
+            goto on_error;
+        }
+        K /= opts.points_per_spine;
+    }
+
+    if ( q == NULL || (K>0 && main_spec == NULL) || (M > 0 && aux_spec == NULL)
+         || (M > 0 && sheet_indices == NULL) ) {
         snprintf(msg, sizeof msg, "Out of memory.");
         goto on_error;
     }

@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018, 2020.
+* Sander Wahls (TU Delft) 2017-2018, 2020-21.
 * Shrinivas Chimmalgi (TU Delft) 2020.
 */
 
@@ -43,9 +43,13 @@
  *  fnft_nsep_opts_loc_SUBSAMPLE_AND_REFINE: Similar approach as for
  *  fnft_nsev_opts_dsloc_SUBSAMPLE_AND_REFINE (see
  *  \link fnft_nsev_opts_t::bound_state_localization \endlink.)\n\n
+ *  fnft_nsep_opts_loc_NEWTON: Refine initial guesses for the main and/or
+ *  auxiliary spectrum by the user using Newton's method.\n\n
+ *  fnft_nsev_opts_dsloc_SUBSAMPLE_AND_REFINE (see
+ *  \link fnft_nsev_opts_t::bound_state_localization \endlink.)\n\n
  *  fnft_nsep_opts_loc_GRIDSEARCH: Uses a grid search to localize roots. Can
  *  only find main and auxiliary spectrum points on the real axis. In the
- *  defocusing case, the main spectrum is always real. The implemented grid 
+ *  defocusing case, the main spectrum is always real. The implemented grid
  *  search gurantees only linear convergence.\n\n
  *  fnft_nsep_opts_loc_MIXED: Uses the SUBSAMPLE_AND_REFINE method to find the
  *  non-real parts of the spectra and the GRIDSEARCH method to find the real
@@ -53,6 +57,7 @@
  */
 typedef enum {
     fnft_nsep_loc_SUBSAMPLE_AND_REFINE,
+    fnft_nsep_loc_NEWTON,
     fnft_nsep_loc_GRIDSEARCH,
     fnft_nsep_loc_MIXED
 } fnft_nsep_loc_t;
@@ -211,6 +216,10 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  *       - fnft_nse_discretization_2SPLIT8B
  *       - fnft_nse_discretization_4SPLIT4A
  *
+ * For the Newton refinement mode only, one of the following should be used instead:
+ *      - fnft_nse_discretization_BO
+ *      - fnft_nse_discretization_CF4_2
+ *
  * @param[in] D Number of samples. Should be power of two and \f$ D\geq 2\f$.
  * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
  *  where \f$ t_n = T[0] + nL/D \f$, where \f$L=T[1]-T[0]\f$ is the period and
@@ -222,18 +231,25 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  * @param[in] phase_shift Real scalar constant. It is the change in the phase
  * over one quasi-period,\f$ \angle(q(t+L)/q(t))\f$. For periodic signals it will be 0.
  * @param[in,out] K_ptr Upon entry, *K_ptr should contain the length of the array
- *  main_spec. Upon return, *K_ptr contains the number of actually detected
+ *  main_spec (except for Newton localization, see below). Upon return,
+ *  *K_ptr contains the number of actually detected
  *  points in the main spectrum. If the length of the array main_spec was not
  *  sufficient to store all of the detected points in the main spectrum, a
  *  warning is printed and as many points as possible are returned instead.
  *  Note that in order to skip the computation of the main spectrum completely,
  *  it is not sufficient to pass *K_ptr==NULL. Instead, pass main_spec==NULL.
+ *  EXCEPTION: If opts->localization==fnft_nsep_loc_NEWTON, then *K_ptr should
+ *  contain the number of initial guess per spine point (see opts->points_per_spine).
  * @param[out] main_spec Array. Upon return, the routine has stored the detected
  *  main specrum points (i.e., the points for which the trace of the monodromy
  *  matrix is either +2 or -2) in the first *K_ptr entries of this array.
  *  If NULL is passed instead, the main spectrum will not be computed.
  *  Has to be preallocated by the user. The user can choose an arbitrary
  *  length. Typically, D is a good choice.
+ *  If opts->localization==fnft_nsep_loc_NEWTON, then main_spec should be of
+ *  the form [g1_1, ..., gK_1, g1_2, ..., gK_2, ..., g1_P, ..., gK_P] when
+ *  the routine is called, where gk_n is the k-th initial guess for the n-th
+ *  spine point, K=*K_ptr, and P=opts->points_per_spine.
  * @param[in,out] M_ptr Upon entry, *M_ptr should contain the length of the array
  *  aux_spec. Upon return, *M_ptr contains the number of actually detected
  *  points in the auxiliary spectrum. If the length of the array aux_spec was

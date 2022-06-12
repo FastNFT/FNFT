@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2018, 2020.
+ * Sander Wahls (TU Delft) 2018, 2020, 2022.
  */
 
 #include "fnft__nse_finvscatter_test.inc"
@@ -33,7 +33,7 @@ int main()
     D = 16384;
     error_bound
 #ifdef HAVE_FFTW3
-        = 483.0*FNFT_EPSILON;
+        = 520.0*FNFT_EPSILON;
 #else
         = 1253.0*FNFT_EPSILON;
 #endif

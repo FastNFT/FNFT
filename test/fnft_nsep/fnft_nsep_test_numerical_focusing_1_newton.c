@@ -14,13 +14,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2020-2021.
+ * Sander Wahls (TU Delft) 2020.
  * Shrinivas Chimmalgi (TU Delft) 2020.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
 #include "fnft.h"
 #include "fnft_nsep.h"
+#include "fnft_nse_discretization_t.h"
 #include "fnft__errwarn.h"
 #include "fnft__misc.h"
 #ifdef DEBUG
@@ -30,7 +31,7 @@
 // This test signal was constructed numerically using a squared
 // eigenfunctions approach (currently undocumented).
 
-INT fnft_nsep_test_numerical_focusing_1(fnft_nsep_opts_t opts)
+INT fnft_nsep_test_numerical_focusing_newton(fnft_nsep_opts_t opts, REAL error_bounds[2])
 {
     INT ret_code = SUCCESS;
     COMPLEX q[257] = {
@@ -302,22 +303,14 @@ INT fnft_nsep_test_numerical_focusing_1(fnft_nsep_opts_t opts)
     const UINT K_exact = sizeof(mainspec_exact) / sizeof(mainspec_exact[0]);
     const UINT M_exact = sizeof(auxspec_exact) / sizeof(auxspec_exact[0]);
 
-    COMPLEX *mainspec = NULL;
-    COMPLEX *auxspec = NULL;
-    COMPLEX *spines = NULL;
-
     const UINT D = sizeof(q) / sizeof(q[0]);
-    UINT K = D;
-    UINT M = D;
-    UINT points_per_spine = 250;
-    UINT K_spine = K*points_per_spine;
-    mainspec = malloc(K * sizeof(COMPLEX));
-    auxspec = malloc(M * sizeof(COMPLEX));
-    spines = malloc(K_spine * sizeof(COMPLEX));
-    if (mainspec == NULL || auxspec == NULL || spines == NULL) {
-        ret_code = E_NOMEM;
-        goto leave_fun;
-    }
+    COMPLEX mainspec[12] = {-5*I+0.1, -2*I-0.1*I, -1*I-0.1, 1*I+0.03*I, 2*I+0.001-0.7*I, 5*I-0.4+0.1*I, -5*I+0.3*I-0.34, -2*I+0.4, -1*I+0.1, 1*I+0.1*I, 2*I-0.213, 5*I+0.023*I};
+    COMPLEX auxspec[2] = {
+        -8e-02 + 2e+00*I,
+        -1e-01 + 8e-01*I
+    };
+    UINT K = sizeof(mainspec) / sizeof(mainspec[0]) / opts.points_per_spine;
+    UINT M = sizeof(auxspec) / sizeof(auxspec[0]);
 
     // Compute main and auxiliary spectrum
     REAL phase_shift = CARG(q[D-1]/q[0]);
@@ -326,103 +319,51 @@ INT fnft_nsep_test_numerical_focusing_1(fnft_nsep_opts_t opts)
 
     // Check that the main and auxiliary spectrum are correct
     REAL dist = misc_hausdorff_dist(K_exact, mainspec_exact, K, mainspec);
-    if (dist > 1.5e-4) {
+#ifdef DEBUG
+    printf("dist(mainspec) = %g\n", dist);
+#endif
+    if (dist > error_bounds[0]) {
+#ifdef DEBUG
+        misc_print_buf(K, mainspec, "mainspec");
+#endif
         ret_code = E_TEST_FAILED;
         goto leave_fun;
     }
     dist = misc_hausdorff_dist(M_exact, auxspec_exact, M, auxspec);
-    if (dist > 1.3e-2) {
-        ret_code = E_TEST_FAILED;
-        goto leave_fun;
-    }
-
-    // Compute spines
-    opts.points_per_spine = points_per_spine;
-    ret_code = fnft_nsep(D-1, q, T, phase_shift, &K_spine, spines, &M, NULL, NULL, +1, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    // Check that all found points are on one of the three spines. The ok_flags
-    // are turned on when we find a point "close" to the center of a spines.
-    const REAL tol = 0.0002;
-    INT ok_flag[3] = {0, 0, 0};
-    for (UINT k=0; k<K_spine; k++) {
-
-        const COMPLEX lam = spines[k];
-
-        // Spines are imaginary or real in this example
-        if (FABS(CREAL(lam)) > 150*EPSILON && FABS(CIMAG(lam)) > 100*EPSILON) {
 #ifdef DEBUG
-            printf("lam = %g + %gj\n", CREAL(lam), CIMAG(lam));
+    printf("dist(auxspec) = %g\n", dist);
 #endif
-            ret_code = E_TEST_FAILED;
-            goto leave_fun;
-        }
-
-        const REAL lam_i = CIMAG(lam);
-
-        // Spine [-5*I, -2*I]
-        if (lam_i>-4.5 && lam_i<-2.5)
-            ok_flag[0] = 1;
-        if (lam_i>=-5-tol && lam_i<=-2+tol)
-            continue;
-
-        // Spine [-I, I]
-        if (FABS(lam_i) < 0.5)
-            ok_flag[1] = 1;
-        if (FABS(lam_i) <= 1+tol)
-            continue;
-
-        // Spine [2*I, 5*I]
-        if (lam_i>2.5 && lam_i<4.5)
-            ok_flag[2] = 1;
-        if (lam_i>=2-tol && lam_i<=5+tol)
-            continue;
-
-        // lam was in none of the spines
+   if (dist > error_bounds[1]) {
 #ifdef DEBUG
-        printf("lam = %e + %ej\n", CREAL(lam), CIMAG(lam));
+        misc_print_buf(M, auxspec, "auxspec");
 #endif
-        ret_code = E_TEST_FAILED;
-        goto leave_fun;
-    }
-
-    // Check if points "close" to the center of each spine were found
-    if (!ok_flag[0]) {
-        ret_code = E_TEST_FAILED;
-        goto leave_fun;
-    }
-    if (!ok_flag[1]) {
-        ret_code = E_TEST_FAILED;
-        goto leave_fun;
-    }
-    if (!ok_flag[2]) {
-        ret_code = E_TEST_FAILED;
+       ret_code = E_TEST_FAILED;
         goto leave_fun;
     }
 
 leave_fun:
-    free(mainspec);
-    free(auxspec);
-    free(spines);
     return ret_code;
 }
 
 int main()
 {
     fnft_nsep_opts_t opts = fnft_nsep_default_opts();
+    opts.localization = fnft_nsep_loc_NEWTON;
     opts.filtering = fnft_nsep_filt_MANUAL;
     opts.bounding_box[0] = -1;
     opts.bounding_box[1] = 1;
     opts.bounding_box[2] = -10;
     opts.bounding_box[3] = 10;
 
-    opts.localization = fnft_nsep_loc_SUBSAMPLE_AND_REFINE;
-    if (fnft_nsep_test_numerical_focusing_1(opts) != SUCCESS)
+    REAL error_bounds[2] = { 1.5e-4 /* mainspec */, 1.3e-2 /* auxspec */ };
+    opts.discretization = fnft_nse_discretization_BO;
+    if (fnft_nsep_test_numerical_focusing_newton(opts, error_bounds) != SUCCESS)
         return EXIT_FAILURE;
  
-    opts.localization = fnft_nsep_loc_MIXED;
-    if (fnft_nsep_test_numerical_focusing_1(opts) != SUCCESS)
+    error_bounds[0] = 1e-8;
+    opts.discretization = fnft_nse_discretization_CF4_2;
+    if (fnft_nsep_test_numerical_focusing_newton(opts, error_bounds) != SUCCESS)
         return EXIT_FAILURE;
- 
+
     return EXIT_SUCCESS;
 }

@@ -13,7 +13,7 @@
 % along with this program. If not, see <http://www.gnu.org/licenses/>.
 %
 % Contributors:
-% Sander Wahls (TU Delft) 2017-2018.
+% Sander Wahls (TU Delft) 2017-2018, 2021.
 % Shrinivas Chimmalgi (TU Delft) 2020.
 
 % This examples demonstrates how the nonlinear Fourier transform with
@@ -52,7 +52,9 @@ phase_shift = angle(q_T2/q_T1); % This is the phase shift in q over
 % interval [-3j, 3j]. Furthermore, there are degenerate spines
 % of length zero at the degenerate points of the main spectrum.
 
-spines = mex_fnft_nsep(q, T, kappa, 'phase_shift', phase_shift, 'points_per_spine', 100);
+filt_box = [-10 10 -10 10]; % manual filtering provides a speed up
+spines = mex_fnft_nsep(q, T, kappa, 'phase_shift', phase_shift, ...
+    'points_per_spine', 100, 'filt_manual', filt_box, 'loc_max_evals', 100);
 
 % Increase the number of points per spine above to improve the
 % resolution of the spine (at the cost of increased run times).

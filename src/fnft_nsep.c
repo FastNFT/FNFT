@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2017-2018, 2020.
+ * Sander Wahls (TU Delft) 2017-2018, 2020-2021.
  * Marius Brehler (TU Dortmund) 2018.
  * Shrinivas Chimmalgi (TU Delft) 2019-2020.
  * Peter J Prins (TU Delft) 2020.
@@ -25,9 +25,9 @@
 #include "fnft_nsep.h"
 
 static fnft_nsep_opts_t default_opts = {
-    .localization = fnft_nsep_loc_MIXED,
+    .localization = fnft_nsep_loc_SUBSAMPLE_AND_REFINE,
     .filtering = fnft_nsep_filt_AUTO,
-    .max_evals = 20,
+    .max_evals = 50,
     .bounding_box[0] = -FNFT_INF,
     .bounding_box[1] = FNFT_INF,
     .bounding_box[2] = -FNFT_INF,
@@ -49,17 +49,21 @@ fnft_nsep_opts_t fnft_nsep_default_opts()
     return default_opts;
 }
 
-// Auxiliary routines.
+// Declaration of auxiliary routines. The function bodies are below.
 static inline INT refine_mainspec(
         const UINT D, COMPLEX const * const q, COMPLEX * r,
         const REAL eps_t, const UINT K,
         COMPLEX * const mainspec, const UINT max_evals,
-        REAL rhs, const REAL tol, INT kappa, nse_discretization_t discretization);
+        REAL rhs, const REAL tol, INT kappa, nse_discretization_t discretization,
+        const REAL * bounding_box);
+
 static inline INT refine_auxspec(
         const UINT D, COMPLEX const * const q, COMPLEX * r,
         const REAL eps_t, const UINT K,
         COMPLEX * const auxspec, const UINT max_evals, const REAL tol,
-        const INT kappa, nse_discretization_t discretization);
+        const INT kappa, nse_discretization_t discretization,
+        const REAL * bounding_box);
+
 static inline INT subsample_and_refine(const UINT D,
         COMPLEX const * const q,
         REAL const * const T, UINT * const K_ptr,
@@ -67,6 +71,13 @@ static inline INT subsample_and_refine(const UINT D,
         COMPLEX * const aux_spec, REAL * const sheet_indices,
         const INT kappa, fnft_nsep_opts_t * opts_ptr, INT skip_real_flag,
         INT warn_flags[2]);
+
+static inline INT newton(
+        const UINT D, COMPLEX const * const q, REAL const * const T,
+        UINT * const K_ptr, COMPLEX * const main_spec, UINT * const M_ptr,
+        COMPLEX * const aux_spec, REAL * const sheet_indices,
+        const INT kappa, fnft_nsep_opts_t * opts_ptr);
+
 static inline INT gridsearch(const UINT D,
         COMPLEX const * const q,
         REAL const * const T, UINT * const K_ptr,
@@ -74,9 +85,9 @@ static inline INT gridsearch(const UINT D,
         COMPLEX * const aux_spec, REAL * const sheet_indices,
         const INT kappa, fnft_nsep_opts_t * opts_ptr,
         INT warn_flags[2]);
-static inline void update_bounding_box_if_auto(const REAL eps_t,
-        const REAL map_coeff, fnft_nsep_opts_t * const opts_ptr);
 
+static inline void update_bounding_box_if_auto(const REAL eps_t,
+        REAL map_coeff, fnft_nsep_opts_t * const opts_ptr);
 
 // Main routine.
 INT fnft_nsep(const UINT D, COMPLEX const * const q,
@@ -115,18 +126,17 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
     if (opts_ptr->filtering != fnft_nsep_filt_NONE && main_spec == NULL && aux_spec != NULL)
         return E_INVALID_ARGUMENT(main_spec. Filtering of the auxiliary spectrum is not possible if the main spectrum is not computed.);
 
-        REAL Lam_shift = phase_shift/(-2*(T[1] - T[0]));
-        const REAL eps_t = (T[1] - T[0])/D;
-        q_preprocessed = malloc(D * sizeof(COMPLEX));
-        if (q_preprocessed == NULL) {
-            ret_code = E_NOMEM;
-            goto leave_fun;
-        }
+    REAL Lam_shift = phase_shift/(-2*(T[1] - T[0]));
+    const REAL eps_t = (T[1] - T[0])/D;
+    q_preprocessed = malloc(D * sizeof(COMPLEX));
+    if (q_preprocessed == NULL) {
+        ret_code = E_NOMEM;
+        goto leave_fun;
+    }
 
-        // Removing phase rotation along q
-        for (i=0; i < D; i++)
-            q_preprocessed[i] = q[i]*CEXP(2*I*Lam_shift*(T[0]+eps_t*i));
-
+    // Removing phase rotation along q
+    for (i=0; i < D; i++)
+        q_preprocessed[i] = q[i]*CEXP(2*I*Lam_shift*(T[0]+eps_t*i));
 
     // Bounding box needs to be shifted to ensure it works properly for
     // quasi-periodic signals
@@ -134,77 +144,85 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
         opts_ptr->bounding_box[0] -= Lam_shift;
         opts_ptr->bounding_box[1] -= Lam_shift;
     }
-        switch (opts_ptr->localization) {
 
-            case fnft_nsep_loc_MIXED:
+    switch (opts_ptr->localization) {
 
-                // Store lengths of user-provided arrays in temp variables
+        case fnft_nsep_loc_MIXED:
 
-                K1 = *K_ptr;
-                M1 = *M_ptr;
+            // Store lengths of user-provided arrays in temp variables
 
-                // Compute non-real points in the spectra via subsample & refine
+            K1 = *K_ptr;
+            M1 = *M_ptr;
 
-                if (kappa == +1) {
-                    ret_code = subsample_and_refine(D, q_preprocessed, T, &K1, main_spec,
-                            &M1, aux_spec, sheet_indices, kappa, opts_ptr,
-                            1 /*skip_real_flag*/, warn_flags);
-                    CHECK_RETCODE(ret_code, leave_fun);
-                } else { // no non-real main spec in the defocusing case, pass NULL
-                    K1 = 0;
-                    ret_code = subsample_and_refine(D, q_preprocessed, T, &K1, NULL,
-                            &M1, aux_spec, sheet_indices, kappa, opts_ptr,
-                            1 /*skip_real_flag*/, warn_flags);
-                    CHECK_RETCODE(ret_code, leave_fun);
-                }
+            // Compute non-real points in the spectra via subsample & refine
 
-                // Store lengths of still unused parts of user-provided arrays in temp
-                // variables
-                if (K1 > *K_ptr || M1 > *M_ptr)
-                    return E_ASSERTION_FAILED;
-                K2 = *K_ptr - K1;
-                M2 = *M_ptr - M1;
-
-                // Compute real points in the spectra via gridsearch
-
-                ret_code = gridsearch(D, q_preprocessed, T, &K2, main_spec+K1,
-                        &M2, aux_spec+M1, sheet_indices, kappa, opts_ptr, warn_flags);
+            if (kappa == +1) {
+                ret_code = subsample_and_refine(D, q_preprocessed, T, &K1, main_spec,
+                        &M1, aux_spec, sheet_indices, kappa, opts_ptr,
+                        1 /*skip_real_flag*/, warn_flags);
                 CHECK_RETCODE(ret_code, leave_fun);
-
-                // Signal numbers of found main and aux spec points to the user
-
-                *K_ptr = K1 + K2;
-                *M_ptr = M1 + M2;
-
-                break;
-
-            case fnft_nsep_loc_SUBSAMPLE_AND_REFINE:
-
-                ret_code = subsample_and_refine(D, q_preprocessed, T, K_ptr, main_spec,
-                        M_ptr, aux_spec, sheet_indices, kappa, opts_ptr,
-                        0/*skip_real_flag*/, warn_flags);
+            } else { // no non-real main spec in the defocusing case, pass NULL
+                K1 = 0;
+                ret_code = subsample_and_refine(D, q_preprocessed, T, &K1, NULL,
+                        &M1, aux_spec, sheet_indices, kappa, opts_ptr,
+                        1 /*skip_real_flag*/, warn_flags);
                 CHECK_RETCODE(ret_code, leave_fun);
-                break;
+            }
 
-            case fnft_nsep_loc_GRIDSEARCH:
+            // Store lengths of still unused parts of user-provided arrays in temp
+            // variables
+            if (K1 > *K_ptr || M1 > *M_ptr)
+                return E_ASSERTION_FAILED;
+            K2 = *K_ptr - K1;
+            M2 = *M_ptr - M1;
 
-                ret_code = gridsearch(D, q_preprocessed, T, K_ptr, main_spec,
-                        M_ptr, aux_spec, sheet_indices, kappa, opts_ptr, warn_flags);
-                CHECK_RETCODE(ret_code, leave_fun);
-                break;
+            // Compute real points in the spectra via gridsearch
 
-            default:
+            ret_code = gridsearch(D, q_preprocessed, T, &K2, main_spec+K1,
+                    &M2, aux_spec+M1, sheet_indices, kappa, opts_ptr, warn_flags);
+            CHECK_RETCODE(ret_code, leave_fun);
 
-                return E_INVALID_ARGUMENT(opts_ptr->discretization);
-        }
-        if (main_spec != NULL) {
-        for (i=0; i < *K_ptr; i++)
-            main_spec[i] += Lam_shift;
-        }
-        if (aux_spec != NULL) {
-        for (i=0; i < *M_ptr; i++)
-            aux_spec[i] += Lam_shift;
-        }
+            // Signal numbers of found main and aux spec points to the user
+
+            *K_ptr = K1 + K2;
+            *M_ptr = M1 + M2;
+
+            break;
+
+        case fnft_nsep_loc_SUBSAMPLE_AND_REFINE:
+
+            ret_code = subsample_and_refine(D, q_preprocessed, T, K_ptr, main_spec,
+                    M_ptr, aux_spec, sheet_indices, kappa, opts_ptr,
+                    0/*skip_real_flag*/, warn_flags);
+            CHECK_RETCODE(ret_code, leave_fun);
+            break;
+
+        case fnft_nsep_loc_NEWTON:
+
+            ret_code = newton(D, q_preprocessed, T, K_ptr, main_spec, M_ptr, aux_spec,
+                              sheet_indices, kappa, opts_ptr);
+            CHECK_RETCODE(ret_code, leave_fun);
+            break;
+
+        case fnft_nsep_loc_GRIDSEARCH:
+
+            ret_code = gridsearch(D, q_preprocessed, T, K_ptr, main_spec,
+                    M_ptr, aux_spec, sheet_indices, kappa, opts_ptr, warn_flags);
+            CHECK_RETCODE(ret_code, leave_fun);
+            break;
+
+        default:
+
+            return E_INVALID_ARGUMENT(opts_ptr->discretization);
+    }
+    if (main_spec != NULL) {
+    for (i=0; i < *K_ptr; i++)
+        main_spec[i] += Lam_shift;
+    }
+    if (aux_spec != NULL) {
+    for (i=0; i < *M_ptr; i++)
+        aux_spec[i] += Lam_shift;
+    }
 
     // Restoring changed limits
     if (opts_ptr->filtering == fnft_nsep_filt_MANUAL){
@@ -241,6 +259,7 @@ static inline INT gridsearch(const UINT D,
     COMPLEX *r_preprocessed = NULL;
     UINT Dsub = 0;
     UINT first_last_index[2] = {0};
+
     // Check inputs
     if (sheet_indices != NULL)
         return E_NOT_YET_IMPLEMENTED(sheet_indices, "Pass NULL");
@@ -259,7 +278,6 @@ static inline INT gridsearch(const UINT D,
     ret_code = nse_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &q_preprocessed, &r_preprocessed,
             first_last_index, opts_ptr->discretization);
     CHECK_RETCODE(ret_code, release_mem);
-
 
     // Allocate memory for the transfer matrix
     i = nse_fscatter_numel(D_effective, opts_ptr->discretization);
@@ -299,7 +317,6 @@ static inline INT gridsearch(const UINT D,
         ret_code = E_NOMEM;
         goto release_mem;
     }
-
 
     // Compute main spectrum if desired
     if (main_spec != NULL) {
@@ -393,6 +410,7 @@ static inline INT gridsearch(const UINT D,
         // Set number of points in the main spectrum
         K += K_filtered;
     }
+
     // Compute auxiliary spectrum (real line only)
     if (aux_spec != NULL) {
 
@@ -421,6 +439,7 @@ static inline INT gridsearch(const UINT D,
         }
         memcpy(aux_spec, roots, M * sizeof(COMPLEX));
     }
+
     // Update number of main spectrum points and auxiliary spectrum points
     *K_ptr = K;
     *M_ptr = M;
@@ -467,6 +486,7 @@ static inline INT subsample_and_refine(const UINT D,
     UINT first_last_index[2];
     UINT nskip_per_step;
     nse_discretization_t nse_discretization = 0;
+
     // To suppress unused parameter warnings.
     if (sheet_indices != NULL)
         return E_NOT_YET_IMPLEMENTED(sheet_indices, "Pass NULL");
@@ -544,7 +564,7 @@ static inline INT subsample_and_refine(const UINT D,
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
     map_coeff = 2/degree1step;
     update_bounding_box_if_auto(eps_t_sub, map_coeff, opts_ptr);
-    tol_im = opts_ptr->bounding_box[1] - opts_ptr->bounding_box[0];
+    tol_im = opts_ptr->bounding_box[3] - opts_ptr->bounding_box[2];
     tol_im /= oversampling_factor*(D - 1);
 
     // Use unused part of transfer matrix as buffer for the roots
@@ -601,7 +621,6 @@ static inline INT subsample_and_refine(const UINT D,
             if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
                 ret_code = misc_filter(&K_new, roots, NULL,
                         opts_ptr->bounding_box);
-
                 CHECK_RETCODE(ret_code, release_mem);
             }
             if (skip_real_flag != 0) {
@@ -611,7 +630,8 @@ static inline INT subsample_and_refine(const UINT D,
 
             // Refine the remaining roots
             ret_code = refine_mainspec(D_effective, q_preprocessed, r_preprocessed, eps_t, K_new, roots,
-                    opts_ptr->max_evals, -rhs, refine_tol, kappa, nse_discretization);
+                                       opts_ptr->max_evals, -rhs, refine_tol, kappa, nse_discretization,
+                                       opts_ptr->bounding_box);
             CHECK_RETCODE(ret_code, release_mem);
 
             // Filter the refined roots
@@ -664,7 +684,8 @@ static inline INT subsample_and_refine(const UINT D,
 
         // Refine the roots
         ret_code = refine_auxspec(D_effective, q_preprocessed, r_preprocessed, eps_t, M, roots,
-                opts_ptr->max_evals, refine_tol, kappa, nse_discretization);
+                                  opts_ptr->max_evals, refine_tol, kappa, nse_discretization,
+                                  opts_ptr->bounding_box);
         CHECK_RETCODE(ret_code, release_mem);
 
 
@@ -704,29 +725,173 @@ static inline INT subsample_and_refine(const UINT D,
         return ret_code;
 }
 
+// Auxiliary function: Refines user-provided initial guesses for the main and
+// auxiliary spectrum using Newton's method.
+static inline INT newton(const UINT D,
+        COMPLEX const * const q,
+        REAL const * const T, UINT * const K_ptr,
+        COMPLEX * const main_spec, UINT * const M_ptr,
+        COMPLEX * const aux_spec, REAL * const sheet_indices,
+        const INT kappa, fnft_nsep_opts_t * opts_ptr)
+{
+    COMPLEX * initial_guesses = NULL;
+    REAL degree1step, map_coeff;
+    REAL tol_im;
+    REAL refine_tol;
+    UINT Dsub = 0;
+    UINT K = 0;
+    UINT M = 0;
+    COMPLEX *q_preprocessed = NULL;
+    COMPLEX *r_preprocessed = NULL;
+    UINT first_last_index[2];
+    INT ret_code = SUCCESS;
+
+    // To suppress unused parameter warnings.
+    if (sheet_indices != NULL)
+        return E_NOT_YET_IMPLEMENTED(sheet_indices, "Pass NULL");
+
+    if (K_ptr != NULL)
+        K = *K_ptr;
+
+    if (M_ptr != NULL)
+        M = *M_ptr;
+
+    const UINT upsampling_factor = nse_discretization_upsampling_factor(opts_ptr->discretization);
+    if (upsampling_factor == 0) {
+        ret_code = E_INVALID_ARGUMENT(opts->discretization);
+        goto release_mem;
+    }
+    const UINT D_effective = D * upsampling_factor;
+
+    // Determine step size
+    const REAL eps_t = (T[1] - T[0])/D;
+
+    // Create the signal required for refinement of the initial guesses.
+    Dsub = D;
+    ret_code = nse_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &q_preprocessed, &r_preprocessed,
+            first_last_index, opts_ptr->discretization);
+    CHECK_RETCODE(ret_code, release_mem);
+
+    if (Dsub != D) {
+        ret_code = E_ASSERTION_FAILED;
+        goto release_mem;
+    }
+
+    // Determine the tolerance for the refinement steps
+    if (opts_ptr->tol < 0)
+        refine_tol = SQRT(EPSILON);
+    else
+        refine_tol = opts_ptr->tol;
+
+    // Will be required later for coordinate transforms and filtering
+    degree1step = nse_discretization_degree(opts_ptr->discretization);
+    if (degree1step == NAN)
+        return E_INVALID_ARGUMENT(opts_ptr->discretization);
+    map_coeff = 2/degree1step;
+    update_bounding_box_if_auto(eps_t, map_coeff, opts_ptr);
+    tol_im = opts_ptr->bounding_box[1] - opts_ptr->bounding_box[0];
+    tol_im /= oversampling_factor*(D - 1);
+
+    // Refine main spectrum if desired
+    if (main_spec != NULL) {
+
+        // The main spectrum is given by the z that solve Delta(z)=+/-2,
+        // where Delta(z)=trace{monodromy matrix(z)} is the Floquet discriminant
+
+        // Below, we'll search for solutions of Delta(z)=rhs, where rhs
+        // iterates through a grid of nvals values between rhs_0 and rhs_1.
+        // Normally, we use rhs_0=-2, rhs_1=2 and points_per_spine=2, which
+        // provides us the main spectrum (= endpoints of spines). Using higher
+        // values for points_per_spine allows us to compute spines.
+        const REAL rhs_0 = opts_ptr->floquet_range[0];
+        const REAL rhs_1 = opts_ptr->floquet_range[1];
+        const UINT nvals = opts_ptr->points_per_spine;
+        REAL rhs_step = rhs_1 - rhs_0;
+        if (nvals>1)
+            rhs_step /= nvals - 1;
+        initial_guesses = main_spec;
+
+        for (UINT nval=0; nval<nvals; nval++) {
+
+            const REAL rhs = 2.0*(rhs_0 + nval*rhs_step);
+
+            // Refine the initial guesses
+            ret_code = refine_mainspec(D_effective, q_preprocessed, r_preprocessed, eps_t,
+                                       K, initial_guesses, opts_ptr->max_evals,
+                                       -rhs, refine_tol, kappa,
+                                       opts_ptr->discretization, opts_ptr->bounding_box);
+            CHECK_RETCODE(ret_code, release_mem);
+
+            initial_guesses += K;
+        }
+
+        K *= opts_ptr->points_per_spine;
+
+        if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
+            ret_code = misc_filter(&K, main_spec, NULL,
+                                   opts_ptr->bounding_box);
+            CHECK_RETCODE(ret_code, release_mem);
+        }
+
+        *K_ptr = K;
+    }
+
+    // Refine aux spectrum if desired
+    if (aux_spec != NULL) {
+
+        // Refine the roots
+        ret_code = refine_auxspec(D_effective, q_preprocessed, r_preprocessed, eps_t, M,
+                                  aux_spec, opts_ptr->max_evals, refine_tol,
+                                  kappa, opts_ptr->discretization, opts_ptr->bounding_box);
+        CHECK_RETCODE(ret_code, release_mem);
+
+        if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
+            ret_code = misc_filter(&M, aux_spec, NULL,
+                                   opts_ptr->bounding_box);
+            CHECK_RETCODE(ret_code, release_mem);
+        }
+
+        *M_ptr = M;
+    }
+
+    release_mem:
+        free(q_preprocessed);
+        free(r_preprocessed);
+        return ret_code;
+}
+
+// Auxiliary function: Checks if a complex number is in a given box
+static INT in_box(const COMPLEX z, const REAL * box)
+{
+    return (CREAL(z) >= box[0]) && (CREAL(z) <= box[1]) &&
+           (CIMAG(z) >= box[2]) && (CIMAG(z) <= box[3]);
+}
+
 // Auxiliary function: Uses Newton's method for roots of higher order to refine the main spectrum.
 static inline INT refine_mainspec(
         const UINT D, COMPLEX const * const q, COMPLEX * r,
         const REAL eps_t, const UINT K,
         COMPLEX * const mainspec,
         const UINT max_evals, const REAL rhs, const REAL tol,
-        const INT kappa, nse_discretization_t discretization)
+        const INT kappa, nse_discretization_t discretization,
+        const REAL * bounding_box)
 {
     UINT k;
     COMPLEX M[8];
-    COMPLEX lam, f, f_prime, incr, tmp, next_f, next_f_prime;
+    COMPLEX lam, f, f_prime, incr, tmp, next_f, next_f_prime, best_incr;
     REAL cur_abs, min_abs;
     UINT nevals;
     INT ret_code;
     UINT m, best_m;
     const UINT max_m = 2; // roots might be single or double
+    INT warn_flag = 0;
 
     if (max_evals == 0)
         return SUCCESS;
 
     for (k=0; k<K; k++) { // Iterate over the provided main spectrum estimates.
 
-        // Initilization. Computes the monodromy matrix at the current main
+        // Initialization. Computes the monodromy matrix at the current main
         // spectrum estimate lam and determines the value of
         // f=a(lam)+a~(lam)+rhs as well as of f' = df/dlam. (The main spectrum
         // consists of the roots of f for rhs=+/- 2.0.)
@@ -742,16 +907,18 @@ static inline INT refine_mainspec(
 
         // Newton's method for higher order roots: next_x=x-m*f/f', where
         // m is the order of the root. Since we do not know m, several values
-        // are tested in a line search-like procedure. Per iterion, max_m
+        // are tested in a line search-like procedure. Per iteration, max_m
         // values of m are tested, leading to max_m monodromoy mat evaluations.
         for (nevals=1; nevals<=max_evals;) {
+
             // The current values of f and f' at lam = mainspec[k]
             f = next_f;
             f_prime = next_f_prime;
             if (f_prime == 0.0)
                 return E_DIV_BY_ZERO;
             incr = f / f_prime;
-            // Test different increments to deal with the many higher order
+
+	        // Test different increments to deal with the many higher order
             // roots (Newton's method for a root of order m is x<-x-m*f/f').
             min_abs = INFINITY;
             best_m = 1;
@@ -775,10 +942,12 @@ static inline INT refine_mainspec(
                         break;
                 }
             }
-            mainspec[k] -= best_m*incr; // Newton step
-            //printf("MAIN k=%zu, nevals=%zu: lam=%e+%ej, |f|=%e, |f_prime|=%e, |incr|=%e, best_m=%d\n", k, nevals, CREAL(mainspec[k]), CIMAG(mainspec[k]), CABS(f), CABS(f_prime),CABS(incr),best_m);
+            best_incr = best_m*incr;
+            mainspec[k] -= best_incr; // Newton step
 
-            if ( min_abs < tol ) {
+	        // printf("MAIN k=%zu, nevals=%zu: lam=%e+%ej, |f|=%e, |f_prime|=%e, |incr|=%e, best_m=%d\n", k, nevals, CREAL(mainspec[k]), CIMAG(mainspec[k]), CABS(f), CABS(f_prime),CABS(incr),best_m);
+
+            if ( CABS(best_incr) <= tol || CABS(f) <= tol ) {
                 // We already know f and f_prime at the new mainspec[k], so
                 // let's use that for a final first-order Newton step.
                 if (next_f_prime == 0.0)
@@ -786,9 +955,21 @@ static inline INT refine_mainspec(
                 mainspec[k] -= next_f / next_f_prime;
                 break;
             }
-        };
+
+            // stop refining the current value if it left the bounding box
+            if (!in_box(mainspec[k], bounding_box))
+                break;
+        }
+
+	    if (CABS(best_incr) > tol && CABS(f) > tol && in_box(mainspec[k], bounding_box))
+		    warn_flag = 1;
+
         //printf("==> used %zu evaluations\n", nevals);
     }
+
+    if (warn_flag)
+    	WARN("Refinement of one or more main spectrum (or spine) points did not converge. Try manual filtering, or increase max_evals or tol.")
+
     return SUCCESS;
 }
 
@@ -797,11 +978,13 @@ static inline INT refine_auxspec(
         const UINT D, COMPLEX const * const q, COMPLEX * r,
         const REAL eps_t, const UINT K,
         COMPLEX * const auxspec, const UINT max_evals, const REAL tol,
-        const INT kappa, nse_discretization_t discretization)
+        const INT kappa, nse_discretization_t discretization,
+        const REAL * bounding_box)
 {
     UINT k, nevals;
     COMPLEX M[8];
-    COMPLEX f, f_prime;
+    COMPLEX f, f_prime, incr;
+    INT warn_flag = 0;
     INT ret_code;
 
     if (max_evals == 0)
@@ -823,19 +1006,30 @@ static inline INT refine_auxspec(
 
             //printf("AUX k=%zu, iter=%zu: lam=%g+%gj, |f|=%g, |f_prime|=%g\n", k, iter, CREAL(auxspec[k]), CIMAG(auxspec[k]), CABS(f), CABS(f_prime));
 
-
-            auxspec[k] -= f / f_prime;
-            if ( CABS(f) < tol ) // Intentionally put after the previous line
+            incr = f / f_prime;
+            auxspec[k] -= incr;
+            if ( CABS(incr) <= tol || CABS(f) <= tol ) // Intentionally put after the previous line
                 // => we use the already known values for f and f_prime for a
                 // last Newton step even if already |f|<tol.
                 break;
+
+            // stop refining the current value if it left the bounding box
+            if (!in_box(auxspec[k], bounding_box))
+                break;
         }
+
+    	if (CABS(incr) > tol && CABS(f) > tol && in_box(auxspec[k], bounding_box))
+    	    warn_flag = 1;
     }
+
+    if (warn_flag)
+    	WARN("Refinement of one or more auxiliary spectrum points did not converge. Try manual filtering, or increase max_evals or tol.")
+
     return SUCCESS;
 }
 
 static inline void update_bounding_box_if_auto(const REAL eps_t,
-        const REAL map_coeff, fnft_nsep_opts_t * const opts_ptr)
+        REAL map_coeff, fnft_nsep_opts_t * const opts_ptr)
 {
     // The bounding box used for filtering is computed. The format of the box
     // is
@@ -854,6 +1048,12 @@ static inline void update_bounding_box_if_auto(const REAL eps_t,
     //  -pi/|map_coeff|/eps_t <= Re(lam) <= pi/|map_coeff|/eps_t.
     //
     // We enforce |Re(lam)|<=0.9*pi/|map_coeff|/eps_t.
+
+    // Deal with "slow" discretizations for which no coordinate transform
+    // of the form above is used. By setting map_coeff=1, we fall back to
+    // the conventional Nyquist frequency in this case.
+    if (map_coeff == INFINITY || map_coeff == 0 || map_coeff != map_coeff /* NaN */)
+        map_coeff = 1.0;
 
     if (opts_ptr->filtering == fnft_nsep_filt_AUTO) {
         opts_ptr->bounding_box[1] = 0.9*PI / (FABS(map_coeff) * eps_t);
