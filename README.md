@@ -86,6 +86,8 @@ FNFT is provided under the terms of the [GNU General Public License, version 2](
 
 * FNFT incorporates code from the C library [Kiss FFT](http://kissfft.sourceforge.net/).
 
+* FNFT contains code that has been ported from the Matlab library [GRPF](https://github.com/PioKow/GRPF/).
+
 ## References
 
 The algorithms in FNFT utilize ideas from the following references. More information can be found in the documentation of the individual routines.
@@ -107,3 +109,5 @@ The algorithms in FNFT utilize ideas from the following references. More informa
 - P. J. Prins and S. Wahls, ["Soliton Phase Shift Calculation for the Korteweg–De Vries Equation"](https://doi.org/10.1109/ACCESS.2019.2932256), IEEE Access, vol. 7, pp. 122914--122930, July 2019.
 - S. Medvedev, I. Vaseva, I. Chekhovskoy and M. Fedoruk, ["Exponential fourth order schemes for direct Zakharov-Shabat problem"](https://doi.org/10.1364/OE.377140), Optics Express, vol. 28, pp. 20--39, 2020.
 - J. Mertsching, ["Quasiperiodie Solutions of the Nonlinear Schroedinger Equation"](https://doi.org/10.1002/prop.2190350704), Fortschritte der Physik, vol. 35, pp. 519--536, 1987.
+- P. Kowalczyk, ["Complex Root Finding Algorithm Based on Delaunay Triangulation"](https://doi.org/10.1145/2699457), ACM Transactions on Mathematical Software, vol. 41, no. 3, art. 19, pp. 1-13, June 2015.
+- P. Kowalczyk, ["Global Complex Roots and Poles Finding Algorithm Based on Phase Analysis for Propagation and Radiation Problems"](https://doi.org/10.1109/TAP.2018.2869213), IEEE Transactions on Antennas and Propagation, vol. 66, no. 12, pp. 7198-7205, Dec. 2018.

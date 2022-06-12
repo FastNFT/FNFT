@@ -109,4 +109,8 @@
  * \defgroup fft_wrapper PRIVATE: Wrapper for fast Fourier transform routines
  */
 
+/**
+ * \defgroup roots PRIVATE: Root finding algorithms
+ */
+
 #endif

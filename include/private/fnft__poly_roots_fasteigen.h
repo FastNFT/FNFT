@@ -32,6 +32,7 @@
  * @brief Fast computation of polynomial roots.
  * 
  * @ingroup poly
+ * @ingroup roots
  * This routine compute the roots of a polynomial
  *
  *   \f[ p(z)=p_0+p_1 z^1+p_2 z^2+...+p_{deg} z^{deg} \f]
