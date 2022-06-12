@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2017-2018.
+ * Sander Wahls (TU Delft) 2017-2018, 2022.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Marius Brehler (TU Dortmund) 2018.
  */
@@ -2431,13 +2431,13 @@ static inline INT nsev_localize_bound_states_GRPF(
                 z_m[i] = z_m[i] - 1;
             else if (dQ == -3)
                 z_m[i] = z_m[i] + 1;
-            else if (FABS(dQ) == 2)
+            else if (ABS(dQ) == 2)
                 z_m[i] = z_m[i] + NAN;
             else
                 z_m[i] = z_m[i] + dQ;
             
         }
-        z_m[i] =  FABS(z_m[i])/4; //taking abs because orientation of contour not known
+        z_m[i] = ABS(z_m[i])/4; //taking abs because orientation of contour not known
         
         z[i] = 0;
         for (j=0; j<NrOfNodesOfRegions[i]; j++)

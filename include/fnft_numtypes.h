@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018, 2022.
 */
 
 /**
@@ -78,6 +78,12 @@ typedef size_t FNFT_UINT;
  * @ingroup numtype
  */
 #define FNFT_INF INFINITY
+
+/**
+ * Absolute value of a \link FNFT_INT \endlink.
+ * @ingroup numtype
+ */
+#define FNFT_ABS(X) abs(X)
 
 /**
  * Absolute value of a \link FNFT_REAL \endlink.
@@ -271,6 +277,7 @@ typedef size_t FNFT_UINT;
 #define COMPLEX         FNFT_COMPLEX
 #define INT             FNFT_INT
 #define UINT            FNFT_UINT
+#define ABS(X)          FNFT_ABS(X)
 #define CABS(X)         FNFT_CABS(X)
 #define FABS(X)         FNFT_FABS(X)
 #define FLOOR(X)        FNFT_FLOOR(X)
