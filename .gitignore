@@ -19,6 +19,7 @@
 !/test/
 !/test/fnft__akns_fscatter/
 !/test/fnft__fft_wrapper/
+!/test/fnft__global_root_finding_algorithm/
 !/test/fnft__kdv_finvscatter/
 !/test/fnft__kdv_scatter/
 !/test/fnft_kdvv/

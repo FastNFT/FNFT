@@ -80,6 +80,12 @@ typedef size_t FNFT_UINT;
 #define FNFT_INF INFINITY
 
 /**
+ * Absolute value of a \link FNFT_INT \endlink.
+ * @ingroup numtype
+ */
+#define FNFT_ABS(X) abs(X)
+
+/**
  * Absolute value of a \link FNFT_REAL \endlink.
  * @ingroup numtype
  */
@@ -120,6 +126,12 @@ typedef size_t FNFT_UINT;
  * @ingroup numtype
  */
 #define FNFT_TANH(X) tanh(X)
+
+/**
+ * Cosine inverse of a \link FNFT_REAL \endlink.
+ * @ingroup numtype
+ */
+#define FNFT_ACOS(X) acos(X)
 
 /**
  * Arc tangent of a \link FNFT_REAL \endlink.
@@ -274,6 +286,7 @@ typedef size_t FNFT_UINT;
 #define COMPLEX         FNFT_COMPLEX
 #define INT             FNFT_INT
 #define UINT            FNFT_UINT
+#define ABS(X)          FNFT_ABS(X)
 #define CABS(X)         FNFT_CABS(X)
 #define FABS(X)         FNFT_FABS(X)
 #define FLOOR(X)        FNFT_FLOOR(X)
@@ -286,6 +299,7 @@ typedef size_t FNFT_UINT;
 #define CLOG(X)         FNFT_CLOG(X)
 #define COS(X)          FNFT_COS(X)
 #define SIN(X)          FNFT_SIN(X)
+#define ACOS(X)         FNFT_ACOS(X)
 #define ATAN(X)         FNFT_ATAN(X)
 #define SQRT(X)         FNFT_SQRT(X)
 #define EPSILON         FNFT_EPSILON
@@ -303,9 +317,9 @@ typedef size_t FNFT_UINT;
 #define CSQRT(X)        FNFT_CSQRT(X)
 #define CEXP(X)         FNFT_CEXP(X)
 #define CARG(X)         FNFT_CARG(X)
-#define PI        	    FNFT_PI
+#define PI        	FNFT_PI
 #define GAMMA(X)        FNFT_GAMMA(X)
-#define ATANH(X)   FNFT_ATANH(X)
+#define ATANH(X)   	FNFT_ATANH(X)
 #endif
 
 #endif
