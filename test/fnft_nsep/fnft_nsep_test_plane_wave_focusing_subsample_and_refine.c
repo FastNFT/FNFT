@@ -23,7 +23,7 @@
 
 INT main()
 {
-    INT ret_code, i;
+    INT ret_code;
     const fnft__nsep_testcases_t tc = nsep_testcases_PLANE_WAVE_FOCUSING;
     UINT D = 1024;
     REAL error_bounds[3] = {
