@@ -59,7 +59,9 @@ typedef enum {
  * bounds in eb. 
  * @param[in] tc Type of test case.
  * @param[in] D Number of samples.
- * @param[in] eb Real valued array with 6 elements corresponding to various error bounds.
+ * @param[in] eb Real valued array with 6 elements corresponding to error bounds for
+ * the reflection coefficient, a, b, the bound states, the norming constants and the
+ * residues.
  * @param[in] opts \link fnft_nsev_opts_t \endlink options for the tests. 
  * @return If all errors stay below bounds the routine \link FNFT_SUCCESS \endlink. Otherwise,
  * it returns an error code (normally, \link FNFT_EC_TEST_FAILED \endlink).

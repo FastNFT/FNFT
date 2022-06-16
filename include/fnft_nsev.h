@@ -48,11 +48,14 @@
  *  fnft_nsev_bsfilt_FULL: Bound states in physically implausible regions and
  *  outside the region based on the step-size of the supplied samples are
  *  rejected.
+ *  fnft_nsev_opts_filt_MANUAL: Only points within the specified
+ *  \link fnft_nsep_opts_t::bounding_box \endlink are kept. \n\n
  */
 typedef enum {
     fnft_nsev_bsfilt_NONE,
     fnft_nsev_bsfilt_BASIC,
-    fnft_nsev_bsfilt_FULL
+    fnft_nsev_bsfilt_FULL,
+    fnft_nsev_bsfilt_MANUAL
 } fnft_nsev_bsfilt_t;
 
 /**
@@ -63,8 +66,7 @@ typedef enum {
  *  https://arxiv.org/abs/1611.02435 and https://github.com/eiscor/eiscor)
  *  with \f$ O(D^2) \f$ complexity is used to detect the roots of
  *  \f$ a(\lambda) \f$. (Note: FNFT incorporates a development version of this
- *  routine as no release was available yet.) This method is relatively slow,
- *  but very reliable. \n \n
+ *  routine as no release was available yet.) This method is relatively slow. \n\n
  *  fnft_nsev_bsloc_NEWTON: Newton's method is used to refine a given set of initial guesses.
  *  The discretization used for the the refinement is one of the base methods \link fnft_nse_discretization_t.h \endlink.
  *  The number of iterations is specified through the field \link fnft_nsev_opts_t::niter
@@ -76,7 +78,7 @@ typedef enum {
  *  initial guesses for the bound states are available. The complexity is
  *  \f$ O(niter (*K\_ptr) D) \f$. \n \n
  *  fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE: This method offers a good compromise
- *  between the other two. The method automatically finds initial guesses for
+ *  between the previous two. The method automatically finds initial guesses for
  *  the NEWTON method by first applying the FAST_EIGENVALUE method to a
  *  subsampled version of the signal. Second these initial guesses are refined
  *  using the NEWTON method. The number of samples of the subsampled signal can
@@ -87,12 +89,19 @@ typedef enum {
  *  call to the fnft_nsev_bsloc_FAST_EIGENVALUE method w.r.t. the subsampled
  *  signal. By choosing Dsub between 2 and D, the user can be request a
  *  different number of samples. Note that algorithm uses this value only as an
+ *  indicator. This method usually performs well, but has been found to fail
+ *  for some complicated cases. Try \link fnft_nsev_bsloc_GRPF \endlink instead
+ *  in such cases.
+ *  fnft_nsev_bsloc_GRPF: This method uses the global root pole finding algorithm
+ *  to localize the bound states.
+ *  See \link fnft__global_roots_poles_finding_algorithm \endlink.
  *  indication.
  */
 typedef enum {
     fnft_nsev_bsloc_FAST_EIGENVALUE,
     fnft_nsev_bsloc_NEWTON,
-    fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE
+    fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE,
+    fnft_nsev_bsloc_GRPF
 } fnft_nsev_bsloc_t;
 
 /**
@@ -158,9 +167,10 @@ typedef enum {
  *   \link fnft_nsev_bsloc_t \endlink for details.
  *
  * @var fnft_nsev_opts_t::niter
- *  Number of Newton iterations to be carried out when either the
- *  fnft_nsev_bsloc_NEWTON or the fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE method
- *  is used.
+ *  For fnft_nsev_bsloc_NEWTON and fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE: Maximum
+ *  number of Newton iterations to be carried out.
+ *  For fnft_nsev_bsloc_GRPF: Maximum number of iterations in the global root
+ *  pole finding algorithm. See \link fnft__global_root_pole_finding_algorithm \endlink.
  *
  * @var fnft_nsev_opts_t::discspec_type
  *  Controls how \link fnft_nsev \endlink fills the array
@@ -195,17 +205,24 @@ typedef enum {
  *  worse accuracy compared to the first approximation.
  *  By default, Richardson extrapolation is disabled (i.e., the
  *  flag is zero). To enable, set the flag to one.
+ *
+ *  @var fnft_nsev_opts_t::bound_state_localization_tol
+ *  Some bound state localization methods such as Newton and GRPF have tolerance
+ *  parameters. If this value is zero or negative, these parameters will be
+ *  chosen automatically. Set to a positive value to chose the tolerance manually.
  */
 typedef struct {
     fnft_nsev_bsfilt_t bound_state_filtering;
     fnft_nsev_bsloc_t bound_state_localization;
     FNFT_UINT niter;
+    FNFT_REAL tol;
     FNFT_UINT Dsub;
     fnft_nsev_dstype_t discspec_type;
     fnft_nsev_cstype_t contspec_type;
     FNFT_INT normalization_flag;
     fnft_nse_discretization_t discretization;
     FNFT_UINT richardson_extrapolation_flag;
+    FNFT_REAL bounding_box[4];
 } fnft_nsev_opts_t;
 
 /**
@@ -215,14 +232,16 @@ typedef struct {
  * @returns A \link fnft_nsev_opts_t \endlink object with the following options.\n
  *  bound_state_filtering = fnft_nsev_bsfilt_FULL\n
  *  bound_state_localization = fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE\n
- *  niter = 10\n
+ *  niter = 100\n
+ *  tol = 0\n
  *  discspec_type = fnft_nsev_dstype_NORMING_CONSTANTS\n
  *  contspec_type = fnft_nsev_cstype_REFLECTION_COEFFICIENT\n
  *  normalization_flag = 1\n
  *  discretization = fnft_nse_discretization_2SPLIT4B\n
  *  richardson_extrapolation_flag = 0\n
+ *  bounding_box = {NAN, NAN, NAN, NAN}\n
  *
-  * @ingroup fnft
+* @ingroup fnft
  */
 fnft_nsev_opts_t fnft_nsev_default_opts();
 
@@ -372,14 +391,15 @@ FNFT_INT fnft_nsev(const FNFT_UINT D, FNFT_COMPLEX const * const q,
     FNFT_COMPLEX * const normconsts_or_residues, const FNFT_INT kappa,
     fnft_nsev_opts_t * opts);
 
-
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define nsev_bsfilt_NONE fnft_nsev_bsfilt_NONE
 #define nsev_bsfilt_BASIC fnft_nsev_bsfilt_BASIC
 #define nsev_bsfilt_FULL fnft_nsev_bsfilt_FULL
+#define nsev_bsfilt_MANUAL fnft_nsev_bsfilt_MANUAL
 #define nsev_bsloc_FAST_EIGENVALUE fnft_nsev_bsloc_FAST_EIGENVALUE
 #define nsev_bsloc_NEWTON fnft_nsev_bsloc_NEWTON
 #define nsev_bsloc_SUBSAMPLE_AND_REFINE fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE
+#define nsev_bsloc_GRPF fnft_nsev_bsloc_GRPF
 #define nsev_dstype_NORMING_CONSTANTS fnft_nsev_dstype_NORMING_CONSTANTS
 #define nsev_dstype_RESIDUES fnft_nsev_dstype_RESIDUES
 #define nsev_dstype_BOTH fnft_nsev_dstype_BOTH

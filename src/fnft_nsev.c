@@ -23,17 +23,20 @@
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft_nsev.h"
+#include "fnft__global_root_pole_finding_algorithm.h"
 
 static fnft_nsev_opts_t default_opts = {
     .bound_state_filtering = nsev_bsfilt_FULL,
     .bound_state_localization = nsev_bsloc_SUBSAMPLE_AND_REFINE,
-    .niter = 10,
+    .niter = 100,
+    .tol = 0.0, // auto
     .Dsub = 0, // auto
     .discspec_type = nsev_dstype_NORMING_CONSTANTS,
     .contspec_type = nsev_cstype_REFLECTION_COEFFICIENT,
     .normalization_flag = 1,
     .discretization = nse_discretization_2SPLIT4B,
-    .richardson_extrapolation_flag = 0
+    .richardson_extrapolation_flag = 0,
+    .bounding_box = {NAN, NAN, NAN, NAN}
 };
 
 /**
@@ -120,6 +123,20 @@ static inline INT nsev_refine_bound_states_newton(const UINT D,
         COMPLEX * const bound_states,
         nse_discretization_t const discretization,
         UINT const niter,
+        REAL tol,
+        REAL const * const bounding_box);
+
+static inline INT nsev_localize_bound_states_grpf(
+        const UINT D,
+        COMPLEX const * const q,
+        COMPLEX const * const r,
+        REAL const * const T,
+        UINT * const K_ptr,
+        COMPLEX * bound_states,
+        nse_discretization_t discretization,
+        const UINT NodesMax,
+        REAL tol,
+        const UINT niter,
         REAL const * const bounding_box);
 
 /**
@@ -213,6 +230,7 @@ INT fnft_nsev(
         case nse_discretization_ES4:
         case nse_discretization_TES4:
             if (opts->bound_state_localization != nsev_bsloc_NEWTON &&
+                    opts->bound_state_localization != nsev_bsloc_GRPF &&
                     kappa == +1 && bound_states != NULL){
                 ret_code = E_INVALID_ARGUMENT(opts->bound_state_localization);
                 goto leave_fun;
@@ -372,7 +390,7 @@ INT fnft_nsev(
             goto leave_fun;
         }
 
-        // The signal q is now subsampled(approx. half the samples) and
+        // The signal q is now subsampled (approx. half the samples) and
         // preprocessed as required for the discretization. This is
         // required for obtaining a second approximation of the spectrum
         // which will be used for Richardson extrapolation.
@@ -629,12 +647,14 @@ static inline INT nsev_compute_boundstates(
     D_given = D/upsampling_factor;
 
     // Set-up bounding_box based on choice of filtering
-    if (opts->bound_state_filtering == nsev_bsfilt_BASIC) {
+    switch (opts->bound_state_filtering) {
+    case nsev_bsfilt_BASIC:
         bounding_box[0] = -INFINITY;
         bounding_box[1] = INFINITY;
         bounding_box[2] = 0.0;
         bounding_box[3] = INFINITY;
-    }else if (opts->bound_state_filtering == nsev_bsfilt_FULL) {
+        break;
+    case nsev_bsfilt_FULL:
         bounding_box[1] = re_bound(eps_t, map_coeff);
         bounding_box[0] = -bounding_box[1];
         bounding_box[2] = 0;
@@ -659,11 +679,25 @@ static inline INT nsev_compute_boundstates(
             default:
                 bounding_box[3] = im_bound(D, q, T, eps_t);
         }
-    }else{
+        break;
+    case nsev_bsfilt_MANUAL:
+        memcpy(bounding_box, opts->bounding_box, 4*sizeof(REAL));
+        for (UINT i=0; i<4; i++) {
+            if (bounding_box[i] != bounding_box[i]) { // check for NaN's
+                ret_code = E_OTHER("Must set opts->bounding_box for manual filtering.");
+                goto leave_fun;
+            }
+        }
+        break;
+    case nsev_bsfilt_NONE:
         bounding_box[0] = -INFINITY;
         bounding_box[1] = INFINITY;
         bounding_box[2] = -INFINITY;
         bounding_box[3] = INFINITY;
+        break;
+    default:
+        ret_code = E_INVALID_ARGUMENT(opts->bound_state_filtering);
+        goto leave_fun;
     }
 
     // Localize bound states ...
@@ -688,7 +722,7 @@ static inline INT nsev_compute_boundstates(
                 discretization = opts->discretization;
 
             ret_code = nsev_refine_bound_states_newton(D, q, r, T, K, buffer,
-                    discretization, opts->niter, bounding_box);
+                    discretization, opts->niter, opts->tol, bounding_box);
             CHECK_RETCODE(ret_code, leave_fun);
             break;
 
@@ -714,6 +748,25 @@ static inline INT nsev_compute_boundstates(
             ret_code = nse_discretization_z_to_lambda(K, eps_t, buffer, opts->discretization);
             CHECK_RETCODE(ret_code, leave_fun);
 
+            break;
+
+            // ... using the global root pole finding algorithm
+        case nsev_bsloc_GRPF:
+
+            K = *K_ptr;
+            buffer = bound_states; // Store intermediate results directly
+
+            if (upsampling_factor == 1 && degree1step != 0){
+                discretization = nse_discretization_BO;
+            }else if(upsampling_factor == 2 && degree1step != 0){
+                discretization = nse_discretization_CF4_2;
+            }else
+                discretization = opts->discretization;
+
+            const UINT NodesMax = 5*D_given;
+            ret_code = nsev_localize_bound_states_grpf(D, q, r, T, &K, buffer,
+                    discretization, NodesMax, opts->tol, opts->niter, bounding_box);
+            CHECK_RETCODE(ret_code, leave_fun);
             break;
 
         default:
@@ -958,7 +1011,7 @@ static inline INT nsev_compute_normconsts_or_residues(
             offset = K;
             memcpy(normconsts_or_residues + offset,
                     normconsts_or_residues,
-                    offset*sizeof(complex double));
+                    offset*sizeof(COMPLEX));
         } else
             return E_INVALID_ARGUMENT(opts->discspec_type);
 
@@ -986,12 +1039,15 @@ static inline INT nsev_refine_bound_states_newton(
         COMPLEX * const bound_states,
         nse_discretization_t const discretization,
         const UINT niter,
+        REAL tol,
         REAL const * const bounding_box)
 {
     INT ret_code = SUCCESS;
     UINT i, iter;
-    COMPLEX a_val, aprime_val, error;
-    REAL eprecision = EPSILON * 100;
+    COMPLEX a_val, aprime_val, error = INFINITY;
+    INT warn_flag = 0;
+    if (!(tol > 0))
+        tol = 100*EPSILON;
 
     // Check inputs
     if (K == 0) // no bound states to refine
@@ -1013,7 +1069,8 @@ static inline INT nsev_refine_bound_states_newton(
     // Perform iterations of Newton's method
     for (i = 0; i < K; i++) {
         iter = 0;
-        do {
+        UINT ok_flag = 0;
+        for (iter=0; iter<niter; iter++) {
             // Compute a(lam) and a'(lam) at the current root
             ret_code = nse_scatter_bound_states(D, q, r, T, 1,
                     bound_states + i, &a_val, &aprime_val, NULL, discretization);
@@ -1034,12 +1091,104 @@ static inline INT nsev_refine_bound_states_newton(
             if (CIMAG(bound_states[i]) > bounding_box[3]
                     || CREAL(bound_states[i]) > bounding_box[1]
                     || CREAL(bound_states[i]) < bounding_box[0]
-                    || CIMAG(bound_states[i]) < bounding_box[2])
+                    || CIMAG(bound_states[i]) < bounding_box[2]) {
+                ok_flag = 1;
                 break;
+            }
 
-        } while (CABS(error) > eprecision && iter < niter);
+            if ((CABS(error) <= tol) || (CABS(a_val) <= tol)) {
+                ok_flag = 1;
+                break;
+            }
+        }
+        if (!ok_flag)
+            warn_flag = 1;
     }
+    if (warn_flag)
+        WARN("Error for one or more bound states still above tolerance after maximum number of Newton iterations. Try to increase the number of iterations, decrease the tolerance or use manual filtering.");
 
     leave_fun:
         return ret_code;
+}
+
+typedef struct {
+    UINT D;
+    COMPLEX const * const q;
+    COMPLEX const * const r;
+    REAL const * const T;
+    nse_discretization_t discretization;
+} fnft_nsev_grpf_fun_params_t;
+
+INT fnft_nsev_grpf_fun(UINT K, COMPLEX * zs, COMPLEX * dest, void * opts)
+{
+    return nse_scatter_bound_states(
+            ((fnft_nsev_grpf_fun_params_t *) opts)->D,
+            ((fnft_nsev_grpf_fun_params_t *) opts)->q,
+            ((fnft_nsev_grpf_fun_params_t *) opts)->r,
+            ((fnft_nsev_grpf_fun_params_t *) opts)->T,
+            K,
+            zs, 
+            dest,
+            NULL,
+            NULL,
+            ((fnft_nsev_grpf_fun_params_t *)opts)->discretization);
+}
+
+// Auxiliary function: Finds bound states using the global root pole finding
+// algorithm
+static inline INT nsev_localize_bound_states_grpf(
+        const UINT D,
+        COMPLEX const * const q,
+        COMPLEX const * const r,
+        REAL const * const T,
+        UINT * const K_ptr,
+        COMPLEX * bound_states,
+        nse_discretization_t discretization,
+        const UINT NodesMax,
+        REAL tol,
+        const UINT niter,
+        REAL const * const bounding_box)
+{
+    // Check inputs
+    if (bound_states == NULL)
+        return E_INVALID_ARGUMENT(bound_states);
+    if (q == NULL)
+        return E_INVALID_ARGUMENT(q);
+    if (T == NULL)
+        return E_INVALID_ARGUMENT(T);
+    if (NodesMax == 0)
+        return E_INVALID_ARGUMENT(NodesMax);
+    if (bounding_box == NULL)
+        return E_INVALID_ARGUMENT(bounding_box);
+    if ( !(bounding_box[0] <= bounding_box[1]) //!(...) ensures error with NANs
+    || !(bounding_box[2] <= bounding_box[3]) )
+        return E_INVALID_ARGUMENT(bounding_box);
+   
+    REAL bounding_box_local[4] = { NAN };
+    bounding_box_local[1] = bounding_box[1];
+    bounding_box_local[0] = bounding_box[0];
+    
+    if (bounding_box[2] < 0)
+        bounding_box_local[2] = 0;
+    else
+        bounding_box_local[2] = bounding_box[2];
+    
+    if (LOG(0.9*DBL_MAX)/((T[1]-T[0])/2) < bounding_box[3])
+        bounding_box_local[3] = LOG(0.9*DBL_MAX)/((T[1]-T[0])/2); //TODO
+    else
+        bounding_box_local[3] = bounding_box[3];
+
+    if (!(tol > 0))
+        tol = 0.9*PI/(T[1]-T[0]);
+
+    fnft_nsev_grpf_fun_params_t params = {D, q, r, T, discretization};
+    return global_root_pole_finding_algorithm(
+        K_ptr,
+        bound_states,
+        &fnft_nsev_grpf_fun,
+        (void *)&params,
+        NodesMax,
+        bounding_box_local,
+        tol,
+        niter);
 }

@@ -103,7 +103,7 @@ INT nse_scatter_bound_states(UINT const D,
 
     // Call akns_scatter_bound_states
     UINT vanilla_flag = 0; // Ignored value for NSE
-    ret_code = akns_scatter_bound_states(D, q, r, T, K,bound_states, a_vals, aprime_vals, b, akns_discretization, akns_pde_NSE, vanilla_flag);
+    ret_code = akns_scatter_bound_states(D, q, r, T, K,bound_states, a_vals, aprime_vals, b_vals, akns_discretization, akns_pde_NSE, vanilla_flag);
     CHECK_RETCODE(ret_code, leave_fun);
 
 leave_fun:

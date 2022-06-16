@@ -67,12 +67,14 @@
  *      searched for roots. The first two entries speficy the smallest and
  *      largest real part, the last two entries the smallest and largest
  *      real part.
- * @param [in] tol Upper bound on the root approximation error
+ * @param [in] tol Desired bound on the root approximation error, used to
+ *      stop the algorithm.
+ * @param [in] niter Maximum number of iterations.
  */
 FNFT_INT fnft__global_root_pole_finding_algorithm(UINT * const K_ptr,
         COMPLEX * roots, INT fun (UINT, COMPLEX *, COMPLEX *, void *),
         void * params_ptr, UINT NodesMax, const REAL bounding_box_local[4],
-        const REAL Tol);
+        const REAL Tol, const UINT niter);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define global_root_pole_finding_algorithm(...) fnft__global_root_pole_finding_algorithm(__VA_ARGS__)

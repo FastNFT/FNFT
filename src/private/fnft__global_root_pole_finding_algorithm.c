@@ -105,7 +105,8 @@ INT fnft__global_root_pole_finding_algorithm(
         void * params_ptr,
         UINT NodesMax,
         const REAL bounding_box_local[4],
-        const REAL Tol)
+        const REAL Tol,
+        const UINT niter)
 {
     INT ret_code = SUCCESS;
     UINT i, j;
@@ -274,13 +275,9 @@ INT fnft__global_root_pole_finding_algorithm(
         ret_code = E_NOMEM;
         goto leave_fun;
     }
-    
-//     REAL Tol = (bounding_box_local[1]-bounding_box_local[0])/D_given;
-//     if ((bounding_box_local[3]-bounding_box_local[2])/D_given < Tol)
-//         Tol = (bounding_box_local[3]-bounding_box_local[2])/D_given;
-//    REAL Tol = 0.9*PI/(T[1]-T[0]);
-    ////////////////////////////////////////
-    for (UINT iter=1; iter<=50; iter++){
+   
+    INT converged_flag = 0;
+    for (UINT iter=1; iter<=niter; iter++){
         
 //         printf("iter=%ld\n",iter);
 //         printf("NrOfNewNodes=%ld \n",NrOfNewNodes);
@@ -449,6 +446,7 @@ INT fnft__global_root_pole_finding_algorithm(
         
         if (MaxCandidateEdgesLengths < Tol){
             //printf("Tolerence achieved in interation %ld \n", iter);
+            converged_flag = 1;
             break;
         }
         
@@ -636,7 +634,9 @@ INT fnft__global_root_pole_finding_algorithm(
 
     }
 //     printf("NrOfCandidateEdges=%ld\n",NrOfCandidateEdges );
-    
+
+    if (!converged_flag)
+        WARN("Desired tolerance not achieved. Try increasing the number of iterations.");
     
 // Evaluation of contour edges from all candidates edges
     NrOfCandidateElements = 0;

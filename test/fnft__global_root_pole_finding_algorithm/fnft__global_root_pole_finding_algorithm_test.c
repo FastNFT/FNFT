@@ -51,10 +51,11 @@ INT test(const REAL Tol)
     UINT K = sizeof(roots)/sizeof(COMPLEX);
 
     const UINT NodesMax = 500000;
+    const UINT niter = 100;
     const REAL bounding_box[4] = {-2, 2, -2, 2};
 
     INT ret_code = global_root_pole_finding_algorithm(&K, roots, &grpf_fun, 
-            NULL, NodesMax, bounding_box, Tol);
+            NULL, NodesMax, bounding_box, Tol, niter);
     CHECK_RETCODE(ret_code, leave_fun);
 
     REAL err = misc_hausdorff_dist(K_true, roots_true, K, roots);
