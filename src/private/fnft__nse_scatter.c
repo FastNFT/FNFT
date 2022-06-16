@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018, 2020.
+* Sander Wahls (TU Delft) 2017-2018, 2020, 2022.
 * Shrinivas Chimmalgi (TU Delft) 2017-2020.
 * Marius Brehler (TU Dortmund) 2018.
 * Peter J Prins (TU Delft) 2020.
@@ -91,9 +91,8 @@ INT nse_scatter_bound_states(UINT const D,
                              COMPLEX * const bound_states,
                              COMPLEX * const a_vals,
                              COMPLEX * const aprime_vals,
-                             COMPLEX * const b,
-                             nse_discretization_t const discretization,
-                             UINT const skip_b_flag)
+                             COMPLEX * const b_vals,
+                             nse_discretization_t const discretization)
 {
     INT ret_code = SUCCESS;
 
@@ -104,7 +103,7 @@ INT nse_scatter_bound_states(UINT const D,
 
     // Call akns_scatter_bound_states
     UINT vanilla_flag = 0; // Ignored value for NSE
-    ret_code = akns_scatter_bound_states(D, q, r, T, K,bound_states, a_vals, aprime_vals, b, akns_discretization, akns_pde_NSE, vanilla_flag, skip_b_flag);
+    ret_code = akns_scatter_bound_states(D, q, r, T, K,bound_states, a_vals, aprime_vals, b, akns_discretization, akns_pde_NSE, vanilla_flag);
     CHECK_RETCODE(ret_code, leave_fun);
 
 leave_fun:

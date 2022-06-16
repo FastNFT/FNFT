@@ -876,7 +876,7 @@ static inline INT kdvv_compute_normconsts_or_residues(
     ret_code=fnft__kdv_slow_discretization(&(opts_slow.discretization));
     CHECK_RETCODE(ret_code, leave_fun);
 
-    ret_code = kdv_scatter_bound_states(D, q, r, T, K, bound_states, a_vals, aprime_vals, normconsts_or_residues, opts_slow.discretization, 0);
+    ret_code = kdv_scatter_bound_states(D, q, r, T, K, bound_states, a_vals, aprime_vals, normconsts_or_residues, opts_slow.discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Update to or add residues if requested
@@ -920,7 +920,7 @@ static inline INT kdvv_refine_bound_states_newton(
 {
     INT ret_code = SUCCESS;
     UINT i, iter;
-    COMPLEX a_val, b_val, aprime_val, error;
+    COMPLEX a_val, aprime_val, error;
     REAL eprecision = EPSILON * 100;
 
     // Check inputs
@@ -946,7 +946,7 @@ static inline INT kdvv_refine_bound_states_newton(
         do {
             // Compute a(lam) and a'(lam) at the current root
             ret_code = kdv_scatter_bound_states(D, q, r, T, 1,
-                    bound_states + i, &a_val, &aprime_val, &b_val, discretization, 1);
+                    bound_states + i, &a_val, &aprime_val, NULL, discretization);
             if (ret_code != SUCCESS){
                 ret_code = E_SUBROUTINE(ret_code);
                 CHECK_RETCODE(ret_code, leave_fun);

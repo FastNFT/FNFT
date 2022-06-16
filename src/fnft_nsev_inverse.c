@@ -713,7 +713,7 @@ static INT add_discrete_spectrum(
     norm_consts = malloc(K * sizeof(COMPLEX));
     bnd_states_conj = malloc(K * sizeof(COMPLEX));
     bnd_states_diff = malloc(K * sizeof(COMPLEX));
-    acoeff_cs = malloc(3*K * sizeof(COMPLEX));
+    acoeff_cs = malloc(2*K * sizeof(COMPLEX));
     if (t == NULL || bnd_states == NULL ||
             bnd_states_conj == NULL || bnd_states_diff == NULL ||
             norm_consts == NULL || acoeff_cs == NULL) {
@@ -779,7 +779,7 @@ static INT add_discrete_spectrum(
             for (i=0; i<D; i++)
                 r[i] = -CONJ(q[i]);
             ret_code = nse_scatter_bound_states(D, q, r, T, K,
-                    bnd_states, acoeff_cs, acoeff_cs+K, acoeff_cs+2*K, nse_discretization_BO, 1);
+                    bnd_states, acoeff_cs, acoeff_cs+K, NULL, nse_discretization_BO);
             CHECK_RETCODE(ret_code, leave_fun);
         }
         else {

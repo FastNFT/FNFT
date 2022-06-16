@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018, 2020.
+* Sander Wahls (TU Delft) 2017-2018, 2020, 2022.
 * Shrinivas Chimmalgi (TU Delft) 2017.
 * Peter J Prins (TU Delft) 2020.
 */
@@ -61,14 +61,15 @@
  * @param[out] a_vals Array of length K, contains the values of \f$a(\lambda)\f$.
  * @param[out] aprime_vals Array of length K, contains the values of
  * \f$ a'(\lambda) = \frac{\partial a(\lambda)}{\partial \lambda}\f$.
- * @param[out] b Array of length K, contains the values of \f$b(\lambda)\f$.
+ * Can be set to NULL if the values are not required.
+ * @param[out] b_vals Array of length K, contains the values of \f$b(\lambda)\f$.
  * The \f$b(\lambda)\f$ are calculated using the criterion from
  * Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2932256">&quot;
  * Soliton Phase Shift Calculation for the Korteweg–De Vries Equation,&quot;</a>.
+ * Can be set to NULL if the values are not required.
  * @param[in] discretization The type of discretization to be used. Should be of type
  * \link fnft_nse_discretization_t \endlink. Not all nse_discretization_t discretizations are supported.
  * Check \link fnft_nse_discretization_t \endlink for list of supported types.
- * @param[in] skip_b_flag If set to 1 the routine will not compute \f$b(\lambda)\f$.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  * @ingroup nse
@@ -81,9 +82,8 @@ FNFT_INT fnft__nse_scatter_bound_states(FNFT_UINT const D,
                                         FNFT_COMPLEX * const bound_states,
                                         FNFT_COMPLEX * const a_vals,
                                         FNFT_COMPLEX * const aprime_vals,
-                                        FNFT_COMPLEX * const b,
-                                        fnft_nse_discretization_t const discretization,
-                                        FNFT_UINT const skip_b_flag);
+                                        FNFT_COMPLEX * const b_vals,
+                                        fnft_nse_discretization_t const discretization);
 
 /**
  * @brief Computes the scattering matrix and its derivative.

@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018, 2020.
+* Sander Wahls (TU Delft) 2017-2018, 2020, 2022.
 * Shrinivas Chimmalgi (TU Delft) 2017-2018.
 */
 #define FNFT_ENABLE_SHORT_NAMES
@@ -113,7 +113,7 @@ INT nse_scatter_bound_states_test_bo()
         r[i] = -CONJ(q[i]);
     }
     ret_code = nse_scatter_bound_states(D, q, r, T, 3,
-        bound_states, a_vals, aprime_vals, b_vals, nse_discretization_BO, 0);
+        bound_states, a_vals, aprime_vals, b_vals, nse_discretization_BO);
     if (ret_code != SUCCESS)
         return E_SUBROUTINE(ret_code);
     error_bounds[0] = 100*EPSILON;

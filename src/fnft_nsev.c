@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2017-2018, 2020.
+ * Sander Wahls (TU Delft) 2017-2018, 2020, 2022.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Marius Brehler (TU Dortmund) 2018.
  * Peter J Prins (TU Delft) 2020.
@@ -946,7 +946,7 @@ static inline INT nsev_compute_normconsts_or_residues(
         discretization = opts->discretization;
 
     ret_code = nse_scatter_bound_states(D, q, r, T, K,
-            bound_states, a_vals, aprime_vals, normconsts_or_residues, discretization, 0);
+            bound_states, a_vals, aprime_vals, normconsts_or_residues, discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Update to or add residues if requested
@@ -990,7 +990,7 @@ static inline INT nsev_refine_bound_states_newton(
 {
     INT ret_code = SUCCESS;
     UINT i, iter;
-    COMPLEX a_val, b_val, aprime_val, error;
+    COMPLEX a_val, aprime_val, error;
     REAL eprecision = EPSILON * 100;
 
     // Check inputs
@@ -1016,7 +1016,7 @@ static inline INT nsev_refine_bound_states_newton(
         do {
             // Compute a(lam) and a'(lam) at the current root
             ret_code = nse_scatter_bound_states(D, q, r, T, 1,
-                    bound_states + i, &a_val, &aprime_val, &b_val, discretization, 1);
+                    bound_states + i, &a_val, &aprime_val, NULL, discretization);
             if (ret_code != SUCCESS){
                 ret_code = E_SUBROUTINE(ret_code);
                 CHECK_RETCODE(ret_code, leave_fun);

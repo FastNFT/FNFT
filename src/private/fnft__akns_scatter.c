@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2017-2018.
+ * Sander Wahls (TU Delft) 2017-2018, 2022.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Peter J Prins (TU Delft) 2020.
  */
@@ -398,13 +398,13 @@ INT akns_scatter_bound_states(UINT const D,
                               COMPLEX const * const bound_states,
                               COMPLEX * const a_vals,
                               COMPLEX * const aprime_vals,
-                              COMPLEX * const b,
+                              COMPLEX * const b_vals,
                               akns_discretization_t const discretization,
                               akns_pde_t const PDE,
-                              UINT const vanilla_flag,
-                              UINT const skip_b_flag)
+                              UINT const vanilla_flag)
 {
     INT ret_code = SUCCESS;
+    const UINT skip_b_flag = b_vals == NULL;
 
     // Check inputs
     if (D == 0)
@@ -421,11 +421,7 @@ INT akns_scatter_bound_states(UINT const D,
         return E_INVALID_ARGUMENT(bound_states);
     if (a_vals == NULL)
         return E_INVALID_ARGUMENT(a);
-    if (aprime_vals == NULL)
-        return E_INVALID_ARGUMENT(a_prime);
-    if (b == NULL)
-        return E_INVALID_ARGUMENT(b);
-    UINT const upsampling_factor = akns_discretization_upsampling_factor(discretization);
+   UINT const upsampling_factor = akns_discretization_upsampling_factor(discretization);
     if (upsampling_factor == 0)
         return E_INVALID_ARGUMENT(discretization);
     REAL const boundary_coeff = akns_discretization_boundary_coeff(discretization);
@@ -733,11 +729,13 @@ INT akns_scatter_bound_states(UINT const D,
         a_vals[neig] = f_S[0] * CEXP(I*l_curr*(T[1]+eps_t*boundary_coeff));
         if (PDE==akns_pde_KdV)
             a_vals[neig] = CREAL(a_vals[neig]);
-        aprime_vals[neig] = f_S[2]*CEXP(I*l_curr*(T[1]+eps_t*boundary_coeff))+(I*(T[1]+eps_t*boundary_coeff))* a_vals[neig];
-        if (PDE==akns_pde_KdV)
-            aprime_vals[neig] = I * CIMAG(aprime_vals[neig]);
+        if (aprime_vals != NULL) {
+            aprime_vals[neig] = f_S[2]*CEXP(I*l_curr*(T[1]+eps_t*boundary_coeff))+(I*(T[1]+eps_t*boundary_coeff))* a_vals[neig];
+            if (PDE==akns_pde_KdV)
+                aprime_vals[neig] = I * CIMAG(aprime_vals[neig]);
+        }
 
-        if (skip_b_flag == 0){
+        if (b_vals != NULL){
             // Calculation of b assuming a=0
             // Uses the metric from DOI: 10.1109/ACCESS.2019.2932256 for choosing the
             // computation point
@@ -762,7 +760,7 @@ INT akns_scatter_bound_states(UINT const D,
                 if (PDE!=akns_pde_KdV || CREAL(b_temp[0]*b_temp[1])>0) {
                     tmp = FABS( 0.5* LOG( (REAL)CABS( b_temp[1]/b_temp[0] ) ) );
                     if (tmp < error_metric){
-                        b[neig] = b_temp[0];
+                        b_vals[neig] = b_temp[0];
                         error_metric = tmp;
                     }
                 }
