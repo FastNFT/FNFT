@@ -29,7 +29,7 @@ static fnft_nsev_opts_t default_opts = {
     .bound_state_filtering = nsev_bsfilt_FULL,
     .bound_state_localization = nsev_bsloc_SUBSAMPLE_AND_REFINE,
     .niter = 100,
-    .tol = 0.0, // auto
+    .tol = -1.0, // auto
     .Dsub = 0, // auto
     .discspec_type = nsev_dstype_NORMING_CONSTANTS,
     .contspec_type = nsev_cstype_REFLECTION_COEFFICIENT,
@@ -1046,7 +1046,7 @@ static inline INT nsev_refine_bound_states_newton(
     UINT i, iter;
     COMPLEX a_val, aprime_val, error = INFINITY;
     INT warn_flag = 0;
-    if (!(tol > 0))
+    if (!(tol >= 0))
         tol = 100*EPSILON;
 
     // Check inputs

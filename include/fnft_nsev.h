@@ -208,8 +208,8 @@ typedef enum {
  *
  *  @var fnft_nsev_opts_t::bound_state_localization_tol
  *  Some bound state localization methods such as Newton and GRPF have tolerance
- *  parameters. If this value is zero or negative, these parameters will be
- *  chosen automatically. Set to a positive value to chose the tolerance manually.
+ *  parameters. If this value is negative, these parameters will be  chosen
+ *  automatically. Set to a non-negative value to chose the tolerance manually.
  */
 typedef struct {
     fnft_nsev_bsfilt_t bound_state_filtering;
