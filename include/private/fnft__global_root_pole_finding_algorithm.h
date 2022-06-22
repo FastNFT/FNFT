@@ -49,13 +49,22 @@
  *   Transactions on Antennas and Propagation, vol. 66, no. 12, pp. 7198-7205,
  *   Dec. 2018
  *
- * @param[in,out] K_ptr Pointer to a number. Upon entry it should contain the
+ * @param[in,out] K_roots_ptr Pointer to a number. Upon entry it should contain the
  *      size of the array roots. Upon exit, it contains the number of found
  *      roots.
+ * @param[out] roots_multiplicty Pre-allocated array in which the routine will store the
+ *      multiplicty of the found roots.
  * @param [out] roots Pre-allocated array in which the routine will store the
- *      found roots.
+ *      found roots. 
+ * @param[in,out] K_poles_ptr Pointer to a number. Upon entry it should contain the
+ *      size of the array poles. Upon exit, it contains the number of found
+ *      poles.
+ * @param[out] poles_multiplicty Pre-allocated array in which the routine will store the
+ *      multiplicty of the found poles.
+ * @param [out] poles Pre-allocated array in which the routine will store the
+ *      found poles. 
  * @param [in] fun Pointer to a routine that evaluates the function whose roots
- *      are to be found. The first argument is number of desired function
+ *      and poles are to be found. The first argument is number of desired function
  *      evaluations, the second argument contains the desired arguments for
  *      the evaluations, and the third argument is where the function values
  *      will be stored. The last argument may contain parameters that will
@@ -71,10 +80,19 @@
  *      stop the algorithm.
  * @param [in] niter Maximum number of iterations.
  */
-FNFT_INT fnft__global_root_pole_finding_algorithm(UINT * const K_ptr,
-        COMPLEX * roots, INT fun (UINT, COMPLEX *, COMPLEX *, void *),
-        void * params_ptr, UINT NodesMax, const REAL bounding_box_local[4],
-        const REAL Tol, const UINT niter);
+FNFT_INT fnft__global_root_pole_finding_algorithm(
+        UINT * const K_roots_ptr,
+        UINT * roots_multiplicity,
+        COMPLEX * roots,
+        UINT * const K_poles_ptr,
+        UINT * poles_multiplicity,
+        COMPLEX * poles,
+        INT fun (UINT, COMPLEX *, COMPLEX *, void *),
+        void * params_ptr,
+        UINT NodesMax,
+        const REAL bounding_box_local[4],
+        const REAL Tol,
+        const UINT niter);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define global_root_pole_finding_algorithm(...) fnft__global_root_pole_finding_algorithm(__VA_ARGS__)

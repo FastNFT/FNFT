@@ -429,20 +429,25 @@ INT misc_quadrant(UINT N, COMPLEX * const vals,
     for (i = 0; i < N; i++){
         real_val = CREAL(vals[i]);
         imag_val = CIMAG(vals[i]);
-        arguments[i] = CARG(vals[i]);
-        quadrants[i] = 0;
-        if (real_val>0 && imag_val>=0)
-            quadrants[i] = 1;
-        else if (real_val<=0 && imag_val>0)
-            quadrants[i] = 2;
-        else if (real_val<0 && imag_val<=0){
-            quadrants[i] = 3;
-            arguments[i] += 2*PI;
-        }
-        else if (real_val>=0 && imag_val<0){
-            quadrants[i] = 4;
-            arguments[i] += 2*PI;
-        }        
+        if (real_val == NAN || imag_val == NAN){
+           arguments[i] = 0;
+           quadrants[i] = 0;}
+        else {
+           arguments[i] = CARG(vals[i]);
+           quadrants[i] = 0;
+           if (real_val>0 && imag_val>=0)
+              quadrants[i] = 1;
+           else if (real_val<=0 && imag_val>0)
+              quadrants[i] = 2;
+           else if (real_val<0 && imag_val<=0){
+              quadrants[i] = 3;
+              arguments[i] += 2*PI;
+           }
+           else if (real_val>=0 && imag_val<0){
+              quadrants[i] = 4;
+              arguments[i] += 2*PI;
+           } 
+        }       
     }
     return SUCCESS;
 }

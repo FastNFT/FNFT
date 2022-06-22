@@ -99,8 +99,12 @@ static UINT FindNextNode(REAL *NodesCoordX, REAL *NodesCoordY, UINT PrevNode,
 }
 
 INT fnft__global_root_pole_finding_algorithm(
-        UINT * const K_ptr,
+        UINT * const K_roots_ptr,
+        UINT * roots_multiplicity,
         COMPLEX * roots,
+        UINT * const K_poles_ptr,
+        UINT * poles_multiplicity,
+        COMPLEX * poles,
         INT fun (UINT, COMPLEX *, COMPLEX *, void *),
         void * params_ptr,
         UINT NodesMax,
@@ -150,6 +154,11 @@ INT fnft__global_root_pole_finding_algorithm(
     UINT *FlagOfSecondZoneCandidateElements = NULL;
     UINT *TempExtraEdges1 = NULL, *TempExtraEdges2 = NULL;
     UINT DT_built = 0;
+
+    COMPLEX * ComplexPoints = NULL;
+    UINT * NewQuadrants = NULL;
+    REAL * NewAngles = NULL;
+    INT * contour_orientation = NULL;
     
     
     UINT * NodeOfTriangles1 = NULL;
@@ -298,7 +307,7 @@ INT fnft__global_root_pole_finding_algorithm(
             ret_code = E_SUBROUTINE(ret_code);
             CHECK_RETCODE(ret_code, leave_fun);
         }
-        misc_quadrant(NrOfNewNodes, FuntionValues+NodesShift,
+        ret_code = misc_quadrant(NrOfNewNodes, FuntionValues+NodesShift,
                 Quadrants+NodesShift, Angles+NodesShift);
         if (ret_code != SUCCESS){
             ret_code = E_SUBROUTINE(ret_code);
@@ -815,13 +824,14 @@ INT fnft__global_root_pole_finding_algorithm(
     NodesCount++;
     Regions[NodesCount-1] = RefNode;
     NrOfNodesOfRegions[NrOfRegions-1]++;
-//    printf("NrOfRegions=%ld\n",NrOfRegions);
-//     for (i=0; i<NrOfRegions; i++)
-//         printf("Nodes in region %ld = %ld\n",i, NrOfNodesOfRegions[i]);
+    //printf("NrOfRegions=%ld\n",NrOfRegions);
+    //for (i=0; i<NrOfRegions; i++)
+      // printf("Nodes in region %ld = %ld\n",i, NrOfNodesOfRegions[i]);
     
     z_m = calloc(NrOfRegions, sizeof(INT)); //NOTE calloc
     z = calloc(NrOfRegions, sizeof(COMPLEX)); //NOTE calloc
-    if (z_m == NULL || z == NULL){
+    contour_orientation = malloc(NrOfRegions*sizeof(INT));
+    if (z_m == NULL || z == NULL || contour_orientation == NULL){
         ret_code = E_NOMEM;
         goto leave_fun;
     }
@@ -831,36 +841,118 @@ INT fnft__global_root_pole_finding_algorithm(
     for (i=0; i<NrOfRegions; i++){
         for (j=1; j<NrOfNodesOfRegions[i]; j++){
             dQ = Quadrants[Regions[NodesCount+j]] - Quadrants[Regions[NodesCount+j-1]];
+            //printf("dQ=%d\n",z_m[i]);
             if (dQ == 3)
                 z_m[i] = z_m[i] - 1;
             else if (dQ == -3)
                 z_m[i] = z_m[i] + 1;
-            else if (ABS(dQ) == 2)
-                z_m[i] = z_m[i] + NAN;
+            else if (ABS(dQ) == 2){
+                z_m[i] = 0;
+                break;
+            }
             else
                 z_m[i] = z_m[i] + dQ;
             
         }
-        z_m[i] = ABS(z_m[i])/4; //taking abs because orientation of contour not known
-        
-        z[i] = 0;
-        for (j=0; j<NrOfNodesOfRegions[i]; j++)
-            z[i] = z[i]+(NodesCoordX[Regions[NodesCount+j]] + I*NodesCoordY[Regions[NodesCount+j]]);
 
-        z[i] = z[i]/NrOfNodesOfRegions[i];
-        
+        z_m[i] = z_m[i]/4;
+        //printf("z_m[i]=%d\n",z_m[i]);
+        z[i] = 0;
+        contour_orientation[i] = 0;
+        // If z_m[i]==0 then discard region
+        if (z_m[i] != 0){
+           for (j=0; j<NrOfNodesOfRegions[i]; j++){
+               z[i] = z[i]+(NodesCoordX[Regions[NodesCount+j]] + I*NodesCoordY[Regions[NodesCount+j]]);
+               //printf("x=%1.5e,y=%1.5e\n",NodesCoordX[Regions[NodesCount+j]],NodesCoordY[Regions[NodesCount+j]]);
+           }
+
+           z[i] = z[i]/NrOfNodesOfRegions[i]; // Approximation of zero or pole
+
+           // We now figure out the orientation of the contour
+           // We do this by setting computed z[i] as the origin and computing the qudrants of the points
+           // in the current region. By looking at the order of the quadrants we get the contour orientation.
+
+
+           ComplexPoints = malloc(NrOfNodesOfRegions[i] * sizeof(COMPLEX)); //TODO : Reuse previously allocated memory
+           NewQuadrants = malloc(NrOfNodesOfRegions[i] * sizeof(UINT));
+           NewAngles = malloc(NrOfNodesOfRegions[i] * sizeof(REAL));
+           if (NewQuadrants == NULL || ComplexPoints == NULL || NewAngles == NULL){
+              ret_code = E_NOMEM;
+              goto leave_fun;
+           }
+
+           for (j=0; j<NrOfNodesOfRegions[i]; j++)
+               ComplexPoints[j] = (NodesCoordX[Regions[NodesCount+j]] + I*NodesCoordY[Regions[NodesCount+j]]) - z[i];
+
+           ret_code = misc_quadrant(NrOfNodesOfRegions[i], ComplexPoints,
+                NewQuadrants, NewAngles);
+           if (ret_code != SUCCESS){
+              ret_code = E_SUBROUTINE(ret_code);
+              CHECK_RETCODE(ret_code, leave_fun);
+           }
+
+           // Clockwise contour with negative z_m implies a zero
+           // Anti-clockwise contour with negative z_m implies a pole
+           // Clockwise contour with positive z_m implies a pole
+           // Anti-clockwise contour with positive z_m implies a zero
+
+           for (j=0; j<NrOfNodesOfRegions[i]-1; j++){
+               if (NewQuadrants[j+1] != NewQuadrants[j]){
+                  if ((NewQuadrants[j+1] == 1 && NewQuadrants[j] == 4) || NewQuadrants[j+1]>NewQuadrants[j]){
+                     contour_orientation[i] = -1; // Anti-clockwise contour
+                     break; 
+                  }
+                  else{
+                     contour_orientation[i] = 1;  // Clockwise contour
+                     break; 
+                  }
+               }
+           } 
+           //printf("contour_orientation=%d\n",contour_orientation[i]);    
+
+        }
         NodesCount = NodesCount+NrOfNodesOfRegions[i];
     }
     
-    j = 0;
-    for (i=0; i<NrOfRegions; i++){
-        if (z_m[i]>0 && z_m[i] != NAN){ // TODO int's cannot be NaN
-         roots[j] = z[i];
-         j++;
+    if (roots != NULL){
+    	j = 0;
+    	for (i=0; i<NrOfRegions; i++){
+    	    if (*K_roots_ptr>j){
+      	       if (z_m[i]*contour_orientation[i] < 0){ // Zeros
+         	   roots[j] = z[i];
+                   if (roots_multiplicity != NULL)
+      	              roots_multiplicity[j] = CABS(z_m[i]);
+                   j++;
+               }
+            }  
+            else{
+                WARN("Ran out of memory for roots.");
+                break;
+            } 
         }
+        *K_roots_ptr = j;
     }
-    *K_ptr = j;
-//     misc_print_buf(*K_ptr,roots,"bs");
+
+
+    if (poles != NULL){    
+        j = 0;
+        for (i=0; i<NrOfRegions; i++){
+            if (*K_poles_ptr>j){
+               if (z_m[i]*contour_orientation[i] > 0){ // Poles
+                  poles[j] = z[i];
+                  if (poles_multiplicity != NULL)
+                     poles_multiplicity[j] = CABS(z_m[i]);
+                  j++;
+               }
+            }
+            else{
+                WARN("Ran out of memory for poles.");
+                break;
+            }
+        }
+        *K_poles_ptr = j;
+    }
+
    
     leave_fun:
         free(NewNodesCoordX);
@@ -898,6 +990,9 @@ INT fnft__global_root_pole_finding_algorithm(
         free(ArrayOfCandidateElements);
         free(CandidateNodes);
         free(Temp);
+        free(ComplexPoints);
+        free(NewQuadrants);
+        free(NewAngles);
         if (DT_built == 1){
             free(DT_ptr->NodeOfTriangles1);
             free(DT_ptr->NodeOfTriangles2);
