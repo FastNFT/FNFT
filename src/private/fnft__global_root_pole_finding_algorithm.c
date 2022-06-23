@@ -872,9 +872,11 @@ INT fnft__global_root_pole_finding_algorithm(
            // We do this by setting computed z[i] as the origin and computing the qudrants of the points
            // in the current region. By looking at the order of the quadrants we get the contour orientation.
 
-
+           free(ComplexPoints);
            ComplexPoints = malloc(NrOfNodesOfRegions[i] * sizeof(COMPLEX)); //TODO : Reuse previously allocated memory
+           free(NewQuadrants); 
            NewQuadrants = malloc(NrOfNodesOfRegions[i] * sizeof(UINT));
+           free(NewAngles);
            NewAngles = malloc(NrOfNodesOfRegions[i] * sizeof(REAL));
            if (NewQuadrants == NULL || ComplexPoints == NULL || NewAngles == NULL){
               ret_code = E_NOMEM;
@@ -993,6 +995,7 @@ INT fnft__global_root_pole_finding_algorithm(
         free(ComplexPoints);
         free(NewQuadrants);
         free(NewAngles);
+        free(contour_orientation);
         if (DT_built == 1){
             free(DT_ptr->NodeOfTriangles1);
             free(DT_ptr->NodeOfTriangles2);
