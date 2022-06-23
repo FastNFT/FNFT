@@ -395,6 +395,8 @@ INT fnft_nsev(
         // required for obtaining a second approximation of the spectrum
         // which will be used for Richardson extrapolation.
         Dsub = (UINT) CEIL(D/2);
+        free(qsub_preprocessed); // to avoid mem leak two lines below, they
+        free(rsub_preprocessed); // already might have been allocated above
         ret_code = nse_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &qsub_preprocessed, &rsub_preprocessed,
                 first_last_index, opts->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
