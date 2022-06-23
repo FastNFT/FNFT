@@ -1186,7 +1186,11 @@ static inline INT nsev_localize_bound_states_grpf(
     fnft_nsev_grpf_fun_params_t params = {D, q, r, T, discretization};
     return global_root_pole_finding_algorithm(
         K_ptr,
+        NULL,
         bound_states,
+        NULL,
+        NULL,
+        NULL,
         &fnft_nsev_grpf_fun,
         (void *)&params,
         NodesMax,
