@@ -898,8 +898,12 @@ INT fnft__global_root_pole_finding_algorithm(
            // Clockwise contour with positive z_m implies a pole
            // Anti-clockwise contour with positive z_m implies a zero
 
+
+           INT Qj, Qjp1;
            for (j=0; j<NrOfNodesOfRegions[i]-1; j++){
-               if (NewQuadrants[j+1] != NewQuadrants[j]){
+               Qjp1 = NewQuadrants[j+1];
+               Qj = NewQuadrants[j];
+               if (ABS(Qjp1 - Qj) == 1){
                   if ((NewQuadrants[j+1] == 1 && NewQuadrants[j] == 4) || NewQuadrants[j+1]>NewQuadrants[j]){
                      contour_orientation[i] = -1; // Anti-clockwise contour
                      break; 
@@ -910,7 +914,7 @@ INT fnft__global_root_pole_finding_algorithm(
                   }
                }
            } 
-           //printf("contour_orientation=%d\n",contour_orientation[i]);    
+
 
         }
         NodesCount = NodesCount+NrOfNodesOfRegions[i];
@@ -921,7 +925,7 @@ INT fnft__global_root_pole_finding_algorithm(
     	for (i=0; i<NrOfRegions; i++){
     	    if (*K_roots_ptr>j){
       	        if (z_m[i]*contour_orientation[i] < 0){ // Zeros
-         	    roots[j] = z[i];
+         	    roots[j] = z[i];  
                     if (roots_multiplicity != NULL)
       	                roots_multiplicity[j] = ABS(z_m[i]);
                     j++;

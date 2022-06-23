@@ -34,7 +34,7 @@ kappa = +1;     % focusing nonlinear Schroedinger equation
 
 ep_t = (T(2) - T(1)) / (D - 1); % time domain step size
 t = T(1):ep_t:T(2);
-q = 3.2j*sech(t);               % signal samples
+q = 3.5j*sech(t);               % signal samples
 
 %%% Compute the nonlinear Fourier transform %%%
 
