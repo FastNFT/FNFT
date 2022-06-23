@@ -918,12 +918,12 @@ INT fnft__global_root_pole_finding_algorithm(
     	j = 0;
     	for (i=0; i<NrOfRegions; i++){
     	    if (*K_roots_ptr>j){
-      	       if (z_m[i]*contour_orientation[i] < 0){ // Zeros
-         	   roots[j] = z[i];
-                   if (roots_multiplicity != NULL)
-      	              roots_multiplicity[j] = CABS(z_m[i]);
-                   j++;
-               }
+      	        if (z_m[i]*contour_orientation[i] < 0){ // Zeros
+         	    roots[j] = z[i];
+                    if (roots_multiplicity != NULL)
+      	                roots_multiplicity[j] = ABS(z_m[i]);
+                    j++;
+                }
             }  
             else{
                 WARN("Ran out of memory for roots.");
@@ -941,7 +941,7 @@ INT fnft__global_root_pole_finding_algorithm(
                if (z_m[i]*contour_orientation[i] > 0){ // Poles
                   poles[j] = z[i];
                   if (poles_multiplicity != NULL)
-                     poles_multiplicity[j] = CABS(z_m[i]);
+                     poles_multiplicity[j] = ABS(z_m[i]);
                   j++;
                }
             }

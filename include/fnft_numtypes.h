@@ -83,7 +83,7 @@ typedef size_t FNFT_UINT;
  * Absolute value of a \link FNFT_INT \endlink.
  * @ingroup numtype
  */
-#define FNFT_ABS(X) abs(X)
+#define FNFT_ABS(X) labs(X)
 
 /**
  * Absolute value of a \link FNFT_REAL \endlink.
