@@ -128,9 +128,11 @@ static inline INT nsev_refine_bound_states_newton(const UINT D,
 
 static inline INT nsev_localize_bound_states_grpf(
         const UINT D,
+        const UINT D_given,
         COMPLEX const * const q,
         COMPLEX const * const r,
         REAL const * const T,
+        const REAL eps_t,
         UINT * const K_ptr,
         COMPLEX * bound_states,
         nse_discretization_t discretization,
@@ -766,8 +768,9 @@ static inline INT nsev_compute_boundstates(
                 discretization = opts->discretization;
 
             const UINT NodesMax = 5*D_given;
-            ret_code = nsev_localize_bound_states_grpf(D, q, r, T, &K, buffer,
-                    discretization, NodesMax, opts->tol, opts->niter, bounding_box);
+            ret_code = nsev_localize_bound_states_grpf(D, D_given, q, r, T,
+                    eps_t, &K, buffer, discretization, NodesMax, opts->tol,
+                    opts->niter, bounding_box);
             CHECK_RETCODE(ret_code, leave_fun);
             break;
 
@@ -1115,34 +1118,58 @@ static inline INT nsev_refine_bound_states_newton(
 
 typedef struct {
     UINT D;
+    UINT D_given;
     COMPLEX const * const q;
     COMPLEX const * const r;
     REAL const * const T;
+    REAL eps_t;
     nse_discretization_t discretization;
 } fnft_nsev_grpf_fun_params_t;
 
 INT fnft_nsev_grpf_fun(UINT K, COMPLEX * zs, COMPLEX * dest, void * opts)
 {
-    return nse_scatter_bound_states(
-            ((fnft_nsev_grpf_fun_params_t *) opts)->D,
-            ((fnft_nsev_grpf_fun_params_t *) opts)->q,
-            ((fnft_nsev_grpf_fun_params_t *) opts)->r,
-            ((fnft_nsev_grpf_fun_params_t *) opts)->T,
-            K,
-            zs, 
-            dest,
-            NULL,
-            NULL,
+    INT ret_code = SUCCESS;
+
+    REAL phase_factor_a;
+    ret_code = nse_discretization_phase_factor_a(
+            ((fnft_nsev_grpf_fun_params_t *)opts)->eps_t,
+            ((fnft_nsev_grpf_fun_params_t *)opts)->D_given,
+            ((fnft_nsev_grpf_fun_params_t *)opts)->T,
+            &phase_factor_a,
             ((fnft_nsev_grpf_fun_params_t *)opts)->discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    for (UINT k=0; k<K; k++) {
+        COMPLEX result[4];
+        ret_code = nse_scatter_matrix(
+                ((fnft_nsev_grpf_fun_params_t *)opts)->D,
+                ((fnft_nsev_grpf_fun_params_t *)opts)->q,
+                ((fnft_nsev_grpf_fun_params_t *)opts)->r,
+                ((fnft_nsev_grpf_fun_params_t *)opts)->eps_t,
+                +1, /*kappa*/
+                1, /*K*/
+                &zs[k],
+                result,
+                ((fnft_nsev_grpf_fun_params_t *)opts)->discretization,
+                0 /*derivative_flag*/);
+        CHECK_RETCODE(ret_code, leave_fun);
+
+        dest[k] = result[0] * CEXP(I*zs[k]*phase_factor_a);
+    }
+
+leave_fun:
+    return ret_code;
 }
 
 // Auxiliary function: Finds bound states using the global root pole finding
 // algorithm
 static inline INT nsev_localize_bound_states_grpf(
         const UINT D,
+        const UINT D_given,
         COMPLEX const * const q,
         COMPLEX const * const r,
         REAL const * const T,
+        const REAL eps_t,
         UINT * const K_ptr,
         COMPLEX * bound_states,
         nse_discretization_t discretization,
@@ -1183,7 +1210,7 @@ static inline INT nsev_localize_bound_states_grpf(
     if (!(tol > 0))
         tol = 0.9*PI/(T[1]-T[0]);
 
-    fnft_nsev_grpf_fun_params_t params = {D, q, r, T, discretization};
+    fnft_nsev_grpf_fun_params_t params = {D, D_given, q, r, T, eps_t, discretization};
     return global_root_pole_finding_algorithm(
         K_ptr,
         NULL,
