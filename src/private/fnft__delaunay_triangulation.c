@@ -21,19 +21,45 @@
 
 #include "fnft__delaunay_triangulation.h"
 
-void CircumCircle(REAL *X, REAL *Y, REAL *xcoord, REAL *ycoord, REAL *R){
-    
+INT CircumCircle(REAL *X, REAL *Y, REAL *xcoord, REAL *ycoord, REAL *R){
+  
     REAL s1 = SQRT((X[1]-X[0])*(X[1]-X[0]) + (Y[1]-Y[0])*(Y[1]-Y[0]));
     REAL s2 = SQRT((X[2]-X[1])*(X[2]-X[1]) + (Y[2]-Y[1])*(Y[2]-Y[1]));
     REAL s3 = SQRT((X[0]-X[2])*(X[0]-X[2]) + (Y[0]-Y[2])*(Y[0]-Y[2]));
     
-    R[0] = (s1*s2*s3)/SQRT((s1+s2+s3)*(-s1+s2+s3)*(s1-s2+s3)*(s1+s2-s3));
-    REAL ang1 = ACOS((s1*s1+s3*s3-s2*s2)/(2*s1*s3));
-    REAL ang2 = ACOS((s1*s1+s2*s2-s3*s3)/(2*s1*s2));
-    REAL ang3 = ACOS((s2*s2+s3*s3-s1*s1)/(2*s2*s3));
-    
-    xcoord[0] = (X[0]*SIN(2*ang1) + X[1]*SIN(2*ang2) + X[2]*SIN(2*ang3))/ (SIN(2*ang1)+SIN(2*ang2)+SIN(2*ang3));
-    ycoord[0] = (Y[0]*SIN(2*ang1) + Y[1]*SIN(2*ang2) + Y[2]*SIN(2*ang3))/ (SIN(2*ang1)+SIN(2*ang2)+SIN(2*ang3));
+    REAL denom = (s1+s2+s3)*(-s1+s2+s3)*(s1-s2+s3)*(s1+s2-s3);
+    if (denom < 0.0) 
+        return E_ASSERTION_FAILED;
+    if (denom == 0.0)
+        return E_DIV_BY_ZERO;
+    R[0] = (s1*s2*s3)/SQRT(denom);
+
+    denom = 2*s1*s3;
+    if (denom == 0.0)
+        return E_DIV_BY_ZERO;
+    REAL ang1 = ACOS((s1*s1+s3*s3-s2*s2)/denom);
+
+    denom = 2*s1*s2;
+    if (denom == 0.0)
+        return E_DIV_BY_ZERO;
+    REAL ang2 = ACOS((s1*s1+s2*s2-s3*s3)/denom);
+
+    denom = 2*s2*s3;
+    if (denom == 0.0)
+        return E_DIV_BY_ZERO;
+    REAL ang3 = ACOS((s2*s2+s3*s3-s1*s1)/denom);
+   
+    denom = SIN(2*ang1)+SIN(2*ang2)+SIN(2*ang3);
+    if (denom == 0.0)
+        return E_DIV_BY_ZERO;
+    xcoord[0] = (X[0]*SIN(2*ang1) + X[1]*SIN(2*ang2) + X[2]*SIN(2*ang3))/denom;
+
+    denom = SIN(2*ang1)+SIN(2*ang2)+SIN(2*ang3);
+    if (denom == 0.0)
+        return E_DIV_BY_ZERO;
+    ycoord[0] = (Y[0]*SIN(2*ang1) + Y[1]*SIN(2*ang2) + Y[2]*SIN(2*ang3))/denom;
+
+    return SUCCESS;
 }
 
 INT delaunay_triangulation(fnft__delaunay_triangulation_data_t * DT_ptr,
@@ -101,7 +127,7 @@ INT delaunay_triangulation(fnft__delaunay_triangulation_data_t * DT_ptr,
             goto leave_fun;
         }
 
-//    Super rectangle
+        //    Super rectangle
         DT_ptr->NodesCoordX[0] = xb-xmax/2;
         DT_ptr->NodesCoordY[0] = yb-ymax/2;
         DT_ptr->NodesCoordX[1] = xe+xmax/2;
@@ -120,7 +146,7 @@ INT delaunay_triangulation(fnft__delaunay_triangulation_data_t * DT_ptr,
         DT_ptr->NodeOfTriangles2[1] = 2;//Second node of second triangle
         DT_ptr->NodeOfTriangles3[1] = 3;
         DT_ptr->NrOfNodesToRemove = (4);
-//     % NOTE: Edges1(k)<Edges2(k)
+        //     % NOTE: Edges1(k)<Edges2(k)
         DT_ptr->Edges1[0] = 0; //Nodes
         DT_ptr->Edges2[0] = 1; //Nodes
         DT_ptr->Edges1[1] = 1; //Nodes
@@ -157,7 +183,8 @@ INT delaunay_triangulation(fnft__delaunay_triangulation_data_t * DT_ptr,
             Ytmp[1] = DT_ptr->NodesCoordY[DT_ptr->NodeOfTriangles2[i]];
             Ytmp[2] = DT_ptr->NodesCoordY[DT_ptr->NodeOfTriangles3[i]];
             
-            CircumCircle(&Xtmp[0], &Ytmp[0], &CCX, &CCY, &CCR);
+            ret_code = CircumCircle(&Xtmp[0], &Ytmp[0], &CCX, &CCY, &CCR);
+            CHECK_RETCODE(ret_code, leave_fun); 
             DT_ptr->XCoordOfCCOfTriangles[i] = CCX;
             DT_ptr->YCoordOfCCOfTriangles[i] = CCY;
             DT_ptr->RadiusOfCCOfTriangles[i] = CCR;
@@ -184,9 +211,7 @@ INT delaunay_triangulation(fnft__delaunay_triangulation_data_t * DT_ptr,
         ret_code = E_ASSERTION_FAILED;
         goto leave_fun;
     }
-    
-    
-    
+
     REAL * NodesCoordX = DT_ptr->NodesCoordX;
     REAL * NodesCoordY = DT_ptr->NodesCoordY;
     UINT * NodeOfTriangles1 = DT_ptr->NodeOfTriangles1;
@@ -208,7 +233,6 @@ INT delaunay_triangulation(fnft__delaunay_triangulation_data_t * DT_ptr,
     UINT NrOfNodes = DT_ptr->NrOfNodes;
     UINT NrOfTriangles = DT_ptr->NrOfTriangles;
     UINT NrOfNodesToRemove = DT_ptr->NrOfNodesToRemove;
-
     
     IdxOfBadTriangles = malloc(2*NodesMax * sizeof(UINT));
     PolygonEdges1 = malloc(2*NodesMax * sizeof(UINT));
@@ -342,7 +366,12 @@ INT delaunay_triangulation(fnft__delaunay_triangulation_data_t * DT_ptr,
             // Checking if new node lies on any edge
             // For everyother edge add new triangle
             for (i=0; i<NrOfPolygonEdges; i++){
-                m = (NodesCoordY[PolygonEdges2[i]] - NodesCoordY[PolygonEdges1[i]])/(NodesCoordX[PolygonEdges2[i]] - NodesCoordX[PolygonEdges1[i]]);
+                const REAL denom = NodesCoordX[PolygonEdges2[i]] - NodesCoordX[PolygonEdges1[i]]; 
+                if (denom == 0.0) {
+                    ret_code = E_DIV_BY_ZERO;
+                    goto leave_fun;
+                }
+                m = (NodesCoordY[PolygonEdges2[i]] - NodesCoordY[PolygonEdges1[i]])/denom;
                 if (FABS(NodesCoordY[NrOfNodes-1] - (m*(NodesCoordX[NrOfNodes-1] - NodesCoordX[PolygonEdges1[i]]) + NodesCoordY[PolygonEdges1[i]]))>2*EPSILON){
                     StatusOfTriangles[NrOfTriangles] = 1;
                     NodeOfTriangles1[NrOfTriangles] = PolygonEdges1[i];
@@ -357,7 +386,8 @@ INT delaunay_triangulation(fnft__delaunay_triangulation_data_t * DT_ptr,
                     Ytmp[1] = NodesCoordY[NodeOfTriangles2[NrOfTriangles]];
                     Ytmp[2] = NodesCoordY[NodeOfTriangles3[NrOfTriangles]];
                     
-                    CircumCircle(&Xtmp[0], &Ytmp[0], &CCX, &CCY, &CCR);
+                    ret_code = CircumCircle(&Xtmp[0], &Ytmp[0], &CCX, &CCY, &CCR);
+                    CHECK_RETCODE(ret_code, leave_fun);
                     XCoordOfCCOfTriangles[NrOfTriangles] = CCX;
                     YCoordOfCCOfTriangles[NrOfTriangles] = CCY;
                     RadiusOfCCOfTriangles[NrOfTriangles] = CCR;
@@ -467,8 +497,7 @@ INT delaunay_triangulation(fnft__delaunay_triangulation_data_t * DT_ptr,
             }
             
         }
-    }
-    
+    }  
 
     // Cleaning up to save memory
     j = 0;
