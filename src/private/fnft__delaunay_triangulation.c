@@ -85,7 +85,7 @@ INT delaunay_triangulation(fnft__delaunay_triangulation_data_t * DT_ptr,
     UINT i, j, add_edge_flag, NewEdge1,NewEdge2;
     UINT *IdxOfBadTriangles = NULL, *PolygonEdges1 = NULL,
             *PolygonEdges2 = NULL, *RepeatedEdge = NULL;
-    REAL Xtmp[3], Ytmp[3], CCX, CCY, CCR, m;
+    REAL Xtmp[3], Ytmp[3], CCX, CCY, CCR;
     
     if (DT_ptr->NodesMax == 0){
         
@@ -366,13 +366,11 @@ INT delaunay_triangulation(fnft__delaunay_triangulation_data_t * DT_ptr,
             // Checking if new node lies on any edge
             // For everyother edge add new triangle
             for (i=0; i<NrOfPolygonEdges; i++){
-                const REAL denom = NodesCoordX[PolygonEdges2[i]] - NodesCoordX[PolygonEdges1[i]]; 
-                if (denom == 0.0) {
-                    ret_code = E_DIV_BY_ZERO;
-                    goto leave_fun;
-                }
-                m = (NodesCoordY[PolygonEdges2[i]] - NodesCoordY[PolygonEdges1[i]])/denom;
-                if (FABS(NodesCoordY[NrOfNodes-1] - (m*(NodesCoordX[NrOfNodes-1] - NodesCoordX[PolygonEdges1[i]]) + NodesCoordY[PolygonEdges1[i]]))>2*EPSILON){
+                if (FABS(
+                    SQRT(POW(NodesCoordX[PolygonEdges2[i]] - NodesCoordX[NrOfNodes-1],2)+POW(NodesCoordY[PolygonEdges2[i]] - NodesCoordY[NrOfNodes-1],2))+
+                    SQRT(POW(NodesCoordX[PolygonEdges1[i]] - NodesCoordX[NrOfNodes-1],2)+POW(NodesCoordY[PolygonEdges1[i]] - NodesCoordY[NrOfNodes-1],2))-
+                    SQRT(POW(NodesCoordX[PolygonEdges2[i]] - NodesCoordX[PolygonEdges1[i]],2)+POW(NodesCoordY[PolygonEdges2[i]] - NodesCoordY[PolygonEdges1[i]],2))              
+                    )>100*EPSILON){
                     StatusOfTriangles[NrOfTriangles] = 1;
                     NodeOfTriangles1[NrOfTriangles] = PolygonEdges1[i];
                     NodeOfTriangles2[NrOfTriangles] = NrOfNodes-1; //new point is a vertex
