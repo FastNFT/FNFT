@@ -25,13 +25,18 @@
 %                   initial guesses. It requires O(niter KD) FLOPs.
 %   'bsloc_gridsearch_refine' The algorithm evaluates a(xi) on the grid xi =
 %                   1i*[eps(1-eps(1)),h*(1:(M-2)),(M-1)h-eps((M-1)h)], where
-%                   h:= \sqrt{c \max_t q(t)} / (M-1), where M=1000 and c=1 for
+%                   h:= \sqrt{c \max_t q(t)} / (M-1), where M=10000 and c=1 for
 %                   all second order discretizations,
 %                   fnft_kdv_discretization_4SPLIT4A/B, and
 %                   fnft_kdv_discretization_CF4_2; c is approximately 2 for
-%                   other discretizations. The sign changes of a(xi) on this
-%                   grid are used as initial guesses for the bound states, which
-%                   are then refined as in 'bsloc_newton'.
+%                   other discretizations. The density of the grid can be
+%                   changed using the grid_spacing parameter. The sign changes
+%                   of a(xi) on this grid are used as initial guesses for the
+%                   bound states, which are then refined as in 'bsloc_newton'.
+%   'grid_spacing'  If set, the number of grid points M for the gridsearch_refine
+%                   method (see above) is instead chosen such that the distance
+%                   between consecutive grid points is not larger than the value 
+%                   provided by the user after this one (a positive number).
 %   'bsloc_niter'   Number of iterations to be carried by Newton's method.
 %                   Followed by a positive integer.
 %   'RE'            Use Richardson extrpolation to improve accuracy. The
@@ -117,6 +122,6 @@
 % along with this program. If not, see <http://www.gnu.org/licenses/>.
 %
 % Contributors:
-% Sander Wahls (TU Delft) 2017-2018.
+% Sander Wahls (TU Delft) 2017-2018, 2023.
 % Shrinivas Chimmalgi (TU Delft) 2019-2020.
 % Peter J. Prins (TU Delft) 2021.

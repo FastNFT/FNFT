@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018, 2023.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
 * Peter J Prins (TU Delft) 2020-2021.
 */
@@ -141,7 +141,7 @@ typedef enum {
  *  Controls which discretization is applied to the continuous-time Zakharov-
  *  Shabat scattering problem. See \link fnft_kdv_discretization_t \endlink.\n\n
  *
- *  @var fnft_kdvv_opts_t::richardson_extrapolation_flag
+ * @var fnft_kdvv_opts_t::richardson_extrapolation_flag
  *  Controls whether Richardson extrapolation is applied to try and improve
  *  the accuracy of the computed spectrum. First approximation is computed
  *  as usual using all the supplied samples. A second approximation is computed
@@ -154,6 +154,14 @@ typedef enum {
  *  worse accuracy compared to the first approximation.
  *  By default, Richardson extrapolation is disabled (i.e., the
  *  flag is zero). To enable, set the flag to one.
+ *
+ * @var fnft_kdvv_opts_t::grid_spacing
+ *   Grid spacing parameter for the fnft_kdvv_bsloc_GRIDSEARCH_AND_REFINE method,
+ *   where the number of grid points is chosen such that the distance between two
+ *   consequtive grid points is not larger than grid_spacing, which should be
+ *   positive. If it is -1 (the default), the interval in which the bound states
+ *   must be is simply covered using 10000 grid points. Other non-positive values
+ *   result in an error. It is recommended to set this parameter manually.
  */
 typedef struct {
     fnft_kdvv_bsloc_t bound_state_localization;
@@ -163,6 +171,7 @@ typedef struct {
     FNFT_INT normalization_flag;
     fnft_kdv_discretization_t discretization;
     FNFT_UINT richardson_extrapolation_flag;
+    FNFT_REAL grid_spacing;
 } fnft_kdvv_opts_t;
 
 /**

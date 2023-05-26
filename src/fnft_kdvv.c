@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2017-2018.
+ * Sander Wahls (TU Delft) 2017-2018, 2023.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Marius Brehler (TU Dortmund) 2018.
  * Peter J Prins (TU Delft) 2020-2021.
@@ -31,7 +31,8 @@ static fnft_kdvv_opts_t default_opts = {
     .contspec_type = kdvv_cstype_REFLECTION_COEFFICIENT,
     .normalization_flag = 1,
     .discretization = kdv_discretization_2SPLIT4B,
-    .richardson_extrapolation_flag = 0
+    .richardson_extrapolation_flag = 0,
+    .grid_spacing = -1
 };
 
 /**
@@ -573,8 +574,25 @@ static inline INT kdvv_compute_boundstates(
         case kdvv_bsloc_GRIDSEARCH_AND_REFINE:
         {
             // Set the search grid
-            UINT const M = 1000;
-            COMPLEX const eps_xi = I*(bounding_box[3]-bounding_box[2])/(M - 1);
+            const REAL dist = bounding_box[3] - bounding_box[2];
+            if (dist <= 0) {
+                ret_code = E_ASSERTION_FAILED;
+                goto leave_fun;
+            }
+            UINT M = 0;
+            if (opts->grid_spacing == -1) {
+                M = 10000;
+            } else if (opts->grid_spacing > 0) {
+                M = CEIL(dist/opts->grid_spacing);
+                if (M<2) {
+                    *K_ptr = 0;
+                    goto leave_fun;
+                }   
+            } else {
+                ret_code = E_INVALID_ARGUMENT(grid_spacing);
+                goto leave_fun;
+            }
+            COMPLEX const eps_xi = I*dist/(M - 1);
             xi = malloc(M * sizeof(COMPLEX));
             if (xi == NULL) {
                 ret_code = E_NOMEM;
@@ -602,7 +620,7 @@ static inline INT kdvv_compute_boundstates(
             // Search for zerocrossings of a(xi)
             K=0;
             for (i = 0; i < M; i++) {
-                if ( scatter_coeffs[4*i]==0) {
+                if (scatter_coeffs[4*i]==0) {
                     if (K>=*K_ptr) { // Lucky us: Exact bound state found
                         ret_code = E_OTHER("More than *K_ptr initial guesses for bound states found. Increase *K_ptr and try again.")
                         CHECK_RETCODE(ret_code, leave_fun);
