@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018, 2023.
 * Peter J Prins (TU Delft) 2020.
 */
 #define FNFT_ENABLE_SHORT_NAMES
@@ -42,6 +42,11 @@ INT main()
 
     ret_code = kdvv_testcases_test_fnft(tc, D, eb_rect, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
+
+    opts.normalization_flag = !opts.normalization_flag;
+    ret_code = kdvv_testcases_test_fnft(tc, D, eb_rect, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+    opts.normalization_flag = !opts.normalization_flag;
 
     // Test smooth potential
     tc = kdvv_testcases_SECH_SQUARED;
@@ -72,6 +77,12 @@ INT main()
         ret_code = kdvv_testcases_test_fnft(tc, D, eb, &opts);
         CHECK_RETCODE(ret_code, leave_fun);
     }
+
+    // test without normalization
+    opts.normalization_flag = !opts.normalization_flag;
+    ret_code = kdvv_testcases_test_fnft(tc, D, eb, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+    opts.normalization_flag = !opts.normalization_flag;
 
     // Test Richardson extrapolation
     opts.richardson_extrapolation_flag = 1;

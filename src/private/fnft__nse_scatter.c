@@ -72,7 +72,7 @@ INT nse_scatter_matrix(UINT const D,
 
     // Call akns_scatter_bound_states
     UINT vanilla_flag = 0; // Ignored value for NSE
-    ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result,
+    ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result, NULL,
             akns_discretization, akns_pde_NSE, vanilla_flag, derivative_flag);
     CHECK_RETCODE(ret_code, leave_fun);
 

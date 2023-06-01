@@ -106,6 +106,7 @@ INT akns_scatter_matrix(UINT const D,
                         UINT const K,
                         COMPLEX const * const lambda,
                         COMPLEX * const result,
+                        INT * const W,
                         akns_discretization_t const discretization,
                         akns_pde_t const PDE,
                         UINT const vanilla_flag,
@@ -216,6 +217,7 @@ INT akns_scatter_matrix(UINT const D,
             COMPLEX l_curr = lambda[i];
             COMPLEX H[2][4][4] = { { {1,0,0,0}, {0,1,0,0}, {0,0,1,0}, {0,0,0,1} } }; // Initiate only first sixteen values
             UINT current = 0;
+            INT Wi = 0;
 
             switch (discretization) {
                 case akns_discretization_BO:
@@ -228,7 +230,11 @@ INT akns_scatter_matrix(UINT const D,
                         akns_scatter_U_BO(q[n],r[n],l_curr,h,1,*U);
                         misc_matrix_mult(4,4,4,&U[0][0],&H[current][0][0],&H[!current][0][0]);
                         current = !current;
+                        if (W != NULL)
+                            Wi += misc_normalize_vector(16, &H[current][0][0]);
                     }
+                    if (W != NULL)
+                        W[i] = Wi;
                     break;
 
                 case akns_discretization_ES4:
@@ -239,7 +245,11 @@ INT akns_scatter_matrix(UINT const D,
                         akns_scatter_U_ES4(a1,a2,a3,1,*U,&tmp2[n]);
                         misc_matrix_mult(4,4,4,&U[0][0],&H[current][0][0],&H[!current][0][0]);
                         current = !current;
+                        if (W != NULL)
+                            Wi += misc_normalize_vector(16, &H[current][0][0]);
                     }
+                    if (W != NULL)
+                        W[i] = Wi;
                     break;
                 case akns_discretization_TES4:
                     for (UINT n = 0; n < D; n+=3){
@@ -261,7 +271,12 @@ INT akns_scatter_matrix(UINT const D,
                         misc_matrix_mult(2,2,4,&M[0][0],&H[current][0][0],&H[!current][0][0]);
                         misc_matrix_mult(2,2,4,&M[0][0],&H[current][2][0],&H[!current][2][0]);
                         current = !current;
+
+                        if (W != NULL)
+                            Wi += misc_normalize_vector(16, &H[current][0][0]);
                     }
+                    if (W != NULL)
+                        W[i] = Wi;
                     break;
 
                 default: // Unknown discretization
@@ -303,6 +318,7 @@ INT akns_scatter_matrix(UINT const D,
             COMPLEX l_curr = lambda[i];
             COMPLEX H[2][2][2] = { { {1,0}, {0,1} } }; // Initiate only first four values
             UINT current = 0;
+            INT Wi = 0;
 
             switch (discretization) {
                 case akns_discretization_BO:
@@ -316,7 +332,11 @@ INT akns_scatter_matrix(UINT const D,
                         akns_scatter_U_BO(q[n],r[n],l_curr,h,0,*U);
                         misc_matrix_mult(2,2,2,&U[0][0],&H[current][0][0],&H[!current][0][0]);
                         current = !current;
+                        if (W != NULL)
+                            Wi += misc_normalize_vector(4, &H[current][0][0]);
                     }
+                    if (W != NULL)
+                        W[i] = Wi;
                     break;
 
                 case akns_discretization_ES4:
@@ -329,7 +349,11 @@ INT akns_scatter_matrix(UINT const D,
                         akns_scatter_U_ES4(a1,a2,a3,0,*U,NULL);
                         misc_matrix_mult(2,2,2,&U[0][0],&H[current][0][0],&H[!current][0][0]);
                         current = !current;
+                        if (W != NULL)
+                            Wi += misc_normalize_vector(4, &H[current][0][0]);                      
                     }
+                    if (W != NULL)
+                        W[i] = Wi;
                     break;
 
                 case akns_discretization_TES4:
@@ -350,7 +374,12 @@ INT akns_scatter_matrix(UINT const D,
                         akns_scatter_U_ES4(tmp2[n],tmp2[n+1],0.0,0,*U,NULL);
                         misc_matrix_mult(2,2,2,&U[0][0],&H[current][0][0],&H[!current][0][0]);
                         current = !current;
+
+                        if (W != NULL)
+                            Wi += misc_normalize_vector(4, &H[current][0][0]);
                     }
+                    if (W != NULL)
+                        W[i] = Wi;
                     break;
 
                 default: // Unknown discretization

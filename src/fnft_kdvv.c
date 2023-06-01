@@ -508,6 +508,7 @@ static inline INT kdvv_compute_boundstates(
     UINT upsampling_factor, i;
     COMPLEX * xi = NULL;
     COMPLEX * scatter_coeffs = NULL;
+    INT * log_scaling_factors = NULL;
     INT const kappa = 1;
 
     upsampling_factor = kdv_discretization_upsampling_factor(opts->discretization);
@@ -606,15 +607,20 @@ static inline INT kdvv_compute_boundstates(
 
             // Allocate memory for call to kdv_scatter_matrix
             scatter_coeffs = malloc(4 * M * sizeof(COMPLEX));
-            if (scatter_coeffs == NULL) {
-                ret_code = E_NOMEM;
-                goto leave_fun;
+            CHECK_NOMEM(scatter_coeffs, leave_fun);
+
+            if (opts->normalization_flag) {
+                log_scaling_factors = malloc(M * sizeof(COMPLEX));
+                CHECK_NOMEM(log_scaling_factors, leave_fun);
             }
 
             // Compute a(xi) on the grid on the imaginary axis
             UINT const derivative_flag = 0;
             ret_code = kdv_scatter_matrix(D, q, r, eps_t, kappa,
-                                          M, xi, scatter_coeffs ,opts_slow.discretization,derivative_flag);
+                                          M, xi, scatter_coeffs, 
+                                          log_scaling_factors,
+                                          opts_slow.discretization,
+                                          derivative_flag);
             CHECK_RETCODE(ret_code, leave_fun);
 
             // Search for zerocrossings of a(xi)
@@ -633,7 +639,12 @@ static inline INT kdvv_compute_boundstates(
                         CHECK_RETCODE(ret_code, leave_fun);
                     }
                     // Zero crossing estimate with regula falsi:
-                    bound_states[K] = (xi[i-1] * CREAL(scatter_coeffs[4*i]) - xi[i] * CREAL(scatter_coeffs[4*(i-1)])) / CREAL( scatter_coeffs[4*i] - scatter_coeffs[4*(i-1)]);
+                    REAL scl1 = 1, scl2 = 1;
+                    if (opts->normalization_flag) {
+                        scl1 = POW(2, log_scaling_factors[i]);
+                        scl2 = POW(2, log_scaling_factors[i-1]);
+                    }
+                    bound_states[K] = (xi[i-1] * scl1*CREAL(scatter_coeffs[4*i]) - xi[i] * scl2*CREAL(scatter_coeffs[4*(i-1)])) / CREAL( scl1*scatter_coeffs[4*i] - scl2*scatter_coeffs[4*(i-1)]);
                     K++;
                 }
             }
@@ -661,6 +672,7 @@ static inline INT kdvv_compute_boundstates(
 leave_fun:
     free(xi);
     free(scatter_coeffs);
+    free(log_scaling_factors);
     return ret_code;
 }
 
@@ -686,6 +698,7 @@ static inline INT kdvv_compute_contspec(
     INT ret_code = SUCCESS;
     UINT i, offset = 0, upsampling_factor, D_given;
     COMPLEX * scatter_coeffs = NULL, * xi = NULL;
+    INT * log_scaling_factors = NULL;
 
     // Determine step size
     // D is interpolated number of samples but eps_t is the step-size
@@ -722,22 +735,28 @@ static inline INT kdvv_compute_contspec(
 
         // Allocate memory for call to kdv_scatter_matrix
         scatter_coeffs = malloc(4 * M * sizeof(COMPLEX));
-        if (scatter_coeffs == NULL) {
-            ret_code = E_NOMEM;
-            goto leave_fun;
+        CHECK_NOMEM(scatter_coeffs, leave_fun);
+
+        if (opts->normalization_flag) {
+            log_scaling_factors = malloc(M * sizeof(COMPLEX));
+            CHECK_NOMEM(log_scaling_factors, leave_fun);
         }
-        
+
         ret_code = kdv_scatter_matrix(D, q, r, eps_t, kappa, M,
-                xi, scatter_coeffs, opts->discretization, 0);
+                xi, scatter_coeffs, log_scaling_factors,
+                opts->discretization, 0);
         CHECK_RETCODE(ret_code, leave_fun);
 
         // This is necessary because kdv_scatter_matrix to ensure
         // boundary conditions can be applied using common code for slow
         // methods and polynomial transfer matrix based methods.
         for (i = 0; i < M; i++){
-            H11_vals[i] = scatter_coeffs[i*4];
+            REAL scl = 1;
+            if (opts->normalization_flag)
+                scl = POW(2, log_scaling_factors[i]);
+            H11_vals[i] = scl*scatter_coeffs[i*4];
 //            H12_vals[i] = scatter_coeffs[i*4+1]; // Not used
-            H21_vals[i] = scatter_coeffs[i*4+2];
+            H21_vals[i] = scl*scatter_coeffs[i*4+2];
 //            H22_vals[i] = scatter_coeffs[i*4+3]; // Not used
         }
 
@@ -822,7 +841,7 @@ static inline INT kdvv_compute_contspec(
 
         case kdvv_cstype_AB:
 
-            scale = POW(2.0, W); // needed since the transfer matrix might
+            scale = POW(2, W); // needed since the transfer matrix might
             // have been scaled by kdv_fscatter. W == 0 for slow methods.
 
             // Calculating the discretization specific phase factors.
@@ -849,6 +868,7 @@ static inline INT kdvv_compute_contspec(
         free(H11_vals);
         free(scatter_coeffs);
         free(xi);
+        free(log_scaling_factors);
         return ret_code;
 }
 
