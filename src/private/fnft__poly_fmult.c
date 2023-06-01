@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2017-2018, 2021.
+ * Sander Wahls (TU Delft) 2017-2018, 2021, 2023.
  * Peter J Prins (TU Delft) 2020.
  * Lianne de Vries (TU Delft student) 2021.
  */
@@ -135,31 +135,7 @@ leave_fun:
 
 static inline INT poly_rescale(const UINT d, COMPLEX * const p)
 {
-    UINT i;
-    REAL a;
-    REAL scl;
-    REAL cur_abs;
-    REAL max_abs = 0.0;
-
-    // Find max of absolute values of coefficients
-    max_abs = 0.0;
-    for (i=0; i<=d; i++) {
-        cur_abs = CABS( p[i] );
-        if (cur_abs > max_abs)
-            max_abs = cur_abs;
-    }
-
-    // Return if polynomial is identical to zero
-    if (max_abs == 0.0)
-        return 0;
-
-    // Otherwise, rescale
-    a = FLOOR( LOG2(max_abs) );
-    scl = POW( 2.0, -a );
-    for (i=0; i<=d; i++)
-        p[i] *= scl;
-
-    return (INT) a;
+    return misc_normalize_vector(d+1, p);
 }
 
 INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
