@@ -394,7 +394,7 @@ static inline FNFT_REAL fnft__misc_legendre_poly(const FNFT_UINT n, const FNFT_R
 
 /**
  * @brief Normalizes a complex vector so that the maximum absolute value is 
- * between 1/2 and 2.
+ * >=1 and <2.
  *
  * @ingroup  misc
  *
@@ -420,7 +420,7 @@ static inline FNFT_INT fnft__misc_normalize_vector(const FNFT_UINT len, FNFT_COM
 
     // Otherwise, rescale
     const FNFT_REAL a = FNFT_FLOOR( FNFT_LOG2(max_abs) );
-    const FNFT_REAL scl = FNFT_POW( 2.0, -a );
+    const FNFT_REAL scl = FNFT_POW( 2, -a );
     for (FNFT_UINT i=0; i<len; i++)
         v[i] *= scl;
 

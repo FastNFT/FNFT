@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2017-2018.
+ * Sander Wahls (TU Delft) 2017-2018, 2023.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Peter J Prins (TU Delft) 2020.
  */
@@ -431,7 +431,8 @@ INT akns_scatter_bound_states(UINT const D,
                               akns_discretization_t const discretization,
                               akns_pde_t const PDE,
                               UINT const vanilla_flag,
-                              UINT const skip_b_flag)
+                              UINT const skip_b_flag,
+                              UINT const normalization_flag)
 {
     INT ret_code = SUCCESS;
 
@@ -470,6 +471,9 @@ INT akns_scatter_bound_states(UINT const D,
     // We must do so before possibly jumping to leave_fun.
     COMPLEX *tmp1 = NULL, *tmp2 = NULL, *tmp3 = NULL, *tmp4 = NULL, *eps_t_scaled = NULL;
 
+    INT * WPHI = NULL; // for storing intermediate scaling factors 
+    INT * WPSI = NULL; // if normalization is enabled
+                       
     // Allocating memory for storing PHI and PSI at all D_given points as
     // there are required to find the right value of b.
     // First, we will store the values of PHI and its xi-derivative as follows:
@@ -480,12 +484,18 @@ INT akns_scatter_bound_states(UINT const D,
     // This keeps all vectors in adjacent memory locations, such that we can
     // use matrix-vector multiplication.
     COMPLEX * const PSIPHI = malloc((4*(D_given+1)+2) * sizeof(COMPLEX));
-    if (PSIPHI == NULL) {
-        ret_code = E_NOMEM;
-        CHECK_RETCODE(ret_code, leave_fun);
-    }
+    CHECK_NOMEM(PSIPHI, ret_code, leave_fun);
     COMPLEX * const PSI = &PSIPHI[0];
     COMPLEX * const PHI = &PSIPHI[2];
+
+    // We need to store many intermediate scaling factors for the
+    // forward-backward computation of b if normalization is on
+    if (normalization_flag && !skip_b_flag) {
+        WPHI = malloc((D_given + 1)*sizeof(COMPLEX));
+        CHECK_NOMEM(WPHI, ret_code, leave_fun);
+        WPSI = malloc((D_given + 1)*sizeof(COMPLEX));
+        CHECK_NOMEM(WPHI, ret_code, leave_fun);
+    }
 
     // Define stepsize constants that are often needed
     REAL const eps_t = (T[1] - T[0])/(D_given - 1);
@@ -499,16 +509,13 @@ INT akns_scatter_bound_states(UINT const D,
 
     UINT N = 0;
     switch (discretization) {
-        //  Fourth-order exponential method which requires
+        // Fourth-order exponential method which requires
         // one matrix exponential. The matrix exponential is
         // implmented by using the expansion of the 2x2 matrix
         // in terms of Pauli matrices.
         case akns_discretization_ES4:
             tmp1 = malloc(2*D*sizeof(COMPLEX));
-            if (tmp1 == NULL) {
-                ret_code = E_NOMEM;
-                CHECK_RETCODE(ret_code, leave_fun);
-            }
+            CHECK_NOMEM(tmp1, ret_code, leave_fun);
             tmp2 = &tmp1[D];
             for (UINT n=0; n<D; n+=3){
                 tmp1[n] = eps_t_3*(q[n+2]+r[n+2])/48.0 + (eps_t*(q[n]+r[n]))*0.5;
@@ -527,10 +534,7 @@ INT akns_scatter_bound_states(UINT const D,
             // in terms of Pauli matrices.
         case akns_discretization_TES4:
             tmp1 = skip_b_flag ? malloc(2*D*sizeof(COMPLEX)) : malloc(4*D*sizeof(COMPLEX));
-            if (tmp1 == NULL) {
-                ret_code = E_NOMEM;
-                CHECK_RETCODE(ret_code, leave_fun);
-            }
+            CHECK_NOMEM(tmp1, ret_code, leave_fun);
             tmp2 = &tmp1[D];
             for (UINT n=0; n<D; n+=3){
                 tmp1[n] = (eps_t_3*(q[n+2]+r[n+2]))/96.0 - (eps_t_2*(q[n+1]+r[n+1]))/24.0;
@@ -541,10 +545,8 @@ INT akns_scatter_bound_states(UINT const D,
             if (!skip_b_flag){
                 tmp3 = &tmp1[2*D];
                 tmp4 = &tmp1[3*D];
-                if (tmp3 == NULL || tmp4 == NULL) {
-                    ret_code = E_NOMEM;
-                    CHECK_RETCODE(ret_code, leave_fun);
-                }
+                CHECK_NOMEM(tmp3, ret_code, leave_fun);
+                CHECK_NOMEM(tmp4, ret_code, leave_fun);
                 for (UINT n = 0; n < D; n+=3){
                     tmp3[n] = (-eps_t_3*(q[n+2]+r[n+2]))/96.0 - (eps_t_2*(q[n+1]+r[n+1]))/24.0;
                     tmp3[n+1] = (-eps_t_3*(q[n+2]-r[n+2])*I)/96.0 + (eps_t_2*(r[n+1]-q[n+1])*I)/24.0;
@@ -573,12 +575,14 @@ INT akns_scatter_bound_states(UINT const D,
             break;
 
         default: // Unknown discretization
-            ret_code = E_INVALID_ARGUMENT(>discretization);
+            ret_code = E_INVALID_ARGUMENT(discretization);
             CHECK_RETCODE(ret_code, leave_fun);
     }
 
     for (UINT neig=0; neig<K; neig++) { // iterate over bound states
         COMPLEX l_curr = bound_states[neig];
+        INT WPHI_acc = 0; // accumulated scaling factor for phi
+        INT WPSI_acc = 0; // ... for psi
 
         // Scattering PHI and PHI_D from T[0]-eps_t/2 to T[1]+eps_t/2
         // PHI is stored at intermediate values as they are needed for the
@@ -599,7 +603,7 @@ INT akns_scatter_bound_states(UINT const D,
         // Calculate the initial condition for PHI in the basis of the discretization
         misc_matrix_mult(4,4,1,&Tmx[0][0],&f_S[0],&PHI[4*0 + 0]);
 
-        // Declaring chonge of state matrix here, to avoid letting them be
+        // Declaring change of state matrix here, to avoid letting them be
         // overwritten with zeros in every loop iteration.
         COMPLEX U[4][4] = {{0}};
         switch (discretization) {
@@ -620,26 +624,38 @@ INT akns_scatter_bound_states(UINT const D,
                         misc_matrix_mult(4,4,1,&U[0][0],&phi_temp[current][0],&phi_temp[!current][0]);
                         current = !current;
                     }
+                    if (normalization_flag) {
+                        WPHI_acc += misc_normalize_vector(4, &phi_temp[current][0]);
+                        if (WPHI != NULL)
+                            WPHI[n_given] = WPHI_acc;
+                    }
                     memcpy(&PHI[4*(n_given+1)], &phi_temp[current][0], 4 * sizeof(COMPLEX));
                 }
             }
-                break;
-                //  Fourth-order exponential method which requires
-                // one matrix exponential. The matrix exponential is
-                // implmented by using the expansion of the 2x2 matrix
-                // in terms of Pauli matrices.
+            break;
+
+            // Fourth-order exponential method which requires
+            // one matrix exponential. The matrix exponential is
+            // implmented by using the expansion of the 2x2 matrix
+            // in terms of Pauli matrices.
             case akns_discretization_ES4:
                 for (UINT n = 0, n_given=0; n<D; n+=3, n_given++) {
                     COMPLEX a1 = tmp1[n]+ eps_t_3*(l_curr*I*(q[n+1]-r[n+1]))/12.0;
                     COMPLEX a2 = tmp1[n+1] - eps_t_3*l_curr*(q[n+1]+r[n+1])/12.0;
                     COMPLEX a3 = - eps_t*I*l_curr +tmp1[n+2];
                     akns_scatter_U_ES4(a1,a2,a3,1,*U,&tmp2[n]);
+                    if (normalization_flag) {
+                        WPHI_acc += misc_normalize_vector(4, &PHI[4*n_given]);
+                        if (WPHI != NULL)
+                            WPHI[n_given] = WPHI_acc;
+                    }                  
                     misc_matrix_mult(4,4,1,*U,&PHI[4*n_given],&PHI[4*(n_given+1)]);
                 }
                 break;
-                // Fourth-order exponential method which requires
-                // three matrix exponentials. The outer two transfer metrices
-                // need to be built differently compared to the CF schemes.
+
+            // Fourth-order exponential method which requires
+            // three matrix exponentials. The outer two transfer metrices
+            // need to be built differently compared to the CF schemes.
             case akns_discretization_TES4:
                 for (UINT n=0, n_given=0; n<D; n+=3, n_given++) {
                     COMPLEX phi_temp[4], M[2][2];
@@ -657,6 +673,12 @@ INT akns_scatter_bound_states(UINT const D,
                     akns_scatter_U_ES4(tmp2[n],tmp2[n+1],0.0,0,*M,NULL);
                     misc_matrix_mult(2,2,1,*M,&phi_temp[0],&PHI[4*(n_given+1)]);
                     misc_matrix_mult(2,2,1,*M,&phi_temp[2],&PHI[4*(n_given+1)+2]);
+
+                    if (normalization_flag) {
+                        WPHI_acc += misc_normalize_vector(4, &PHI[4*(n_given+1)]);
+                        if (WPHI != NULL)
+                            WPHI[n_given] = WPHI_acc;
+                    }
                 }
                 break;
 
@@ -669,7 +691,7 @@ INT akns_scatter_bound_states(UINT const D,
         // Scattering PSI from T[1]+eps_t/2 to T[0]-eps_t/2.
         // PSI is stored at intermediate values as they are needed for the
         // accurate computation of b-coefficient.
-        if (skip_b_flag == 0){
+        if (!skip_b_flag) {
 
             // Set final condition for PSI in S basis:
             f_S[0] = 0.0;
@@ -703,15 +725,19 @@ INT akns_scatter_bound_states(UINT const D,
                             misc_matrix_mult(2,2,1,&U[0][0],&psi_temp[current][0],&psi_temp[!current][0]);
                             current = !current;
                         }
-                        memcpy(&PSI[4*n_given], psi_temp, 2 * sizeof(COMPLEX));
+                        if (normalization_flag) {
+                            WPSI_acc += misc_normalize_vector(2, &psi_temp[current][0]);
+                            WPSI[n_given] = WPSI_acc;
+                        }             
+                        memcpy(&PSI[4*n_given], &psi_temp[current][0], 2 * sizeof(COMPLEX));
                     }
-                }
                     break;
+                }
 
-                    //  Fourth-order exponential method which requires
-                    // one matrix exponential. The matrix exponential is
-                    // implmented by using the expansion of the 2x2 matrix
-                    // in terms of Pauli matrices.
+                // Fourth-order exponential method which requires
+                // one matrix exponential. The matrix exponential is
+                // implmented by using the expansion of the 2x2 matrix
+                // in terms of Pauli matrices.
                 case akns_discretization_ES4:
                     for (UINT n_given=D_given, n=D-3; n_given-->0; n-=3) {
                         COMPLEX U[2][2];
@@ -719,12 +745,17 @@ INT akns_scatter_bound_states(UINT const D,
                         COMPLEX a2 = -tmp1[n+1] + eps_t_3*l_curr*(q[n+1]+r[n+1])/12.0;
                         COMPLEX a3 =  eps_t*I*l_curr -tmp1[n+2];
                         akns_scatter_U_ES4(a1,a2,a3,0,*U,NULL);
+                        if (normalization_flag) {
+                            WPSI_acc += misc_normalize_vector(2, &PSI[4*(n_given+1)]);
+                            WPSI[n_given] = WPSI_acc;
+                        }
                         misc_matrix_mult(2,2,1,*U,&PSI[4*(n_given+1)],&PSI[4*n_given]);
                     }
                     break;
-                    // Fourth-order exponential method which requires
-                    // three matrix exponentials. The transfer metrix cannot
-                    // needs to be built differently compared to the CF schemes.
+
+                // Fourth-order exponential method which requires
+                // three matrix exponentials. The transfer metrix cannot
+                // needs to be built differently compared to the CF schemes.
                 case akns_discretization_TES4:
                     for (UINT n_given=D_given, n=D-3; n_given-->0; n-=3) {
                         COMPLEX U[2][2], psi_temp[2];
@@ -740,6 +771,11 @@ INT akns_scatter_bound_states(UINT const D,
                         // Third substep
                         akns_scatter_U_ES4(tmp4[n],tmp4[n+1],0.0,0,*U,NULL);
                         misc_matrix_mult(2,2,1,*U,psi_temp,&PSI[4*n_given]);
+
+                        if (normalization_flag) {
+                            WPSI_acc += misc_normalize_vector(2, &PSI[4*n_given]);
+                            WPSI[n_given] = WPSI_acc;
+                        }
                     }
                     break;
 
@@ -750,6 +786,7 @@ INT akns_scatter_bound_states(UINT const D,
             }
         }
 
+
         // Fetch the change of basis matrix from the basis of the discretization to S
         derivative_flag = 1;
         ret_code = akns_discretization_change_of_basis_matrix_to_S(&Tmx[0][0],l_curr,derivative_flag,eps_t,discretization,vanilla_flag,PDE);
@@ -759,10 +796,13 @@ INT akns_scatter_bound_states(UINT const D,
         misc_matrix_mult(4,4,1,&Tmx[0][0],&PHI[4*D_given + 0],&f_S[0]);
 
         // Calculate the final state for PHI in E basis
-        a_vals[neig] = f_S[0] * CEXP(I*l_curr*(T[1]+eps_t*boundary_coeff));
+        const REAL l2 = LOG(2);
+        a_vals[neig] = f_S[0];
+        a_vals[neig] *= CEXP(I*l_curr*(T[1]+eps_t*boundary_coeff) + l2*WPHI_acc);
         if (PDE==akns_pde_KdV)
             a_vals[neig] = CREAL(a_vals[neig]);
-        aprime_vals[neig] = f_S[2]*CEXP(I*l_curr*(T[1]+eps_t*boundary_coeff))+(I*(T[1]+eps_t*boundary_coeff))* a_vals[neig];
+
+        aprime_vals[neig] = f_S[2]*CEXP(I*l_curr*(T[1]+eps_t*boundary_coeff) + l2*WPHI_acc) + I*(T[1]+eps_t*boundary_coeff)*a_vals[neig];
         if (PDE==akns_pde_KdV)
             aprime_vals[neig] = I * CIMAG(aprime_vals[neig]);
 
@@ -786,8 +826,12 @@ INT akns_scatter_bound_states(UINT const D,
                     for (UINT i=0; i<4; i++)
                         f_S[i] = CREAL(f_S[i]);
                 }
-                for (UINT i=0; i<2; i++)
+                for (UINT i=0; i<2; i++) {
                     b_temp[i] = phi_S[i]/psi_S[i];
+                    if (normalization_flag)
+                        b_temp[i] *= POW(2, WPHI[n] - WPSI[n]);
+                }
+
                 if (PDE!=akns_pde_KdV || CREAL(b_temp[0]*b_temp[1])>0) {
                     tmp = FABS( 0.5* LOG( (REAL)CABS( b_temp[1]/b_temp[0] ) ) );
                     if (tmp < error_metric){
@@ -797,12 +841,14 @@ INT akns_scatter_bound_states(UINT const D,
                 }
             }
         }
-
     }
+
 leave_fun:
     free(eps_t_scaled);
 leave_fun_no_eps_t_scaled:
     free(tmp1);
     free(PSIPHI);
+    free(WPHI);
+    free(WPSI);
     return ret_code;
 }

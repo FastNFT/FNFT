@@ -140,7 +140,8 @@ FNFT_INT akns_scatter_bound_states(FNFT_UINT const D,
                                    fnft__akns_discretization_t const discretization,
                                    fnft__akns_pde_t const PDE,
                                    FNFT_UINT const vanilla_flag,
-                                   FNFT_UINT const skip_b_flag);
+                                   FNFT_UINT const skip_b_flag,
+                                   FNFT_UINT const normalization_flag);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define akns_scatter_matrix(...) fnft__akns_scatter_matrix(__VA_ARGS__)

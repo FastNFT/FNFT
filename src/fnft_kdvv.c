@@ -607,11 +607,11 @@ static inline INT kdvv_compute_boundstates(
 
             // Allocate memory for call to kdv_scatter_matrix
             scatter_coeffs = malloc(4 * M * sizeof(COMPLEX));
-            CHECK_NOMEM(scatter_coeffs, leave_fun);
+            CHECK_NOMEM(scatter_coeffs, ret_code, leave_fun);
 
             if (opts->normalization_flag) {
                 log_scaling_factors = malloc(M * sizeof(COMPLEX));
-                CHECK_NOMEM(log_scaling_factors, leave_fun);
+                CHECK_NOMEM(log_scaling_factors, ret_code, leave_fun);
             }
 
             // Compute a(xi) on the grid on the imaginary axis
@@ -735,11 +735,11 @@ static inline INT kdvv_compute_contspec(
 
         // Allocate memory for call to kdv_scatter_matrix
         scatter_coeffs = malloc(4 * M * sizeof(COMPLEX));
-        CHECK_NOMEM(scatter_coeffs, leave_fun);
+        CHECK_NOMEM(scatter_coeffs, ret_code, leave_fun);
 
         if (opts->normalization_flag) {
             log_scaling_factors = malloc(M * sizeof(COMPLEX));
-            CHECK_NOMEM(log_scaling_factors, leave_fun);
+            CHECK_NOMEM(log_scaling_factors, ret_code, leave_fun);
         }
 
         ret_code = kdv_scatter_matrix(D, q, r, eps_t, kappa, M,
@@ -914,7 +914,7 @@ static inline INT kdvv_compute_normconsts_or_residues(
     ret_code=fnft__kdv_slow_discretization(&(opts_slow.discretization));
     CHECK_RETCODE(ret_code, leave_fun);
 
-    ret_code = kdv_scatter_bound_states(D, q, r, T, K, bound_states, a_vals, aprime_vals, normconsts_or_residues, opts_slow.discretization, 0);
+    ret_code = kdv_scatter_bound_states(D, q, r, T, K, bound_states, a_vals, aprime_vals, normconsts_or_residues, opts_slow.discretization, 0, 0);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Update to or add residues if requested
@@ -984,7 +984,7 @@ static inline INT kdvv_refine_bound_states_newton(
         do {
             // Compute a(lam) and a'(lam) at the current root
             ret_code = kdv_scatter_bound_states(D, q, r, T, 1,
-                    bound_states + i, &a_val, &aprime_val, &b_val, discretization, 1);
+                    bound_states + i, &a_val, &aprime_val, &b_val, discretization, 1, 0);
             if (ret_code != SUCCESS){
                 ret_code = E_SUBROUTINE(ret_code);
                 CHECK_RETCODE(ret_code, leave_fun);
