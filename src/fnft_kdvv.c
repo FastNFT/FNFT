@@ -18,6 +18,7 @@
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Marius Brehler (TU Dortmund) 2018.
  * Peter J Prins (TU Delft) 2020-2021.
+ * Sander Wahls (KIT) 2023.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -105,7 +106,8 @@ static inline INT kdvv_refine_bound_states_newton(const UINT D,
         COMPLEX * const bound_states,
         kdv_discretization_t const discretization,
         UINT const niter,
-        REAL const * const bounding_box);
+        REAL const * const bounding_box,
+        const INT normalization_flagi);
 
 /**
  * Fast nonlinear Fourier transform for the nonlinear Schroedinger
@@ -519,7 +521,7 @@ static inline INT kdvv_compute_boundstates(
 
     // Copy the values of opts and modify it from fast to slow discretization if needed.
     fnft_kdvv_opts_t opts_slow = *opts;
-    ret_code=fnft__kdv_slow_discretization(&(opts_slow.discretization));
+    ret_code = fnft__kdv_slow_discretization(&(opts_slow.discretization));
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Calculate the bounding box for the bound states. Therefore we need to find the maximum of the real part of q(t), skipping t-derivative samples
@@ -656,7 +658,7 @@ static inline INT kdvv_compute_boundstates(
             // should be in the continuous-time domain.
 
             ret_code = kdvv_refine_bound_states_newton(D, q, r, T, K, bound_states,
-                    opts_slow.discretization, opts_slow.niter, bounding_box);
+                    opts_slow.discretization, opts_slow.niter, bounding_box, opts_slow.normalization_flag);
             CHECK_RETCODE(ret_code, leave_fun);
 
             break;
@@ -914,7 +916,7 @@ static inline INT kdvv_compute_normconsts_or_residues(
     ret_code=fnft__kdv_slow_discretization(&(opts_slow.discretization));
     CHECK_RETCODE(ret_code, leave_fun);
 
-    ret_code = kdv_scatter_bound_states(D, q, r, T, K, bound_states, a_vals, aprime_vals, normconsts_or_residues, opts_slow.discretization, 0, 0);
+    ret_code = kdv_scatter_bound_states(D, q, r, T, K, bound_states, a_vals, aprime_vals, normconsts_or_residues, opts_slow.discretization, 0, opts->normalization_flag);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Update to or add residues if requested
@@ -954,7 +956,8 @@ static inline INT kdvv_refine_bound_states_newton(
         COMPLEX * const bound_states,
         kdv_discretization_t const discretization,
         const UINT niter,
-        REAL const * const bounding_box)
+        REAL const * const bounding_box,
+        const INT normalization_flag)
 {
     INT ret_code = SUCCESS;
     UINT i, iter;
@@ -984,7 +987,7 @@ static inline INT kdvv_refine_bound_states_newton(
         do {
             // Compute a(lam) and a'(lam) at the current root
             ret_code = kdv_scatter_bound_states(D, q, r, T, 1,
-                    bound_states + i, &a_val, &aprime_val, &b_val, discretization, 1, 0);
+                    bound_states + i, &a_val, &aprime_val, &b_val, discretization, 1, normalization_flag);
             if (ret_code != SUCCESS){
                 ret_code = E_SUBROUTINE(ret_code);
                 CHECK_RETCODE(ret_code, leave_fun);
