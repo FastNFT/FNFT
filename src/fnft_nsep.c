@@ -18,6 +18,7 @@
  * Marius Brehler (TU Dortmund) 2018.
  * Shrinivas Chimmalgi (TU Delft) 2019-2020.
  * Peter J Prins (TU Delft) 2020.
+ * Sander Wahls (KIT) 2023.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -55,14 +56,14 @@ static inline INT refine_mainspec(
         const REAL eps_t, const UINT K,
         COMPLEX * const mainspec, const UINT max_evals,
         REAL rhs, const REAL tol, INT kappa, nse_discretization_t discretization,
-        const REAL * bounding_box);
+        const REAL * bounding_box, const INT normalization_flag);
 
 static inline INT refine_auxspec(
         const UINT D, COMPLEX const * const q, COMPLEX * r,
         const REAL eps_t, const UINT K,
         COMPLEX * const auxspec, const UINT max_evals, const REAL tol,
         const INT kappa, nse_discretization_t discretization,
-        const REAL * bounding_box);
+        const REAL * bounding_box, const INT normalization_flag);
 
 static inline INT subsample_and_refine(const UINT D,
         COMPLEX const * const q,
@@ -631,7 +632,7 @@ static inline INT subsample_and_refine(const UINT D,
             // Refine the remaining roots
             ret_code = refine_mainspec(D_effective, q_preprocessed, r_preprocessed, eps_t, K_new, roots,
                                        opts_ptr->max_evals, -rhs, refine_tol, kappa, nse_discretization,
-                                       opts_ptr->bounding_box);
+                                       opts_ptr->bounding_box, opts_ptr->normalization_flag);
             CHECK_RETCODE(ret_code, release_mem);
 
             // Filter the refined roots
@@ -685,7 +686,7 @@ static inline INT subsample_and_refine(const UINT D,
         // Refine the roots
         ret_code = refine_auxspec(D_effective, q_preprocessed, r_preprocessed, eps_t, M, roots,
                                   opts_ptr->max_evals, refine_tol, kappa, nse_discretization,
-                                  opts_ptr->bounding_box);
+                                  opts_ptr->bounding_box, opts_ptr->normalization_flag);
         CHECK_RETCODE(ret_code, release_mem);
 
 
@@ -819,7 +820,8 @@ static inline INT newton(const UINT D,
             ret_code = refine_mainspec(D_effective, q_preprocessed, r_preprocessed, eps_t,
                                        K, initial_guesses, opts_ptr->max_evals,
                                        -rhs, refine_tol, kappa,
-                                       opts_ptr->discretization, opts_ptr->bounding_box);
+                                       opts_ptr->discretization, opts_ptr->bounding_box,
+                                       opts_ptr->normalization_flag);
             CHECK_RETCODE(ret_code, release_mem);
 
             initial_guesses += K;
@@ -842,7 +844,8 @@ static inline INT newton(const UINT D,
         // Refine the roots
         ret_code = refine_auxspec(D_effective, q_preprocessed, r_preprocessed, eps_t, M,
                                   aux_spec, opts_ptr->max_evals, refine_tol,
-                                  kappa, opts_ptr->discretization, opts_ptr->bounding_box);
+                                  kappa, opts_ptr->discretization, opts_ptr->bounding_box,
+                                  opts_ptr->normalization_flag);
         CHECK_RETCODE(ret_code, release_mem);
 
         if (opts_ptr->filtering != fnft_nsep_filt_NONE) {
@@ -854,10 +857,10 @@ static inline INT newton(const UINT D,
         *M_ptr = M;
     }
 
-    release_mem:
-        free(q_preprocessed);
-        free(r_preprocessed);
-        return ret_code;
+release_mem:
+    free(q_preprocessed);
+    free(r_preprocessed);
+    return ret_code;
 }
 
 // Auxiliary function: Checks if a complex number is in a given box
@@ -874,7 +877,7 @@ static inline INT refine_mainspec(
         COMPLEX * const mainspec,
         const UINT max_evals, const REAL rhs, const REAL tol,
         const INT kappa, nse_discretization_t discretization,
-        const REAL * bounding_box)
+        const REAL * bounding_box, const INT normalization_flag)
 {
     UINT k;
     COMPLEX M[8];
@@ -885,6 +888,8 @@ static inline INT refine_mainspec(
     UINT m, best_m;
     const UINT max_m = 2; // roots might be single or double
     INT warn_flag = 0;
+    INT W = 0;
+    INT * const W_ptr = (normalization_flag) ? &W : NULL;
 
     if (max_evals == 0)
         return SUCCESS;
@@ -897,14 +902,15 @@ static inline INT refine_mainspec(
         // consists of the roots of f for rhs=+/- 2.0.)
 
         ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, 1,
-                &mainspec[k], M, NULL, discretization, 1);
+                &mainspec[k], M, W_ptr, discretization, 1);
         if (ret_code != SUCCESS)
             return E_SUBROUTINE(ret_code);
-        next_f = M[0] + M[3] + rhs; // f = a(lam) + atil(lam) + rhs
-        next_f_prime = M[4] + M[7] ; // f' = a'(lam) + atil'(lam)
+
+        REAL scl = (normalization_flag) ? POW(2, W) : 1;
+        next_f = scl*(M[0] + M[3]) + rhs; // f = a(lam) + atil(lam) + rhs
+        next_f_prime = scl*(M[4] + M[7]); // f' = a'(lam) + atil'(lam)
 
         // Iteratively refine the current main spectrum point by applying
-
         // Newton's method for higher order roots: next_x=x-m*f/f', where
         // m is the order of the root. Since we do not know m, several values
         // are tested in a line search-like procedure. Per iteration, max_m
@@ -924,12 +930,12 @@ static inline INT refine_mainspec(
             best_m = 1;
             for (m=1; m<=max_m; m++) {
                 lam = mainspec[k] - m*incr;
-                ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, 1, &lam, M, NULL, discretization, 1);
-
+                ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, 1, &lam, M, W_ptr, discretization, 1);
                 if (ret_code != SUCCESS)
                     return E_SUBROUTINE(ret_code);
+                scl = (normalization_flag) ? POW(2, W) : 1;
                 nevals++;
-                tmp = M[0] + M[3] + rhs;
+                tmp = scl*(M[0] + M[3]) + rhs;
                 cur_abs = CABS(tmp);
                 // keep this m if the new value of |f| would be lower than the
                 // ones for the previously tested values of m
@@ -937,7 +943,7 @@ static inline INT refine_mainspec(
                     min_abs = cur_abs;
                     best_m = m;
                     next_f = tmp;
-                    next_f_prime = M[4] + M[7];
+                    next_f_prime = scl*(M[4] + M[7]);
                     if ( cur_abs < tol )
                         break;
                 }
@@ -979,13 +985,15 @@ static inline INT refine_auxspec(
         const REAL eps_t, const UINT K,
         COMPLEX * const auxspec, const UINT max_evals, const REAL tol,
         const INT kappa, nse_discretization_t discretization,
-        const REAL * bounding_box)
+        const REAL * bounding_box, const INT normalization_flag)
 {
     UINT k, nevals;
     COMPLEX M[8];
     COMPLEX f, f_prime, incr;
     INT warn_flag = 0;
     INT ret_code;
+    INT W = 0;
+    INT * const W_ptr = (normalization_flag) ? &W : NULL;
 
     if (max_evals == 0)
         return SUCCESS;
@@ -995,10 +1003,13 @@ static inline INT refine_auxspec(
         for (nevals=0; nevals<max_evals;) {
 
             ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, 1,
-                    &auxspec[k], M, NULL, discretization, 1);
+                    &auxspec[k], M, W_ptr, discretization, 1);
             if (ret_code != SUCCESS)
                 return E_SUBROUTINE(ret_code);
             nevals++;
+            // We should in principle multiply all entries of M with scl
+            // due to the normalization, but we don't because we only
+            // care about the ratio of f and f_prime, so that scl cancels out
             f = M[1]; // f = b(lam)
             f_prime = M[5]; // f' = b'(lam)
             if (f_prime == 0.0)

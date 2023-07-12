@@ -771,6 +771,7 @@ static inline INT nsev_compute_contspec(
     INT ret_code = SUCCESS;
     UINT i, offset = 0, upsampling_factor, D_given;
     COMPLEX * scatter_coeffs = NULL, * xi = NULL;
+    INT * Ws = NULL;
 
     // Determine step size
     // D is interpolated number of samples but eps_t is the step-size
@@ -805,13 +806,13 @@ static inline INT nsev_compute_contspec(
 
         // Allocate memory for call to nse_scatter_matrix
         scatter_coeffs = malloc(4 * M * sizeof(COMPLEX));
-        if (scatter_coeffs == NULL) {
-            ret_code = E_NOMEM;
-            goto leave_fun;
+        CHECK_NOMEM(scatter_coeffs, ret_code, leave_fun);
+        if (opts->normalization_flag) {
+            Ws = malloc(4 * M * sizeof(INT));
+            CHECK_NOMEM(Ws, ret_code, leave_fun);
         }
-
         ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, M,
-                xi, scatter_coeffs, NULL, opts->discretization, 0);
+                xi, scatter_coeffs, Ws, opts->discretization, 0);
         CHECK_RETCODE(ret_code, leave_fun);
 
         // This is necessary because nse_scatter_matrix to ensure
@@ -820,6 +821,11 @@ static inline INT nsev_compute_contspec(
         for (i = 0; i < M; i++){
             H11_vals[i] = scatter_coeffs[i*4];
             H21_vals[i] = scatter_coeffs[i*4+2];
+            if (opts->normalization_flag) {
+                const REAL scl = POW(2, Ws[i]);
+                H11_vals[i] *= scl;
+                H21_vals[i] *= scl;
+            }
         }
 
     }else{
@@ -895,6 +901,7 @@ static inline INT nsev_compute_contspec(
     leave_fun:
         free(H11_vals);
         free(scatter_coeffs);
+        free(Ws);
         free(xi);
         return ret_code;
 }
