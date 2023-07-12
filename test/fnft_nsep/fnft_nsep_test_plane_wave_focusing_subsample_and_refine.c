@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018, 2021.
+* Sander Wahls (KIT) 2023.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -23,7 +24,7 @@
 
 INT main()
 {
-    INT ret_code, i;
+    INT ret_code;
     const fnft__nsep_testcases_t tc = nsep_testcases_PLANE_WAVE_FOCUSING;
     UINT D = 1024;
     REAL error_bounds[3] = {
