@@ -17,6 +17,7 @@
 * Sander Wahls (TU Delft) 2017-2018, 2023.
 * Shrinivas Chimmalgi (TU Delft) 2017-2018,2020.
 * Peter J Prins (TU Delft) 2020.
+* Sander Wahls (KIT) 2023.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -96,7 +97,7 @@ INT kdv_scatter_matrix_test_bo(INT * W)
             result[i] *= scl;
             #ifdef DEBUG
             // In this case W[i] is always zero, but we can test the mechanics
-            printf("W[%i] = %g\n", i, W[i]);
+            printf("W[%u] = %i\n", (unsigned int)i, W[i]);
             #endif
         }
     }
