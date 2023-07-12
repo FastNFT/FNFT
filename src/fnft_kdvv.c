@@ -107,7 +107,7 @@ static inline INT kdvv_refine_bound_states_newton(const UINT D,
         kdv_discretization_t const discretization,
         UINT const niter,
         REAL const * const bounding_box,
-        const INT normalization_flagi);
+        const INT normalization_flag);
 
 /**
  * Fast nonlinear Fourier transform for the nonlinear Schroedinger

@@ -17,6 +17,7 @@
 * Sander Wahls (TU Delft) 2017-2018, 2020.
 * Shrinivas Chimmalgi (TU Delft) 2017.
 * Peter J Prins (TU Delft) 2020.
+* Sander Wahls (KIT) 2023.
 */
 
 /**
@@ -69,6 +70,8 @@
  * \link fnft_nse_discretization_t \endlink. Not all nse_discretization_t discretizations are supported.
  * Check \link fnft_nse_discretization_t \endlink for list of supported types.
  * @param[in] skip_b_flag If set to 1 the routine will not compute \f$b(\lambda)\f$.
+ * @param[in] normalization_flag If non-zero, the routine will normalize the
+ * scattering matrices during the computations to avoid overflow problems.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  * @ingroup nse
@@ -83,7 +86,8 @@ FNFT_INT fnft__nse_scatter_bound_states(FNFT_UINT const D,
                                         FNFT_COMPLEX * const aprime_vals,
                                         FNFT_COMPLEX * const b,
                                         fnft_nse_discretization_t const discretization,
-                                        FNFT_UINT const skip_b_flag);
+                                        FNFT_UINT const skip_b_flag,
+                                        FNFT_INT const normalization_flag);
 
 /**
  * @brief Computes the scattering matrix and its derivative.
@@ -111,6 +115,10 @@ FNFT_INT fnft__nse_scatter_bound_states(FNFT_UINT const D,
  * If derivative_flag=1 returns [S11 S12 S21 S22 S11' S12' S21' S22'] in
  * result where S11' is the derivative of S11 w.r.t to lambda.
  * Should be preallocated with size 4*K or 8*K accordingly.
+ * @param[in,out] W Pass an array of size K. Upon exit, it contains scaling factors that
+ * arise due to an internal normalization of the scattering matrix (to deal with potential
+ * overflow issues). The result has to be scaled by the power of 2 to obtain the final
+ * values. No normalization is carried out if NULL is passed.
  * @param[in] discretization The type of discretization to be used. Should be of type
  * \link fnft_nse_discretization_t \endlink. Not all nse_discretization_t discretizations are supported.
  * Check \link fnft_nse_discretization_t \endlink for list of supported types.
@@ -121,11 +129,17 @@ FNFT_INT fnft__nse_scatter_bound_states(FNFT_UINT const D,
  *  defined in \link fnft_errwarn.h \endlink.
  * @ingroup nse
  */
-FNFT_INT fnft__nse_scatter_matrix(const FNFT_UINT D, FNFT_COMPLEX const * const q, FNFT_COMPLEX const * const r,
-    const FNFT_REAL eps_t, const FNFT_INT kappa, const FNFT_UINT K,
-    FNFT_COMPLEX const * const lambda,
-    FNFT_COMPLEX * const result, fnft_nse_discretization_t const discretization,
-    const FNFT_UINT derivative_flag);
+FNFT_INT fnft__nse_scatter_matrix(const FNFT_UINT D,
+        FNFT_COMPLEX const * const q,
+        FNFT_COMPLEX const * const r,
+        const FNFT_REAL eps_t,
+        const FNFT_INT kappa, 
+        const FNFT_UINT K,
+        FNFT_COMPLEX const * const lambda,
+        FNFT_COMPLEX * const result, 
+        FNFT_INT * const W,
+        fnft_nse_discretization_t const discretization,
+        const FNFT_UINT derivative_flag);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define nse_scatter_bound_states(...) fnft__nse_scatter_bound_states(__VA_ARGS__)

@@ -18,6 +18,7 @@
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Marius Brehler (TU Dortmund) 2018.
  * Peter J Prins (TU Delft) 2020.
+ * Sander Wahls (KIT) 2023.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -120,7 +121,8 @@ static inline INT nsev_refine_bound_states_newton(const UINT D,
         COMPLEX * const bound_states,
         nse_discretization_t const discretization,
         UINT const niter,
-        REAL const * const bounding_box);
+        REAL const * const bounding_box,
+        const INT normalization_flag);
 
 /**
  * Fast nonlinear Fourier transform for the nonlinear Schroedinger
@@ -688,7 +690,7 @@ static inline INT nsev_compute_boundstates(
                 discretization = opts->discretization;
 
             ret_code = nsev_refine_bound_states_newton(D, q, r, T, K, buffer,
-                    discretization, opts->niter, bounding_box);
+                    discretization, opts->niter, bounding_box, opts->normalization_flag);
             CHECK_RETCODE(ret_code, leave_fun);
             break;
 
@@ -809,7 +811,7 @@ static inline INT nsev_compute_contspec(
         }
 
         ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, M,
-                xi, scatter_coeffs, opts->discretization, 0);
+                xi, scatter_coeffs, NULL, opts->discretization, 0);
         CHECK_RETCODE(ret_code, leave_fun);
 
         // This is necessary because nse_scatter_matrix to ensure
@@ -946,7 +948,8 @@ static inline INT nsev_compute_normconsts_or_residues(
         discretization = opts->discretization;
 
     ret_code = nse_scatter_bound_states(D, q, r, T, K,
-            bound_states, a_vals, aprime_vals, normconsts_or_residues, discretization, 0);
+            bound_states, a_vals, aprime_vals, normconsts_or_residues, 
+            discretization, 0/*skip_b_flag*/,opts->normalization_flag);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Update to or add residues if requested
@@ -986,7 +989,8 @@ static inline INT nsev_refine_bound_states_newton(
         COMPLEX * const bound_states,
         nse_discretization_t const discretization,
         const UINT niter,
-        REAL const * const bounding_box)
+        REAL const * const bounding_box,
+        const INT normalization_flag)
 {
     INT ret_code = SUCCESS;
     UINT i, iter;
@@ -1016,7 +1020,8 @@ static inline INT nsev_refine_bound_states_newton(
         do {
             // Compute a(lam) and a'(lam) at the current root
             ret_code = nse_scatter_bound_states(D, q, r, T, 1,
-                    bound_states + i, &a_val, &aprime_val, &b_val, discretization, 1);
+                    bound_states + i, &a_val, &aprime_val, &b_val,
+                    discretization, 0/*skip_b_flag*/, normalization_flag);
             if (ret_code != SUCCESS){
                 ret_code = E_SUBROUTINE(ret_code);
                 CHECK_RETCODE(ret_code, leave_fun);

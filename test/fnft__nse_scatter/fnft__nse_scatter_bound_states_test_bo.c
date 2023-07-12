@@ -16,6 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018, 2020.
 * Shrinivas Chimmalgi (TU Delft) 2017-2018.
+* Sander Wahls (KIT) 2023.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -26,7 +27,7 @@
 #include <stdio.h> // for printf
 #endif
 
-INT nse_scatter_bound_states_test_bo()
+INT nse_scatter_bound_states_test_bo(const INT normalization_flag)
 {
     UINT i, D = 256;
     INT ret_code;
@@ -113,7 +114,8 @@ INT nse_scatter_bound_states_test_bo()
         r[i] = -CONJ(q[i]);
     }
     ret_code = nse_scatter_bound_states(D, q, r, T, 3,
-        bound_states, a_vals, aprime_vals, b_vals, nse_discretization_BO, 0);
+        bound_states, a_vals, aprime_vals, b_vals, nse_discretization_BO,
+        0, normalization_flag);
     if (ret_code != SUCCESS)
         return E_SUBROUTINE(ret_code);
     error_bounds[0] = 100*EPSILON;
@@ -144,8 +146,13 @@ INT nse_scatter_bound_states_test_bo()
 
 INT main()
 {
-    if (nse_scatter_bound_states_test_bo() != SUCCESS)
-        return EXIT_FAILURE;
+    INT ret_code = nse_scatter_bound_states_test_bo(0);
+    CHECK_RETCODE(ret_code, failure);
+
+    ret_code = nse_scatter_bound_states_test_bo(1);
+    CHECK_RETCODE(ret_code, failure);
 
     return EXIT_SUCCESS;
+failure:
+    return EXIT_FAILURE;
 }

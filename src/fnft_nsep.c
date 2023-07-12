@@ -897,7 +897,7 @@ static inline INT refine_mainspec(
         // consists of the roots of f for rhs=+/- 2.0.)
 
         ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, 1,
-                &mainspec[k], M, discretization, 1);
+                &mainspec[k], M, NULL, discretization, 1);
         if (ret_code != SUCCESS)
             return E_SUBROUTINE(ret_code);
         next_f = M[0] + M[3] + rhs; // f = a(lam) + atil(lam) + rhs
@@ -924,7 +924,7 @@ static inline INT refine_mainspec(
             best_m = 1;
             for (m=1; m<=max_m; m++) {
                 lam = mainspec[k] - m*incr;
-                ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, 1, &lam, M, discretization, 1);
+                ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, 1, &lam, M, NULL, discretization, 1);
 
                 if (ret_code != SUCCESS)
                     return E_SUBROUTINE(ret_code);
@@ -995,7 +995,7 @@ static inline INT refine_auxspec(
         for (nevals=0; nevals<max_evals;) {
 
             ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, 1,
-                    &auxspec[k], M, discretization, 1);
+                    &auxspec[k], M, NULL, discretization, 1);
             if (ret_code != SUCCESS)
                 return E_SUBROUTINE(ret_code);
             nevals++;

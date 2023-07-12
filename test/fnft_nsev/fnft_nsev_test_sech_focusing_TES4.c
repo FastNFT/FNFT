@@ -17,6 +17,7 @@
  * Sander Wahls (TU Delft) 2017-2018.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Peter J Prins (TU Delft) 2020.
+ * Sander Wahls (KIT) 2023.
  */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -74,6 +75,13 @@ INT main()
     opts.richardson_extrapolation_flag = 1;
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
+
+    // Repeat without normalization
+    opts.normalization_flag = !opts.normalization_flag;
+    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+    opts.normalization_flag = !opts.normalization_flag;
+
     // Check for at least 5th-order error decay (error_bounds_RE[4] corresponding
     // to the norming constants stays as it is already close to machine precision,
     D *= 2;

@@ -16,6 +16,7 @@
  * Contributors:
  * Sander Wahls (TU Delft) 2018, 2020-2021.
  * Shrinivas Chimmalgi (TU Delft) 2018.
+ * Sander Wahls (KIT) 2023.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -779,7 +780,8 @@ static INT add_discrete_spectrum(
             for (i=0; i<D; i++)
                 r[i] = -CONJ(q[i]);
             ret_code = nse_scatter_bound_states(D, q, r, T, K,
-                    bnd_states, acoeff_cs, acoeff_cs+K, acoeff_cs+2*K, nse_discretization_BO, 1);
+                    bnd_states, acoeff_cs, acoeff_cs+K, acoeff_cs+2*K, 
+                    nse_discretization_BO, 1, 1 /*normalization_flag*/);
             CHECK_RETCODE(ret_code, leave_fun);
         }
         else {
