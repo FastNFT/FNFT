@@ -106,7 +106,7 @@ INT kdv_scatter_bound_states(UINT const D,
                              COMPLEX * const b,
                              kdv_discretization_t const discretization,
                              UINT const skip_b_flag,
-                             UINT const normalization_flag)
+                             INT const normalization_flag)
 {
     INT ret_code = SUCCESS;
 

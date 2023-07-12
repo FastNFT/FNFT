@@ -17,6 +17,7 @@
  * Sander Wahls (TU Delft) 2017-2018, 2023.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Peter J Prins (TU Delft) 2020.
+ * Sander Wahls (KIT) 2023.
  */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -432,7 +433,7 @@ INT akns_scatter_bound_states(UINT const D,
                               akns_pde_t const PDE,
                               UINT const vanilla_flag,
                               UINT const skip_b_flag,
-                              UINT const normalization_flag)
+                              INT const normalization_flag)
 {
     INT ret_code = SUCCESS;
 
@@ -627,7 +628,7 @@ INT akns_scatter_bound_states(UINT const D,
                     if (normalization_flag) {
                         WPHI_acc += misc_normalize_vector(4, &phi_temp[current][0]);
                         if (WPHI != NULL)
-                            WPHI[n_given] = WPHI_acc;
+                            WPHI[n_given+1] = WPHI_acc;
                     }
                     memcpy(&PHI[4*(n_given+1)], &phi_temp[current][0], 4 * sizeof(COMPLEX));
                 }
@@ -643,13 +644,13 @@ INT akns_scatter_bound_states(UINT const D,
                     COMPLEX a1 = tmp1[n]+ eps_t_3*(l_curr*I*(q[n+1]-r[n+1]))/12.0;
                     COMPLEX a2 = tmp1[n+1] - eps_t_3*l_curr*(q[n+1]+r[n+1])/12.0;
                     COMPLEX a3 = - eps_t*I*l_curr +tmp1[n+2];
-                    akns_scatter_U_ES4(a1,a2,a3,1,*U,&tmp2[n]);
-                    if (normalization_flag) {
-                        WPHI_acc += misc_normalize_vector(4, &PHI[4*n_given]);
-                        if (WPHI != NULL)
-                            WPHI[n_given] = WPHI_acc;
-                    }                  
+                    akns_scatter_U_ES4(a1,a2,a3,1,*U,&tmp2[n]);                   
                     misc_matrix_mult(4,4,1,*U,&PHI[4*n_given],&PHI[4*(n_given+1)]);
+                    if (normalization_flag) {
+                        WPHI_acc += misc_normalize_vector(4, &PHI[4*(n_given+1)]);
+                        if (WPHI != NULL)
+                            WPHI[n_given+1] = WPHI_acc;
+                    }                  
                 }
                 break;
 
@@ -669,16 +670,16 @@ INT akns_scatter_bound_states(UINT const D,
                     akns_scatter_U_BO(q[n],r[n],l_curr,eps_t,1,*U);
                     misc_matrix_mult(4,4,1,*U,&PHI[4*(n_given+1)],phi_temp);
 
+                    if (normalization_flag) {
+                        WPHI_acc += misc_normalize_vector(4, phi_temp);
+                        if (WPHI != NULL)
+                            WPHI[n_given+1] = WPHI_acc;
+                    }
+
                     // Third substep, block diagonal matrix
                     akns_scatter_U_ES4(tmp2[n],tmp2[n+1],0.0,0,*M,NULL);
                     misc_matrix_mult(2,2,1,*M,&phi_temp[0],&PHI[4*(n_given+1)]);
                     misc_matrix_mult(2,2,1,*M,&phi_temp[2],&PHI[4*(n_given+1)+2]);
-
-                    if (normalization_flag) {
-                        WPHI_acc += misc_normalize_vector(4, &PHI[4*(n_given+1)]);
-                        if (WPHI != NULL)
-                            WPHI[n_given] = WPHI_acc;
-                    }
                 }
                 break;
 
@@ -745,11 +746,11 @@ INT akns_scatter_bound_states(UINT const D,
                         COMPLEX a2 = -tmp1[n+1] + eps_t_3*l_curr*(q[n+1]+r[n+1])/12.0;
                         COMPLEX a3 =  eps_t*I*l_curr -tmp1[n+2];
                         akns_scatter_U_ES4(a1,a2,a3,0,*U,NULL);
+                        misc_matrix_mult(2,2,1,*U,&PSI[4*(n_given+1)],&PSI[4*n_given]);
                         if (normalization_flag) {
-                            WPSI_acc += misc_normalize_vector(2, &PSI[4*(n_given+1)]);
+                            WPSI_acc += misc_normalize_vector(2, &PSI[4*n_given]);
                             WPSI[n_given] = WPSI_acc;
                         }
-                        misc_matrix_mult(2,2,1,*U,&PSI[4*(n_given+1)],&PSI[4*n_given]);
                     }
                     break;
 
@@ -768,14 +769,14 @@ INT akns_scatter_bound_states(UINT const D,
                         akns_scatter_U_BO(q[n],r[n],l_curr,-eps_t,0,*U);
                         misc_matrix_mult(2,2,1,*U,&PSI[4*n_given],psi_temp);
 
+                        if (normalization_flag) {
+                            WPSI_acc += misc_normalize_vector(2, psi_temp);
+                            WPSI[n_given] = WPSI_acc;
+                        }
+
                         // Third substep
                         akns_scatter_U_ES4(tmp4[n],tmp4[n+1],0.0,0,*U,NULL);
                         misc_matrix_mult(2,2,1,*U,psi_temp,&PSI[4*n_given]);
-
-                        if (normalization_flag) {
-                            WPSI_acc += misc_normalize_vector(2, &PSI[4*n_given]);
-                            WPSI[n_given] = WPSI_acc;
-                        }
                     }
                     break;
 
