@@ -200,6 +200,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
             skip_normconsts_flag = 1;
 
+        } else if ( strcmp(str, "skip_normalization") == 0 ) {
+
+            opts.normalization_flag = 0;
+
         } else if ( strcmp(str, "quiet") == 0 ) {
 
             fnft_errwarn_setprintf(NULL);
