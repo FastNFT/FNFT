@@ -338,7 +338,6 @@ INT misc_resample(const UINT D, const REAL eps_t, COMPLEX const * const q,
     ret_code = fft_wrapper_create_plan(&plan_fwd, D, buf0, buf1, -1);
     CHECK_RETCODE(ret_code, release_mem);
 
-
     ret_code = fft_wrapper_create_plan(&plan_inv, D, buf0, buf1, 1);
     CHECK_RETCODE(ret_code, release_mem);
 
@@ -348,18 +347,6 @@ INT misc_resample(const UINT D, const REAL eps_t, COMPLEX const * const q,
 
     ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf1);
     CHECK_RETCODE(ret_code, release_mem);
-
-    // Check that the signal spectrum decays sufficiently to ensure accurate interpolation
-    
-    // D samples of buf1 correspond to 100% bandwidth. Find the total l2-norm
-    // of buf1 and compare it to l2-norm of 90% bandwidth. To prevent repeated 
-    // computation, the two norms of the 5% bandwidths on both ends of the
-    // spectrum are computed instead.
-    UINT Dlp = D/20;
-    REAL tmp = SQRT(misc_l2norm2(Dlp, buf1+D/2-1-Dlp, 0, Dlp*eps_t) + 
-            misc_l2norm2(Dlp, buf1+D/2+1, 0, Dlp*eps_t))/SQRT(misc_l2norm2(D, buf1, 0, D*eps_t));
-    if (tmp > SQRT(EPSILON))
-        WARN("Signal does not appear to be bandlimited. Interpolation step may be inaccurate. Try to reduce the step size, or switch to a discretization that does not require interpolation");
     
     const REAL scl_factor = (REAL)D*eps_t;
     // Applying phase shift
