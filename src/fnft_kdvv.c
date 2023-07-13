@@ -640,11 +640,31 @@ static inline INT kdvv_compute_boundstates(
                         ret_code = E_OTHER("More than *K_ptr initial guesses for bound states found. Increase *K_ptr and try again.")
                         CHECK_RETCODE(ret_code, leave_fun);
                     }
+                    
                     // Zero crossing estimate with regula falsi:
                     REAL scl1 = 1, scl2 = 1;
                     if (opts->normalization_flag) {
-                        scl1 = POW(2, log_scaling_factors[i]);
-                        scl2 = POW(2, log_scaling_factors[i-1]);
+                        // The regula falsi without normalization is simply
+                        //
+                        //   (xi[i-1]*a[i] - xi[i]*a[i-1])/(a[i] - a[i-1]).
+                        //
+                        // With normalization, taking the scaling factors l[i]=log_scaling_factors[i]
+                        // into account, we get
+                        //    
+                        //  [Eq 1]  (xi[i]*2^l[i-1]*a[i-1] - xi[i]*2^l[i]*a[i-1])/(2^l[i]*a[i] - 2^l[i-1]*a[i-1]),
+                        //
+                        // where the hat indicates a power. To use the true values of the scattering
+                        // function a(xi), the scaling factors used in the code below should be
+                        //
+                        //  scl1 = POW(2, log_scaling_factors[i]);
+                        //  scl2 = POW(2, log_scaling_factors[i-1]);
+                        //
+                        // However, this can quickly lead to overflow problems. By multiplying both
+                        // the numerator and denominator in Eq 1 with the factor 2^-(l[i]-l[i-1])/2,
+                        // we instead arrive at the following scaling factors.
+                        const REAL s = (log_scaling_factors[i]-log_scaling_factors[i-1])/2;
+                        scl1 = POW(2, s);
+                        scl2 = POW(2, -s);
                     }
                     bound_states[K] = (xi[i-1] * scl1*CREAL(scatter_coeffs[4*i]) - xi[i] * scl2*CREAL(scatter_coeffs[4*(i-1)])) / CREAL( scl1*scatter_coeffs[4*i] - scl2*scatter_coeffs[4*(i-1)]);
                     K++;
