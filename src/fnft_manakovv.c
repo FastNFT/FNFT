@@ -290,6 +290,10 @@ INT fnft_manakovv(
 		// required for obtaining a second approximation of the spectrum
 		// which will be used for Richardson extrapolation.
 		Dsub = (UINT)CEIL(D / 2);
+        if (q1sub_preprocessed != NULL)
+            free(q1sub_preprocessed);
+        if (q2sub_preprocessed != NULL)
+            free(q2sub_preprocessed);
 		ret_code = manakov_discretization_preprocess_signal(D, q1, q2, eps_t, &Dsub, &q1sub_preprocessed, &q2sub_preprocessed,
 			first_last_index, opts->discretization);
 		CHECK_RETCODE(ret_code, leave_fun);
@@ -322,7 +326,9 @@ INT fnft_manakovv(
 	}
 
 leave_fun:
-	free(q1sub_preprocessed);
+	free(q1_preprocessed);
+	free(q2_preprocessed);
+    free(q1sub_preprocessed);
 	free(q2sub_preprocessed);
 	free(contspec_sub);
 	if (normconsts_or_residues_reserve != normconsts_or_residues)
