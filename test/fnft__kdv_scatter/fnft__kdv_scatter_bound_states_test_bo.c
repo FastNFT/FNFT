@@ -149,7 +149,7 @@ static INT test(const REAL ebounds[3], kdv_discretization_t discr)
     CHECK_RETCODE(ret_code, leave_fun);
 
 #ifdef DEBUG
-    printf("\n", discr);
+    printf("\n");
 #endif
 
 

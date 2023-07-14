@@ -26,6 +26,7 @@ INT main()
 {
     INT ret_code;
     fnft_kdvv_opts_t opts = fnft_kdvv_default_opts();
+    opts.grid_spacing = 0.01;
     const kdvv_testcases_t tc = kdvv_testcases_SECH_SQUARED;
     opts.discretization = kdv_discretization_ES4;
     UINT D = 256;

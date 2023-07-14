@@ -26,6 +26,7 @@ INT main()
 {
     INT ret_code;
     fnft_kdvv_opts_t opts = fnft_kdvv_default_opts();
+    opts.grid_spacing = 0.01;
     opts.discretization = kdv_discretization_2SPLIT1A_VANILLA;
 
     // Test staircase potential

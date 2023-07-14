@@ -33,7 +33,7 @@ static fnft_kdvv_opts_t default_opts = {
     .normalization_flag = 1,
     .discretization = kdv_discretization_2SPLIT4B,
     .richardson_extrapolation_flag = 0,
-    .grid_spacing = -1
+    .grid_spacing = 0
 };
 
 /**
@@ -583,16 +583,14 @@ static inline INT kdvv_compute_boundstates(
                 goto leave_fun;
             }
             UINT M = 0;
-            if (opts->grid_spacing == -1) {
-                M = 10000;
-            } else if (opts->grid_spacing > 0) {
+            if (opts->grid_spacing > 0) {
                 M = CEIL(dist/opts->grid_spacing);
                 if (M<2) {
                     *K_ptr = 0;
                     goto leave_fun;
                 }   
             } else {
-                ret_code = E_INVALID_ARGUMENT(grid_spacing);
+                ret_code = E_INVALID_ARGUMENT(opts->grid_spacing);
                 goto leave_fun;
             }
             COMPLEX const eps_xi = I*dist/(M - 1);

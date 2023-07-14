@@ -54,9 +54,13 @@
  *  \f$ O(niter (*K\_ptr) D) \f$. \n \n
  *  fnft_kdvv_bsloc_GRIDSEARCH_AND_REFINE: The algorithm evaluates \f$ a(\xi) \f$ on the grid
  *  \f$ \xi = \{j nexttoward(0,1), jh,2jh,3jh,\ldots,(M-3)jh\,(M-2)jh,j nexttoward((M-1)h,0)\\}\f$,
- *  where \f$ h:= \sqrt{c \max_t q(t)} / (M-1)\f$, where \f$ M=1000\f$ and
- *  \f$ c=1\f$ for all second order discretizations, `fnft_kdv_discretization_4SPLIT4A'/'B'('_VANILLA'), and `fnft_kdv_discretization_CF4_2`(`_VANILLA`); \f$ c \f$ is approximately 2 for
- *  other discretizations. The sign changes of \f$ a(\xi) \f$ on this grid are used as initial
+ *  where \f$ h:= \sqrt{c \max_t q(t)} / (M-1)\f$, where \f$ c=1\f$ for all second order discretizations,
+ *  `fnft_kdv_discretization_4SPLIT4A'/'B'('_VANILLA'), and `fnft_kdv_discretization_CF4_2`(`_VANILLA`);
+ *  \f$ c \f$ is approximately 2 for other discretizations. The constant \f$ M \f$ is chosen
+ *  such that the distance between the neighboring grid points is not larger than the
+ *  parameter \link fnft_kdvv_opts_t::grid_spacing \endlink. This parameter therefore must
+ *  be set if this algorithm is used.
+ *  The sign changes of \f$ a(\xi) \f$ on this grid are used as initial
  *  guesses for the bound states, which are then refined as in `fnft_kdvv_bsloc_NEWTON`.
  */
 typedef enum {
@@ -119,7 +123,7 @@ typedef enum {
  * @var fnft_kdvv_opts_t::niter
  *  Number of Newton iterations to be carried out when either the
  *  fnft_kdvv_bsloc_NEWTON, or the fnft_kdvv_bsloc_GRIDSEARCH_AND_REFINE method
- *  is used.
+ *  is used. Can be zero or positive.
  *
  * @var fnft_kdvv_opts_t::discspec_type
  *  Controls how \link fnft_kdvv \endlink fills the array
@@ -158,11 +162,8 @@ typedef enum {
  * @var fnft_kdvv_opts_t::grid_spacing
  *   Grid spacing parameter for the fnft_kdvv_bsloc_GRIDSEARCH_AND_REFINE method,
  *   where the number of grid points is chosen such that the distance between two
- *   consequtive grid points is not larger than grid_spacing, which should be
- *   positive. If it is -1 (the default), the interval in which the bound states
- *   must be is simply covered using 10000 grid points. Other non-positive values
- *   result in an error. It is recommended to set this parameter manually.
- */
+ *   consequtive grid points is not larger than grid_spacing, which has to be
+ *   positive. This option has to be set if GRIDSEARCH_AND_REFINE is used. */
 typedef struct {
     fnft_kdvv_bsloc_t bound_state_localization;
     FNFT_UINT niter;
