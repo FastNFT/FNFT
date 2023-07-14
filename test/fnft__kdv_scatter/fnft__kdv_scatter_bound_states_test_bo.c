@@ -33,6 +33,8 @@ static INT test_aux(const REAL ebounds[3], kdv_discretization_t discr,
     COMPLEX a_aprime_b[3] = {0};
     UINT i;
     UINT vanilla_flag = 0;
+    INT W = 0;
+    INT * const W_ptr = (normalization_flag) ? &W : NULL;
     INT ret_code = SUCCESS;
 
     ret_code = kdv_discretization_vanilla_flag(&vanilla_flag, discr);
@@ -59,8 +61,15 @@ static INT test_aux(const REAL ebounds[3], kdv_discretization_t discr,
     CHECK_RETCODE(ret_code, leave_fun);
 
     const UINT D_effective = D * upsampling_factor;
-    ret_code = fnft__kdv_scatter_bound_states(D_effective, q_preprocessed, r_preprocessed, T, 1, lambda, a_aprime_b, a_aprime_b+1, a_aprime_b+2, discr, 0, normalization_flag);
+    ret_code = fnft__kdv_scatter_bound_states(D_effective, q_preprocessed, r_preprocessed, T, 1, lambda, a_aprime_b, a_aprime_b+1, a_aprime_b+2, W_ptr, discr, 0);
     CHECK_RETCODE(ret_code, leave_fun);
+
+    if (W_ptr != NULL) {
+        const REAL scl = POW(2, W);
+        a_aprime_b[0] *= scl;
+        a_aprime_b[1] *= scl;
+        // b is not scaled
+    }
 
     const COMPLEX a_exact = 0;
     const COMPLEX aprime_exact = -I/2;
@@ -91,8 +100,14 @@ static INT test_aux(const REAL ebounds[3], kdv_discretization_t discr,
     a_aprime_b[0] = 0;
     a_aprime_b[1] = 0;
     a_aprime_b[2] = 0;
-    ret_code = fnft__kdv_scatter_bound_states(D_effective, q_preprocessed, r_preprocessed, T, 1, lambda, a_aprime_b, a_aprime_b+1, a_aprime_b+2, discr, 1, normalization_flag);
+    ret_code = fnft__kdv_scatter_bound_states(D_effective, q_preprocessed, r_preprocessed, T, 1, lambda, a_aprime_b, a_aprime_b+1, a_aprime_b+2, W_ptr, discr, 1);
     CHECK_RETCODE(ret_code, leave_fun);
+
+    if (W_ptr != NULL) {
+        const REAL scl = POW(2, W);
+        a_aprime_b[0] *= scl;
+        a_aprime_b[1] *= scl;
+    }
 
     errs[0] = CABS(a_exact - a_aprime_b[0]);
     errs[1] = CABS(aprime_exact - a_aprime_b[1]);

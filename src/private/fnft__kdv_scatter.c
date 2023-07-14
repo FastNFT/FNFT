@@ -104,9 +104,9 @@ INT kdv_scatter_bound_states(UINT const D,
                              COMPLEX * const a_vals,
                              COMPLEX * const aprime_vals,
                              COMPLEX * const b,
+                             INT * const Ws,
                              kdv_discretization_t const discretization,
-                             UINT const skip_b_flag,
-                             INT const normalization_flag)
+                             UINT const skip_b_flag)
 {
     INT ret_code = SUCCESS;
 
@@ -122,9 +122,9 @@ INT kdv_scatter_bound_states(UINT const D,
 
     // Call akns_scatter_bound_states
     if (vanilla_flag)
-        ret_code = akns_scatter_bound_states(D, q, r, T, K,bound_states, a_vals, aprime_vals, b, akns_discretization, akns_pde_KdV, vanilla_flag, skip_b_flag, normalization_flag);
+        ret_code = akns_scatter_bound_states(D, q, r, T, K,bound_states, a_vals, aprime_vals, b, Ws, akns_discretization, akns_pde_KdV, vanilla_flag, skip_b_flag);
     else
-        ret_code = akns_scatter_bound_states(D, r, q, T, K,bound_states, a_vals, aprime_vals, b, akns_discretization, akns_pde_KdV, vanilla_flag, skip_b_flag, normalization_flag);
+        ret_code = akns_scatter_bound_states(D, r, q, T, K,bound_states, a_vals, aprime_vals, b, Ws, akns_discretization, akns_pde_KdV, vanilla_flag, skip_b_flag);
     CHECK_RETCODE(ret_code, leave_fun);
 
 leave_fun:

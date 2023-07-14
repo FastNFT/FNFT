@@ -33,6 +33,8 @@ INT nse_scatter_bound_states_test_bo(const INT normalization_flag)
     INT ret_code;
     REAL eps_t, T[2] = {-16,16};
     REAL errs[3], error_bounds[3];
+    INT Wsx[3] = {0};
+    INT * const Ws = (normalization_flag) ? Wsx : NULL;
     COMPLEX q[256], r[256];
     COMPLEX a_vals[3], aprime_vals[3], b_vals[3];
     COMPLEX bound_states[3] = {0.5*I, 1.5*I, 2.5*I};
@@ -113,11 +115,17 @@ INT nse_scatter_bound_states_test_bo(const INT normalization_flag)
         q[i] = 3.0*misc_sech(T[0] + i*eps_t);
         r[i] = -CONJ(q[i]);
     }
-    ret_code = nse_scatter_bound_states(D, q, r, T, 3,
-        bound_states, a_vals, aprime_vals, b_vals, nse_discretization_BO,
-        0, normalization_flag);
+    ret_code = nse_scatter_bound_states(D, q, r, T, 3, bound_states, a_vals, aprime_vals,
+            b_vals, Ws, nse_discretization_BO, 0);
     if (ret_code != SUCCESS)
         return E_SUBROUTINE(ret_code);
+    if (Ws != NULL) {
+        for (i=0; i<3; i++) {
+            const REAL scl = POW(2, Ws[i]);
+            a_vals[i] *= scl;
+            aprime_vals[i] *= scl;
+        }
+    }
     error_bounds[0] = 100*EPSILON;
     error_bounds[1] = 100*EPSILON;
     error_bounds[2] = 100*EPSILON;

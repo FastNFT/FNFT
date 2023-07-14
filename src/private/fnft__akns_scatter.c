@@ -429,11 +429,11 @@ INT akns_scatter_bound_states(UINT const D,
                               COMPLEX * const a_vals,
                               COMPLEX * const aprime_vals,
                               COMPLEX * const b,
+                              INT * const Ws,
                               akns_discretization_t const discretization,
                               akns_pde_t const PDE,
                               UINT const vanilla_flag,
-                              UINT const skip_b_flag,
-                              INT const normalization_flag)
+                              UINT const skip_b_flag)
 {
     INT ret_code = SUCCESS;
 
@@ -491,6 +491,7 @@ INT akns_scatter_bound_states(UINT const D,
 
     // We need to store many intermediate scaling factors for the
     // forward-backward computation of b if normalization is on
+    const INT normalization_flag = Ws != NULL;
     if (normalization_flag && !skip_b_flag) {
         WPHI = malloc((D_given + 1)*sizeof(COMPLEX));
         CHECK_NOMEM(WPHI, ret_code, leave_fun);
@@ -797,15 +798,27 @@ INT akns_scatter_bound_states(UINT const D,
         misc_matrix_mult(4,4,1,&Tmx[0][0],&PHI[4*D_given + 0],&f_S[0]);
 
         // Calculate the final state for PHI in E basis
-        const REAL l2 = LOG(2);
-        a_vals[neig] = f_S[0];
-        a_vals[neig] *= CEXP(I*l_curr*(T[1]+eps_t*boundary_coeff) + l2*WPHI_acc);
-        if (PDE==akns_pde_KdV)
+        const COMPLEX exponent = I*l_curr*(T[1]+eps_t*boundary_coeff);
+        if (!normalization_flag) {
+            a_vals[neig] = f_S[0]*CEXP(exponent);
+            aprime_vals[neig] = f_S[2]*CEXP(exponent) + I*(T[1]+eps_t*boundary_coeff)*a_vals[neig];
+        } else {
+            const REAL l2 = LOG(2); // to mix powers of 2 and e
+            // We'll have to multiply with CEXP(exponent), which can drastically
+            // change the absolute values of the results. Therefore, we write the
+            // amplitude of that term as 2^u*2^v, with -1/2<=u<=1/2 and v integer,
+            // and we shift the 2^v part into the scaling factor 2^Ws.
+            const INT v = ROUND(CREAL(exponent)/l2);
+            const COMPLEX u = CREAL(exponent)/l2 - v; // between -1/2 and 1/2
+            a_vals[neig] = f_S[0] * CEXP(I*CIMAG(exponent) + u*l2);
+            Ws[neig] = v + WPHI_acc;
+            aprime_vals[neig] = f_S[2] + I*(T[1]+eps_t*boundary_coeff)*f_S[0];
+            aprime_vals[neig] *= CEXP(I*CIMAG(exponent) + u*l2);
+        }
+        if (PDE==akns_pde_KdV) {
             a_vals[neig] = CREAL(a_vals[neig]);
-
-        aprime_vals[neig] = f_S[2]*CEXP(I*l_curr*(T[1]+eps_t*boundary_coeff) + l2*WPHI_acc) + I*(T[1]+eps_t*boundary_coeff)*a_vals[neig];
-        if (PDE==akns_pde_KdV)
             aprime_vals[neig] = I * CIMAG(aprime_vals[neig]);
+        }
 
         if (skip_b_flag == 0){
             // Calculation of b assuming a=0
@@ -832,7 +845,6 @@ INT akns_scatter_bound_states(UINT const D,
                     if (normalization_flag)
                         b_temp[i] *= POW(2, WPHI[n] - WPSI[n]);
                 }
-
                 if (PDE!=akns_pde_KdV || CREAL(b_temp[0]*b_temp[1])>0) {
                     tmp = FABS( 0.5* LOG( (REAL)CABS( b_temp[1]/b_temp[0] ) ) );
                     if (tmp < error_metric){

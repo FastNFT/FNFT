@@ -66,12 +66,16 @@
  * The \f$b(\lambda)\f$ are calculated using the criterion from
  * Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2932256">&quot;
  * Soliton Phase Shift Calculation for the Korteweg–De Vries Equation,&quot;</a>.
+ * @param[in,out] Ws Pass an array of size K. Upon exit, it contains scaling factors that
+ * arise due to an internal normalization of the scattering process (to deal with potential
+ * overflow issues). The returned values for a and a_prime still have to be multiplied with
+ * corresponding power of two (i.e. POW(2, Ws[i])) to obtain the final values. Note
+ * that this is not required for the values of b. No normalization is carried out if NULL
+ * is passed.
  * @param[in] discretization The type of discretization to be used. Should be of type
  * \link fnft_nse_discretization_t \endlink. Not all nse_discretization_t discretizations are supported.
  * Check \link fnft_nse_discretization_t \endlink for list of supported types.
  * @param[in] skip_b_flag If set to 1 the routine will not compute \f$b(\lambda)\f$.
- * @param[in] normalization_flag If non-zero, the routine will normalize the
- * scattering matrices during the computations to avoid overflow problems.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  * @ingroup nse
@@ -85,9 +89,9 @@ FNFT_INT fnft__nse_scatter_bound_states(FNFT_UINT const D,
                                         FNFT_COMPLEX * const a_vals,
                                         FNFT_COMPLEX * const aprime_vals,
                                         FNFT_COMPLEX * const b,
+                                        FNFT_INT * const Ws,
                                         fnft_nse_discretization_t const discretization,
-                                        FNFT_UINT const skip_b_flag,
-                                        FNFT_INT const normalization_flag);
+                                        FNFT_UINT const skip_b_flag);
 
 /**
  * @brief Computes the scattering matrix and its derivative.
