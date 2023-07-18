@@ -16,6 +16,7 @@
  * Contributors:
  * Sander Wahls (TU Delft) 2018, 2020-2021.
  * Shrinivas Chimmalgi (TU Delft) 2018.
+ * Sander Wahls (KIT) 2023.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -703,6 +704,7 @@ static INT add_discrete_spectrum(
     COMPLEX * phi = NULL;
     COMPLEX * psi = NULL;
     COMPLEX * r = NULL;
+    INT * Ws = NULL;
     UINT i,j;
     UINT zc_point = 0; //index of zero-crossing of time
     INT ret_code = SUCCESS;
@@ -772,15 +774,20 @@ static INT add_discrete_spectrum(
             // removed.
 
             r = malloc(D*sizeof(COMPLEX));
-            if (r == NULL) {
-                ret_code = E_NOMEM;
-                goto leave_fun;
-            }
+            CHECK_NOMEM(r, ret_code, leave_fun);
+            Ws = malloc(K*sizeof(INT));
+            CHECK_NOMEM(Ws, ret_code, leave_fun);
             for (i=0; i<D; i++)
                 r[i] = -CONJ(q[i]);
             ret_code = nse_scatter_bound_states(D, q, r, T, K,
-                    bnd_states, acoeff_cs, acoeff_cs+K, acoeff_cs+2*K, nse_discretization_BO, 1);
+                    bnd_states, acoeff_cs, acoeff_cs+K, acoeff_cs+2*K, 
+                    Ws, nse_discretization_BO, 1);
             CHECK_RETCODE(ret_code, leave_fun);
+            for (i = 0; i < K; i++) {
+                const REAL scl = POW(2, Ws[i]);
+                acoeff_cs[i] *= scl;
+                acoeff_cs[i+K] *= scl;
+            }
         }
         else {
             for (i = 0; i < K; i++)
@@ -907,6 +914,7 @@ static INT add_discrete_spectrum(
         free(norm_consts);
         free(acoeff_cs);
         free(r);
+        free(Ws);
         return ret_code;
 }
 

@@ -78,7 +78,7 @@ in the PowerShell to install Scoop. Then, run the commands
 
     scoop install git
     scoop install cmake
-    scoop install gcc
+    scoop install mingw
 
 in the PowerShell to install the required tools. Change (for example) to your home directory,
 download FNFT, and change into the new dir:

@@ -118,3 +118,4 @@ The algorithms in FNFT utilize ideas from the following references. More informa
 - P. J. Prins and S. Wahls, ["Soliton Phase Shift Calculation for the Korteweg–De Vries Equation"](https://doi.org/10.1109/ACCESS.2019.2932256), IEEE Access, vol. 7, pp. 122914--122930, July 2019.
 - S. Medvedev, I. Vaseva, I. Chekhovskoy and M. Fedoruk, ["Exponential fourth order schemes for direct Zakharov-Shabat problem"](https://doi.org/10.1364/OE.377140), Optics Express, vol. 28, pp. 20--39, 2020.
 - J. Mertsching, ["Quasiperiodie Solutions of the Nonlinear Schroedinger Equation"](https://doi.org/10.1002/prop.2190350704), Fortschritte der Physik, vol. 35, pp. 519--536, 1987.
+- L. de Vries, ["Fast Numerical Nonlinear Fourier Transform Algorithms for the Manakov Equation"](http://resolver.tudelft.nl/uuid:0276e693-3408-4472-9749-b754c2114183"), Master thesis, TU Delft, 2021.

@@ -77,7 +77,7 @@ INT nse_scatter_matrix_test_focusing_bo()
         r[i] = -CONJ(q[i]);
     }
 
-    ret_code = nse_scatter_matrix(D, q, r, eps_t, +1, 2, lam, result, nse_discretization_BO, 1);
+    ret_code = nse_scatter_matrix(D, q, r, eps_t, +1, 2, lam, result, NULL, nse_discretization_BO, 1);
     if (ret_code != SUCCESS)
         return E_SUBROUTINE(ret_code);
     if (misc_rel_err(16, result, result_exact) > 10*EPSILON)

@@ -216,6 +216,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             opts.Dsub = (FNFT_UINT)mxGetScalar(prhs[k+1]);
             k++;
 
+        } else if ( strcmp(str, "skip_normalization") == 0 ) {
+
+            opts.normalization_flag = 0;
+
         } else if ( strcmp(str, "quiet") == 0 ) {
 
             fnft_errwarn_setprintf(NULL);

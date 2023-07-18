@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018, 2023.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
 * Peter J. Prins (TU Delft) 2021.
 */
@@ -392,6 +392,40 @@ static inline FNFT_REAL fnft__misc_legendre_poly(const FNFT_UINT n, const FNFT_R
     return P;
 }
 
+/**
+ * @brief Normalizes a complex vector so that the maximum absolute value is 
+ * >=1 and <2.
+ *
+ * @ingroup  misc
+ *
+ * @param[in] len Length of the vector.
+ * @param[in,out] v Complex vector to be normalized. Is overwritten with
+ *  the result.
+ * @return Returns an integer a. Two to the power -a is the scaling factor
+ *  used for the normalization. That is, v_out = 2^(-a)*v_in.
+ */
+static inline FNFT_INT fnft__misc_normalize_vector(const FNFT_UINT len, FNFT_COMPLEX * const v)
+{
+    // Find max of absolute values of coefficients
+    FNFT_REAL max_abs = 0.0;
+    for (FNFT_UINT i=0; i<len; i++) {
+        const FNFT_REAL cur_abs = FNFT_CABS( v[i] );
+        if (cur_abs > max_abs)
+            max_abs = cur_abs;
+    }
+
+    // Return if polynomial is identical to zero
+    if (max_abs == 0.0)
+        return 0;
+
+    // Otherwise, rescale
+    const FNFT_REAL a = FNFT_FLOOR( FNFT_LOG2(max_abs) );
+    const FNFT_REAL scl = FNFT_POW( 2, -a );
+    for (FNFT_UINT i=0; i<len; i++)
+        v[i] *= scl;
+
+    return (FNFT_INT) a;
+}
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define misc_print_buf(...) fnft__misc_print_buf(__VA_ARGS__)
@@ -412,7 +446,7 @@ static inline FNFT_REAL fnft__misc_legendre_poly(const FNFT_UINT n, const FNFT_R
 #define misc_mat_mult_2x2(...) fnft__misc_mat_mult_2x2(__VA_ARGS__)
 #define misc_mat_mult_4x4(...) fnft__misc_mat_mult_4x4(__VA_ARGS__)
 #define misc_legendre_poly(...) fnft__misc_legendre_poly(__VA_ARGS__)
-
+#define misc_normalize_vector(...) fnft__misc_normalize_vector(__VA_ARGS__)
 #endif
 
 #endif

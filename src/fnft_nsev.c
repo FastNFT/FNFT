@@ -18,6 +18,7 @@
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Marius Brehler (TU Dortmund) 2018.
  * Peter J Prins (TU Delft) 2020.
+ * Sander Wahls (KIT) 2023.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -120,7 +121,8 @@ static inline INT nsev_refine_bound_states_newton(const UINT D,
         COMPLEX * const bound_states,
         nse_discretization_t const discretization,
         UINT const niter,
-        REAL const * const bounding_box);
+        REAL const * const bounding_box,
+        const INT normalization_flag);
 
 /**
  * Fast nonlinear Fourier transform for the nonlinear Schroedinger
@@ -377,6 +379,10 @@ INT fnft_nsev(
         // required for obtaining a second approximation of the spectrum
         // which will be used for Richardson extrapolation.
         Dsub = (UINT) CEIL(D/2);
+        if (qsub_preprocessed != NULL)
+            free(qsub_preprocessed);
+        if (rsub_preprocessed != NULL)
+            free(rsub_preprocessed);
         ret_code = nse_discretization_preprocess_signal(D, q, eps_t, kappa, &Dsub, &qsub_preprocessed, &rsub_preprocessed,
                 first_last_index, opts->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
@@ -688,7 +694,7 @@ static inline INT nsev_compute_boundstates(
                 discretization = opts->discretization;
 
             ret_code = nsev_refine_bound_states_newton(D, q, r, T, K, buffer,
-                    discretization, opts->niter, bounding_box);
+                    discretization, opts->niter, bounding_box, opts->normalization_flag);
             CHECK_RETCODE(ret_code, leave_fun);
             break;
 
@@ -769,6 +775,7 @@ static inline INT nsev_compute_contspec(
     INT ret_code = SUCCESS;
     UINT i, offset = 0, upsampling_factor, D_given;
     COMPLEX * scatter_coeffs = NULL, * xi = NULL;
+    INT * Ws = NULL;
 
     // Determine step size
     // D is interpolated number of samples but eps_t is the step-size
@@ -803,13 +810,13 @@ static inline INT nsev_compute_contspec(
 
         // Allocate memory for call to nse_scatter_matrix
         scatter_coeffs = malloc(4 * M * sizeof(COMPLEX));
-        if (scatter_coeffs == NULL) {
-            ret_code = E_NOMEM;
-            goto leave_fun;
+        CHECK_NOMEM(scatter_coeffs, ret_code, leave_fun);
+        if (opts->normalization_flag) {
+            Ws = malloc(4 * M * sizeof(INT));
+            CHECK_NOMEM(Ws, ret_code, leave_fun);
         }
-
         ret_code = nse_scatter_matrix(D, q, r, eps_t, kappa, M,
-                xi, scatter_coeffs, opts->discretization, 0);
+                xi, scatter_coeffs, Ws, opts->discretization, 0);
         CHECK_RETCODE(ret_code, leave_fun);
 
         // This is necessary because nse_scatter_matrix to ensure
@@ -818,6 +825,11 @@ static inline INT nsev_compute_contspec(
         for (i = 0; i < M; i++){
             H11_vals[i] = scatter_coeffs[i*4];
             H21_vals[i] = scatter_coeffs[i*4+2];
+            if (opts->normalization_flag) {
+                const REAL scl = POW(2, Ws[i]);
+                H11_vals[i] *= scl;
+                H21_vals[i] *= scl;
+            }
         }
 
     }else{
@@ -893,6 +905,7 @@ static inline INT nsev_compute_contspec(
     leave_fun:
         free(H11_vals);
         free(scatter_coeffs);
+        free(Ws);
         free(xi);
         return ret_code;
 }
@@ -910,6 +923,7 @@ static inline INT nsev_compute_normconsts_or_residues(
         fnft_nsev_opts_t const * const opts)
 {
     COMPLEX *a_vals = NULL, *aprime_vals = NULL;
+    INT * Ws = NULL;
     UINT i, offset = 0;
     INT ret_code = SUCCESS;
     nse_discretization_t discretization;
@@ -926,6 +940,11 @@ static inline INT nsev_compute_normconsts_or_residues(
     if (a_vals == NULL || aprime_vals == NULL) {
         ret_code = E_NOMEM;
         goto leave_fun;
+    }
+
+    if (opts->normalization_flag) {
+        Ws = malloc(K * sizeof(INT));
+        CHECK_NOMEM(Ws, ret_code, leave_fun);
     }
 
     const UINT upsampling_factor = nse_discretization_upsampling_factor(opts->discretization);
@@ -946,7 +965,8 @@ static inline INT nsev_compute_normconsts_or_residues(
         discretization = opts->discretization;
 
     ret_code = nse_scatter_bound_states(D, q, r, T, K,
-            bound_states, a_vals, aprime_vals, normconsts_or_residues, discretization, 0);
+            bound_states, a_vals, aprime_vals, normconsts_or_residues, 
+            Ws, discretization, 0/*skip_b_flag*/);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Update to or add residues if requested
@@ -967,12 +987,15 @@ static inline INT nsev_compute_normconsts_or_residues(
             if (aprime_vals[i] == 0.0)
                 return E_DIV_BY_ZERO;
             normconsts_or_residues[offset + i] /= aprime_vals[i];
+            if (Ws != NULL) // normalization is on
+                normconsts_or_residues[offset + i] /= POW(2, Ws[i]);
         }
     }
 
     leave_fun:
         free(a_vals);
         free(aprime_vals);
+        free(Ws);
         return ret_code;
 }
 
@@ -986,9 +1009,12 @@ static inline INT nsev_refine_bound_states_newton(
         COMPLEX * const bound_states,
         nse_discretization_t const discretization,
         const UINT niter,
-        REAL const * const bounding_box)
+        REAL const * const bounding_box,
+        const INT normalization_flag)
 {
     INT ret_code = SUCCESS;
+    INT W = 0;
+    INT * const W_ptr = (normalization_flag) ? &W : NULL;
     UINT i, iter;
     COMPLEX a_val, b_val, aprime_val, error;
     REAL eprecision = EPSILON * 100;
@@ -1016,7 +1042,8 @@ static inline INT nsev_refine_bound_states_newton(
         do {
             // Compute a(lam) and a'(lam) at the current root
             ret_code = nse_scatter_bound_states(D, q, r, T, 1,
-                    bound_states + i, &a_val, &aprime_val, &b_val, discretization, 1);
+                    bound_states + i, &a_val, &aprime_val, &b_val,
+                    W_ptr, discretization, 0/*skip_b_flag*/);
             if (ret_code != SUCCESS){
                 ret_code = E_SUBROUTINE(ret_code);
                 CHECK_RETCODE(ret_code, leave_fun);
@@ -1028,6 +1055,7 @@ static inline INT nsev_refine_bound_states_newton(
                 return E_DIV_BY_ZERO;
 
             // Perform Newton updates: lam[i] <- lam[i] - a(lam[i])/a'(lam[i])
+            // We don't have to scale a and a' by 2^W because that factor cancels.
             error = a_val / aprime_val;
             bound_states[i] -= error;
             iter++;

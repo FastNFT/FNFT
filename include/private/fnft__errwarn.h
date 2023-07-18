@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018, 2023.
 */
 
 /**
@@ -100,6 +100,13 @@
  */
 #define FNFT__CHECK_RETCODE(ret_code, label) {if (ret_code!=FNFT_SUCCESS) {ret_code=FNFT__E_SUBROUTINE(ret_code);goto label;}}
 
+/**
+ * Macro for checking if memory has been allocated. If var!=NULL, a
+ * FNFT__E_NOMEM error is assigned to ret_code and the macro uses goto to jump to label.
+ * @ingroup private_errwarn
+ */
+#define FNFT__CHECK_NOMEM(var,ret_code,label) {if (var==NULL) {ret_code=FNFT__E_NOMEM;goto label;}}
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define WARN(msg)           FNFT__WARN(msg)
 #define E_NOMEM             FNFT__E_NOMEM
@@ -112,6 +119,7 @@
 #define E_SANITY_CHECK_FAILED(msg) FNFT__E_SANITY_CHECK_FAILED(msg)
 #define E_ASSERTION_FAILED  FNFT__E_ASSERTION_FAILED
 #define CHECK_RETCODE(ret_code,label) FNFT__CHECK_RETCODE(ret_code,label)
+#define CHECK_NOMEM(var,ret_code,label) FNFT__CHECK_NOMEM(var,ret_code,label)
 #endif
 
 /* --- Auxiliary macros and functions. Do not use directly. --- */

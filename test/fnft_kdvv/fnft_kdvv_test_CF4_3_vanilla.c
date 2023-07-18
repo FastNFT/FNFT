@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018, 2023.
 * Peter J Prins (TU Delft) 2020.
 */
 #define FNFT_ENABLE_SHORT_NAMES
@@ -26,6 +26,7 @@ INT main()
 {
     INT ret_code;
     fnft_kdvv_opts_t opts = fnft_kdvv_default_opts();
+    opts.grid_spacing = 0.01;
     const kdvv_testcases_t tc = kdvv_testcases_SECH_SQUARED;
     opts.discretization = kdv_discretization_CF4_3_VANILLA;
     UINT D = 128;
@@ -55,6 +56,12 @@ INT main()
         ret_code = kdvv_testcases_test_fnft(tc, D, eb, &opts);
         CHECK_RETCODE(ret_code, leave_fun);
     }
+
+    // test without normalization
+    opts.normalization_flag = !opts.normalization_flag;
+    ret_code = kdvv_testcases_test_fnft(tc, D, eb, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+    opts.normalization_flag = !opts.normalization_flag;
 
 leave_fun:
     if (ret_code != SUCCESS)

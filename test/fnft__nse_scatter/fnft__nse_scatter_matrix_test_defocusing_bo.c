@@ -16,6 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018, 2020.
 * Shrinivas Chimmalgi (TU Delft) 2017-2018,2020.
+* Sander Wahls (KIT) 2023.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -23,7 +24,7 @@
 #include "fnft__misc.h"
 #include "fnft__errwarn.h"
 
-INT nse_scatter_matrix_test_defocusing_bo()
+INT nse_scatter_matrix_test_defocusing_bo(INT normalization_flag)
 {
     UINT i, D = 8;
     INT ret_code;
@@ -71,14 +72,24 @@ INT nse_scatter_matrix_test_defocusing_bo()
     end
     format long g; result_exact.'
     */
+    INT W[8];
+    INT * const W_ptr = (normalization_flag) ? W : NULL;
     for (i=0; i<D; i++) {
         q[i] = 0.4*cos(i+1) + 0.5*I*sin(0.3*(i+1));
         r[i] = CONJ(q[i]);
     }
 
-    ret_code = nse_scatter_matrix(D, q, r, eps_t, -1, 2, lam, result, nse_discretization_BO,1);
+    ret_code = nse_scatter_matrix(D, q, r, eps_t, -1, 2, lam, result, W_ptr, nse_discretization_BO, 1);
     if (ret_code != SUCCESS)
         return E_SUBROUTINE(ret_code);
+    if (normalization_flag) {
+        REAL scl = POW(2, W[0]);
+        for (i=0; i<8; i++)
+            result[i] *= scl;
+        scl = POW(2, W[1]);
+        for (i=8; i<16; i++)
+            result[i] *= scl;
+    }
     if (misc_rel_err(16, result, result_exact) > 10*EPSILON)
         return E_TEST_FAILED;
 
@@ -87,8 +98,14 @@ INT nse_scatter_matrix_test_defocusing_bo()
 
 INT main()
 {
-    if (nse_scatter_matrix_test_defocusing_bo() != SUCCESS)
-        return EXIT_FAILURE;
+    INT ret_code = nse_scatter_matrix_test_defocusing_bo(0);
+    CHECK_RETCODE(ret_code, failure);
 
+    ret_code = nse_scatter_matrix_test_defocusing_bo(1);
+    CHECK_RETCODE(ret_code, failure);
+
+    return EXIT_SUCCESS;
+
+failure:
     return EXIT_SUCCESS;
 }

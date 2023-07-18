@@ -72,6 +72,7 @@ static INT nse_finvscatter_test(const UINT D, const INT kappa,
 leave_fun:
     free(q);
     free(q_exact);
+    free(r_exact);
     free(result);
     return ret_code;
 }

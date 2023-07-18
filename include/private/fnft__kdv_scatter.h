@@ -14,9 +14,10 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018, 2023.
 * Shrinivas Chimmalgi (TU Delft) 2017.
 * Peter J Prins (TU Delft) 2020.
+* Sander Wahls (KIT) 2023.
 */
 
 /**
@@ -66,6 +67,12 @@
  * The \f$b(\lambda)\f$ are calculated using the criterion from
  * Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2932256">&quot;
  * Soliton Phase Shift Calculation for the Korteweg–De Vries Equation,&quot;</a>.
+ * @param[in,out] Ws Pass an array of size K. Upon exit, it contains scaling factors that
+ * arise due to an internal normalization of the scattering process (to deal with potential
+ * overflow issues). The returned values for a and a_prime still have to be multiplied with
+ * corresponding power of two (i.e. POW(2, Ws[i])) to obtain the final values. Note
+ * that this is not required for the values of b. No normalization is carried out if NULL
+ * is passed.
  * @param[in] discretization The type of discretization to be used. Should be of type
  * \link fnft_kdv_discretization_t \endlink. Not all kdv_discretization_t discretizations are supported.
  * Check \link fnft_kdv_discretization_t \endlink for list of supported types.
@@ -77,7 +84,7 @@
 FNFT_INT fnft__kdv_scatter_bound_states(const FNFT_UINT D, FNFT_COMPLEX const * const q,
     FNFT_COMPLEX const * const r, FNFT_REAL const * const T, FNFT_UINT const K,
     FNFT_COMPLEX * const bound_states, FNFT_COMPLEX * const a_vals,
-    FNFT_COMPLEX * const aprime_vals, FNFT_COMPLEX * const b,
+    FNFT_COMPLEX * const aprime_vals, FNFT_COMPLEX * const b, FNFT_INT * const Ws,
     fnft_kdv_discretization_t const discretization, FNFT_UINT const skip_b_flag);
 
 /**
@@ -106,6 +113,10 @@ FNFT_INT fnft__kdv_scatter_bound_states(const FNFT_UINT D, FNFT_COMPLEX const * 
  * If derivative_flag=1 returns [S11 S12 S21 S22 S11' S12' S21' S22'] in
  * result where S11' is the derivative of S11 w.r.t to lambda.
  * Should be preallocated with size 4*K or 8*K accordingly.
+ * @param[in,out] W Pass an array of size K. Upon exit, it contains scaling factors that
+ * arise due to an internal normalization of the scattering matrix (to deal with potential
+ * overflow issues). The result has to be scaled by the power of 2 to obtain the final
+ * values. No normalization is carried out if NULL is passed.
  * @param[in] discretization The type of discretization to be used. Should be of type
  * \link fnft_kdv_discretization_t \endlink. Not all kdv_discretization_t discretizations are supported.
  * Check \link fnft_kdv_discretization_t \endlink for list of supported types.
@@ -116,10 +127,11 @@ FNFT_INT fnft__kdv_scatter_bound_states(const FNFT_UINT D, FNFT_COMPLEX const * 
  *  defined in \link fnft_errwarn.h \endlink.
  * @ingroup kdv
  */
-FNFT_INT fnft__kdv_scatter_matrix(const FNFT_UINT D, FNFT_COMPLEX const * const q, FNFT_COMPLEX const * const r,
+FNFT_INT fnft__kdv_scatter_matrix(const FNFT_UINT D, 
+    FNFT_COMPLEX const * const q, FNFT_COMPLEX const * const r,
     const FNFT_REAL eps_t, const FNFT_INT kappa, const FNFT_UINT K,
-    FNFT_COMPLEX const * const lambda,
-    FNFT_COMPLEX * const result, fnft_kdv_discretization_t const discretization,
+    FNFT_COMPLEX const * const lambda, FNFT_COMPLEX * const result, 
+    FNFT_INT * const W, fnft_kdv_discretization_t const discretization,
     const FNFT_UINT derivative_flag);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES

@@ -14,9 +14,10 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018, 2023.
 * Shrinivas Chimmalgi (TU Delft) 2017-2018,2020.
 * Peter J Prins (TU Delft) 2020.
+* Sander Wahls (KIT) 2023.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -24,7 +25,7 @@
 #include "fnft__misc.h"
 #include "fnft__errwarn.h"
 
-INT kdv_scatter_matrix_test_bo()
+INT kdv_scatter_matrix_test_bo(INT * W)
 {
     UINT i, D = 8;
     INT ret_code;
@@ -87,7 +88,19 @@ INT kdv_scatter_matrix_test_bo()
     }
 
     INT kappa=1; // unused
-    ret_code = kdv_scatter_matrix(D, q, r, eps_t, kappa, 2, lam, result, kdv_discretization_BO_VANILLA, 1);
+    ret_code = kdv_scatter_matrix(D, q, r, eps_t, kappa, 2, lam, result, W,
+            kdv_discretization_BO_VANILLA, 1);
+
+    if (W != NULL) {
+        for (i=0; i<16; i++) {
+            const REAL scl = POW(2, W[i]);
+            result[i] *= scl;
+            #ifdef DEBUG
+            // In this case W[i] is always zero, but we can test the mechanics
+            printf("W[%u] = %i\n", (unsigned int)i, W[i]);
+            #endif
+        }
+    }
 
     if (ret_code != SUCCESS)
         return E_SUBROUTINE(ret_code);
@@ -105,7 +118,11 @@ INT kdv_scatter_matrix_test_bo()
 
 INT main()
 {
-    if (kdv_scatter_matrix_test_bo() != SUCCESS)
+    if (kdv_scatter_matrix_test_bo(NULL) != SUCCESS)
+        return EXIT_FAILURE;
+
+    INT W[16] = {0};
+    if (kdv_scatter_matrix_test_bo(W) != SUCCESS)
         return EXIT_FAILURE;
 
     return EXIT_SUCCESS;

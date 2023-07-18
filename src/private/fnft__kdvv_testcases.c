@@ -17,6 +17,7 @@
  * Sander Wahls (TU Delft) 2017-2018.
  * Shrinivas Chimmalgi (TU Delft) 2019-2020.
  * Peter J Prins (TU Delft) 2020.
+ * Sander Wahls (KIT) 2023.
  */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -795,6 +796,10 @@ INT kdvv_testcases_test_fnft(kdvv_testcases_t tc, UINT D,
         goto release_mem;
     }
     if (!(errs[4] <= error_bounds[4])) {
+#ifdef DEBUG
+        misc_print_buf(K_exact, normconsts_exact, "normconsts_exact");
+        misc_print_buf(K_exact, normconsts_and_residues, "normconsts");
+#endif
         ret_code = E_TEST_FAILED;
         goto release_mem;
     }

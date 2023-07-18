@@ -14,10 +14,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2017-2018.
+ * Sander Wahls (TU Delft) 2017-2018, 2023.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Marius Brehler (TU Dortmund) 2018.
  * Peter J Prins (TU Delft) 2020-2021.
+ * Sander Wahls (KIT) 2023.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -31,7 +32,8 @@ static fnft_kdvv_opts_t default_opts = {
     .contspec_type = kdvv_cstype_REFLECTION_COEFFICIENT,
     .normalization_flag = 1,
     .discretization = kdv_discretization_2SPLIT4B,
-    .richardson_extrapolation_flag = 0
+    .richardson_extrapolation_flag = 0,
+    .grid_spacing = 0
 };
 
 /**
@@ -104,7 +106,8 @@ static inline INT kdvv_refine_bound_states_newton(const UINT D,
         COMPLEX * const bound_states,
         kdv_discretization_t const discretization,
         UINT const niter,
-        REAL const * const bounding_box);
+        REAL const * const bounding_box,
+        const INT normalization_flag);
 
 /**
  * Fast nonlinear Fourier transform for the nonlinear Schroedinger
@@ -507,6 +510,7 @@ static inline INT kdvv_compute_boundstates(
     UINT upsampling_factor, i;
     COMPLEX * xi = NULL;
     COMPLEX * scatter_coeffs = NULL;
+    INT * log_scaling_factors = NULL;
     INT const kappa = 1;
 
     upsampling_factor = kdv_discretization_upsampling_factor(opts->discretization);
@@ -517,7 +521,7 @@ static inline INT kdvv_compute_boundstates(
 
     // Copy the values of opts and modify it from fast to slow discretization if needed.
     fnft_kdvv_opts_t opts_slow = *opts;
-    ret_code=fnft__kdv_slow_discretization(&(opts_slow.discretization));
+    ret_code = fnft__kdv_slow_discretization(&(opts_slow.discretization));
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Calculate the bounding box for the bound states. Therefore we need to find the maximum of the real part of q(t), skipping t-derivative samples
@@ -573,8 +577,23 @@ static inline INT kdvv_compute_boundstates(
         case kdvv_bsloc_GRIDSEARCH_AND_REFINE:
         {
             // Set the search grid
-            UINT const M = 1000;
-            COMPLEX const eps_xi = I*(bounding_box[3]-bounding_box[2])/(M - 1);
+            const REAL dist = bounding_box[3] - bounding_box[2];
+            if (dist <= 0) {
+                ret_code = E_ASSERTION_FAILED;
+                goto leave_fun;
+            }
+            UINT M = 0;
+            if (opts->grid_spacing > 0) {
+                M = CEIL(dist/opts->grid_spacing);
+                if (M<2) {
+                    *K_ptr = 0;
+                    goto leave_fun;
+                }   
+            } else {
+                ret_code = E_INVALID_ARGUMENT(opts->grid_spacing);
+                goto leave_fun;
+            }
+            COMPLEX const eps_xi = I*dist/(M - 1);
             xi = malloc(M * sizeof(COMPLEX));
             if (xi == NULL) {
                 ret_code = E_NOMEM;
@@ -588,21 +607,26 @@ static inline INT kdvv_compute_boundstates(
 
             // Allocate memory for call to kdv_scatter_matrix
             scatter_coeffs = malloc(4 * M * sizeof(COMPLEX));
-            if (scatter_coeffs == NULL) {
-                ret_code = E_NOMEM;
-                goto leave_fun;
+            CHECK_NOMEM(scatter_coeffs, ret_code, leave_fun);
+
+            if (opts->normalization_flag) {
+                log_scaling_factors = malloc(M * sizeof(COMPLEX));
+                CHECK_NOMEM(log_scaling_factors, ret_code, leave_fun);
             }
 
             // Compute a(xi) on the grid on the imaginary axis
             UINT const derivative_flag = 0;
             ret_code = kdv_scatter_matrix(D, q, r, eps_t, kappa,
-                                          M, xi, scatter_coeffs ,opts_slow.discretization,derivative_flag);
+                                          M, xi, scatter_coeffs, 
+                                          log_scaling_factors,
+                                          opts_slow.discretization,
+                                          derivative_flag);
             CHECK_RETCODE(ret_code, leave_fun);
 
             // Search for zerocrossings of a(xi)
             K=0;
             for (i = 0; i < M; i++) {
-                if ( scatter_coeffs[4*i]==0) {
+                if (scatter_coeffs[4*i]==0) {
                     if (K>=*K_ptr) { // Lucky us: Exact bound state found
                         ret_code = E_OTHER("More than *K_ptr initial guesses for bound states found. Increase *K_ptr and try again.")
                         CHECK_RETCODE(ret_code, leave_fun);
@@ -614,8 +638,33 @@ static inline INT kdvv_compute_boundstates(
                         ret_code = E_OTHER("More than *K_ptr initial guesses for bound states found. Increase *K_ptr and try again.")
                         CHECK_RETCODE(ret_code, leave_fun);
                     }
+                    
                     // Zero crossing estimate with regula falsi:
-                    bound_states[K] = (xi[i-1] * CREAL(scatter_coeffs[4*i]) - xi[i] * CREAL(scatter_coeffs[4*(i-1)])) / CREAL( scatter_coeffs[4*i] - scatter_coeffs[4*(i-1)]);
+                    REAL scl1 = 1, scl2 = 1;
+                    if (opts->normalization_flag) {
+                        // The regula falsi without normalization is simply
+                        //
+                        //   (xi[i-1]*a[i] - xi[i]*a[i-1])/(a[i] - a[i-1]).
+                        //
+                        // With normalization, taking the scaling factors l[i]=log_scaling_factors[i]
+                        // into account, we get
+                        //    
+                        //  [Eq 1]  (xi[i]*2^l[i-1]*a[i-1] - xi[i]*2^l[i]*a[i-1])/(2^l[i]*a[i] - 2^l[i-1]*a[i-1]),
+                        //
+                        // where the hat indicates a power. To use the true values of the scattering
+                        // function a(xi), the scaling factors used in the code below should be
+                        //
+                        //  scl1 = POW(2, log_scaling_factors[i]);
+                        //  scl2 = POW(2, log_scaling_factors[i-1]);
+                        //
+                        // However, this can quickly lead to overflow problems. By multiplying both
+                        // the numerator and denominator in Eq 1 with the factor 2^-(l[i]-l[i-1])/2,
+                        // we instead arrive at the following scaling factors.
+                        const REAL s = (log_scaling_factors[i]-log_scaling_factors[i-1])/2;
+                        scl1 = POW(2, s);
+                        scl2 = POW(2, -s);
+                    }
+                    bound_states[K] = (xi[i-1] * scl1*CREAL(scatter_coeffs[4*i]) - xi[i] * scl2*CREAL(scatter_coeffs[4*(i-1)])) / CREAL( scl1*scatter_coeffs[4*i] - scl2*scatter_coeffs[4*(i-1)]);
                     K++;
                 }
             }
@@ -627,7 +676,7 @@ static inline INT kdvv_compute_boundstates(
             // should be in the continuous-time domain.
 
             ret_code = kdvv_refine_bound_states_newton(D, q, r, T, K, bound_states,
-                    opts_slow.discretization, opts_slow.niter, bounding_box);
+                    opts_slow.discretization, opts_slow.niter, bounding_box, opts_slow.normalization_flag);
             CHECK_RETCODE(ret_code, leave_fun);
 
             break;
@@ -643,6 +692,7 @@ static inline INT kdvv_compute_boundstates(
 leave_fun:
     free(xi);
     free(scatter_coeffs);
+    free(log_scaling_factors);
     return ret_code;
 }
 
@@ -668,6 +718,7 @@ static inline INT kdvv_compute_contspec(
     INT ret_code = SUCCESS;
     UINT i, offset = 0, upsampling_factor, D_given;
     COMPLEX * scatter_coeffs = NULL, * xi = NULL;
+    INT * log_scaling_factors = NULL;
 
     // Determine step size
     // D is interpolated number of samples but eps_t is the step-size
@@ -704,22 +755,28 @@ static inline INT kdvv_compute_contspec(
 
         // Allocate memory for call to kdv_scatter_matrix
         scatter_coeffs = malloc(4 * M * sizeof(COMPLEX));
-        if (scatter_coeffs == NULL) {
-            ret_code = E_NOMEM;
-            goto leave_fun;
+        CHECK_NOMEM(scatter_coeffs, ret_code, leave_fun);
+
+        if (opts->normalization_flag) {
+            log_scaling_factors = malloc(M * sizeof(COMPLEX));
+            CHECK_NOMEM(log_scaling_factors, ret_code, leave_fun);
         }
-        
+
         ret_code = kdv_scatter_matrix(D, q, r, eps_t, kappa, M,
-                xi, scatter_coeffs, opts->discretization, 0);
+                xi, scatter_coeffs, log_scaling_factors,
+                opts->discretization, 0);
         CHECK_RETCODE(ret_code, leave_fun);
 
         // This is necessary because kdv_scatter_matrix to ensure
         // boundary conditions can be applied using common code for slow
         // methods and polynomial transfer matrix based methods.
         for (i = 0; i < M; i++){
-            H11_vals[i] = scatter_coeffs[i*4];
+            REAL scl = 1;
+            if (opts->normalization_flag)
+                scl = POW(2, log_scaling_factors[i]);
+            H11_vals[i] = scl*scatter_coeffs[i*4];
 //            H12_vals[i] = scatter_coeffs[i*4+1]; // Not used
-            H21_vals[i] = scatter_coeffs[i*4+2];
+            H21_vals[i] = scl*scatter_coeffs[i*4+2];
 //            H22_vals[i] = scatter_coeffs[i*4+3]; // Not used
         }
 
@@ -804,7 +861,7 @@ static inline INT kdvv_compute_contspec(
 
         case kdvv_cstype_AB:
 
-            scale = POW(2.0, W); // needed since the transfer matrix might
+            scale = POW(2, W); // needed since the transfer matrix might
             // have been scaled by kdv_fscatter. W == 0 for slow methods.
 
             // Calculating the discretization specific phase factors.
@@ -831,6 +888,7 @@ static inline INT kdvv_compute_contspec(
         free(H11_vals);
         free(scatter_coeffs);
         free(xi);
+        free(log_scaling_factors);
         return ret_code;
 }
 
@@ -847,6 +905,7 @@ static inline INT kdvv_compute_normconsts_or_residues(
         fnft_kdvv_opts_t const * const opts)
 {
     COMPLEX *a_vals = NULL, *aprime_vals = NULL;
+    INT * Ws = NULL;
     UINT i, offset = 0;
     INT ret_code = SUCCESS;
 
@@ -865,6 +924,11 @@ static inline INT kdvv_compute_normconsts_or_residues(
         goto leave_fun;
     }
 
+    if (opts->normalization_flag) {
+        Ws = malloc(K * sizeof(INT));
+        CHECK_NOMEM(Ws, ret_code, leave_fun);
+    }
+
     const UINT upsampling_factor = kdv_discretization_upsampling_factor(opts->discretization);
     if (upsampling_factor == 0) {
         ret_code = E_INVALID_ARGUMENT(opts->discretization);
@@ -876,7 +940,7 @@ static inline INT kdvv_compute_normconsts_or_residues(
     ret_code=fnft__kdv_slow_discretization(&(opts_slow.discretization));
     CHECK_RETCODE(ret_code, leave_fun);
 
-    ret_code = kdv_scatter_bound_states(D, q, r, T, K, bound_states, a_vals, aprime_vals, normconsts_or_residues, opts_slow.discretization, 0);
+    ret_code = kdv_scatter_bound_states(D, q, r, T, K, bound_states, a_vals, aprime_vals, normconsts_or_residues, Ws, opts_slow.discretization, 0);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // Update to or add residues if requested
@@ -897,12 +961,15 @@ static inline INT kdvv_compute_normconsts_or_residues(
             if (aprime_vals[i] == 0.0)
                 return E_DIV_BY_ZERO;
             normconsts_or_residues[offset + i] /= aprime_vals[i];
+            if (Ws != NULL) // if normalization is on
+                normconsts_or_residues[offset + i] /= POW(2, Ws[i]);
         }
     }
 
     leave_fun:
         free(a_vals);
         free(aprime_vals);
+        free(Ws);
         return ret_code;
 }
 
@@ -916,11 +983,14 @@ static inline INT kdvv_refine_bound_states_newton(
         COMPLEX * const bound_states,
         kdv_discretization_t const discretization,
         const UINT niter,
-        REAL const * const bounding_box)
+        REAL const * const bounding_box,
+        const INT normalization_flag)
 {
     INT ret_code = SUCCESS;
     UINT i, iter;
     COMPLEX a_val, b_val, aprime_val, error;
+    INT W = 0;
+    INT * const W_ptr = (normalization_flag) ? &W : NULL;
     REAL eprecision = EPSILON * 100;
 
     // Check inputs
@@ -946,7 +1016,7 @@ static inline INT kdvv_refine_bound_states_newton(
         do {
             // Compute a(lam) and a'(lam) at the current root
             ret_code = kdv_scatter_bound_states(D, q, r, T, 1,
-                    bound_states + i, &a_val, &aprime_val, &b_val, discretization, 1);
+                    bound_states + i, &a_val, &aprime_val, &b_val, W_ptr, discretization, 1);
             if (ret_code != SUCCESS){
                 ret_code = E_SUBROUTINE(ret_code);
                 CHECK_RETCODE(ret_code, leave_fun);
@@ -959,6 +1029,7 @@ static inline INT kdvv_refine_bound_states_newton(
                 return E_DIV_BY_ZERO;
 
             // Perform Newton updates: lam[i] <- lam[i] - a(lam[i])/a'(lam[i])
+            // We don't have to scale a and a' by 2^W because that factor cancels.
             error = CREAL(a_val) / (I * CIMAG(aprime_val));
             bound_states[i] -= error;
             iter++;

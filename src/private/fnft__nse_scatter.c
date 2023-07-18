@@ -18,6 +18,7 @@
 * Shrinivas Chimmalgi (TU Delft) 2017-2020.
 * Marius Brehler (TU Dortmund) 2018.
 * Peter J Prins (TU Delft) 2020.
+* Sander Wahls (KIT) 2023.
 */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -41,6 +42,7 @@ INT nse_scatter_matrix(UINT const D,
                        UINT const K,
                        COMPLEX const * const lambda,
                        COMPLEX * const result,
+                       INT * const W,
                        nse_discretization_t const discretization,
                        UINT const derivative_flag)
 {
@@ -72,7 +74,7 @@ INT nse_scatter_matrix(UINT const D,
 
     // Call akns_scatter_bound_states
     UINT vanilla_flag = 0; // Ignored value for NSE
-    ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result,
+    ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result, W,
             akns_discretization, akns_pde_NSE, vanilla_flag, derivative_flag);
     CHECK_RETCODE(ret_code, leave_fun);
 
@@ -92,6 +94,7 @@ INT nse_scatter_bound_states(UINT const D,
                              COMPLEX * const a_vals,
                              COMPLEX * const aprime_vals,
                              COMPLEX * const b,
+                             INT * const Ws,
                              nse_discretization_t const discretization,
                              UINT const skip_b_flag)
 {
@@ -104,7 +107,7 @@ INT nse_scatter_bound_states(UINT const D,
 
     // Call akns_scatter_bound_states
     UINT vanilla_flag = 0; // Ignored value for NSE
-    ret_code = akns_scatter_bound_states(D, q, r, T, K,bound_states, a_vals, aprime_vals, b, akns_discretization, akns_pde_NSE, vanilla_flag, skip_b_flag);
+    ret_code = akns_scatter_bound_states(D, q, r, T, K, bound_states, a_vals, aprime_vals, b, Ws, akns_discretization, akns_pde_NSE, vanilla_flag, skip_b_flag);
     CHECK_RETCODE(ret_code, leave_fun);
 
 leave_fun:

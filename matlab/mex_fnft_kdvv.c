@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018, 2023.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
 * Peter J. Prins (TU Delft) 2021.
 */
@@ -160,6 +160,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             /* Increase k to account for vector of initial guesses */
             k++;
 
+        } else if ( strcmp(str, "grid_spacing") == 0 ) {
+
+            /* Extract desired number of iterations */
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+            || mxGetNumberOfElements(prhs[k+1]) != 1
+                    || mxGetScalar(prhs[k+1]) <= 0.0 ) {
+                snprintf(msg, sizeof msg, "'grid_spacing' should be followed by a positive real scalar.");
+                goto on_error;
+            }
+            opts.grid_spacing = (FNFT_REAL)mxGetScalar(prhs[k+1]);
+
+            /* Increase k to account for the passed value */
+            k++;
+
         } else if ( strcmp(str, "RE") == 0 ) {
 
             opts.richardson_extrapolation_flag  = 1;
@@ -185,6 +199,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "skip_nc") == 0 ) {
 
             skip_normconsts_flag = 1;
+
+        } else if ( strcmp(str, "skip_normalization") == 0 ) {
+
+            opts.normalization_flag = 0;
 
         } else if ( strcmp(str, "quiet") == 0 ) {
 

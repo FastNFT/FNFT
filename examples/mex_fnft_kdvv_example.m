@@ -39,7 +39,10 @@ q = 16*sech(t).^2;
 
 %%% Compute the nonlinear Fourier transform %%%
 
-[contspec, bound_states, norming_constants] = mex_fnft_kdvv(q, T, XI);
+dxi = sqrt(max(q)) / 1000; % use approximately 1000 grid points for the
+% bound state localization step
+[contspec, bound_states, norming_constants] = mex_fnft_kdvv(q, T, XI, ...
+    'grid_spacing', dxi);
 % mex_fnft_kdvv has many options => run "help mex_fnft_kdvv" to learn more
 
 %%% Plot the results %%%

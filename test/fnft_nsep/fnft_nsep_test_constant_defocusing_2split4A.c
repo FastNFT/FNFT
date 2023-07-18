@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (KIT) 2023.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -42,6 +43,11 @@ INT main()
     opts.bounding_box[2] = -10;
     opts.bounding_box[3] = 10;
 
+    opts.normalization_flag = 0;
+    ret_code = nsep_testcases_test_fnft(tc, D, error_bounds, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    opts.normalization_flag = 1;
     ret_code = nsep_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
