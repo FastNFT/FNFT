@@ -19,24 +19,27 @@
 %
 %   'M'             The length of the vector contspec. Followed by the
 %                   desired value, a positive integer.
+%   'bsloc_gridsearch_refine' Default bound state localization method.
+%                   The algorithm evaluates a(xi) on the grid 
+%                   xi = 1i*[eps(1-eps(1)),h*(1:(N-2)),(N-1)h-eps((N-1)h)], where
+%                   h:= \sqrt{c \max_t q(t)} / (N-1). The sign changes of
+%                   a(xi) on this grid are used as initial guesses for the
+%                   bound states, which are then refined as in 'bsloc_newton'.
+%                   The number of grid points N is chosen such that the
+%                   distance between two consecutive grid points does not
+%                   exceed the grid_spacing parameter, which must be
+%                   set with the option described below if this method is used.
+%                   The constant c is given by c=1 for all second order
+%                   discretizations, fnft_kdv_discretization_4SPLIT4A/B, and
+%                   fnft_kdv_discretization_CF4_2; c is approximately 2 for
+%                   other discretizations. 
 %   'bsloc_newton'  Use Newton's method to locate bound states. This method
 %                   is reliable if good intial guesses for the bound states
 %                   are known. Followed by a complex row vector of K
 %                   initial guesses. It requires O(niter KD) FLOPs.
-%   'bsloc_gridsearch_refine' The algorithm evaluates a(xi) on the grid xi =
-%                   1i*[eps(1-eps(1)),h*(1:(M-2)),(M-1)h-eps((M-1)h)], where
-%                   h:= \sqrt{c \max_t q(t)} / (M-1), where M=10000 and c=1 for
-%                   all second order discretizations,
-%                   fnft_kdv_discretization_4SPLIT4A/B, and
-%                   fnft_kdv_discretization_CF4_2; c is approximately 2 for
-%                   other discretizations. The density of the grid can be
-%                   changed using the grid_spacing parameter. The sign changes
-%                   of a(xi) on this grid are used as initial guesses for the
-%                   bound states, which are then refined as in 'bsloc_newton'.
-%   'grid_spacing'  If set, the number of grid points M for the gridsearch_refine
-%                   method (see above) is instead chosen such that the distance
-%                   between consecutive grid points is not larger than the value 
-%                   provided by the user after this one (a positive number).
+%   'grid_spacing'  Followed by a positive real number. Has to be set if the
+%                   bsloc_gridsearch_refine method is used. See the
+%                   description there.
 %   'bsloc_niter'   Number of iterations to be carried by Newton's method.
 %                   Followed by a positive integer.
 %   'RE'            Use Richardson extrpolation to improve accuracy. The
