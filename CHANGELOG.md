@@ -1,14 +1,36 @@
 # Changelog
 
+## [0.5.0]
+
+### Added
+
+- A NFT routine fnft_manakovv for the Manakov equation with vanishing boundaries was added (continuous spectrum only).
+- The periodic NFT routine fnft_nsep now also supports pure Newton refinement.
+- The routine fnft_kdvv now can now also compute the discrete spectrum. To locate the bound states, either Newton's method or a grid search with additional Newton refinements are available.
+- The slow scattering methods for AKNS-type systems now include a normalization procedure to deal with numerical overflow (enabled by default).
+- The routine fnft__kdv_finvscatter has been added. The plan is to later use it for a fast inverse KdV NFT.
+
+### Changed
+
+- New criteria for stopping Newton iteration in fnft_nsep.
+- Simplified some tests to reduce run times.
+- The code for AKNS scattering has been overhauled.
+
+### Fixed
+
+- Several memory leaks have been fixed.
+
 ## [0.4.1] -- 2020-07-13
 
 ### Changed
 
 - Number of samples for fnft_nsep again has to be a power of two.
+- misc_resample no longer issues a warning when the signal appears to be undersampled. This gave the wrong impression that CFx_y discrizations suffer more in such scenarios than the other ones, which do not use this routine.
 
 ### Fixed
 
-- misc_downsample could return incorrect values for first_last_index[1]
+- misc_downsample could return incorrect values for first_last_index[1].
+- Some errors in fnft_nsev become meaningless when bound_states==NULL and should not be risen in that case.
 
 ## [0.4.0] -- 2020-07-08
 
