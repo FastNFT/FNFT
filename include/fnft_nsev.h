@@ -48,9 +48,9 @@
  *  to each other are merged. \n \n
  *  fnft_nsev_bsfilt_FULL: Bound states in physically implausible regions and
  *  outside the region based on the step-size of the supplied samples are
- *  rejected.
+ *  rejected. \n \n
  *  fnft_nsev_opts_filt_MANUAL: Only points within the specified
- *  \link fnft_nsep_opts_t::bounding_box \endlink are kept. \n\n
+ *  \link fnft_nsev_opts_t::bounding_box \endlink are kept. \n\n
  */
 typedef enum {
     fnft_nsev_bsfilt_NONE,
@@ -201,7 +201,13 @@ typedef enum {
  *  such as discontinuous signals, applying Richardson extrapolation may result in
  *  worse accuracy compared to the first approximation.
  *  By default, Richardson extrapolation is disabled (i.e., the
- *  flag is zero). To enable, set the flag to one.
+ *  flag is zero). To enable, set the flag to one.\n\n
+ *
+ * @var fnft_nsev_opts_t::bounding_box
+ *  Array of four reals. Defines a box in the complex plane that is used for
+ *  manual filtering: \n
+ *  bounding_box[0] <= real(lambda) <= bounding_box[1] \n
+ *  bounding_box[2] <= imag(lambda) <= bounding_box[3] \n
  */
 typedef struct {
     fnft_nsev_bsfilt_t bound_state_filtering;
