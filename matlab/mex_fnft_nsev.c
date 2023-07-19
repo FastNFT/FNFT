@@ -14,9 +14,10 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018, 2022.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
 * Peter J. Prins (2021).
+* Sander Wahls (KIT) 2023.
 */
 
 #include <string.h>
@@ -164,7 +165,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             
             /* Increase k to account for vector of initial guesses */
     	    k++;
-            
+
+        } else if ( strcmp(str, "bsloc_tol") == 0 ) {
+
+            /* Extract desired number of iterations */
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+            || mxGetNumberOfElements(prhs[k+1]) != 1
+                    || mxGetScalar(prhs[k+1]) < 0.0 ) {
+                snprintf(msg, sizeof msg, "'bsloc_tol' should be followed by a non-negative real scalar.");
+                goto on_error;
+            }
+            opts.tol = (FNFT_REAL)mxGetScalar(prhs[k+1]);
+
+            /* Increase k to account for vector of initial guesses */
+    	    k++;
+
         } else if ( strcmp(str, "bsloc_subsamp_refine") == 0 ) {
             
             opts.bound_state_localization = fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE;
@@ -195,6 +210,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "bsfilt_full") == 0 ) {
             
             opts.bound_state_filtering = fnft_nsev_bsfilt_FULL;
+
+        } else if ( strcmp(str, "bsfilt_manual") == 0 ) {
+
+            opts.bound_state_filtering = fnft_nsev_bsfilt_MANUAL;
+
+            /* Extract bounding box for manual filltering */
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+            || mxGetM(prhs[k+1]) != 1 || mxGetN(prhs[k+1]) != 4) {
+                snprintf(msg, sizeof msg, "'filt_manual' should be followed by a real row vector of length four. See the help.");
+                goto on_error;
+            }
+            double const * const tmp = mxGetPr(prhs[k+1]);
+            opts.bounding_box[0] = (FNFT_REAL)tmp[0];
+            opts.bounding_box[1] = (FNFT_REAL)tmp[1];
+            opts.bounding_box[2] = (FNFT_REAL)tmp[2];
+            opts.bounding_box[3] = (FNFT_REAL)tmp[3];
+
+            /* Increase k to account for bounding box vector */
+            k++;
+
         } else if ( strcmp(str, "RE") == 0 ) {
 
             opts.richardson_extrapolation_flag  = 1;
@@ -314,7 +349,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
             opts.discretization = fnft_nse_discretization_4SPLIT4B;
 
-
         // Slow discretizations
         } else if ( strcmp(str, "discr_BO") == 0 ) {
             
@@ -374,8 +408,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if (bound_states == NULL) {
             K = fnft_nsev_max_K(D, &opts);
             if (K == 0) {
-                snprintf(msg, sizeof msg, "Discretization does not support the chosen bound state localization method.");
-                goto on_error;
+                //snprintf(msg, sizeof msg, "Discretization does not support the chosen bound state localization method.");
+                //goto on_error;
+                K = D;
             }
             bound_states = mxMalloc(K * sizeof(FNFT_COMPLEX));
         }

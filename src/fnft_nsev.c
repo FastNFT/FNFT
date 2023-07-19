@@ -28,13 +28,15 @@
 static fnft_nsev_opts_t default_opts = {
     .bound_state_filtering = nsev_bsfilt_FULL,
     .bound_state_localization = nsev_bsloc_SUBSAMPLE_AND_REFINE,
-    .niter = 10,
+    .niter = 100,
+    .tol = -1.0, // auto
     .Dsub = 0, // auto
     .discspec_type = nsev_dstype_NORMING_CONSTANTS,
     .contspec_type = nsev_cstype_REFLECTION_COEFFICIENT,
     .normalization_flag = 1,
     .discretization = nse_discretization_2SPLIT4B,
-    .richardson_extrapolation_flag = 0
+    .richardson_extrapolation_flag = 0,
+    .bounding_box = {NAN, NAN, NAN, NAN}
 };
 
 /**
@@ -121,6 +123,7 @@ static inline INT nsev_refine_bound_states_newton(const UINT D,
         COMPLEX * const bound_states,
         nse_discretization_t const discretization,
         UINT const niter,
+        REAL tol,
         REAL const * const bounding_box,
         const INT normalization_flag);
 
@@ -635,12 +638,15 @@ static inline INT nsev_compute_boundstates(
     D_given = D/upsampling_factor;
 
     // Set-up bounding_box based on choice of filtering
-    if (opts->bound_state_filtering == nsev_bsfilt_BASIC) {
+    switch (opts->bound_state_filtering) {
+    case nsev_bsfilt_BASIC:
         bounding_box[0] = -INFINITY;
         bounding_box[1] = INFINITY;
         bounding_box[2] = 0.0;
         bounding_box[3] = INFINITY;
-    }else if (opts->bound_state_filtering == nsev_bsfilt_FULL) {
+        break;
+
+    case nsev_bsfilt_FULL:
         bounding_box[1] = re_bound(eps_t, map_coeff);
         bounding_box[0] = -bounding_box[1];
         bounding_box[2] = 0;
@@ -665,11 +671,28 @@ static inline INT nsev_compute_boundstates(
             default:
                 bounding_box[3] = im_bound(D, q, T, eps_t);
         }
-    }else{
+        break;
+
+    case nsev_bsfilt_MANUAL:
+        memcpy(bounding_box, opts->bounding_box, 4*sizeof(REAL));
+        for (UINT i=0; i<4; i++) {
+            if (bounding_box[i] != bounding_box[i]) { // check for NaN's
+                ret_code = E_OTHER("Must set opts->bounding_box for manual filtering.");
+                goto leave_fun;
+            }
+        }
+        break;
+    
+    case nsev_bsfilt_NONE:        
         bounding_box[0] = -INFINITY;
         bounding_box[1] = INFINITY;
         bounding_box[2] = -INFINITY;
         bounding_box[3] = INFINITY;
+        break;
+
+    default:
+        ret_code = E_INVALID_ARGUMENT(opts->bound_state_filtering);
+        goto leave_fun;
     }
 
     // Localize bound states ...
@@ -694,7 +717,7 @@ static inline INT nsev_compute_boundstates(
                 discretization = opts->discretization;
 
             ret_code = nsev_refine_bound_states_newton(D, q, r, T, K, buffer,
-                    discretization, opts->niter, bounding_box, opts->normalization_flag);
+                    discretization, opts->niter, opts->tol, bounding_box, opts->normalization_flag);
             CHECK_RETCODE(ret_code, leave_fun);
             break;
 
@@ -978,7 +1001,7 @@ static inline INT nsev_compute_normconsts_or_residues(
             offset = K;
             memcpy(normconsts_or_residues + offset,
                     normconsts_or_residues,
-                    offset*sizeof(complex double));
+                    offset*sizeof(COMPLEX));
         } else
             return E_INVALID_ARGUMENT(opts->discspec_type);
 
@@ -1009,6 +1032,7 @@ static inline INT nsev_refine_bound_states_newton(
         COMPLEX * const bound_states,
         nse_discretization_t const discretization,
         const UINT niter,
+        REAL tol,
         REAL const * const bounding_box,
         const INT normalization_flag)
 {
@@ -1016,8 +1040,10 @@ static inline INT nsev_refine_bound_states_newton(
     INT W = 0;
     INT * const W_ptr = (normalization_flag) ? &W : NULL;
     UINT i, iter;
-    COMPLEX a_val, b_val, aprime_val, error;
-    REAL eprecision = EPSILON * 100;
+    COMPLEX a_val, aprime_val, error = INFINITY;
+    INT warn_flag = 0;
+    if (!(tol >= 0))
+        tol = 100*EPSILON;
 
     // Check inputs
     if (K == 0) // no bound states to refine
@@ -1039,11 +1065,13 @@ static inline INT nsev_refine_bound_states_newton(
     // Perform iterations of Newton's method
     for (i = 0; i < K; i++) {
         iter = 0;
-        do {
+        UINT ok_flag = 0;
+        for (iter=0; iter<niter; iter++) {
+
             // Compute a(lam) and a'(lam) at the current root
             ret_code = nse_scatter_bound_states(D, q, r, T, 1,
-                    bound_states + i, &a_val, &aprime_val, &b_val,
-                    W_ptr, discretization, 0/*skip_b_flag*/);
+                    bound_states + i, &a_val, &aprime_val, NULL,
+                    W_ptr, discretization, 1/*skip_b_flag*/);
             if (ret_code != SUCCESS){
                 ret_code = E_SUBROUTINE(ret_code);
                 CHECK_RETCODE(ret_code, leave_fun);
@@ -1062,11 +1090,22 @@ static inline INT nsev_refine_bound_states_newton(
             if (CIMAG(bound_states[i]) > bounding_box[3]
                     || CREAL(bound_states[i]) > bounding_box[1]
                     || CREAL(bound_states[i]) < bounding_box[0]
-                    || CIMAG(bound_states[i]) < bounding_box[2])
+                    || CIMAG(bound_states[i]) < bounding_box[2]) {
+                ok_flag = 1;
                 break;
+            }
 
-        } while (CABS(error) > eprecision && iter < niter);
+            if ((CABS(error) <= tol) || (CABS(a_val) <= tol)) {
+                ok_flag = 1;
+                break;
+            }
+        }
+        if (!ok_flag)
+            warn_flag = 1;
     }
+
+    if (warn_flag)
+        WARN("Error for one or more bound states still above tolerance after maximum number of Newton iterations. Try to increase the number of iterations, decrease the tolerance or use manual filtering.");
 
     leave_fun:
         return ret_code;

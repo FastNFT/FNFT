@@ -4,16 +4,19 @@
 
 ### Added
 
-- A NFT routine fnft_manakovv for the Manakov equation with vanishing boundaries was added (continuous spectrum only).
-- The periodic NFT routine fnft_nsep now also supports pure Newton refinement.
 - The routine fnft_kdvv now can now also compute the discrete spectrum. To locate the bound states, either Newton's method or a grid search with additional Newton refinements are available.
+- A NFT routine fnft_manakovv for the Manakov equation with vanishing boundaries was added (continuous spectrum only).
 - The slow scattering methods for AKNS-type systems now include a normalization procedure to deal with numerical overflow (enabled by default).
+- The periodic NFT routine fnft_nsep now also supports pure Newton refinement.
+- The vanishing NFT routine fnft_nsev now also supports manual filtering.
 - The routine fnft__kdv_finvscatter has been added. The plan is to later use it for a fast inverse KdV NFT.
 
 ### Changed
 
-- New criteria for stopping Newton iteration in fnft_nsep.
-- Simplified some tests to reduce run times.
+- New criteria for stopping Newton iterations in fnft_nsep and fnft_nsev.
+- The tolerance for the Newton refinements in fnft_nsev can now be set by the user.
+- The default number of iterations for the Newton refinements in fnft_nsev is now 100, and the user is warned if the number was too small.
+- Reduced some tests to reduce run times.
 - The code for AKNS scattering has been overhauled.
 
 ### Fixed
