@@ -36,7 +36,9 @@
 %                   below) is set by the algorithm. Not followed by a
 %                   value.
 %   'bsloc_niter'   Number of iterations to be carried by Newton's method.
-%                   Followed by a positive integer.
+%                   Followed by a non-negative integer.
+%   'bsloc_tol'     Tolerance used for stopping Newton's method. Followed
+%                   by a non-negative real number.
 %   'bsloc_Dsub'    The desired number of samples for the subsampled signal
 %                   in the 'subsamp_refine' method. Less samples in the
 %                   subsampled stage result in faster execution time, but
@@ -48,6 +50,10 @@
 %                   bound states in the lower half plane.
 %   'bsfilt_full'   Full bound state filtering. Additionally removes
 %		            physically implausible bound states.
+%   'bsfilt_manual' Manual filtering. Remove bound states outside of a box
+%                   provided by the user. Must be followed by a real vector
+%                   of the form [min_real, max_real, min_imag, max_imag]
+%                   that specifies the box.
 %   'RE'            Use Richardson extrpolation to improve accuracy. The
 %                   approximations of the nonlinear Fourier spectrum are
 %                   calcuated using all given samples and again with half of
@@ -133,6 +139,7 @@
 % along with this program. If not, see <http://www.gnu.org/licenses/>.
 %
 % Contributors:
-% Sander Wahls (TU Delft) 2017-2018.
+% Sander Wahls (TU Delft) 2017-2018, 2022.
 % Shrinivas Chimmalgi (TU Delft) 2019-2020.
 % Peter J. Prins (TU Delft) 2021.
+% Sander Wahls (KIT) 2023.

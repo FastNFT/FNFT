@@ -428,7 +428,7 @@ INT akns_scatter_bound_states(UINT const D,
                               COMPLEX const * const bound_states,
                               COMPLEX * const a_vals,
                               COMPLEX * const aprime_vals,
-                              COMPLEX * const b,
+                              COMPLEX * const b_vals,
                               INT * const Ws,
                               akns_discretization_t const discretization,
                               akns_pde_t const PDE,
@@ -454,7 +454,7 @@ INT akns_scatter_bound_states(UINT const D,
         return E_INVALID_ARGUMENT(a);
     if (aprime_vals == NULL)
         return E_INVALID_ARGUMENT(a_prime);
-    if (b == NULL)
+    if (!skip_b_flag && b_vals == NULL)
         return E_INVALID_ARGUMENT(b);
     UINT const upsampling_factor = akns_discretization_upsampling_factor(discretization);
     if (upsampling_factor == 0)
@@ -848,7 +848,7 @@ INT akns_scatter_bound_states(UINT const D,
                 if (PDE!=akns_pde_KdV || CREAL(b_temp[0]*b_temp[1])>0) {
                     tmp = FABS( 0.5* LOG( (REAL)CABS( b_temp[1]/b_temp[0] ) ) );
                     if (tmp < error_metric){
-                        b[neig] = b_temp[0];
+                        b_vals[neig] = b_temp[0];
                         error_metric = tmp;
                     }
                 }

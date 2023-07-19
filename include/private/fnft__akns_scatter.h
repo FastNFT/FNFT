@@ -117,7 +117,7 @@ FNFT_INT fnft__akns_scatter_matrix(FNFT_UINT const D,
  * @param[out] a_vals Array of length K, contains the values of \f$a(\lambda)\f$.
  * @param[out] aprime_vals Array of length K, contains the values of
  * \f$ a'(\lambda) = \frac{\partial a(\lambda)}{\partial \lambda}\f$.
- * @param[out] b Array of length K, contains the values of \f$b(\lambda)\f$.
+ * @param[out] b_vals Array of length K, contains the values of \f$b(\lambda)\f$.
  * The \f$b(\lambda)\f$ are calculated using the criterion from
  * Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2932256">&quot;
  * Soliton Phase Shift Calculation for the Korteweg–De Vries Equation,&quot;</a>.
@@ -149,7 +149,7 @@ FNFT_INT akns_scatter_bound_states(FNFT_UINT const D,
                                    FNFT_COMPLEX const * const bound_states,
                                    FNFT_COMPLEX * const a_vals,
                                    FNFT_COMPLEX * const aprime_vals,
-                                   FNFT_COMPLEX * const b,
+                                   FNFT_COMPLEX * const b_vals,
                                    FNFT_INT * Ws,
                                    fnft__akns_discretization_t const discretization,
                                    fnft__akns_pde_t const PDE,
