@@ -26,7 +26,7 @@ INT poly_eval(const UINT deg, COMPLEX const * const p, const UINT nz, \
     COMPLEX * const z)
 {
     UINT i, j;
-    COMPLEX tmp;
+    COMPLEX tmp;    
 
     // Check inputs
     if (p == NULL)

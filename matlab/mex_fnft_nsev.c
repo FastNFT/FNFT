@@ -14,8 +14,10 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018, 2022.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
+* Peter J. Prins (2021).
+* Sander Wahls (KIT) 2023.
 */
 
 #include <string.h>
@@ -163,7 +165,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             
             /* Increase k to account for vector of initial guesses */
     	    k++;
-            
+
+        } else if ( strcmp(str, "bsloc_tol") == 0 ) {
+
+            /* Extract desired number of iterations */
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+            || mxGetNumberOfElements(prhs[k+1]) != 1
+                    || mxGetScalar(prhs[k+1]) < 0.0 ) {
+                snprintf(msg, sizeof msg, "'bsloc_tol' should be followed by a non-negative real scalar.");
+                goto on_error;
+            }
+            opts.tol = (FNFT_REAL)mxGetScalar(prhs[k+1]);
+
+            /* Increase k to account for vector of initial guesses */
+    	    k++;
+
         } else if ( strcmp(str, "bsloc_subsamp_refine") == 0 ) {
             
             opts.bound_state_localization = fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE;
@@ -194,27 +210,146 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "bsfilt_full") == 0 ) {
             
             opts.bound_state_filtering = fnft_nsev_bsfilt_FULL;
-            
-        } else if ( strcmp(str, "discr_modal") == 0 ) {
-            
-            opts.discretization = fnft_nse_discretization_2SPLIT2_MODAL;
-            
-        } else if ( strcmp(str, "discr_2split2A") == 0 ) {
-            
-            opts.discretization = fnft_nse_discretization_2SPLIT2A;
-            
-        } else if ( strcmp(str, "discr_2split4A") == 0 ) {
-            
-            opts.discretization = fnft_nse_discretization_2SPLIT4A;
-            
-        } else if ( strcmp(str, "discr_2split4B") == 0 ) {
-            
-            opts.discretization = fnft_nse_discretization_2SPLIT4B;
-            
-        } else if ( strcmp(str, "discr_4split4B") == 0 ) {
-            
-            opts.discretization = fnft_nse_discretization_4SPLIT4B; 
+
+        } else if ( strcmp(str, "bsfilt_manual") == 0 ) {
+
+            opts.bound_state_filtering = fnft_nsev_bsfilt_MANUAL;
+
+            /* Extract bounding box for manual filltering */
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+            || mxGetM(prhs[k+1]) != 1 || mxGetN(prhs[k+1]) != 4) {
+                snprintf(msg, sizeof msg, "'filt_manual' should be followed by a real row vector of length four. See the help.");
+                goto on_error;
+            }
+            double const * const tmp = mxGetPr(prhs[k+1]);
+            opts.bounding_box[0] = (FNFT_REAL)tmp[0];
+            opts.bounding_box[1] = (FNFT_REAL)tmp[1];
+            opts.bounding_box[2] = (FNFT_REAL)tmp[2];
+            opts.bounding_box[3] = (FNFT_REAL)tmp[3];
+
+            /* Increase k to account for bounding box vector */
+            k++;
+
+        } else if ( strcmp(str, "RE") == 0 ) {
+
+            opts.richardson_extrapolation_flag  = 1;
+
+        } else if ( strcmp(str, "dstype_residues") == 0 ) {
+
+            opts.discspec_type = fnft_nsev_dstype_RESIDUES;
+
+        } else if ( strcmp(str, "cstype_ab") == 0 ) {
+
+            opts.contspec_type = fnft_nsev_cstype_AB;
+
+        } else if ( strcmp(str, "skip_cs") == 0 ) {
+
+            skip_contspec_flag = 1;
+
+        } else if ( strcmp(str, "skip_bs") == 0 ) {
+
+            skip_bound_states_flag = 1;
+            skip_normconsts_flag = 1; // since bound states are needed to
+                                      // compute norming constants
+
+        } else if ( strcmp(str, "skip_nc") == 0 ) {
+
+            skip_normconsts_flag = 1;
+
+        } else if ( strcmp(str, "skip_normalization") == 0 ) {
+
+            opts.normalization_flag = 0;
+
+        } else if ( strcmp(str, "quiet") == 0 ) {
+
+            fnft_errwarn_setprintf(NULL);
         
+        // Fast discretizations
+        } else if ( strcmp(str, "discr_modal") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT2_MODAL;
+
+        } else if ( strcmp(str, "discr_2split1A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT1A;
+
+        } else if ( strcmp(str, "discr_2split1B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT1B;
+
+        } else if ( strcmp(str, "discr_2split2A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT2A;
+
+        } else if ( strcmp(str, "discr_2split2B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT2B;
+
+        } else if ( strcmp(str, "discr_2split2S") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT2S;
+
+        } else if ( strcmp(str, "discr_2split3A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT3A;
+
+        } else if ( strcmp(str, "discr_2split3B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT3B;
+
+        } else if ( strcmp(str, "discr_2split3S") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT3S;
+
+        } else if ( strcmp(str, "discr_2split4A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT4A;
+
+        } else if ( strcmp(str, "discr_2split4B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT4B;
+
+        } else if ( strcmp(str, "discr_2split5A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT5A;
+
+        } else if ( strcmp(str, "discr_2split5B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT5B;
+
+        } else if ( strcmp(str, "discr_2split6A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT6A;
+
+        } else if ( strcmp(str, "discr_2split6B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT6B;
+
+        } else if ( strcmp(str, "discr_2split7A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT7A;
+
+        } else if ( strcmp(str, "discr_2split7B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT7B;
+
+        } else if ( strcmp(str, "discr_2split8A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT8A;
+
+        } else if ( strcmp(str, "discr_2split8B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_2SPLIT8B;
+
+        } else if ( strcmp(str, "discr_4split4A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_4SPLIT4A;
+
+        } else if ( strcmp(str, "discr_4split4B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_4SPLIT4B;
+
+        // Slow discretizations
         } else if ( strcmp(str, "discr_BO") == 0 ) {
             
             opts.discretization = fnft_nse_discretization_BO;
@@ -242,36 +377,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "discr_TES4") == 0 ) {
             
             opts.discretization = fnft_nse_discretization_TES4;
-            
-        } else if ( strcmp(str, "RE") == 0 ) {
-            
-            opts.richardson_extrapolation_flag  = 1;
-            
-        } else if ( strcmp(str, "dstype_residues") == 0 ) {
-            
-            opts.discspec_type = fnft_nsev_dstype_RESIDUES;
- 
-        } else if ( strcmp(str, "cstype_ab") == 0 ) {
-            
-            opts.contspec_type = fnft_nsev_cstype_AB;
- 
-        } else if ( strcmp(str, "skip_cs") == 0 ) {
-            
-            skip_contspec_flag = 1;
-
-        } else if ( strcmp(str, "skip_bs") == 0 ) {
-            
-            skip_bound_states_flag = 1;
-            skip_normconsts_flag = 1; // since bound states are needed to
-                                      // compute norming constants
-
-        } else if ( strcmp(str, "skip_nc") == 0 ) {
-            
-            skip_normconsts_flag = 1;
-          
-        } else if ( strcmp(str, "quiet") == 0 ) {
-            
-            fnft_errwarn_setprintf(NULL);
             
         } else {
             snprintf(msg, sizeof msg, "%uth input has invalid value.", 
@@ -303,8 +408,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if (bound_states == NULL) {
             K = fnft_nsev_max_K(D, &opts);
             if (K == 0) {
-                snprintf(msg, sizeof msg, "fnft_nsev_max_K returned zero.");
-                goto on_error;
+                //snprintf(msg, sizeof msg, "Discretization does not support the chosen bound state localization method.");
+                //goto on_error;
+                K = D;
             }
             bound_states = mxMalloc(K * sizeof(FNFT_COMPLEX));
         }

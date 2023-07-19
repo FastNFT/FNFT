@@ -16,6 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
 * Shrinivas Chimmalgi (TU Delft) 2019.
+* Sander Wahls (KIT) 2023.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -44,8 +45,14 @@ INT main()
     opts.bounding_box[2] = -10;
     opts.bounding_box[3] = 10;
 
+    opts.normalization_flag = 0;
     ret_code = nsep_testcases_test_fnft(tc, D, error_bounds, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
+
+    opts.normalization_flag = 1;
+    ret_code = nsep_testcases_test_fnft(tc, D, error_bounds, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+
     // Check for error decay. The poly_roots_fftgridsearch routine used to
     // find the spectrum on real line guarantees only linear error decay.
     // For this discretization the decay is less than linear.

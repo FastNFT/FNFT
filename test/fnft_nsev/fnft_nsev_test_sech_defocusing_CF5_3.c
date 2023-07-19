@@ -15,7 +15,8 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
-* Shrnivas Chimmalgi (TU Delft) 2019-2020.
+* Shrinivas Chimmalgi (TU Delft) 2019-2020.
+* Sander Wahls (KIT) 2023.
 */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -68,9 +69,15 @@ INT main()
         0.0         // residues 
     };
     opts.richardson_extrapolation_flag = 1;
-    
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);    
+
+    // Repeat without normalization
+    opts.normalization_flag = !opts.normalization_flag;
+    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+    opts.normalization_flag = !opts.normalization_flag;
+
     // Check for at least 6th-order error decay
     D *= 2;
     for (i=0; i<6; i++)

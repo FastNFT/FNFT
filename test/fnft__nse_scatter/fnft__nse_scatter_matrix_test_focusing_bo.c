@@ -1,6 +1,6 @@
 /*
-* This file is part of FNFT.  
-*                                                                  
+* This file is part of FNFT.
+*
 * FNFT is free software; you can redistribute it and/or
 * modify it under the terms of the version 2 of the GNU General
 * Public License as published by the Free Software Foundation.
@@ -9,14 +9,15 @@
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU General Public License for more details.
-*                                                                      
+*
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018, 2020.
 * Shrinivas Chimmalgi (TU Delft) 2017-2018,2020.
 */
+
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft__nse_scatter.h"
@@ -28,12 +29,11 @@ INT nse_scatter_matrix_test_focusing_bo()
     UINT i, D = 8;
     INT ret_code;
     const REAL eps_t = 0.13;
-    COMPLEX q[8];
-    COMPLEX * r = NULL;
+    COMPLEX q[8], r[8];
     COMPLEX result[2*8];
     COMPLEX lam[2] = {2, 1+0.5*I};
     COMPLEX result_exact[16] = { \
-            
+
          -0.498549252810195 -     0.807291550799286*I, \
         -0.0696038174888031 +     0.308032957849424*I, \
          0.0696038174888031 +     0.308032957849424*I, \
@@ -58,7 +58,7 @@ INT nse_scatter_matrix_test_focusing_bo()
         S=eye(4);
         for n=D:-1:1
             ks=(-kappa*abs(q(n))^2-l^2);
-            k=sqrt(ks);        
+            k=sqrt(ks);
             U=[cosh(k*eps_t)-1i*l*sinh(k*eps_t)/k,q(n)*sinh(k*eps_t)/k;...
                 -kappa*conj(q(n))*sinh(k*eps_t)/k,cosh(k*eps_t)+1i*l*sinh(k*eps_t)/k];
             Udash=[1i*eps_t*l^2*cosh(k*eps_t)/ks-(l*eps_t+1i+1i*l^2/ks)*sinh(k*eps_t)/k,...
@@ -72,10 +72,12 @@ INT nse_scatter_matrix_test_focusing_bo()
     end
     format long g; result_exact.'
     */
-    for (i=0; i<D; i++)
+    for (i=0; i<D; i++) {
         q[i] = 0.4*cos(i+1) + 0.5*I*sin(0.3*(i+1));
+        r[i] = -CONJ(q[i]);
+    }
 
-    ret_code = nse_scatter_matrix(D, q, r, eps_t, +1, 2, lam, result, nse_discretization_BO, 1);
+    ret_code = nse_scatter_matrix(D, q, r, eps_t, +1, 2, lam, result, NULL, nse_discretization_BO, 1);
     if (ret_code != SUCCESS)
         return E_SUBROUTINE(ret_code);
     if (misc_rel_err(16, result, result_exact) > 10*EPSILON)

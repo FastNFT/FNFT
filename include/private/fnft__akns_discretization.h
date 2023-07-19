@@ -16,7 +16,7 @@
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
  * Shrinivas Chimmalgi (TU Delft) 2017.
- * Peter J. Prins (TU Delft) 2018.
+ * Peter J. Prins (TU Delft) 2018, 2020-2021.
  */
 
 /**
@@ -145,22 +145,106 @@ FNFT_INT fnft__akns_discretization_z_to_lambda(const FNFT_UINT n, const FNFT_REA
  * This routing computes the special weights required for the 
  * higher-order methods CF\f$^{[4]}_2\f$, CF\f$^{[4]}_3\f$, CF\f$^{[5]}_3\f$ 
  * and CF\f$^{[6]}_4\f$. The weights are used in \link fnft__nse_discretization_preprocess_signal \endlink,
- * \link fnft__akns_scatter_matrix \endlink and \link fnft__nse_scatter_bound_states\endlink.
+ * \link fnft__akns_scatter_matrix \endlink and \link fnft__nse_scatter_bound_states \endlink.
  * The weights for CF\f$^{[4]}_3\f$ are taken from Alvermann and Fehske (<a href="https://doi.org/10.1016/j.jcp.2011.04.006">Journal of Computational Phys. 230, 2011</a>)
  * and the weights for the others are from Blanes, Casas and Thalhammer(<a href="https://doi.org/10.1016/j.cpc.2017.07.016">Computer Phys. Comm. 220, 2017</a>).
  * The weights are mentioned as matrices in the references. This routine returns 
  * them in row-major order.
- * @param[in,out] weights_ptr Pointer to the starting location of weights.
+ * @param[in,out] qr_weights_ptr Pointer to the starting location of potential weights.
+ * @param[in,out] eps_t_weights_ptr Pointer to the starting location of step size weights.
  * @param[in] akns_discretization Discretization of type \link fnft__akns_discretization_t \endlink.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  *
  * @ingroup akns
  */
-FNFT_INT fnft__akns_discretization_method_weights(FNFT_COMPLEX **weights_ptr,
-        fnft__akns_discretization_t akns_discretization);
-        
-        
+FNFT_INT fnft__akns_discretization_method_weights(FNFT_COMPLEX **qr_weights_ptr,
+                                                  FNFT_COMPLEX **eps_t_weights_ptr,
+                                                  fnft__akns_discretization_t const akns_discretization);
+
+/**
+ * @brief  This routine preprocesses the signal by resampling and subsampling based on the discretization.
+ * The preprocessing is necessary for higher-order methods.
+ *
+ * This routine preprocess q to generate q_preprocessed and r_preprocessed
+ * based on the discretization. The preprocessing may involve resampling
+ * and sub-sampling.
+ * The routine is based on the following papers:
+ *      - Chimmalgi, Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2945480">&quot; Fast Nonlinear Fourier Transform Algorithms Using Higher Order Exponential Integrators,&quot;</a> IEEE Access 7, 2019.
+ *      - Medvedev, Vaseva, Chekhovskoy and  Fedoruk, <a href="https://doi.org/10.1364/OE.377140">&quot; Exponential fourth order schemes for direct Zakharov-Shabat problem,&quot;</a> Optics Express, vol. 28, pp. 20--39, 2020.
+ *
+ * @param[in] D Number of samples
+ * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
+ *  where \f$ t_n = T[0] + n(T[1]-T[0])/(D-1) \f$ and \f$n=0,1,\dots,D-1\f$, of
+ *  the to-be-transformed signal in ascending order
+ *  (i.e., \f$ q(t_0), q(t_1), \dots, q(t_{D-1}) \f$)
+ * @param[in] r_from_q A function pointer array of length 3. `r_from_q[0](q)` has to return the value of an r-sample given the corresponding q-sample, before preprocessing. `r_from_q[1](q)` and `r_from_q[2](q)` have to return respectively the sample of the first/second derivative of r given the corresponding sample of the first/second derivative of q.
+ * @param[in] eps_t Real-valued discretization step-size.
+ * @param[out] q_preprocessed_ptr Pointer to the starting location of preprocessed signal q_preprocessed.
+ * @param[out] r_preprocessed_ptr Pointer to the starting location of preprocessed signal r_preprocessed.
+ * @param[in,out] Dsub_ptr Pointer to number of processed samples. Upon entry, *Dsub_ptr
+ *             should contain a desired number of samples. Upon exit, *Dsub_ptr
+ *             has been overwritten with the actual number of samples that the
+ *             routine has chosen. It is usually close to the desired one.
+ * @param[out] first_last_index Vector of length two. Upon exit, it contains
+ *             the original index of the first and the last sample used to build
+ *             q_preprocessed.
+ * @param[in] discretization Discretization of type \link fnft__akns_discretization_t \endlink.
+ * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
+ *  defined in \link fnft_errwarn.h \endlink.
+ *
+ * @ingroup akns
+*/
+FNFT_INT fnft__akns_discretization_preprocess_signal(FNFT_UINT const D,
+                                                     FNFT_COMPLEX const * const q,
+                                                     FNFT_COMPLEX (*r_from_q[3])(FNFT_COMPLEX const),
+                                                     FNFT_REAL const eps_t,
+                                                     FNFT_UINT * const Dsub_ptr,
+                                                     FNFT_COMPLEX **q_preprocessed_ptr,
+                                                     FNFT_COMPLEX **r_preprocessed_ptr,
+                                                     FNFT_UINT * const first_last_index,
+                                                     fnft__akns_discretization_t discretization);
+
+/**
+ * @brief This routine returns the change of basis matrix from the basis of the discretization to S.
+ * @param[out] T 2x2 or 4x4 matrix. Left multiplication of a vector in the basis of the discretization by T changes it to the equivalent vector in S basis.
+ * @param[in] xi spectral parameter \f$ \xi \f$.
+ * @param[in] derivative_flag When 0, T is 2x2. When 1 T is 4x4, to include the derivatives.
+ * @param[in] eps_t Real-valued discretization step-size.
+ * @param[in] akns_discretization Discretization of type \link fnft__akns_discretization_t \endlink.
+ * @param[in] vanilla_flag For calculations for the KdV equation, pass 1 for the original mapping to the AKNS framework with r=-1. Pass 0 for the alternative mapping with q=-1. Unused for NSE.
+ * @param[in] PDE PDE of type \link fnft__akns_pde_t \endlink.
+ *
+ * @ingroup akns
+ */
+FNFT_INT fnft__akns_discretization_change_of_basis_matrix_to_S(FNFT_COMPLEX * const T,
+                                                               FNFT_COMPLEX const xi,
+                                                               FNFT_UINT  const derivative_flag, // 0- > 2x2, 1->4x4
+                                                               FNFT_REAL const eps_t,
+                                                               fnft__akns_discretization_t const akns_discretization,
+                                                               FNFT_UINT vanilla_flag,
+                                                               fnft__akns_pde_t const PDE);
+
+/**
+ * @brief This routine returns the change of basis matrix from the S basis to the basis of the discretization.
+ * @param[out] T 2x2 or 4x4 matrix. Left multiplication of a vector in the S basis of the discretization by T changes it to the equivalent vector in the basis of the discretization.
+ * @param[in] xi spectral parameter \f$ \xi \f$.
+ * @param[in] derivative_flag When 0, T is 2x2. When 1 T is 4x4, to include the derivatives.
+ * @param[in] eps_t Real-valued discretization step-size.
+ * @param[in] akns_discretization Discretization of type \link fnft__akns_discretization_t \endlink.
+ * @param[in] vanilla_flag For calculations for the KdV equation, pass 1 for the original mapping to the AKNS framework with r=-1. Pass 0 for the alternative mapping with q=-1. Unused for NSE.
+ * @param[in] PDE PDE of type \link fnft__akns_pde_t \endlink.
+ * 
+ * @ingroup akns
+ */
+FNFT_INT fnft__akns_discretization_change_of_basis_matrix_from_S(FNFT_COMPLEX * const T,
+                                                                FNFT_COMPLEX const xi,
+                                                                FNFT_UINT  const derivative_flag, // 0- > 2x2, 1->4x4
+                                                                FNFT_REAL const eps_t,
+                                                                fnft__akns_discretization_t const akns_discretization,
+                                                                FNFT_UINT vanilla_flag,
+                                                                fnft__akns_pde_t const PDE);
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define akns_discretization_degree(...) fnft__akns_discretization_degree(__VA_ARGS__)
 #define akns_discretization_boundary_coeff(...) fnft__akns_discretization_boundary_coeff(__VA_ARGS__)
@@ -169,7 +253,9 @@ FNFT_INT fnft__akns_discretization_method_weights(FNFT_COMPLEX **weights_ptr,
 #define akns_discretization_lambda_to_z(...) fnft__akns_discretization_lambda_to_z(__VA_ARGS__)
 #define akns_discretization_z_to_lambda(...) fnft__akns_discretization_z_to_lambda(__VA_ARGS__)
 #define akns_discretization_method_weights(...) fnft__akns_discretization_method_weights(__VA_ARGS__)
-
+#define akns_discretization_preprocess_signal(...) fnft__akns_discretization_preprocess_signal(__VA_ARGS__)
+#define akns_discretization_change_of_basis_matrix_to_S(...) fnft__akns_discretization_change_of_basis_matrix_to_S(__VA_ARGS__)
+#define akns_discretization_change_of_basis_matrix_from_S(...) fnft__akns_discretization_change_of_basis_matrix_from_S(__VA_ARGS__)
 #endif
 
 #endif

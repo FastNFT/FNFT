@@ -22,6 +22,7 @@
 #include "fnft__poly_fmult.h"
 #include "fnft__misc.h"
 #include "fnft__errwarn.h"
+#include <stdio.h>
 
 static INT poly_fmult2x2_test_n_is_power_of_2(INT normalize_flag)
 {

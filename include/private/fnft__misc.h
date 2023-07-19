@@ -14,8 +14,9 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018, 2023.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
+* Peter J. Prins (TU Delft) 2021.
 */
 
 /**
@@ -39,7 +40,7 @@
  * @param[in] buf Array to be printed.
  * @param[in] varname Name of the array being printed.
  */
-void fnft__misc_print_buf(const FNFT_INT len, FNFT_COMPLEX const * const buf,
+void fnft__misc_print_buf(const FNFT_UINT len, FNFT_COMPLEX const * const buf,
                           char const * const varname);
 
 /**
@@ -53,7 +54,7 @@ void fnft__misc_print_buf(const FNFT_INT len, FNFT_COMPLEX const * const buf,
  * @param[in] vec_exact Complex array of exact result of length len.
  * @return Returns the real valued relative error err.
  */
-FNFT_REAL fnft__misc_rel_err(const FNFT_INT len,
+FNFT_REAL fnft__misc_rel_err(const FNFT_UINT len,
     FNFT_COMPLEX const * const vec_numer, FNFT_COMPLEX const * const vec_exact);
 
 /**
@@ -86,12 +87,12 @@ FNFT_COMPLEX fnft__misc_sech(FNFT_COMPLEX Z);
  *
  * @ingroup misc
  * This function computes the quantity\n
- * \f$ val = \frac{b-a}{2N}.(|Z[0]|^2+|Z[N-1]|^2)+\sum_{i=1}^{i=N-2}\frac{b-a}{N}.|Z[i]|^2\f$.
+ * \f$ val = \frac{b-a}{N} \sum_{i=0}^{i=N-1}|Z[i]|^2\f$.
  * @param[in] N Number of elements in the array.
  * @param[in] Z Complex valued array of length N.
- * @param[in] a Real number corresponding to first element of Z.
- * @param[in] b Real number corresponding to last element of Z.
- * @return Returns the quantity val. Returns NAN if N<2 or a>=b.
+ * @param[in] a Real number corresponding to the left boundary of the first element of Z.
+ * @param[in] b Real number corresponding to right boundary of the last element of Z.
+ * @return Returns the quantity val. Returns NAN if N==0 or a>=b.
  */
 FNFT_REAL fnft__misc_l2norm2(const FNFT_UINT N, FNFT_COMPLEX const * const Z,
     const FNFT_REAL a, const FNFT_REAL b);
@@ -203,11 +204,54 @@ FNFT_INT fnft__misc_downsample(const FNFT_UINT D, FNFT_COMPLEX const * const q,
  * @brief Sinc function for complex arguments.
  *
  * @ingroup misc
- * Function computes the Sinc function sin(x)/x for \link FNFT_COMPLEX \endlink argument.
+ * Function computes the sinc function sin(x)/x for \link FNFT_COMPLEX \endlink argument.
+ * If x is close to 0, the calculation is approximated with
+ * sinc(x) = cos(x/sqrt(3)) + O(x^4)
  * @param[in] x \link FNFT_COMPLEX \endlink argument.
- * @return Sinc(x).
+ * @return sinc(x).
  */
-FNFT_COMPLEX fnft__misc_CSINC(FNFT_COMPLEX x);
+static inline FNFT_COMPLEX fnft__misc_CSINC(FNFT_COMPLEX x)
+{
+    const FNFT_REAL sinc_th=1.0E-8;
+
+    if (FNFT_CABS(x)>=sinc_th)
+        return FNFT_CSIN(x)/x;
+    else
+        return FNFT_CCOS(x/FNFT_CSQRT(3));
+}
+
+/**
+ * @brief Derivative of sinc function for complex arguments.
+ *
+ * @ingroup misc
+ * Function computes the derivative of the sinc function sin(x)/x for
+ * \link FNFT_COMPLEX \endlink argument.
+ * This derivative can be expressed analytically as
+ * d/dx sinc(x) = 0 if x=0, and (cos(x) - sinc(x)) / x otherwise.
+ * However, if x is close to 0, a numerical implementation like that results in
+ * catastrophic cancellation. Therefore we use its Taylor approximation instead:
+ * \f$ \frac{d}{dx} \text{sinc}(x) = \sum_{n=0}^\infty \frac{x^{2n+1} (-1)^{n+1}}{(2n+3)(2*n+1)!} )\f$
+ * of which we use the first 9 terms, i.e. a 18-th order Taylor approximation.
+ * This polynomial is computed with Horner's method.
+ * @param[in] x \link FNFT_COMPLEX \endlink argument.
+ * @return d/dx sinc(x).
+ */
+static inline FNFT_COMPLEX fnft__misc_CSINC_derivative(FNFT_COMPLEX x)
+{
+    const FNFT_REAL sinc_derivative_th=1.0;
+    FNFT_COMPLEX returnvalue;
+
+    if (FNFT_CABS(x)>=sinc_derivative_th)
+        returnvalue = (FNFT_CCOS(x)-fnft__misc_CSINC(x))/x;
+    else {
+        returnvalue = 0.0;
+        FNFT_COMPLEX x2 = x * x;
+        for (FNFT_UINT n=9; n-->0; )
+            returnvalue = (( n%2 ? 1.0 : -1.0) + x2/(2*n+2) * returnvalue ) / (2*n+3);
+        returnvalue *= x;
+    }
+    return returnvalue;
+}
 
 /**
  * @brief Closest larger or equal number that is a power of two.
@@ -242,29 +286,34 @@ FNFT_INT fnft__misc_resample(const FNFT_UINT D, const FNFT_REAL eps_t, FNFT_COMP
     const FNFT_REAL delta, FNFT_COMPLEX *const q_new);
 
 /**
- * @brief Multiples two square matrices of size N.
+ * @brief Multiples two complex valued matrices of any compatible size.
  *
  * @ingroup  misc
  *
- * Multiples two square matrices U and T of size N. T is replaced by the
- * result U*T.
- * @param[in] N Positive integer that is the size of the two matrices.
- * @param[in] U Pointer to the first element of complex valued NxN matrix U.
- * @param[in] T Pointer to the first element of complex valued NxN matrix T.
- * @param[out] TM Pointer to the first element of complex valued NxN matrix TM 
- * which will contain the result TM=U*T on return.
+ * Right-multiples an nxm matrix A by an mxp matrix B. The resulting nxp matrix
+ * is stored in C.
+ * @param[in] n Positive integer that is the number of rows of A and C.
+ * @param[in] m Positive integer that is the number of columns of A and the
+ * number of rows of B.
+ * @param[in] p Positive integer that is the number of columns of B and C.
+ * @param[in] A Pointer to the first element of complex valued nxm matrix A.
+ * @param[in] B Pointer to the first element of complex valued mxp matrix B.
+ * @param[out] C Pointer to the first element of complex valued nxp matrix C
+ * which will contain the result C=AB on return. The user should allocate
+ * memory for C, different from the memory that contains A and B.
+ *
  */
-static inline void fnft__misc_mat_mult_proto(const FNFT_UINT N, FNFT_COMPLEX * const U,
-        FNFT_COMPLEX *const T, FNFT_COMPLEX *const TM){
-    FNFT_UINT  c1, c2, c3;
-    FNFT_COMPLEX sum = 0;
-    for (c1 = 0; c1 < N; c1++) {
-        for (c2 = 0; c2 < N; c2++) {
-            for (c3 = 0; c3 < N; c3++) {
-                sum = sum + U[c1*N+c3]*T[c3*N+c2];
-            }
-            TM[c1*N+c2] = sum;
-            sum = 0;
+static inline void fnft__misc_matrix_mult(const FNFT_UINT n,
+                                          const FNFT_UINT m,
+                                          const FNFT_UINT p,
+                                          FNFT_COMPLEX const * const A,
+                                          FNFT_COMPLEX const * const B,
+                                          FNFT_COMPLEX * const C){
+    for (FNFT_UINT cn = 0; cn < n; cn++) {
+        for (FNFT_UINT cp = 0; cp < p; cp++) {
+            C[ cn*p + cp] = 0.0;
+            for (FNFT_UINT cm = 0; cm < m; cm++)
+                C[ cn*p + cp ] += A[ cn*m + cm ] * B[ cm*p + cp ];
         }
     }
     
@@ -286,7 +335,7 @@ static inline void fnft__misc_mat_mult_2x2(FNFT_COMPLEX * const U,
         FNFT_COMPLEX *const T){
 
     FNFT_COMPLEX TM[4] = { 0 };
-    fnft__misc_mat_mult_proto(2, U, T, &TM[0]);
+    fnft__misc_matrix_mult(2, 2, 2, U, T, &TM[0]);
     memcpy(T,TM,4*sizeof(FNFT_COMPLEX));
     
     return;
@@ -307,7 +356,7 @@ static inline void fnft__misc_mat_mult_4x4(FNFT_COMPLEX * const U,
         FNFT_COMPLEX *const T){
 
     FNFT_COMPLEX TM[16] = { 0 };
-    fnft__misc_mat_mult_proto(4, U, T, &TM[0]);
+    fnft__misc_matrix_mult(4, 4, 4, U, T, &TM[0]);
     memcpy(T,TM,16*sizeof(FNFT_COMPLEX));
     
     return;
@@ -343,6 +392,41 @@ static inline FNFT_REAL fnft__misc_legendre_poly(const FNFT_UINT n, const FNFT_R
     return P;
 }
 
+/**
+ * @brief Normalizes a complex vector so that the maximum absolute value is 
+ * >=1 and <2.
+ *
+ * @ingroup  misc
+ *
+ * @param[in] len Length of the vector.
+ * @param[in,out] v Complex vector to be normalized. Is overwritten with
+ *  the result.
+ * @return Returns an integer a. Two to the power -a is the scaling factor
+ *  used for the normalization. That is, v_out = 2^(-a)*v_in.
+ */
+static inline FNFT_INT fnft__misc_normalize_vector(const FNFT_UINT len, FNFT_COMPLEX * const v)
+{
+    // Find max of absolute values of coefficients
+    FNFT_REAL max_abs = 0.0;
+    for (FNFT_UINT i=0; i<len; i++) {
+        const FNFT_REAL cur_abs = FNFT_CABS( v[i] );
+        if (cur_abs > max_abs)
+            max_abs = cur_abs;
+    }
+
+    // Return if polynomial is identical to zero
+    if (max_abs == 0.0)
+        return 0;
+
+    // Otherwise, rescale
+    const FNFT_REAL a = FNFT_FLOOR( FNFT_LOG2(max_abs) );
+    const FNFT_REAL scl = FNFT_POW( 2, -a );
+    for (FNFT_UINT i=0; i<len; i++)
+        v[i] *= scl;
+
+    return (FNFT_INT) a;
+}
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define misc_print_buf(...) fnft__misc_print_buf(__VA_ARGS__)
 #define misc_rel_err(...) fnft__misc_rel_err(__VA_ARGS__)
@@ -355,13 +439,14 @@ static inline FNFT_REAL fnft__misc_legendre_poly(const FNFT_UINT n, const FNFT_R
 #define misc_merge(...) fnft__misc_merge(__VA_ARGS__)
 #define misc_downsample(...) fnft__misc_downsample(__VA_ARGS__)
 #define misc_CSINC(...) fnft__misc_CSINC(__VA_ARGS__)
+#define misc_CSINC_derivative(...) fnft__misc_CSINC_derivative(__VA_ARGS__)
 #define misc_nextpowerof2(...) fnft__misc_nextpowerof2(__VA_ARGS__)
 #define misc_resample(...) fnft__misc_resample(__VA_ARGS__)
-#define misc_mat_mult_proto(...) fnft__misc_mat_mult_proto(__VA_ARGS__)
+#define misc_matrix_mult(...) fnft__misc_matrix_mult(__VA_ARGS__)
 #define misc_mat_mult_2x2(...) fnft__misc_mat_mult_2x2(__VA_ARGS__)
 #define misc_mat_mult_4x4(...) fnft__misc_mat_mult_4x4(__VA_ARGS__)
 #define misc_legendre_poly(...) fnft__misc_legendre_poly(__VA_ARGS__)
-
+#define misc_normalize_vector(...) fnft__misc_normalize_vector(__VA_ARGS__)
 #endif
 
 #endif

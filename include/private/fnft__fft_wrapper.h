@@ -30,6 +30,7 @@
 
 #include "fnft__fft_wrapper_plan_t.h"
 #include "fnft__errwarn.h"
+#include <limits.h>
 
 /**
  * @brief Next valid number of samples for the FFT routines.
@@ -44,7 +45,7 @@ static inline FNFT_UINT fnft__fft_wrapper_next_fft_length(
     FNFT_UINT desired_length)
 {
     // Also seems to work well with FFTW
-    return kiss_fft_next_fast_size(desired_length);    
+    return kiss_fft_next_fast_size(desired_length);
 }
 
 /**
@@ -94,12 +95,15 @@ static inline FNFT_INT fnft__fft_wrapper_create_plan(
     if (is_inverse != 1 && is_inverse != -1)
         return FNFT__E_INVALID_ARGUMENT(is_inverse);
 
+    // Check if typecast to unsigned int is lossless
 #ifdef HAVE_FFTW3
-    *plan_ptr = fftw_plan_dft_1d(fft_length, in, out, is_inverse, FFTW_ESTIMATE);
+    if (fft_length>INT_MAX) // overflow
+        return FNFT_EC_ASSERTION_FAILED;
+    *plan_ptr = fftw_plan_dft_1d((int) fft_length, in, out, is_inverse, FFTW_ESTIMATE);
 #else
     (void)in;
     (void)out;
-    *plan_ptr = kiss_fft_alloc(fft_length, (is_inverse+1)/2, NULL, NULL);
+    *plan_ptr = kiss_fft_alloc(fft_length,(FNFT_UINT)(is_inverse+1)/2, NULL, NULL);
 #endif
 
     if (*plan_ptr == NULL)

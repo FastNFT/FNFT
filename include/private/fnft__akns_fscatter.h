@@ -76,7 +76,7 @@ FNFT_UINT fnft__akns_fscatter_numel(FNFT_UINT D,
  * with `malloc(akns_fscatter_numel(D,discretization)*sizeof(COMPLEX))`.
  * @param[out] deg_ptr Pointer to variable containing degree of the discretization.
  * Determined based on discretization by \link fnft__akns_discretization_degree \endlink.
- * @param[in] W_ptr Normalization flag. Polynomial coefficients are normalized
+ * @param[out] W_ptr Normalization flag. Polynomial coefficients are normalized
  * if W_ptr is non-zero.
  * @param[in] discretization The type of discretization to be used. Should be of type
  * \link fnft__akns_discretization_t \endlink.
@@ -86,8 +86,8 @@ FNFT_UINT fnft__akns_fscatter_numel(FNFT_UINT D,
  *
  * @ingroup akns
  */
-FNFT_INT fnft__akns_fscatter(const FNFT_UINT D, FNFT_COMPLEX const * const q, FNFT_COMPLEX const * const r, const FNFT_REAL eps_t, FNFT_COMPLEX * const result, FNFT_UINT * const deg_ptr,
-                            FNFT_INT * const W_ptr, fnft__akns_discretization_t discretization);
+FNFT_INT fnft__akns_fscatter(const FNFT_UINT D, FNFT_COMPLEX const * const q, FNFT_COMPLEX const * const r, FNFT_REAL eps_t, FNFT_COMPLEX * const result, FNFT_UINT * const deg_ptr,
+                            FNFT_INT * const W_ptr, fnft__akns_discretization_t const discretization);
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define akns_fscatter_numel(...) fnft__akns_fscatter_numel(__VA_ARGS__)

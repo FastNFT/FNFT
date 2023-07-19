@@ -15,7 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017.
-* Peter J Prins (TU Delft) 2018.
+* Peter J Prins (TU Delft) 2018-2020.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
 */
 #define FNFT_ENABLE_SHORT_NAMES
@@ -25,10 +25,10 @@
 #include "fnft__misc.h"
 #include "fnft__fft_wrapper.h"
 
-void misc_print_buf(const INT len, COMPLEX const * const buf,
+void misc_print_buf(const UINT len, COMPLEX const * const buf,
                     char const * const varname)
 {
-    INT i;
+    UINT i;
     printf("%s = [", varname);
     for (i = 0; i < len; i++) {
         printf("%1.12e+%1.12ej", CREAL(buf[i]), CIMAG(buf[i]));
@@ -38,10 +38,10 @@ void misc_print_buf(const INT len, COMPLEX const * const buf,
     printf("];\n");
 }
 
-REAL misc_rel_err(const INT len, COMPLEX const * const vec_numer,
+REAL misc_rel_err(const UINT len, COMPLEX const * const vec_numer,
     COMPLEX const * const vec_exact)
 {
-    INT i;
+    UINT i;
     double n = 0.0, d = 0.0;
     for (i=0; i<len; i++) {
         n += CABS(vec_numer[i] - vec_exact[i]);
@@ -90,23 +90,17 @@ COMPLEX misc_sech(COMPLEX Z)
 REAL misc_l2norm2(const UINT N, COMPLEX const * const Z,
     const REAL a, const REAL b)
 {
-    REAL val, h, tmp;
-    UINT i;
-
     // Check inputs
-    if (N < 2 || a >= b)
+    if (a >= b || N==0)
         return NAN;
 
     // Integrate |q(t)|^2 numerically
-    h = (b - a)/N;
-    tmp = CABS(Z[0]);
-    val = 0.5 * h * tmp * tmp;
-    for (i=1; i<N-1; i++) {
-        tmp = CABS(Z[i]);
-        val += h * tmp * tmp;
+    REAL val = 0.0;
+    for (UINT i=0; i<N; i++) {
+        REAL tmp = (REAL)CABS(Z[i]);
+        val += tmp * tmp;
     }
-    tmp = CABS(Z[N-1]);
-    val += 0.5 * h * tmp * tmp;
+    val *= (b - a)/N;
 
     return val;
 }
@@ -278,8 +272,8 @@ INT misc_downsample(const UINT D, COMPLEX const * const q,
        Dsub = 2;
     if (Dsub > D)
         Dsub = D;
-    const UINT nskip_per_step = ROUND((REAL)D / Dsub);
-    Dsub = ROUND((REAL)D / nskip_per_step); // actual Dsub
+    const UINT nskip_per_step = (UINT) ROUND((REAL)D / Dsub);
+    Dsub = (UINT) ROUND((REAL)D / nskip_per_step); // actual Dsub
 
     COMPLEX * const qsub = malloc(Dsub * sizeof(COMPLEX));
     if (qsub == NULL)
@@ -299,18 +293,6 @@ INT misc_downsample(const UINT D, COMPLEX const * const q,
     *qsub_ptr = qsub;
     *Dsub_ptr = Dsub;
     return SUCCESS;
-}
-
-// Computes sinc(x):= 1 if x=0 and sin(x)/x otherwise. If x is close to 0, the
-// calculation is approximated with sinc(x) = cos(x/sqrt(3)) + O(x^4)
-COMPLEX misc_CSINC(COMPLEX x)
-{
-    const REAL sinc_th=1.0E-8;
-
-    if (CABS(x)>=sinc_th)
-        return CSIN(x)/x;
-    else
-        return CCOS(x/CSQRT(3));
 }
 
 UINT misc_nextpowerof2(const UINT number)
@@ -356,7 +338,6 @@ INT misc_resample(const UINT D, const REAL eps_t, COMPLEX const * const q,
     ret_code = fft_wrapper_create_plan(&plan_fwd, D, buf0, buf1, -1);
     CHECK_RETCODE(ret_code, release_mem);
 
-
     ret_code = fft_wrapper_create_plan(&plan_inv, D, buf0, buf1, 1);
     CHECK_RETCODE(ret_code, release_mem);
 
@@ -366,18 +347,6 @@ INT misc_resample(const UINT D, const REAL eps_t, COMPLEX const * const q,
 
     ret_code = fft_wrapper_execute_plan(plan_fwd, buf0, buf1);
     CHECK_RETCODE(ret_code, release_mem);
-
-    // Check that the signal spectrum decays sufficiently to ensure accurate interpolation
-    
-    // D samples of buf1 correspond to 100% bandwidth. Find the total l2-norm
-    // of buf1 and compare it to l2-norm of 90% bandwidth. To prevent repeated 
-    // computation, the two norms of the 5% bandwidths on both ends of the
-    // spectrum are computed instead.
-    UINT Dlp = D/20;
-    REAL tmp = SQRT(misc_l2norm2(Dlp, buf1+D/2-1-Dlp, 0, Dlp*eps_t) + 
-            misc_l2norm2(Dlp, buf1+D/2+1, 0, Dlp*eps_t))/SQRT(misc_l2norm2(D, buf1, 0, D*eps_t));
-    if (tmp > SQRT(EPSILON))
-        WARN("Signal does not appear to be bandlimited. Interpolation step may be inaccurate. Try to reduce the step size, or switch to a discretization that does not require interpolation");
     
     const REAL scl_factor = (REAL)D*eps_t;
     // Applying phase shift

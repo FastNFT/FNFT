@@ -16,6 +16,8 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
+* Peter J Prins (TU Delft) 2020-2021.
+* Sander Wahls (KIT) 2023.
 */
 
 /**
@@ -46,24 +48,26 @@
  *  to each other are merged. \n \n
  *  fnft_nsev_bsfilt_FULL: Bound states in physically implausible regions and
  *  outside the region based on the step-size of the supplied samples are
- *  rejected.
+ *  rejected. \n \n
+ *  fnft_nsev_opts_filt_MANUAL: Only points within the specified
+ *  \link fnft_nsev_opts_t::bounding_box \endlink are kept. \n\n
  */
 typedef enum {
     fnft_nsev_bsfilt_NONE,
     fnft_nsev_bsfilt_BASIC,
-    fnft_nsev_bsfilt_FULL
+    fnft_nsev_bsfilt_FULL,
+    fnft_nsev_bsfilt_MANUAL
 } fnft_nsev_bsfilt_t;
 
 /**
  * Enum that specifies how the bound states are localized. Used in
  * \link fnft_nsev_opts_t \endlink. \n \n
  * @ingroup data_types
- *  fnft_nsev_bsloc_FAST_EIGENVALUE: A rooting finding routine due to Aurentz et al. (see
+ *  fnft_nsev_bsloc_FAST_EIGENVALUE: A root finding routine due to Aurentz et al. (see
  *  https://arxiv.org/abs/1611.02435 and https://github.com/eiscor/eiscor)
  *  with \f$ O(D^2) \f$ complexity is used to detect the roots of
  *  \f$ a(\lambda) \f$. (Note: FNFT incorporates a development version of this
- *  routine as no release was available yet.) This method is relatively slow,
- *  but very reliable. \n \n
+ *  routine as no release was available yet.) This method is relatively slow. \n \n
  *  fnft_nsev_bsloc_NEWTON: Newton's method is used to refine a given set of initial guesses.
  *  The discretization used for the the refinement is one of the base methods \link fnft_nse_discretization_t.h \endlink.
  *  The number of iterations is specified through the field \link fnft_nsev_opts_t::niter
@@ -75,7 +79,7 @@ typedef enum {
  *  initial guesses for the bound states are available. The complexity is
  *  \f$ O(niter (*K\_ptr) D) \f$. \n \n
  *  fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE: This method offers a good compromise
- *  between the other two. The method automatically finds initial guesses for
+ *  between the previous two. The method automatically finds initial guesses for
  *  the NEWTON method by first applying the FAST_EIGENVALUE method to a
  *  subsampled version of the signal. Second these initial guesses are refined
  *  using the NEWTON method. The number of samples of the subsampled signal can
@@ -157,9 +161,13 @@ typedef enum {
  *   \link fnft_nsev_bsloc_t \endlink for details.
  *
  * @var fnft_nsev_opts_t::niter
- *  Number of Newton iterations to be carried out when either the
- *  fnft_nsev_bsloc_NEWTON or the fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE method
- *  is used.
+ *  For fnft_nsev_bsloc_NEWTON and fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE: Maximum
+ *  number of Newton iterations to be carried out.
+ * 
+ *  @var fnft_nsev_opts_t::tol
+ *  Some bound state localization methods such as Newton have tolerance
+ *  parameters. If this value is negative, these parameters will be chosen
+ *  automatically. Set to a non-negative value to chose the tolerance manually.
  *
  * @var fnft_nsev_opts_t::discspec_type
  *  Controls how \link fnft_nsev \endlink fills the array
@@ -193,18 +201,26 @@ typedef enum {
  *  such as discontinuous signals, applying Richardson extrapolation may result in
  *  worse accuracy compared to the first approximation.
  *  By default, Richardson extrapolation is disabled (i.e., the
- *  flag is zero). To enable, set the flag to one.
+ *  flag is zero). To enable, set the flag to one.\n\n
+ *
+ * @var fnft_nsev_opts_t::bounding_box
+ *  Array of four reals. Defines a box in the complex plane that is used for
+ *  manual filtering: \n
+ *  bounding_box[0] <= real(lambda) <= bounding_box[1] \n
+ *  bounding_box[2] <= imag(lambda) <= bounding_box[3] \n
  */
 typedef struct {
     fnft_nsev_bsfilt_t bound_state_filtering;
     fnft_nsev_bsloc_t bound_state_localization;
     FNFT_UINT niter;
+    FNFT_REAL tol;
     FNFT_UINT Dsub;
     fnft_nsev_dstype_t discspec_type;
     fnft_nsev_cstype_t contspec_type;
     FNFT_INT normalization_flag;
     fnft_nse_discretization_t discretization;
     FNFT_UINT richardson_extrapolation_flag;
+    FNFT_REAL bounding_box[4];
 } fnft_nsev_opts_t;
 
 /**
@@ -214,14 +230,16 @@ typedef struct {
  * @returns A \link fnft_nsev_opts_t \endlink object with the following options.\n
  *  bound_state_filtering = fnft_nsev_bsfilt_FULL\n
  *  bound_state_localization = fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE\n
- *  niter = 10\n
+ *  niter = 100\n
+ *  tol = -1.0\n
  *  discspec_type = fnft_nsev_dstype_NORMING_CONSTANTS\n
  *  contspec_type = fnft_nsev_cstype_REFLECTION_COEFFICIENT\n
  *  normalization_flag = 1\n
  *  discretization = fnft_nse_discretization_2SPLIT4B\n
  *  richardson_extrapolation_flag = 0\n
+ *  bounding_box = {NAN, NAN, NAN, NAN}\n
  *
-  * @ingroup fnft
+ * @ingroup fnft
  */
 fnft_nsev_opts_t fnft_nsev_default_opts();
 
@@ -304,17 +322,10 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  * is know, the accuracy can be quantified by defining a suitable error. The error usually decreases with increasing \f$ D\f$ assuming everthing else remains the same.
  * The rate at which the error decreases with increase in \f$ D\f$ is known as the order of the method. The orders of the various discretizations can be found at \link fnft_nse_discretization_t \endlink.
  * The orders of the discretizations which use exponential splitting schemes should be the same as their base methods but can deviate when accuracy of the splitting scheme is low.
- * In the following cases the orders of the methods has been observed to be less than expected:
- *       - Focusing case CF4_3, residues have order two instead of four.
- *       - Focusing case CF6_4, residues have order three instead of six.
- *       - Focusing case TES4, residues have order two instead of four.
  *
  * Application of one step Richardson extrapolation should in theory increase the order by one. However, it can deviate both ways. In case of some smooth signals the order
- * may increase by two instead of one. On the other hand for discontinuous signals it maybe deterimental to apply Richardson extrapolation. In the following cases the orders of the methods has been observed to be less than expected:
- *       - Focusing case CF4_3, residues have order two instead of five.
- *       - Focusing case CF5_3, residues have order five instead of six.
- *       - Focusing case CF6_4, residues have order four instead of seven.
- *       - Focusing case TES4, residues have order two instead of five.
+ * may increase by two instead of one. On the other hand for discontinuous signals it maybe deterimental to apply Richardson extrapolation. In the following case the order of the method has been observed to be less than expected:
+ *       - Focusing case CF5_3, residues and norming constants have order five instead of six.
  *
  * @param[in] D Number of samples
  * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
@@ -328,7 +339,7 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  * @param[out] contspec Array of length M in which the routine will store the
  *  desired samples \f$ r(\xi_m) \f$ of the continuous spectrum (aka
  *  reflection coefficient) in ascending order,
- *  where \f$ \xi_m = XI[0]+(XI[1]-XI[0])/(M-1) \f$ and \f$m=0,1,\dots,M-1\f$.
+ *  where \f$ \xi_m = XI[0]+m(XI[1]-XI[0])/(M-1) \f$ and \f$m=0,1,\dots,M-1\f$.
  *  Has to be preallocated by the user. If NULL is passed instead, the
  *  continuous spectrum will not be computed. By changing the options, it is
  *  also possible to compute the values of \f$ a(\xi) \f$ and \f$ b(\xi) \f$
@@ -343,7 +354,10 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *  bound states as possible are returned instead. Note that in order to skip
  *  the computation of the bound states completely, it is not sufficient to pass
  *  *K_ptr==0. Instead, one needs to pass bound_states==NULL.
- * @param[out] bound_states Array. Upon return, the routine has stored the detected
+ * @param[in,out] bound_states Array. Upon entry, only if the option
+ *  `bound_state_localization=fnft_nsev_bsloc_NEWTON` is passed, this array should
+ *  contain initial guesses for the bound states. Otherwise the input values are
+ *  ignored. Upon return, the routine has stored the detected
  *  bound states (aka eigenvalues) in the first *K_ptr entries of this array.
  *  If NULL is passed instead, the discrete spectrum will not be computed.
  *  Has to be preallocated by the user. The user can choose an arbitrary
@@ -368,18 +382,19 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *
  * @ingroup fnft
  */
-FNFT_INT fnft_nsev(const FNFT_UINT D, FNFT_COMPLEX * const q,
+FNFT_INT fnft_nsev(const FNFT_UINT D, FNFT_COMPLEX const * const q,
     FNFT_REAL const * const T, const FNFT_UINT M,
     FNFT_COMPLEX * const contspec, FNFT_REAL const * const XI,
     FNFT_UINT * const K_ptr, FNFT_COMPLEX * const bound_states,
     FNFT_COMPLEX * const normconsts_or_residues, const FNFT_INT kappa,
-    fnft_nsev_opts_t *opts);
+    fnft_nsev_opts_t * opts);
 
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define nsev_bsfilt_NONE fnft_nsev_bsfilt_NONE
 #define nsev_bsfilt_BASIC fnft_nsev_bsfilt_BASIC
 #define nsev_bsfilt_FULL fnft_nsev_bsfilt_FULL
+#define nsev_bsfilt_MANUAL fnft_nsev_bsfilt_MANUAL
 #define nsev_bsloc_FAST_EIGENVALUE fnft_nsev_bsloc_FAST_EIGENVALUE
 #define nsev_bsloc_NEWTON fnft_nsev_bsloc_NEWTON
 #define nsev_bsloc_SUBSAMPLE_AND_REFINE fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE

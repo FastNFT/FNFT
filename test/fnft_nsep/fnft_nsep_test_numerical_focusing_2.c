@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2020.
+ * Sander Wahls (TU Delft) 2020-2021.
  * Shrinivas Chimmalgi (TU Delft) 2020.
  */
 
@@ -122,7 +122,7 @@ end
 end
 */
 
-INT fnft_nsep_test_numerical_focusing_2()
+INT fnft_nsep_test_numerical_focusing_2(fnft_nsep_opts_t opts)
 {
     INT ret_code = SUCCESS;
 
@@ -406,13 +406,6 @@ INT fnft_nsep_test_numerical_focusing_2()
     }
 
     // Compute main and auxiliary spectrum
-    fnft_nsep_opts_t opts = fnft_nsep_default_opts();
-    opts.filtering = fnft_nsep_filt_MANUAL;
-    opts.bounding_box[0] = -1;
-    opts.bounding_box[1] = 1;
-    opts.bounding_box[2] = -10;
-    opts.bounding_box[3] = 10;
-    
     REAL phase_shift = CARG(q[D-1]/q[0]);
     ret_code = fnft_nsep(D-1, q, T, phase_shift, &K, mainspec, &M, NULL, NULL, +1, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
@@ -441,8 +434,13 @@ INT fnft_nsep_test_numerical_focusing_2()
         const COMPLEX lam = spines[k];
 
         // Spines are imaginary in this example
-        if (FABS(CREAL(lam)) > 1000*EPSILON)
-            return E_TEST_FAILED;
+        if (FABS(CREAL(lam)) > 1000*EPSILON && FABS(CIMAG(lam)) > 100*EPSILON) {
+#ifdef DEBUG
+            printf("lam = %g + %gj\n", CREAL(lam), CIMAG(lam));
+#endif
+            ret_code = E_TEST_FAILED;
+            goto leave_fun;
+        }
 
         const REAL lam_i = CIMAG(lam);
 
@@ -489,13 +487,27 @@ INT fnft_nsep_test_numerical_focusing_2()
 leave_fun:
     free(mainspec);
     free(spines);
-    return SUCCESS;
+    return ret_code;
 }
 
 int main()
 {
-    if (fnft_nsep_test_numerical_focusing_2() == SUCCESS)
-        return EXIT_SUCCESS;
-    else
-        return EXIT_FAILURE;
+    fnft_nsep_opts_t opts = fnft_nsep_default_opts();
+    opts.filtering = fnft_nsep_filt_MANUAL;
+    opts.bounding_box[0] = -1;
+    opts.bounding_box[1] = 1;
+    opts.bounding_box[2] = -10;
+    opts.bounding_box[3] = 10;
+
+    opts.localization = fnft_nsep_loc_SUBSAMPLE_AND_REFINE;
+    INT ret_code = fnft_nsep_test_numerical_focusing_2(opts);
+    CHECK_RETCODE(ret_code, on_failure);
+
+    opts.localization = fnft_nsep_loc_MIXED;
+    ret_code = fnft_nsep_test_numerical_focusing_2(opts);
+    CHECK_RETCODE(ret_code, on_failure);
+
+    return EXIT_SUCCESS;
+on_failure:
+    return EXIT_FAILURE;
 }

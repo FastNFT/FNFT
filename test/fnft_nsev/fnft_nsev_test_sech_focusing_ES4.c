@@ -16,6 +16,7 @@
  * Contributors:
  * Sander Wahls (TU Delft) 2017-2018.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
+ * Sander Wahls (KIT) 2023.
  */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -33,7 +34,7 @@ INT main()
         4.8e-2,     // a
         1.7e-2,     // b
         2.5e-2,     // bound states
-        3.2e-11,      // norming constants
+        3.4e-14,    // norming constants
         4.7e-2      // residues
     };
     opts = fnft_nsev_default_opts();
@@ -60,19 +61,26 @@ INT main()
     CHECK_RETCODE(ret_code, leave_fun);
     
     
-    
+
     D = 1024;
     REAL error_bounds_RE[6] = {
         4.6e-4,     // reflection coefficient
         2.3e-4,     // a
         1.4e-4,     // b
         6.1e-5,     // bound states
-        5e-14,      // norming constants
+        2.1e-14,    // norming constants
         1.5e-4      // residues
     };
     opts.richardson_extrapolation_flag = 1;
     ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
+
+    // Repeat without normalization
+    opts.normalization_flag = !opts.normalization_flag;
+    ret_code = nsev_testcases_test_fnft(tc, D, error_bounds_RE, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+    opts.normalization_flag = !opts.normalization_flag;
+
     // Check for at least 5th-order error decay (error_bounds_RE[4] corresponding
     // to the norming constants stays as it is already close to machine precision)
     D *= 2;

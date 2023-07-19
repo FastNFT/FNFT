@@ -1,6 +1,6 @@
 # FNFT: Fast Nonlinear Fourier Transforms
 
-[![Version](https://img.shields.io/github/v/release/FastNFT/FNFT)](https://github.com/FastNFT/FNFT/releases) [![Documentation](https://img.shields.io/badge/-documentation-informational)](https://fastnft.github.io/FNFT/) [![Build Status](https://travis-ci.org/FastNFT/FNFT.svg?branch=master)](https://travis-ci.org/FastNFT/FNFT) [![DOI](http://joss.theoj.org/papers/10.21105/joss.00597/status.svg)](https://doi.org/10.21105/joss.00597)
+[![Version](https://img.shields.io/github/v/release/FastNFT/FNFT)](https://github.com/FastNFT/FNFT/releases) [![Documentation](https://img.shields.io/badge/-documentation-informational)](https://fastnft.github.io/FNFT/) [![Build Status](https://api.travis-ci.com/FastNFT/FNFT.svg?branch=master)](https://travis-ci.com/github/FastNFT/FNFT) [![DOI](http://joss.theoj.org/papers/10.21105/joss.00597/status.svg)](https://doi.org/10.21105/joss.00597) 
 
 FNFT is a software library for the numerical computation of (inverse) nonlinear Fourier transforms, which are also known as (inverse) scattering transforms. The focus of the library is on fast algorithms, but it also contains non-fast methods. FNFT is written in C and comes with a MATLAB interface. A [Python interface](https://github.com/xmhk/FNFTpy) is available separately.
 
@@ -11,16 +11,26 @@ FNFT is a software library for the numerical computation of (inverse) nonlinear 
 * Nonlinear Schroedinger equation
 
     * Vanishing boundary conditions
-      * Reflection coefficient and/or scattering coefficients (a and b)
-      * Bound states (eigenvalues)
-      * Norming constants and/or residues
+        * Reflection coefficient and/or scattering coefficients (a and b)
+        * Bound states (eigenvalues)
+        * Norming constants and/or residues
 
     * (Quasi-)Periodic boundary conditions
-      * Main spectrum
-      * Auxiliary spectrum
+        * Main spectrum
+        * Auxiliary spectrum
 
 * Korteweg-de Vries equation
-    * Vanishing boundary conditions (reflection coefficient only)
+
+    * Vanishing boundary conditions
+        * Reflection coefficient and/or scattering coefficients (a and b)
+        * Bound states (eigenvalues)
+        * Norming constants and/or residues
+
+* Manakov equation
+
+    * Vanishing boundary conditions
+        * Reflection coefficient and/or scattering coefficients (a, b1 and b2)
+        * Bound states (eigenvalues)
 
 ### Inverse Transforms
 
@@ -67,10 +77,11 @@ Please use the [issue tracker](https://github.com/FastNFT/FNFT/issues) to report
 
 ## Contributors
 
-* Sander Wahls, TU Delft
+* Sander Wahls, KIT (since July 2023) and TU Delft (before)
 * Shrinivas Chimmalgi, TU Delft
 * Peter J. Prins, TU Delft
 * Marius Brehler, TU Dortmund
+* Lianne de Vries, student TU Delft
 
 ## License
 
@@ -107,3 +118,4 @@ The algorithms in FNFT utilize ideas from the following references. More informa
 - P. J. Prins and S. Wahls, ["Soliton Phase Shift Calculation for the Korteweg–De Vries Equation"](https://doi.org/10.1109/ACCESS.2019.2932256), IEEE Access, vol. 7, pp. 122914--122930, July 2019.
 - S. Medvedev, I. Vaseva, I. Chekhovskoy and M. Fedoruk, ["Exponential fourth order schemes for direct Zakharov-Shabat problem"](https://doi.org/10.1364/OE.377140), Optics Express, vol. 28, pp. 20--39, 2020.
 - J. Mertsching, ["Quasiperiodie Solutions of the Nonlinear Schroedinger Equation"](https://doi.org/10.1002/prop.2190350704), Fortschritte der Physik, vol. 35, pp. 519--536, 1987.
+- L. de Vries, ["Fast Numerical Nonlinear Fourier Transform Algorithms for the Manakov Equation"](http://resolver.tudelft.nl/uuid:0276e693-3408-4472-9749-b754c2114183"), Master thesis, TU Delft, 2021.

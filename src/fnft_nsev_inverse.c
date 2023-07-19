@@ -14,8 +14,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2018.
+ * Sander Wahls (TU Delft) 2018, 2020-2021.
  * Shrinivas Chimmalgi (TU Delft) 2018.
+ * Sander Wahls (KIT) 2023.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -146,7 +147,7 @@ INT fnft_nsev_inverse(
     if (kappa != +1 && kappa != -1)
         return E_INVALID_ARGUMENT(kappa);
     if (K > 0 && kappa != +1)
-        return E_SANITY_CHECK_FAILED(Discrete spectrum is present only in the focussing case(kappa=1).);
+        return E_SANITY_CHECK_FAILED(Discrete spectrum is present only in the focusing case(kappa=1).);
     if (K > 0 && bound_states == NULL)
         return E_INVALID_ARGUMENT(bound_states);
     UINT i;
@@ -168,7 +169,7 @@ INT fnft_nsev_inverse(
         return E_INVALID_ARGUMENT(XI);
 
     INT ret_code = SUCCESS;
-    INT contspec_flag = 0;
+    UINT contspec_flag = 0;
     COMPLEX *transfer_matrix = NULL;
 
     if (contspec != NULL) {
@@ -481,29 +482,29 @@ static inline INT
     if (iter == max_iter)
         WARN("Maximum number of iterations reached when constructing transfer matrix.")
 
-        // Build the transfer matrix
+    // Build the transfer matrix
 
-        for (i=0; i<D; i++) {
-            transfer_matrix[1 + i] = a_coeffs[i];
-            transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[D-1 - i]);
-            transfer_matrix[2*(deg+1) + 1 + i] = b_coeffs[i];
-            transfer_matrix[3*(deg+1) + i] = a_coeffs[D-1 - i];
-        }
-        transfer_matrix[0] = 0.0;
-        transfer_matrix[2*(deg+1) - 1] = 0.0;
-        transfer_matrix[2*(deg+1)] = 0.0;
-        transfer_matrix[4*(deg+1) - 1] = 0.0;
+    for (i=0; i<D; i++) {
+        transfer_matrix[1 + i] = a_coeffs[i];
+        transfer_matrix[1*(deg+1) + i] = -kappa*CONJ(b_coeffs[D-1 - i]);
+        transfer_matrix[2*(deg+1) + 1 + i] = b_coeffs[i];
+        transfer_matrix[3*(deg+1) + i] = a_coeffs[D-1 - i];
+    }
+    transfer_matrix[0] = 0.0;
+    transfer_matrix[2*(deg+1) - 1] = 0.0;
+    transfer_matrix[2*(deg+1)] = 0.0;
+    transfer_matrix[4*(deg+1) - 1] = 0.0;
 
 
-        leave_fun:
-            fft_wrapper_free(contspec_reordered);
-            fft_wrapper_free(fft_in);
-            fft_wrapper_free(fft_out);
-            fft_wrapper_free(a_coeffs);
-            fft_wrapper_free(b_coeffs);
-            fft_wrapper_destroy_plan(&plan_fwd);
-            fft_wrapper_destroy_plan(&plan_inv);
-            return ret_code;
+    leave_fun:
+        fft_wrapper_free(contspec_reordered);
+        fft_wrapper_free(fft_in);
+        fft_wrapper_free(fft_out);
+        fft_wrapper_free(a_coeffs);
+        fft_wrapper_free(b_coeffs);
+        fft_wrapper_destroy_plan(&plan_fwd);
+        fft_wrapper_destroy_plan(&plan_inv);
+        return ret_code;
 }
 
 // Auxiliary function. Calls the right method to build the transfer matrix
@@ -703,6 +704,7 @@ static INT add_discrete_spectrum(
     COMPLEX * phi = NULL;
     COMPLEX * psi = NULL;
     COMPLEX * r = NULL;
+    INT * Ws = NULL;
     UINT i,j;
     UINT zc_point = 0; //index of zero-crossing of time
     INT ret_code = SUCCESS;
@@ -771,9 +773,21 @@ static INT add_discrete_spectrum(
             // of the potential contributes to the residues and needs to be
             // removed.
 
+            r = malloc(D*sizeof(COMPLEX));
+            CHECK_NOMEM(r, ret_code, leave_fun);
+            Ws = malloc(K*sizeof(INT));
+            CHECK_NOMEM(Ws, ret_code, leave_fun);
+            for (i=0; i<D; i++)
+                r[i] = -CONJ(q[i]);
             ret_code = nse_scatter_bound_states(D, q, r, T, K,
-                    bnd_states, acoeff_cs, acoeff_cs+K, acoeff_cs+2*K, nse_discretization_BO, 1);
+                    bnd_states, acoeff_cs, acoeff_cs+K, acoeff_cs+2*K, 
+                    Ws, nse_discretization_BO, 1);
             CHECK_RETCODE(ret_code, leave_fun);
+            for (i = 0; i < K; i++) {
+                const REAL scl = POW(2, Ws[i]);
+                acoeff_cs[i] *= scl;
+                acoeff_cs[i+K] *= scl;
+            }
         }
         else {
             for (i = 0; i < K; i++)
@@ -856,8 +870,6 @@ static INT add_discrete_spectrum(
             goto leave_fun;
         }
 
-
-
         ret_code = compute_eigenfunctions(K, bnd_states, D, q, T, phi, psi);
         CHECK_RETCODE(ret_code, leave_fun);
         COMPLEX S1[K], S2[K], phi1, phi2, psi1, psi2, beta, qn;
@@ -902,6 +914,7 @@ static INT add_discrete_spectrum(
         free(norm_consts);
         free(acoeff_cs);
         free(r);
+        free(Ws);
         return ret_code;
 }
 
