@@ -77,7 +77,7 @@ Please use the [issue tracker](https://github.com/FastNFT/FNFT/issues) to report
 
 ## Contributors
 
-* Sander Wahls, TU Delft
+* Sander Wahls, KIT (since July 2023) and TU Delft (before July 2023)
 * Shrinivas Chimmalgi, TU Delft
 * Peter J. Prins, TU Delft
 * Marius Brehler, TU Dortmund
