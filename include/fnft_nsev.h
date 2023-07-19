@@ -225,7 +225,7 @@ typedef struct {
  *  bound_state_filtering = fnft_nsev_bsfilt_FULL\n
  *  bound_state_localization = fnft_nsev_bsloc_SUBSAMPLE_AND_REFINE\n
  *  niter = 100\n
- *  tol = 0\n
+ *  tol = -1.0\n
  *  discspec_type = fnft_nsev_dstype_NORMING_CONSTANTS\n
  *  contspec_type = fnft_nsev_cstype_REFLECTION_COEFFICIENT\n
  *  normalization_flag = 1\n
