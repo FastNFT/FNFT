@@ -1,0 +1,14 @@
+<map id="include/private/fnft__kdv_discretization.h" name="include/private/fnft__kdv_discretization.h">
+<area shape="rect" id="Node000001" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="167,5,333,50"/>
+<area shape="rect" id="Node000002" href="$fnft____kdv__finvscatter_8h.html" title="Recovers the signal from a scattering matrix." alt="" coords="5,98,154,143"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="198,60,121,100,119,95,195,55"/>
+<area shape="rect" id="Node000003" href="$fnft____kdv__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="178,98,323,143"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="253,65,253,98,248,98,248,65"/>
+<area shape="rect" id="Node000006" href="$fnft____kdv__scatter_8h.html" title="Slow forward scattering." alt="" coords="347,98,492,143"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="305,55,381,95,378,100,302,60"/>
+<area shape="rect" id="Node000004" href="$fnft__kdvv_8h.html" title="Fast nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="262,191,407,218"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="284,151,322,188,319,192,281,155"/>
+<area shape="rect" id="Node000005" href="$fnft____kdvv__testcases_8h.html" title="Provides test cases for the tests of fnft_kdvv." alt="" coords="260,266,408,311"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="337,233,337,266,332,266,332,233"/>
+<area shape="poly" id="edge6_Node000006_Node000004" title=" " alt="" coords="389,155,350,192,346,188,385,151"/>
+</map>

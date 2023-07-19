@@ -1,0 +1,29 @@
+<map id="include/private/fnft__poly_fmult.h" name="include/private/fnft__poly_fmult.h">
+<area shape="rect" id="Node000001" title="Fast multiplication of n polynomials." alt="" coords="438,5,583,50"/>
+<area shape="rect" id="Node000002" href="$fnft____akns__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="348,98,494,143"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="481,63,444,100,440,96,477,59"/>
+<area shape="rect" id="Node000012" href="$fnft____manakov__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="521,98,686,143"/>
+<area shape="poly" id="edge11_Node000001_Node000012" title=" " alt="" coords="544,58,583,96,580,100,541,62"/>
+<area shape="rect" id="Node000003" href="$fnft____kdv__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="95,191,240,235"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="348,151,229,193,227,188,346,146"/>
+<area shape="rect" id="Node000006" href="$fnft____nse__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="348,191,494,235"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="424,157,424,190,418,190,418,157"/>
+<area shape="rect" id="Node000004" href="$fnft__kdvv_8h.html" title="Fast nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="8,292,154,320"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="139,248,95,293,92,289,135,244"/>
+<area shape="rect" id="Node000005" href="$fnft____kdvv__testcases_8h.html" title="Provides test cases for the tests of fnft_kdvv." alt="" coords="5,376,154,421"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="83,334,82,375,77,375,78,334"/>
+<area shape="rect" id="Node000007" href="$fnft__nsep_8h.html" title="Fast nonlinear Fourier transform for the periodic nonlinear Schroedinger equation." alt="" coords="179,292,324,320"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="369,245,277,294,275,289,366,240"/>
+<area shape="rect" id="Node000009" href="$fnft__nsev_8h.html" title="Fast nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="349,292,493,320"/>
+<area shape="poly" id="edge8_Node000006_Node000009" title=" " alt="" coords="424,250,424,291,418,291,418,250"/>
+<area shape="rect" id="Node000011" href="$fnft__nsev__inverse_8h.html" title="Fast inverse nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="517,292,717,320"/>
+<area shape="poly" id="edge10_Node000006_Node000011" title=" " alt="" coords="482,240,590,289,587,294,480,244"/>
+<area shape="rect" id="Node000008" href="$fnft____nsep__testcases_8h.html" title="Provides test cases for the tests of fnft_nsep." alt="" coords="178,376,325,421"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="254,334,254,375,249,375,249,334"/>
+<area shape="rect" id="Node000010" href="$fnft____nsev__testcases_8h.html" title="Provides test cases for the tests of fnft_nsev." alt="" coords="350,376,497,421"/>
+<area shape="poly" id="edge9_Node000009_Node000010" title=" " alt="" coords="424,334,426,375,420,376,419,334"/>
+<area shape="rect" id="Node000013" href="$fnft__manakovv_8h.html" title="Fast nonlinear Fourier transform for the vanishing Manakov equation." alt="" coords="630,199,812,227"/>
+<area shape="poly" id="edge12_Node000012_Node000013" title=" " alt="" coords="644,149,705,196,702,201,641,154"/>
+<area shape="rect" id="Node000014" href="$fnft____manakovv__testcases_8h.html" title="Provides test cases for the tests of fnft_manakovv." alt="" coords="741,283,925,328"/>
+<area shape="poly" id="edge13_Node000013_Node000014" title=" " alt="" coords="750,234,808,281,804,285,746,238"/>
+</map>

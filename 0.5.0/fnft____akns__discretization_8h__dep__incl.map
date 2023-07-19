@@ -1,0 +1,46 @@
+<map id="include/private/fnft__akns_discretization.h" name="include/private/fnft__akns_discretization.h">
+<area shape="rect" id="Node000001" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="417,5,590,50"/>
+<area shape="rect" id="Node000002" href="$fnft____akns__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="347,98,492,143"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="476,63,441,100,437,96,472,59"/>
+<area shape="rect" id="Node000012" href="$fnft____akns__scatter_8h.html" title="Slow forward scattering." alt="" coords="516,98,662,143"/>
+<area shape="poly" id="edge11_Node000001_Node000012" title=" " alt="" coords="535,59,571,96,567,100,532,63"/>
+<area shape="rect" id="Node000015" href="$fnft____kdv__discretization_8h.html" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="156,98,323,143"/>
+<area shape="poly" id="edge18_Node000001_Node000015" title=" " alt="" coords="428,58,304,100,302,95,426,53"/>
+<area shape="rect" id="Node000017" href="$fnft____nse__discretization_8h.html" title="Properties of the discretizations for the nonlinear Schroedinger equation." alt="" coords="686,98,852,143"/>
+<area shape="poly" id="edge22_Node000001_Node000017" title=" " alt="" coords="582,53,706,95,704,100,580,58"/>
+<area shape="rect" id="Node000003" href="$fnft____kdv__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="178,191,323,235"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="367,152,292,193,289,188,365,148"/>
+<area shape="rect" id="Node000006" href="$fnft____nse__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="516,191,662,235"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="474,148,550,188,547,193,472,152"/>
+<area shape="rect" id="Node000004" href="$fnft__kdvv_8h.html" title="Fast nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="247,283,392,311"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="280,245,310,281,306,284,276,249"/>
+<area shape="rect" id="Node000005" href="$fnft____kdvv__testcases_8h.html" title="Provides test cases for the tests of fnft_kdvv." alt="" coords="245,359,394,404"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="322,326,322,358,317,358,317,326"/>
+<area shape="rect" id="Node000007" href="$fnft__nsep_8h.html" title="Fast nonlinear Fourier transform for the periodic nonlinear Schroedinger equation." alt="" coords="491,283,636,311"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="580,250,570,284,565,282,575,249"/>
+<area shape="rect" id="Node000009" href="$fnft__nsev_8h.html" title="Fast nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="661,283,805,311"/>
+<area shape="poly" id="edge8_Node000006_Node000009" title=" " alt="" coords="641,241,711,280,708,285,638,245"/>
+<area shape="rect" id="Node000011" href="$fnft__nsev__inverse_8h.html" title="Fast inverse nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="829,283,1029,311"/>
+<area shape="poly" id="edge10_Node000006_Node000011" title=" " alt="" coords="677,233,874,280,873,285,675,238"/>
+<area shape="rect" id="Node000008" href="$fnft____nsep__testcases_8h.html" title="Provides test cases for the tests of fnft_nsep." alt="" coords="489,359,636,404"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="566,326,565,358,560,358,560,326"/>
+<area shape="rect" id="Node000010" href="$fnft____nsev__testcases_8h.html" title="Provides test cases for the tests of fnft_nsev." alt="" coords="661,359,808,404"/>
+<area shape="poly" id="edge9_Node000009_Node000010" title=" " alt="" coords="736,326,736,358,731,358,731,326"/>
+<area shape="rect" id="Node000013" href="$fnft____kdv__scatter_8h.html" title="Slow forward scattering." alt="" coords="347,191,492,235"/>
+<area shape="poly" id="edge12_Node000012_Node000013" title=" " alt="" coords="537,152,461,193,458,188,534,148"/>
+<area shape="rect" id="Node000014" href="$fnft____nse__scatter_8h.html" title="Slow forward scattering." alt="" coords="686,191,831,235"/>
+<area shape="poly" id="edge14_Node000012_Node000014" title=" " alt="" coords="643,148,719,188,717,193,641,152"/>
+<area shape="poly" id="edge13_Node000013_Node000004" title=" " alt="" coords="384,247,337,285,334,281,380,243"/>
+<area shape="poly" id="edge15_Node000014_Node000007" title=" " alt="" coords="694,244,596,285,594,280,692,239"/>
+<area shape="poly" id="edge16_Node000014_Node000009" title=" " alt="" coords="750,250,739,284,734,282,745,249"/>
+<area shape="poly" id="edge17_Node000014_Node000011" title=" " alt="" coords="817,240,903,280,900,285,815,245"/>
+<area shape="poly" id="edge20_Node000015_Node000003" title=" " alt="" coords="246,157,250,190,245,191,241,158"/>
+<area shape="poly" id="edge21_Node000015_Node000013" title=" " alt="" coords="297,147,378,188,376,193,294,152"/>
+<area shape="rect" id="Node000016" href="$fnft____kdv__finvscatter_8h.html" title="Recovers the signal from a scattering matrix." alt="" coords="5,191,154,235"/>
+<area shape="poly" id="edge19_Node000015_Node000016" title=" " alt="" coords="190,153,119,193,116,188,187,148"/>
+<area shape="poly" id="edge25_Node000017_Node000006" title=" " alt="" coords="714,152,633,193,630,188,712,147"/>
+<area shape="poly" id="edge26_Node000017_Node000014" title=" " alt="" coords="767,158,763,191,758,190,762,157"/>
+<area shape="rect" id="Node000018" href="$fnft____nse__finvscatter_8h.html" title="Recovers the signal from a scattering matrix." alt="" coords="855,191,1003,235"/>
+<area shape="poly" id="edge23_Node000017_Node000018" title=" " alt="" coords="821,148,892,188,890,193,818,153"/>
+<area shape="poly" id="edge24_Node000018_Node000011" title=" " alt="" coords="932,250,932,283,926,283,926,250"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="include/private/fnft__kdv_fscatter.h" name="include/private/fnft__kdv_fscatter.h">
+<area shape="rect" id="Node000001" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="7,5,152,50"/>
+<area shape="rect" id="Node000002" href="$fnft__kdvv_8h.html" title="Fast nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="7,98,152,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="82,65,82,97,77,97,77,65"/>
+<area shape="rect" id="Node000003" href="$fnft____kdvv__testcases_8h.html" title="Provides test cases for the tests of fnft_kdvv." alt="" coords="5,174,154,218"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="82,141,82,173,77,173,77,141"/>
+</map>

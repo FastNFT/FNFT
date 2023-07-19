@@ -1,0 +1,23 @@
+<map id="include/private/fnft__nse_discretization.h" name="include/private/fnft__nse_discretization.h">
+<area shape="rect" id="Node000001" title="Properties of the discretizations for the nonlinear Schroedinger equation." alt="" coords="194,5,359,50"/>
+<area shape="rect" id="Node000002" href="$fnft____nse__finvscatter_8h.html" title="Recovers the signal from a scattering matrix." alt="" coords="32,98,179,143"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="224,60,147,100,145,95,221,55"/>
+<area shape="rect" id="Node000004" href="$fnft____nse__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="373,98,518,143"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="331,55,407,95,404,100,328,60"/>
+<area shape="rect" id="Node000009" href="$fnft____nse__scatter_8h.html" title="Slow forward scattering." alt="" coords="204,98,349,143"/>
+<area shape="poly" id="edge9_Node000001_Node000009" title=" " alt="" coords="279,65,279,98,274,98,274,65"/>
+<area shape="rect" id="Node000003" href="$fnft__nsev__inverse_8h.html" title="Fast inverse nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="5,191,206,218"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="108,158,108,190,103,190,103,158"/>
+<area shape="poly" id="edge8_Node000004_Node000003" title=" " alt="" coords="359,146,163,193,161,187,358,141"/>
+<area shape="rect" id="Node000005" href="$fnft__nsep_8h.html" title="Fast nonlinear Fourier transform for the periodic nonlinear Schroedinger equation." alt="" coords="398,191,544,218"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="459,156,469,189,464,191,454,158"/>
+<area shape="rect" id="Node000007" href="$fnft__nsev_8h.html" title="Fast nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="229,191,374,218"/>
+<area shape="poly" id="edge6_Node000004_Node000007" title=" " alt="" coords="396,153,326,192,323,188,394,148"/>
+<area shape="rect" id="Node000006" href="$fnft____nsep__testcases_8h.html" title="Provides test cases for the tests of fnft_nsep." alt="" coords="399,266,546,311"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="474,233,474,266,469,266,469,234"/>
+<area shape="rect" id="Node000008" href="$fnft____nsev__testcases_8h.html" title="Provides test cases for the tests of fnft_nsev." alt="" coords="227,266,374,311"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="304,234,303,266,298,266,298,233"/>
+<area shape="poly" id="edge12_Node000009_Node000003" title=" " alt="" coords="219,152,134,193,132,188,217,147"/>
+<area shape="poly" id="edge10_Node000009_Node000005" title=" " alt="" coords="342,146,441,188,439,193,340,151"/>
+<area shape="poly" id="edge11_Node000009_Node000007" title=" " alt="" coords="290,156,300,189,295,191,285,158"/>
+</map>

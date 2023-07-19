@@ -1,0 +1,16 @@
+<map id="include/fnft_kdv_discretization_t.h" name="include/fnft_kdv_discretization_t.h">
+<area shape="rect" id="Node000001" title="Lists discretizations for the Korteweg&#45;de Vries equation." alt="" coords="128,5,373,33"/>
+<area shape="rect" id="Node000002" href="$fnft____kdv__discretization_8h.html" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="167,81,333,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="253,48,253,80,248,80,248,48"/>
+<area shape="rect" id="Node000003" href="$fnft____kdv__finvscatter_8h.html" title="Recovers the signal from a scattering matrix." alt="" coords="5,174,154,218"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="198,135,121,176,119,171,195,131"/>
+<area shape="rect" id="Node000004" href="$fnft____kdv__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="178,174,323,218"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="253,140,253,173,248,173,248,140"/>
+<area shape="rect" id="Node000007" href="$fnft____kdv__scatter_8h.html" title="Slow forward scattering." alt="" coords="347,174,492,218"/>
+<area shape="poly" id="edge6_Node000002_Node000007" title=" " alt="" coords="305,131,381,171,378,176,302,135"/>
+<area shape="rect" id="Node000005" href="$fnft__kdvv_8h.html" title="Fast nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="262,266,407,294"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="284,227,322,264,319,268,281,231"/>
+<area shape="rect" id="Node000006" href="$fnft____kdvv__testcases_8h.html" title="Provides test cases for the tests of fnft_kdvv." alt="" coords="260,342,408,387"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="337,309,337,341,332,341,332,309"/>
+<area shape="poly" id="edge7_Node000007_Node000005" title=" " alt="" coords="389,231,350,268,346,264,385,227"/>
+</map>

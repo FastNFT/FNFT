@@ -1,0 +1,31 @@
+<map id="include/private/fnft__manakov_discretization.h" name="include/private/fnft__manakov_discretization.h">
+<area shape="rect" id="Node000001" title="Properties of the discretization for the Manakov equation." alt="" coords="265,5,467,50"/>
+<area shape="rect" id="Node000002" href="$fnft__manakov__discretization__t_8h.html" title="Lists discretizations for the Manakov Equation." alt="" coords="251,98,481,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="368,50,368,83,363,83,363,50"/>
+<area shape="rect" id="Node000012" href="$fnft____errwarn_8h.html" title=" " alt="" coords="159,174,279,201"/>
+<area shape="poly" id="edge11_Node000001_Node000012" title=" " alt="" coords="304,53,270,73,241,100,227,129,222,160,217,159,222,127,237,96,267,68,301,48"/>
+<area shape="rect" id="Node000013" href="$fnft____misc_8h.html" title="Miscellaneous functions used in the FNFT library." alt="" coords="504,98,606,126"/>
+<area shape="poly" id="edge13_Node000001_Node000013" title=" " alt="" coords="417,48,513,89,510,94,415,53"/>
+<area shape="rect" id="Node000003" href="$fnft_8h_source.html" title=" " alt="" coords="338,174,394,201"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="368,126,368,159,363,159,363,126"/>
+<area shape="rect" id="Node000004" href="$fnft__config_8h_source.html" title=" " alt="" coords="314,249,417,277"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="368,202,368,234,363,234,363,202"/>
+<area shape="rect" id="Node000005" href="$fnft__errwarn_8h.html" title="Controls error messages." alt="" coords="172,249,285,277"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="342,204,267,244,264,240,340,200"/>
+<area shape="rect" id="Node000006" href="$fnft__numtypes_8h.html" title=" " alt="" coords="164,325,293,353"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="231,278,231,310,226,310,226,278"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="5,401,73,428"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="195,356,87,398,85,393,194,351"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="97,401,160,428"/>
+<area shape="poly" id="edge7_Node000006_Node000008" title=" " alt="" coords="212,355,159,394,156,390,209,351"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="184,401,273,428"/>
+<area shape="poly" id="edge8_Node000006_Node000009" title=" " alt="" coords="231,353,231,386,226,386,226,353"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="297,401,368,428"/>
+<area shape="poly" id="edge9_Node000006_Node000010" title=" " alt="" coords="248,351,304,390,301,394,245,355"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="391,401,460,428"/>
+<area shape="poly" id="edge10_Node000006_Node000011" title=" " alt="" coords="265,351,378,393,376,398,263,356"/>
+<area shape="poly" id="edge12_Node000012_Node000005" title=" " alt="" coords="223,202,227,234,222,235,218,202"/>
+<area shape="poly" id="edge14_Node000013_Node000003" title=" " alt="" coords="522,129,409,173,407,168,520,124"/>
+<area shape="rect" id="Node000014" title=" " alt="" coords="520,174,590,201"/>
+<area shape="poly" id="edge15_Node000013_Node000014" title=" " alt="" coords="558,126,558,159,552,159,552,126"/>
+</map>

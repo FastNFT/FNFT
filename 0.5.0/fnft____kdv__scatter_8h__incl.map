@@ -1,0 +1,51 @@
+<map id="include/private/fnft__kdv_scatter.h" name="include/private/fnft__kdv_scatter.h">
+<area shape="rect" id="Node000001" title="Slow forward scattering." alt="" coords="599,5,745,50"/>
+<area shape="rect" id="Node000002" href="$fnft____kdv__discretization_8h.html" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="61,98,251,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="599,43,254,98,253,92,599,38"/>
+<area shape="rect" id="Node000015" href="$fnft____errwarn_8h.html" title=" " alt="" coords="546,249,667,277"/>
+<area shape="poly" id="edge30_Node000001_Node000015" title=" " alt="" coords="704,49,739,79,772,117,783,138,790,160,789,182,779,203,760,224,736,239,709,250,682,257,681,252,707,245,733,234,756,220,775,200,784,181,784,161,778,140,767,120,735,83,700,53"/>
+<area shape="rect" id="Node000016" href="$fnft____misc_8h.html" title="Miscellaneous functions used in the FNFT library." alt="" coords="189,249,291,277"/>
+<area shape="poly" id="edge28_Node000001_Node000016" title=" " alt="" coords="600,49,535,68,460,96,383,131,312,176,281,206,257,238,253,235,277,202,309,172,381,127,458,91,533,63,598,44"/>
+<area shape="rect" id="Node000017" title=" " alt="" coords="669,325,739,353"/>
+<area shape="poly" id="edge29_Node000001_Node000017" title=" " alt="" coords="726,48,757,69,785,96,796,116,800,133,802,173,804,188,802,202,788,235,769,267,729,316,725,312,765,263,783,233,797,201,799,188,797,174,795,134,791,118,780,100,754,73,723,53"/>
+<area shape="rect" id="Node000018" href="$fnft____akns__scatter_8h.html" title="Slow forward scattering." alt="" coords="535,98,689,126"/>
+<area shape="poly" id="edge21_Node000001_Node000018" title=" " alt="" coords="658,52,632,87,628,84,654,49"/>
+<area shape="rect" id="Node000019" title=" " alt="" coords="699,174,765,201"/>
+<area shape="poly" id="edge27_Node000001_Node000019" title=" " alt="" coords="684,50,704,97,726,159,721,161,699,99,679,52"/>
+<area shape="rect" id="Node000003" href="$fnft__kdv__discretization__t_8h.html" title="Lists discretizations for the Korteweg&#45;de Vries equation." alt="" coords="5,174,200,201"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="148,128,123,163,118,160,144,125"/>
+<area shape="rect" id="Node000013" href="$fnft____akns__discretization_8h.html" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="376,174,573,201"/>
+<area shape="poly" id="edge12_Node000002_Node000013" title=" " alt="" coords="214,124,404,167,402,172,213,129"/>
+<area shape="poly" id="edge20_Node000002_Node000016" title=" " alt="" coords="173,124,194,145,214,172,228,204,237,234,232,236,223,206,210,175,190,149,169,128"/>
+<area shape="rect" id="Node000004" href="$fnft_8h_source.html" title=" " alt="" coords="301,325,357,353"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="113,200,139,237,179,275,234,305,288,324,286,329,231,310,176,279,135,240,108,204"/>
+<area shape="rect" id="Node000005" href="$fnft__config_8h_source.html" title=" " alt="" coords="278,401,381,428"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="332,353,332,386,327,386,327,353"/>
+<area shape="rect" id="Node000006" href="$fnft__errwarn_8h.html" title="Controls error messages." alt="" coords="442,401,555,428"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="359,350,456,392,454,397,357,355"/>
+<area shape="rect" id="Node000007" href="$fnft__numtypes_8h.html" title=" " alt="" coords="434,476,563,504"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="501,429,501,461,496,461,496,429"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="276,552,343,580"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="466,507,357,549,355,544,464,502"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="367,552,430,580"/>
+<area shape="poly" id="edge8_Node000007_Node000009" title=" " alt="" coords="482,507,429,545,426,541,479,502"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="454,552,543,580"/>
+<area shape="poly" id="edge9_Node000007_Node000010" title=" " alt="" coords="501,505,501,537,496,537,496,505"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="567,552,638,580"/>
+<area shape="poly" id="edge10_Node000007_Node000011" title=" " alt="" coords="519,502,574,541,571,546,516,507"/>
+<area shape="rect" id="Node000012" title=" " alt="" coords="661,552,731,580"/>
+<area shape="poly" id="edge11_Node000007_Node000012" title=" " alt="" coords="535,502,648,544,647,549,533,507"/>
+<area shape="rect" id="Node000014" href="$fnft____akns__discretization__t_8h.html" title="Lists discretizations of AKNS system." alt="" coords="314,249,523,277"/>
+<area shape="poly" id="edge13_Node000013_Node000014" title=" " alt="" coords="467,204,439,239,435,236,462,200"/>
+<area shape="poly" id="edge15_Node000013_Node000015" title=" " alt="" coords="499,200,572,240,569,244,497,204"/>
+<area shape="poly" id="edge17_Node000013_Node000016" title=" " alt="" coords="433,204,296,247,295,242,432,199"/>
+<area shape="poly" id="edge14_Node000014_Node000004" title=" " alt="" coords="404,280,358,317,355,313,401,275"/>
+<area shape="poly" id="edge16_Node000015_Node000006" title=" " alt="" coords="599,279,519,390,514,387,595,276"/>
+<area shape="poly" id="edge18_Node000016_Node000004" title=" " alt="" coords="257,275,304,313,300,317,254,280"/>
+<area shape="poly" id="edge19_Node000016_Node000017" title=" " alt="" coords="292,272,303,274,498,306,655,328,654,333,497,311,302,280,291,278"/>
+<area shape="poly" id="edge22_Node000018_Node000013" title=" " alt="" coords="589,129,513,169,510,164,586,124"/>
+<area shape="poly" id="edge25_Node000018_Node000015" title=" " alt="" coords="614,126,610,234,605,234,609,126"/>
+<area shape="poly" id="edge26_Node000018_Node000016" title=" " alt="" coords="536,127,452,146,407,159,365,176,311,208,266,242,263,238,308,203,363,171,406,154,450,140,534,122"/>
+<area shape="poly" id="edge24_Node000018_Node000017" title=" " alt="" coords="621,125,649,178,681,248,700,310,695,312,676,250,645,180,617,127"/>
+<area shape="poly" id="edge23_Node000018_Node000019" title=" " alt="" coords="635,124,700,164,697,168,632,128"/>
+</map>

@@ -1,0 +1,12 @@
+<map id="include/private/fnft__manakov_discretization.h" name="include/private/fnft__manakov_discretization.h">
+<area shape="rect" id="Node000001" title="Properties of the discretization for the Manakov equation." alt="" coords="78,5,281,50"/>
+<area shape="rect" id="Node000002" href="$fnft____manakov__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="5,98,170,143"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="149,62,111,100,107,96,146,58"/>
+<area shape="rect" id="Node000005" href="$fnft____manakov__scatter_8h.html" title="Slow forward scattering." alt="" coords="193,98,353,143"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="214,58,253,96,249,100,210,62"/>
+<area shape="rect" id="Node000003" href="$fnft__manakovv_8h.html" title="Fast nonlinear Fourier transform for the vanishing Manakov equation." alt="" coords="89,191,270,218"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="124,151,166,188,163,192,121,155"/>
+<area shape="rect" id="Node000004" href="$fnft____manakovv__testcases_8h.html" title="Provides test cases for the tests of fnft_manakovv." alt="" coords="87,266,272,311"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="182,233,182,266,177,266,177,233"/>
+<area shape="poly" id="edge5_Node000005_Node000003" title=" " alt="" coords="239,155,196,192,193,188,236,151"/>
+</map>

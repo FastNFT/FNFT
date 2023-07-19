@@ -1,0 +1,48 @@
+<map id="include/private/fnft__akns_discretization_t.h" name="include/private/fnft__akns_discretization_t.h">
+<area shape="rect" id="Node000001" title="Lists discretizations of AKNS system." alt="" coords="411,5,596,50"/>
+<area shape="rect" id="Node000002" href="$fnft____akns__discretization_8h.html" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="417,98,590,143"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="506,65,506,98,501,98,501,65"/>
+<area shape="rect" id="Node000003" href="$fnft____akns__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="347,191,492,235"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="476,156,441,192,437,189,472,152"/>
+<area shape="rect" id="Node000013" href="$fnft____akns__scatter_8h.html" title="Slow forward scattering." alt="" coords="516,191,662,235"/>
+<area shape="poly" id="edge12_Node000002_Node000013" title=" " alt="" coords="535,151,571,189,567,192,532,155"/>
+<area shape="rect" id="Node000016" href="$fnft____kdv__discretization_8h.html" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="156,191,323,235"/>
+<area shape="poly" id="edge19_Node000002_Node000016" title=" " alt="" coords="428,150,304,193,302,188,426,145"/>
+<area shape="rect" id="Node000018" href="$fnft____nse__discretization_8h.html" title="Properties of the discretizations for the nonlinear Schroedinger equation." alt="" coords="686,191,852,235"/>
+<area shape="poly" id="edge23_Node000002_Node000018" title=" " alt="" coords="582,145,706,188,704,193,580,150"/>
+<area shape="rect" id="Node000004" href="$fnft____kdv__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="178,283,323,328"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="367,245,292,285,289,281,365,240"/>
+<area shape="rect" id="Node000007" href="$fnft____nse__fscatter_8h.html" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="516,283,662,328"/>
+<area shape="poly" id="edge6_Node000003_Node000007" title=" " alt="" coords="474,240,550,281,547,285,472,245"/>
+<area shape="rect" id="Node000005" href="$fnft__kdvv_8h.html" title="Fast nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="247,376,392,404"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="280,338,310,374,306,377,276,341"/>
+<area shape="rect" id="Node000006" href="$fnft____kdvv__testcases_8h.html" title="Provides test cases for the tests of fnft_kdvv." alt="" coords="245,452,394,496"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="322,419,322,451,317,451,317,419"/>
+<area shape="rect" id="Node000008" href="$fnft__nsep_8h.html" title="Fast nonlinear Fourier transform for the periodic nonlinear Schroedinger equation." alt="" coords="491,376,636,404"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="580,343,570,376,565,375,575,341"/>
+<area shape="rect" id="Node000010" href="$fnft__nsev_8h.html" title="Fast nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="661,376,805,404"/>
+<area shape="poly" id="edge9_Node000007_Node000010" title=" " alt="" coords="641,333,711,373,708,378,638,338"/>
+<area shape="rect" id="Node000012" href="$fnft__nsev__inverse_8h.html" title="Fast inverse nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="829,376,1029,404"/>
+<area shape="poly" id="edge11_Node000007_Node000012" title=" " alt="" coords="677,326,874,373,873,378,675,331"/>
+<area shape="rect" id="Node000009" href="$fnft____nsep__testcases_8h.html" title="Provides test cases for the tests of fnft_nsep." alt="" coords="489,452,636,496"/>
+<area shape="poly" id="edge8_Node000008_Node000009" title=" " alt="" coords="566,419,565,451,560,451,560,419"/>
+<area shape="rect" id="Node000011" href="$fnft____nsev__testcases_8h.html" title="Provides test cases for the tests of fnft_nsev." alt="" coords="661,452,808,496"/>
+<area shape="poly" id="edge10_Node000010_Node000011" title=" " alt="" coords="736,419,736,451,731,451,731,419"/>
+<area shape="rect" id="Node000014" href="$fnft____kdv__scatter_8h.html" title="Slow forward scattering." alt="" coords="347,283,492,328"/>
+<area shape="poly" id="edge13_Node000013_Node000014" title=" " alt="" coords="537,245,461,285,458,281,534,240"/>
+<area shape="rect" id="Node000015" href="$fnft____nse__scatter_8h.html" title="Slow forward scattering." alt="" coords="686,283,831,328"/>
+<area shape="poly" id="edge15_Node000013_Node000015" title=" " alt="" coords="643,240,719,281,717,285,641,245"/>
+<area shape="poly" id="edge14_Node000014_Node000005" title=" " alt="" coords="384,340,337,377,334,373,380,336"/>
+<area shape="poly" id="edge16_Node000015_Node000008" title=" " alt="" coords="694,337,596,378,594,373,692,332"/>
+<area shape="poly" id="edge17_Node000015_Node000010" title=" " alt="" coords="750,343,739,376,734,375,745,341"/>
+<area shape="poly" id="edge18_Node000015_Node000012" title=" " alt="" coords="817,332,903,373,900,378,815,337"/>
+<area shape="poly" id="edge21_Node000016_Node000004" title=" " alt="" coords="246,250,250,283,245,283,241,250"/>
+<area shape="poly" id="edge22_Node000016_Node000014" title=" " alt="" coords="297,240,378,281,376,285,294,245"/>
+<area shape="rect" id="Node000017" href="$fnft____kdv__finvscatter_8h.html" title="Recovers the signal from a scattering matrix." alt="" coords="5,283,154,328"/>
+<area shape="poly" id="edge20_Node000016_Node000017" title=" " alt="" coords="190,245,119,285,116,281,187,241"/>
+<area shape="poly" id="edge26_Node000018_Node000007" title=" " alt="" coords="714,245,633,285,630,281,712,240"/>
+<area shape="poly" id="edge27_Node000018_Node000015" title=" " alt="" coords="767,250,763,283,758,283,762,250"/>
+<area shape="rect" id="Node000019" href="$fnft____nse__finvscatter_8h.html" title="Recovers the signal from a scattering matrix." alt="" coords="855,283,1003,328"/>
+<area shape="poly" id="edge24_Node000018_Node000019" title=" " alt="" coords="821,241,892,281,890,285,818,245"/>
+<area shape="poly" id="edge25_Node000019_Node000012" title=" " alt="" coords="932,343,932,375,926,375,926,343"/>
+</map>

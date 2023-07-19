@@ -1,0 +1,21 @@
+<map id="include/fnft_nse_discretization_t.h" name="include/fnft_nse_discretization_t.h">
+<area shape="rect" id="Node000001" title="Lists discretizations for the nonlinear Schroedinger equation." alt="" coords="40,5,284,33"/>
+<area shape="rect" id="Node000002" href="$fnft_8h_source.html" title=" " alt="" coords="134,81,190,109"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="164,34,164,66,159,66,159,34"/>
+<area shape="rect" id="Node000003" href="$fnft__config_8h_source.html" title=" " alt="" coords="45,157,148,184"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="152,111,119,147,115,144,148,107"/>
+<area shape="rect" id="Node000004" href="$fnft__errwarn_8h.html" title="Controls error messages." alt="" coords="172,157,285,184"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="176,107,209,144,205,147,172,111"/>
+<area shape="rect" id="Node000005" href="$fnft__numtypes_8h.html" title=" " alt="" coords="164,232,293,260"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="231,185,231,217,226,217,226,185"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="5,308,73,336"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="195,263,87,305,85,300,194,258"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="97,308,160,336"/>
+<area shape="poly" id="edge6_Node000005_Node000007" title=" " alt="" coords="212,263,159,301,156,297,209,258"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="184,308,273,336"/>
+<area shape="poly" id="edge7_Node000005_Node000008" title=" " alt="" coords="231,261,231,293,226,293,226,261"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="297,308,368,336"/>
+<area shape="poly" id="edge8_Node000005_Node000009" title=" " alt="" coords="248,258,304,297,301,302,245,263"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="391,308,460,336"/>
+<area shape="poly" id="edge9_Node000005_Node000010" title=" " alt="" coords="265,258,378,300,376,305,263,263"/>
+</map>

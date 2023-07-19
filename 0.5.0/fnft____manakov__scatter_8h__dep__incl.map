@@ -1,0 +1,7 @@
+<map id="include/private/fnft__manakov_scatter.h" name="include/private/fnft__manakov_scatter.h">
+<area shape="rect" id="Node000001" title="Slow forward scattering." alt="" coords="18,5,177,50"/>
+<area shape="rect" id="Node000002" href="$fnft__manakovv_8h.html" title="Fast nonlinear Fourier transform for the vanishing Manakov equation." alt="" coords="7,98,188,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="100,65,100,97,95,97,95,65"/>
+<area shape="rect" id="Node000003" href="$fnft____manakovv__testcases_8h.html" title="Provides test cases for the tests of fnft_manakovv." alt="" coords="5,174,190,218"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="100,141,100,173,95,173,95,141"/>
+</map>

@@ -1,0 +1,21 @@
+<map id="include/fnft_manakov_discretization_t.h" name="include/fnft_manakov_discretization_t.h">
+<area shape="rect" id="Node000001" title="Lists discretizations for the Manakov Equation." alt="" coords="81,5,243,50"/>
+<area shape="rect" id="Node000002" href="$fnft_8h_source.html" title=" " alt="" coords="134,98,190,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="164,50,164,83,159,83,159,50"/>
+<area shape="rect" id="Node000003" href="$fnft__config_8h_source.html" title=" " alt="" coords="45,174,148,201"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="152,128,119,164,115,161,148,124"/>
+<area shape="rect" id="Node000004" href="$fnft__errwarn_8h.html" title="Controls error messages." alt="" coords="172,174,285,201"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="176,124,209,161,205,164,172,128"/>
+<area shape="rect" id="Node000005" href="$fnft__numtypes_8h.html" title=" " alt="" coords="164,249,293,277"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="231,202,231,234,226,234,226,202"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="5,325,73,353"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="195,280,87,322,85,317,194,275"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="97,325,160,353"/>
+<area shape="poly" id="edge6_Node000005_Node000007" title=" " alt="" coords="212,280,159,318,156,314,209,275"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="184,325,273,353"/>
+<area shape="poly" id="edge7_Node000005_Node000008" title=" " alt="" coords="231,278,231,310,226,310,226,278"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="297,325,368,353"/>
+<area shape="poly" id="edge8_Node000005_Node000009" title=" " alt="" coords="248,275,304,314,301,319,245,280"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="391,325,460,353"/>
+<area shape="poly" id="edge9_Node000005_Node000010" title=" " alt="" coords="265,275,378,317,376,322,263,280"/>
+</map>

@@ -1,0 +1,37 @@
+<map id="include/private/fnft__nse_discretization.h" name="include/private/fnft__nse_discretization.h">
+<area shape="rect" id="Node000001" title="Properties of the discretizations for the nonlinear Schroedinger equation." alt="" coords="246,5,411,50"/>
+<area shape="rect" id="Node000002" href="$fnft__nse__discretization__t_8h.html" title="Lists discretizations for the nonlinear Schroedinger equation." alt="" coords="5,98,199,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="269,53,153,95,151,90,268,48"/>
+<area shape="rect" id="Node000012" href="$fnft____akns__discretization_8h.html" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="231,98,427,126"/>
+<area shape="poly" id="edge11_Node000001_Node000012" title=" " alt="" coords="331,50,331,83,326,83,326,50"/>
+<area shape="rect" id="Node000015" href="$fnft____misc_8h.html" title="Miscellaneous functions used in the FNFT library." alt="" coords="414,174,515,201"/>
+<area shape="poly" id="edge19_Node000001_Node000015" title=" " alt="" coords="381,48,413,69,441,96,457,127,465,159,459,160,452,129,437,100,410,73,378,53"/>
+<area shape="rect" id="Node000003" href="$fnft_8h_source.html" title=" " alt="" coords="207,249,264,277"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="104,126,106,162,112,182,121,200,137,216,155,229,194,248,192,252,152,234,133,220,117,203,107,184,101,163,99,126"/>
+<area shape="rect" id="Node000004" href="$fnft__config_8h_source.html" title=" " alt="" coords="173,325,276,353"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="236,278,231,310,226,310,231,277"/>
+<area shape="rect" id="Node000005" href="$fnft__errwarn_8h.html" title="Controls error messages." alt="" coords="300,325,413,353"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="258,275,324,315,321,319,256,280"/>
+<area shape="rect" id="Node000006" href="$fnft__numtypes_8h.html" title=" " alt="" coords="293,401,421,428"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="359,353,359,386,354,386,354,353"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="134,476,201,504"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="324,431,215,473,213,468,322,426"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="225,476,288,504"/>
+<area shape="poly" id="edge7_Node000006_Node000008" title=" " alt="" coords="340,431,288,470,284,465,337,427"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="312,476,401,504"/>
+<area shape="poly" id="edge8_Node000006_Node000009" title=" " alt="" coords="359,429,359,461,354,461,354,429"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="426,476,496,504"/>
+<area shape="poly" id="edge9_Node000006_Node000010" title=" " alt="" coords="377,427,432,466,429,470,374,431"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="519,476,589,504"/>
+<area shape="poly" id="edge10_Node000006_Node000011" title=" " alt="" coords="393,426,507,468,505,473,391,431"/>
+<area shape="rect" id="Node000013" href="$fnft____akns__discretization__t_8h.html" title="Lists discretizations of AKNS system." alt="" coords="131,174,340,201"/>
+<area shape="poly" id="edge12_Node000012_Node000013" title=" " alt="" coords="314,128,265,166,262,162,310,124"/>
+<area shape="rect" id="Node000014" href="$fnft____errwarn_8h.html" title=" " alt="" coords="297,249,417,277"/>
+<area shape="poly" id="edge14_Node000012_Node000014" title=" " alt="" coords="337,125,354,173,360,235,354,235,349,174,332,127"/>
+<area shape="poly" id="edge16_Node000012_Node000015" title=" " alt="" coords="354,124,429,164,427,169,352,129"/>
+<area shape="poly" id="edge13_Node000013_Node000003" title=" " alt="" coords="238,202,238,234,233,234,233,202"/>
+<area shape="poly" id="edge15_Node000014_Node000005" title=" " alt="" coords="359,278,359,310,354,310,354,278"/>
+<area shape="poly" id="edge17_Node000015_Node000003" title=" " alt="" coords="424,204,279,251,277,246,423,199"/>
+<area shape="rect" id="Node000016" title=" " alt="" coords="442,249,512,277"/>
+<area shape="poly" id="edge18_Node000015_Node000016" title=" " alt="" coords="469,201,475,234,470,235,464,202"/>
+</map>

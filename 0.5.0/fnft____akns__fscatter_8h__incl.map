@@ -1,0 +1,42 @@
+<map id="include/private/fnft__akns_fscatter.h" name="include/private/fnft__akns_fscatter.h">
+<area shape="rect" id="Node000001" title="Computes the polynomial approximation of the combined scattering matrix." alt="" coords="243,5,389,50"/>
+<area shape="rect" id="Node000002" href="$fnft____akns__discretization_8h.html" title="Properties of the discretizations for the Korteweg&#45;de Vries equation." alt="" coords="150,98,346,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="300,52,270,88,266,85,296,49"/>
+<area shape="rect" id="Node000013" href="$fnft____errwarn_8h.html" title=" " alt="" coords="363,174,483,201"/>
+<area shape="poly" id="edge18_Node000001_Node000013" title=" " alt="" coords="333,49,408,159,403,162,328,52"/>
+<area shape="rect" id="Node000014" href="$fnft____misc_8h.html" title="Miscellaneous functions used in the FNFT library." alt="" coords="5,174,107,201"/>
+<area shape="poly" id="edge17_Node000001_Node000014" title=" " alt="" coords="244,51,190,72,139,100,104,131,76,163,72,160,100,127,136,96,188,67,242,46"/>
+<area shape="rect" id="Node000016" href="$fnft____poly__fmult_8h.html" title="Fast multiplication of n polynomials." alt="" coords="497,98,637,126"/>
+<area shape="poly" id="edge19_Node000001_Node000016" title=" " alt="" coords="383,48,513,90,512,95,382,53"/>
+<area shape="rect" id="Node000003" href="$fnft____akns__discretization__t_8h.html" title="Lists discretizations of AKNS system." alt="" coords="131,174,339,201"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="248,127,242,160,237,159,243,126"/>
+<area shape="poly" id="edge12_Node000002_Node000013" title=" " alt="" coords="280,124,379,165,377,170,278,129"/>
+<area shape="poly" id="edge14_Node000002_Node000014" title=" " alt="" coords="215,129,104,171,103,166,213,124"/>
+<area shape="rect" id="Node000004" href="$fnft_8h_source.html" title=" " alt="" coords="220,249,276,277"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="240,201,246,234,240,235,234,202"/>
+<area shape="rect" id="Node000005" href="$fnft__config_8h_source.html" title=" " alt="" coords="196,325,300,353"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="251,278,251,310,245,310,245,278"/>
+<area shape="rect" id="Node000006" href="$fnft__errwarn_8h.html" title="Controls error messages." alt="" coords="351,325,465,353"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="278,275,368,316,365,321,275,280"/>
+<area shape="rect" id="Node000007" href="$fnft__numtypes_8h.html" title=" " alt="" coords="344,401,472,428"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="411,353,411,386,405,386,405,353"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="185,476,252,504"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="375,431,266,473,265,468,373,426"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="276,476,340,504"/>
+<area shape="poly" id="edge8_Node000007_Node000009" title=" " alt="" coords="392,431,339,470,336,465,389,427"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="363,476,453,504"/>
+<area shape="poly" id="edge9_Node000007_Node000010" title=" " alt="" coords="411,429,411,461,405,461,405,429"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="477,476,547,504"/>
+<area shape="poly" id="edge10_Node000007_Node000011" title=" " alt="" coords="428,427,484,466,480,470,425,431"/>
+<area shape="rect" id="Node000012" title=" " alt="" coords="571,476,640,504"/>
+<area shape="poly" id="edge11_Node000007_Node000012" title=" " alt="" coords="444,426,558,468,556,473,442,431"/>
+<area shape="poly" id="edge13_Node000013_Node000006" title=" " alt="" coords="424,202,413,310,408,310,419,201"/>
+<area shape="poly" id="edge15_Node000014_Node000004" title=" " alt="" coords="91,199,207,243,205,248,89,204"/>
+<area shape="rect" id="Node000015" title=" " alt="" coords="21,249,91,277"/>
+<area shape="poly" id="edge16_Node000014_Node000015" title=" " alt="" coords="59,202,59,234,53,234,53,202"/>
+<area shape="rect" id="Node000017" href="$fnft____fft__wrapper__plan__t_8h.html" title=" " alt="" coords="507,174,699,201"/>
+<area shape="poly" id="edge20_Node000016_Node000017" title=" " alt="" coords="575,125,592,159,588,161,571,127"/>
+<area shape="poly" id="edge21_Node000017_Node000004" title=" " alt="" coords="539,205,291,256,290,250,538,199"/>
+<area shape="rect" id="Node000018" title=" " alt="" coords="562,249,643,277"/>
+<area shape="poly" id="edge22_Node000017_Node000018" title=" " alt="" coords="605,202,605,234,600,234,600,202"/>
+</map>

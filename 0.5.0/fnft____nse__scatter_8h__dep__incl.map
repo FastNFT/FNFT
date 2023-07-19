@@ -1,0 +1,13 @@
+<map id="include/private/fnft__nse_scatter.h" name="include/private/fnft__nse_scatter.h">
+<area shape="rect" id="Node000001" title="Slow forward scattering." alt="" coords="177,5,322,50"/>
+<area shape="rect" id="Node000002" href="$fnft__nsep_8h.html" title="Fast nonlinear Fourier transform for the periodic nonlinear Schroedinger equation." alt="" coords="8,98,153,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="193,59,109,100,106,95,190,55"/>
+<area shape="rect" id="Node000004" href="$fnft__nsev_8h.html" title="Fast nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="178,98,322,126"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="252,65,252,97,247,97,247,65"/>
+<area shape="rect" id="Node000006" href="$fnft__nsev__inverse_8h.html" title="Fast inverse nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="346,98,546,126"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="316,54,415,95,413,100,314,59"/>
+<area shape="rect" id="Node000003" href="$fnft____nsep__testcases_8h.html" title="Provides test cases for the tests of fnft_nsep." alt="" coords="5,174,153,218"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="83,141,82,173,77,173,77,141"/>
+<area shape="rect" id="Node000005" href="$fnft____nsev__testcases_8h.html" title="Provides test cases for the tests of fnft_nsev." alt="" coords="177,174,325,218"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="253,141,253,173,248,173,247,141"/>
+</map>

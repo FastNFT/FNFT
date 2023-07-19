@@ -1,0 +1,19 @@
+<map id="include/private/fnft__poly_roots_fasteigen.h" name="include/private/fnft__poly_roots_fasteigen.h">
+<area shape="rect" id="Node000001" title="Fast root finding of polynomials." alt="" coords="272,5,455,50"/>
+<area shape="rect" id="Node000002" href="$fnft__kdvv_8h.html" title="Fast nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="8,98,154,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="276,57,127,100,125,95,274,52"/>
+<area shape="rect" id="Node000004" href="$fnft__manakovv_8h.html" title="Fast nonlinear Fourier transform for the vanishing Manakov equation." alt="" coords="180,98,361,126"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="330,62,287,99,283,95,326,58"/>
+<area shape="rect" id="Node000006" href="$fnft__nsep_8h.html" title="Fast nonlinear Fourier transform for the periodic nonlinear Schroedinger equation." alt="" coords="386,98,531,126"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="401,58,445,95,441,99,398,62"/>
+<area shape="rect" id="Node000008" href="$fnft__nsev_8h.html" title="Fast nonlinear Fourier transform for the vanishing nonlinear Schroedinger equation." alt="" coords="557,98,701,126"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="449,52,587,95,586,100,447,57"/>
+<area shape="rect" id="Node000003" href="$fnft____kdvv__testcases_8h.html" title="Provides test cases for the tests of fnft_kdvv." alt="" coords="5,174,154,218"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="83,141,83,173,77,173,78,141"/>
+<area shape="rect" id="Node000005" href="$fnft____manakovv__testcases_8h.html" title="Provides test cases for the tests of fnft_manakovv." alt="" coords="178,174,362,218"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="273,141,273,173,268,173,268,141"/>
+<area shape="rect" id="Node000007" href="$fnft____nsep__testcases_8h.html" title="Provides test cases for the tests of fnft_nsep." alt="" coords="386,174,533,218"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="461,141,462,173,456,173,456,141"/>
+<area shape="rect" id="Node000009" href="$fnft____nsev__testcases_8h.html" title="Provides test cases for the tests of fnft_nsev." alt="" coords="558,174,705,218"/>
+<area shape="poly" id="edge8_Node000008_Node000009" title=" " alt="" coords="632,141,633,173,628,173,627,141"/>
+</map>
