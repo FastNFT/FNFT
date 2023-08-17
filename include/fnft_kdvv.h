@@ -17,12 +17,13 @@
 * Sander Wahls (TU Delft) 2017-2018, 2023.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
 * Peter J Prins (TU Delft) 2020-2021.
+* Sander Wahls (KIT) 2023.
 */
 
 /**
  * @file fnft_kdvv.h
- * @brief Fast nonlinear Fourier transform for the vanishing nonlinear
- *  Schroedinger equation.
+ * @brief Fast nonlinear Fourier transform for the vanishing
+ *  Korteweg-de Vries equation.
  * @ingroup fnft
  */
 
