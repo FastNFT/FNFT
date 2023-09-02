@@ -74,7 +74,7 @@ INT fnft_kdvp(  const UINT D,
     if (opts_ptr->mainspec_type != kdvp_mstype_FLOQUET && opts_ptr->grid_spacing <= 0)
         return E_INVALID_ARGUMENT(opts_ptr->grid_spacing);
     if (opts_ptr->discretization != kdv_discretization_BO)
-        return E_NOT_YET_IMPLEMENTED(opts_ptr->discretization);
+        return E_NOT_YET_IMPLEMENTED(opts_ptr->discretization, Use the BO discretization);
 
     (void) L_ptr; // to avoid unused parameter warning
 
@@ -97,13 +97,26 @@ INT fnft_kdvp(  const UINT D,
     const UINT L = (opts_ptr->mainspec_type == kdvp_mstype_FLOQUET) ? *K_ptr : CEIL((E[1] - E[0]) / opts_ptr->grid_spacing);
     const REAL eps_t = (T[1] - T[0])/D;
     const REAL eps_E = (E[1] - E[0])/(L - 1);
-    
-    switch (opts_ptr->mainspec_type) {
-    case kdvp_mstype_AMPLITUDES_AND_MODULI:
-        // fallthrough
-    case kdvp_mstype_OPENBANDS:
-        // fallthrough
-    case kdvp_mstype_EDGEPOINTS_AND_SIGNS:
+
+    if (opts_ptr->mainspec_type == kdvp_mstype_FLOQUET) {
+        for (i=0; i<L; i++) {
+                Ei = E[0] + i*eps_E;
+                if (Ei < 0)
+                    lambda = I*SQRT(-Ei);
+                else
+                    lambda = SQRT(Ei);
+                ret_code = kdv_scatter_matrix(D, q, r, eps_t, 0/*E*/, 1/*K*/,
+                        &lambda, scatter_matrix, &W, opts_ptr->discretization, 0/*derivative_flag*/);
+                CHECK_RETCODE(ret_code, leave_fun);
+
+                DEL = 0.5*POW(2, W)*CREAL(scatter_matrix[0] + scatter_matrix[3]);
+                main_spec[i] = DEL;
+            }
+    } else {
+
+        // Commmon step for all other mainspec_type: Find the +/-1 crossings E_i of
+        // the Floquet discriminant Delta(E)
+
         Ei = E[0];
         if (Ei < 0)
             lambda = I*SQRT(-Ei);
@@ -159,7 +172,7 @@ INT fnft_kdvp(  const UINT D,
                     main_spec[2*(K-2)+1] = main_spec[2*(K-1)+1];
                     main_spec[2*(K-1)+1] = tmp;
                 }
- 
+
             } else if (s == 1 || s == -1) { // one edge point between two grid points
                 if (K>=*K_ptr) {
                     ret_code = E_OTHER("More than *K_ptr initial guesses for bound states found. Increase *K_ptr and try again.")
@@ -175,12 +188,12 @@ INT fnft_kdvp(  const UINT D,
             DEL_prev = DEL;
         }
 
-        if (opts_ptr->mainspec_type == kdvp_mstype_EDGEPOINTS_AND_SIGNS) {
+        switch (opts_ptr->mainspec_type) {
+        case kdvp_mstype_EDGEPOINTS_AND_SIGNS:
             *K_ptr = K;
             break;
-        }
 
-        if (opts_ptr->mainspec_type == kdvp_mstype_OPENBANDS) {
+        case kdvp_mstype_OPENBANDS:
             for (i=1; i<K; i++) {
                 if (main_spec[2*i-1] == main_spec[2*i+1]) { // same signs s => open band
                     const REAL left_edge = main_spec[2*i-2];
@@ -194,58 +207,45 @@ INT fnft_kdvp(  const UINT D,
 
             *K_ptr = N_bands;
             break;
-        }
 
-        // mainspec_type == AMPLITUDES_AND_MODULI
- 
-        if (K < 3) { // nothing to do
-            *K_ptr = 0;
-            break;
-        }
-
-        // replace main spectrum points E_i with amplitudes and signs with moduli
-        UINT cnt = 0;
-        UINT i_ref = 0;
-        REAL E_ref = FNFT_INF; // reference level
-        for (i=1; i<K-1; i+=2) {
-            const REAL E_2i = main_spec[2*i];
-            const REAL E_2ip1 = main_spec[2*(i+1)];
-            const REAL E_2im1 = main_spec[2*(i-1)];
-            const REAL modulus = (E_2ip1 - E_2i)/(E_2ip1 - E_2im1);
-            main_spec[2*cnt+1] = modulus;
-            if (modulus >= 0.99) { // soliton
-                i_ref = cnt;
-                E_ref = E_2ip1;
-                main_spec[2*cnt] = E_2i; // reference level is added later
-            } else { // radiation
-                main_spec[2*cnt] = 0.5*(E_2ip1 - E_2i);
+        case kdvp_mstype_AMPLITUDES_AND_MODULI:
+            if (K < 3) { // nothing to do
+                *K_ptr = 0;
+                break;
             }
-            cnt++;
+
+            // replace main spectrum points E_i with amplitudes and signs with moduli
+            UINT cnt = 0;
+            UINT i_ref = 0;
+            REAL E_ref = FNFT_INF; // reference level
+            for (i=1; i<K-1; i+=2) {
+                const REAL E_2i = main_spec[2*i];
+                const REAL E_2ip1 = main_spec[2*(i+1)];
+                const REAL E_2im1 = main_spec[2*(i-1)];
+                const REAL modulus = (E_2ip1 - E_2i)/(E_2ip1 - E_2im1);
+                main_spec[2*cnt+1] = modulus;
+                if (modulus >= 0.99) { // soliton
+                    i_ref = cnt;
+                    E_ref = E_2ip1;
+                    main_spec[2*cnt] = E_2i; // reference level is added later
+                } else { // radiation
+                    main_spec[2*cnt] = 0.5*(E_2ip1 - E_2i);
+                }
+                cnt++;
+            }
+
+            if (E_ref < FNFT_INF) { // soliton reference level still needs to be accounted for
+                for (i=0; i<=i_ref; i++)
+                    main_spec[2*i] = 2*(E_ref - main_spec[2*i]);
+            }
+
+            *K_ptr = cnt;
+            break;
+
+        default:
+            ret_code = E_INVALID_ARGUMENT(opts_ptr->mainspec_type);
+            goto leave_fun;
         }
-
-        if (E_ref < FNFT_INF) { // soliton reference level still needs to be accounted for
-            for (i=0; i<=i_ref; i++)
-                main_spec[2*i] = 2*(E_ref - main_spec[2*i]);
-        }
-
-        *K_ptr = cnt;
-        break;
-
-    case kdvp_mstype_FLOQUET:
-        for (i=0; i<L; i++) {
-            Ei = E[0] + i*eps_E;
-            if (Ei < 0)
-                lambda = I*SQRT(-Ei);
-            else
-                lambda = SQRT(Ei);
-            ret_code = kdv_scatter_matrix(D, q, r, eps_t, 0/*E*/, 1/*K*/,
-                    &lambda, scatter_matrix, &W, opts_ptr->discretization, 0/*derivative_flag*/);
-            CHECK_RETCODE(ret_code, leave_fun);
-
-            DEL = 0.5*POW(2, W)*CREAL(scatter_matrix[0] + scatter_matrix[3]);
-            main_spec[i] = DEL;
-        }
-        break;
     }
 
 leave_fun:
