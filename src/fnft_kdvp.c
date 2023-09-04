@@ -38,6 +38,14 @@ fnft_kdvp_opts_t fnft_kdvp_default_opts()
     return default_opts;
 }
 
+static COMPLEX E_to_lambda(REAL E)
+{
+    if (E < 0)
+        return I*SQRT(-E);
+    else
+        return SQRT(E);
+}
+
 /**
  * Fast nonlinear Fourier transform for the nonlinear Schroedinger
  * equation with vanishing boundary conditions.
@@ -48,7 +56,7 @@ INT fnft_kdvp(  const UINT D,
                 REAL const * const E,
                 UINT * const K_ptr,
                 REAL * const main_spec, 
-                UINT * const L_ptr,
+                UINT * const M_ptr,
                 REAL * const aux_spec,
                 REAL * const sheet_indices,
                 fnft_kdvp_opts_t * opts_ptr)
@@ -65,8 +73,10 @@ INT fnft_kdvp(  const UINT D,
         return E_INVALID_ARGUMENT(K_ptr);
     if (main_spec == NULL)
         return E_INVALID_ARGUMENT(main_spec);
-    if (aux_spec != NULL)
-        return E_NOT_YET_IMPLEMENTED(aux_spec, Pass aux_spec="NULL");
+    if (M_ptr == NULL)
+        return E_INVALID_ARGUMENT(M_ptr);   
+    if (aux_spec == NULL)
+        return E_INVALID_ARGUMENT(aux_spec); 
     if (sheet_indices != NULL)
         return E_NOT_YET_IMPLEMENTED(sheet_indices, Pass sheet_indices="NULL");
     if (opts_ptr == NULL)
@@ -76,13 +86,12 @@ INT fnft_kdvp(  const UINT D,
     if (opts_ptr->discretization != kdv_discretization_BO)
         return E_NOT_YET_IMPLEMENTED(opts_ptr->discretization, Use the BO discretization);
 
-    (void) L_ptr; // to avoid unused parameter warning
-
     COMPLEX scatter_matrix[4] = {0};
     COMPLEX * r = NULL;
     COMPLEX lambda = 0;
     REAL Ei = 0, Ei_prev = 0;
     REAL DEL = 0, DEL_prev = 0;
+    REAL al21 = 0, al21_prev = 0;
     INT W = 0;
     UINT N_bands = 0;
     UINT i = 0;
@@ -99,45 +108,43 @@ INT fnft_kdvp(  const UINT D,
     const REAL eps_E = (E[1] - E[0])/(L - 1);
 
     if (opts_ptr->mainspec_type == kdvp_mstype_FLOQUET) {
+
         for (i=0; i<L; i++) {
                 Ei = E[0] + i*eps_E;
-                if (Ei < 0)
-                    lambda = I*SQRT(-Ei);
-                else
-                    lambda = SQRT(Ei);
-                ret_code = kdv_scatter_matrix(D, q, r, eps_t, 0/*E*/, 1/*K*/,
+                lambda = E_to_lambda(Ei);
+                ret_code = kdv_scatter_matrix(D, q, r, eps_t, 0/*kappa*/, 1/*K*/,
                         &lambda, scatter_matrix, &W, opts_ptr->discretization, 0/*derivative_flag*/);
                 CHECK_RETCODE(ret_code, leave_fun);
 
                 DEL = 0.5*POW(2, W)*CREAL(scatter_matrix[0] + scatter_matrix[3]);
                 main_spec[i] = DEL;
             }
+
     } else {
 
-        // Commmon step for all other mainspec_type: Find the +/-1 crossings E_i of
-        // the Floquet discriminant Delta(E)
+        // Commmon step for all other mainspec_types: Find the main spectrum, i.e., the +/-1 crossings
+        // E_i of the Floquet discriminant Delta(E). For efficiency reasons, the auxiliary spectrum is
+        // computed here as well.
 
         Ei = E[0];
-        if (Ei < 0)
-            lambda = I*SQRT(-Ei);
-        else
-            lambda = SQRT(Ei);
+        lambda = E_to_lambda(Ei);
         ret_code = kdv_scatter_matrix(D, q, r, eps_t, 0/*kappa*/, 1/*K*/,
             &lambda, scatter_matrix, &W, opts_ptr->discretization, 0/*derivative_flag*/);
         CHECK_RETCODE(ret_code, leave_fun);
         Ei_prev = E[0];
         DEL_prev = 0.5*POW(2, W)*CREAL(scatter_matrix[0] + scatter_matrix[3]);
-
+        al21_prev = POW(2,W)*CREAL(-I/(2*lambda)*(scatter_matrix[0] + scatter_matrix[1] - scatter_matrix[2] - scatter_matrix[3]));
+ 
         UINT K = 0;
+        UINT M = 0;
         for (i=1; i<L; i++) {
             Ei = E[0] + i*eps_E;
-            if (Ei < 0)
-                lambda = I*SQRT(-Ei);
-            else
-                lambda = SQRT(Ei);
+            lambda = E_to_lambda(Ei);
             ret_code = kdv_scatter_matrix(D, q, r, eps_t, 0/*kappa*/, 1/*K*/,
                     &lambda, scatter_matrix, &W, opts_ptr->discretization, 0/*derivative_flag*/);
             CHECK_RETCODE(ret_code, leave_fun);
+
+            // Main spectrum
 
             DEL = 0.5*POW(2, W)*CREAL(scatter_matrix[0] + scatter_matrix[3]);
             REAL s = 0;
@@ -152,7 +159,7 @@ INT fnft_kdvp(  const UINT D,
 
             if (s == 2 || s == -2) { // two edge points between two grid points
                 if (K+1>=*K_ptr) {
-                    ret_code = E_OTHER("More than *K_ptr initial guesses for bound states found. Increase *K_ptr and try again.")
+                    ret_code = E_OTHER("Found more than *K_ptr main spectrum points. Increase *K_ptr and try again.")
                     goto leave_fun;
                 }
 
@@ -184,10 +191,28 @@ INT fnft_kdvp(  const UINT D,
                 main_spec[2*K+1] = s;
                 K++;
             }
+
+            // Auxiliary spectrum
+
+            al21 = POW(2,W)*CREAL(-I/(2*lambda)*(scatter_matrix[0] + scatter_matrix[1] - scatter_matrix[2] - scatter_matrix[3]));           
+            if (al21_prev*al21<0) { // zero-crossing detected
+                if (M>=*M_ptr) {
+                    ret_code = E_OTHER("Found more than *M_ptr auxiliary spectrum points found. Increase *M_ptr and try again.")
+                    goto leave_fun;
+                }
+                // regula falsi for al21
+                aux_spec[M] = (Ei_prev*al21 - Ei*al21_prev)/(al21 - al21_prev);
+                M++;
+            }
+ 
             Ei_prev = Ei;
             DEL_prev = DEL;
+            al21_prev = al21;
         }
+        *M_ptr = M;
 
+        // We so far have the usual representation of the main spectrum (i.e., the Ei). If the user requested
+        // another representation, we convert it now.
         switch (opts_ptr->mainspec_type) {
         case kdvp_mstype_EDGEPOINTS_AND_SIGNS:
             *K_ptr = K;
