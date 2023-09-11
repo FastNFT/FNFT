@@ -689,7 +689,11 @@ INT fnft__akns_discretization_change_of_basis_matrix_to_S(COMPLEX * const T,
 
     switch (PDE) {
         case akns_pde_KdV:
-           switch (akns_discretization) {
+            if(xi==0){
+                ret_code = E_DIV_BY_ZERO;
+                CHECK_RETCODE(ret_code, release_mem);
+            }
+            switch (akns_discretization) {
                 // Fill the first two columns of T for the discretization basis
                 case akns_discretization_2SPLIT1A:
                 case akns_discretization_2SPLIT1B:
@@ -896,6 +900,10 @@ INT fnft__akns_discretization_change_of_basis_matrix_from_S(COMPLEX * const T,
 
     switch (PDE) {
         case akns_pde_KdV:
+            if(xi==0){
+                ret_code = E_DIV_BY_ZERO;
+                CHECK_RETCODE(ret_code, release_mem);
+            }
             switch (akns_discretization) {
                 // Fill the first two columns of T for the discretization basis
                 case akns_discretization_2SPLIT1A:
