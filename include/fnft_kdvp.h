@@ -33,7 +33,7 @@ typedef enum {
     fnft_kdvp_mstype_FLOQUET,
     fnft_kdvp_mstype_EDGEPOINTS_AND_SIGNS,
     fnft_kdvp_mstype_OPENBANDS,
-    fnft_kdvp_mstype_AMPLITUDES_AND_MODULI
+    fnft_kdvp_mstype_AMPLITUDES_MODULI_FREQS
 } fnft_kdvp_mstype_t;
 
 typedef struct {
@@ -60,7 +60,7 @@ FNFT_INT fnft_kdvp( const FNFT_UINT D,
 #define kdvp_mstype_FLOQUET fnft_kdvp_mstype_FLOQUET
 #define kdvp_mstype_EDGEPOINTS_AND_SIGNS fnft_kdvp_mstype_EDGEPOINTS_AND_SIGNS
 #define kdvp_mstype_OPENBANDS fnft_kdvp_mstype_OPENBANDS
-#define kdvp_mstype_AMPLITUDES_AND_MODULI fnft_kdvp_mstype_AMPLITUDES_AND_MODULI
+#define kdvp_mstype_AMPLITUDES_MODULI_FREQS fnft_kdvp_mstype_AMPLITUDES_MODULI_FREQS
 #endif
 
 

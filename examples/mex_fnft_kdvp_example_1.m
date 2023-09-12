@@ -2,8 +2,8 @@
 %
 % FNFT is free software; you can redistribute it and/or
 % modify it under the terms of the version 2 of the GNU General
-% Public License as published by the Free Software Foundation.
-%
+% Public License  as published by the Free Software Foundation.
+%aux
 % FNFT is distributed in the hope that it will be useful,
 % but WITHOUT ANY WARRANTY; without even the implied warranty of
 % MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -57,16 +57,18 @@ R = 10000;                 % Number of grid points for the Floquet diagram
 grid_spacing = 0.0001;     % Max. allowed distance between consecutive grid
                            % points on the spectral interval
 
-floq_det =  mex_fnft_kdvp(q, [0 L], E, 'mstype_floquet', R);
-main_spec = mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing);
-bands =     mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing, 'mstype_openbands');
-ampmod =    mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing, 'mstype_amplitudes_and_moduli');
+floq_det =              mex_fnft_kdvp(q, [0 L], E, 'mstype_floquet', R);
+[main_spec, aux_spec] = mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing);
+bands =                 mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing, 'mstype_openbands');
+ampmodfreq =            mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing, 'mstype_amplitudes_moduli_freqs');
 
 %% Compute the soliton amplitudes
 
-A = ampmod(1:2:end)/lam;    % amplitudes
-m = ampmod(2:2:end);        % moduli
-A_sol = A(m>=0.99);         % soliton amplitudes
+A = ampmodfreq(1:3:end)/lam;    % amplitudes
+m = ampmodfreq(2:3:end);        % moduli
+K = ampmodfreq(3:3:end)/pi;     % nonlinear wave numbers
+A_sol = A(K<0);                 % soliton amplitudes
+K_sol = K(K<0);                 % soliton wave numbers
 
 %% Recreate Fig. 3 from the paper
 
@@ -87,19 +89,21 @@ subplot(2,1,2)
 plot(Es, floq_scaled)
 xlim(E);
 hold on
-plot(main_spec(1:2:end), main_spec(2:2:end), 'o')
+plot(B, 0*B, '-g', 'LineWidth', 1.2)
+plot(main_spec(1:2:end), main_spec(2:2:end), 'ro')
+plot(aux_spec, 0*aux_spec, 'rs')
 plot([E(1) E(2)], [1 1], '-k')
 plot([E(1) E(2)], [-1 -1], '-k')
-plot(B, 0*B, '-r', 'linewidth', 2)
 hold off
 grid on
 xlabel('E');
-legend('Floquet det. (scaled)', 'Edge points', 'Open bands');
+legend('Floquet det. (scaled)', 'Open bands', 'Main spectrum', 'Aux. spectrum');
 
 %% Plot the soliton amplitudes
 
 figure;
-stem(A_sol, 'filled')
-xlabel('Soliton index')
-ylabel('Amplitude')
+stem(K_sol, A_sol, '-o');
+xlabel('Wave number [1/cm]')
+ylabel('Amplitude [cm]')
+title('Soliton spectrum')
 grid on

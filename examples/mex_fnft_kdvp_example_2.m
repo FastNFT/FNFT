@@ -59,19 +59,30 @@ E = [-2000 2500];   % spectral interval
 grid_spacing = 1;   % Max. allowed distance between consecutive grid
                     % points on the spectral interval
 
-ampmod = mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing, 'mstype_amplitudes_and_moduli');
-A = ampmod(1:2:end)/(a*lam);    % amplitudes
-m = ampmod(2:2:end);            % moduli
+ampmodfreqs = mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing, 'mstype_amplitudes_moduli_freqs');
+A = ampmodfreqs(1:3:end)/(a*lam);    % amplitudes
+m = ampmodfreqs(2:3:end);            % moduli
+F = ampmodfreqs(3:3:end)/pi;         % nonlinear frequencies (not used here)
 
 %% Recreate Fig. 1 (right panel) from the paper
 
 figure
+subplot(1,2,1)
 i_ref = find(m>=0.99, 1, 'last');
-plot(A, '-o')
+plot(2*pi*(1:length(A))/L, A, '-o')
 hold on
-plot(m, '-s')
-plot([i_ref i_ref], ylim, '--k');
-xlabel('Mode index')
-xlim([1 length(A)])
+plot(2*pi*(1:length(A))/L, m, '-s')
+plot(2*pi/L*[i_ref i_ref], ylim, '--k');
+xlabel('2\pij/L [1/cm]')
+xlim(2*pi/L*[1 length(A)])
+grid minor
+legend('Amplitudes [cm]', 'Moduli');
+
+subplot(1,2,2)
+plot(F, A, '-o')
+hold on
+plot(F, m, '-s')
+xlim([min(F) max(F)])
+xlabel('Wave numbers [1/cm]')
 grid minor
 legend('Amplitudes [cm]', 'Moduli');

@@ -114,13 +114,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             /* Increase k to account for the passed value */
             k++;
 
-         } else if ( strcmp(str, "mstype_openbands") == 0 ) {
+        } else if ( strcmp(str, "mstype_openbands") == 0 ) {
 
             opts.mainspec_type = fnft_kdvp_mstype_OPENBANDS;
 
-        } else if ( strcmp(str, "mstype_amplitudes_and_moduli") == 0 ) {
+        } else if ( strcmp(str, "mstype_amplitudes_moduli_freqs") == 0 ) {
 
-            opts.mainspec_type = fnft_kdvp_mstype_AMPLITUDES_AND_MODULI;
+            opts.mainspec_type = fnft_kdvp_mstype_AMPLITUDES_MODULI_FREQS;
 
         } else if ( strcmp(str, "skip_normalization") == 0 ) {
 
@@ -129,6 +129,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "quiet") == 0 ) {
 
             fnft_errwarn_setprintf(NULL);
+
+        } else if ( strcmp(str, "default") == 0 ) {
+
+            // Ignore this. Useful e.g. if the user wants to pass a string variable is_quiet,
+            // which is either "quiet" to turn it on or "default" to keep the default (off)
 
         } else {
             snprintf(msg, sizeof msg, "%uth input has invalid value.",
@@ -145,30 +150,29 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         goto on_error;
     }
 
+    M = D;
     switch (opts.mainspec_type) {
-    case fnft_kdvp_mstype_AMPLITUDES_AND_MODULI:
-        // fallthrough
+    case fnft_kdvp_mstype_AMPLITUDES_MODULI_FREQS:
+        K = D;
+        ms_len = 3*K;
+        break;
     case fnft_kdvp_mstype_OPENBANDS:
         // fallthrough
     case fnft_kdvp_mstype_EDGEPOINTS_AND_SIGNS:
         K = D;
         ms_len = 2*K;
         break;
-
     case fnft_kdvp_mstype_FLOQUET:
-        // K is already set by the user
+         // K is already set by the user
         ms_len = K;
+        M = K;
         break;
-
     default:
         snprintf(msg, sizeof msg, "Unknown mainspec_type.");
         goto on_error;
     }
     main_spec = mxMalloc(ms_len * sizeof(FNFT_REAL));
-    
-    M = D;
     aux_spec = mxMalloc(M * sizeof(FNFT_REAL));
- 
     if (main_spec == NULL || aux_spec == NULL) {
         snprintf(msg, sizeof msg, "Out of memory.");
         goto on_error;
@@ -188,8 +192,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 ret_code);
         goto on_error;
     }
-    if (opts.mainspec_type != fnft_kdvp_mstype_FLOQUET)
-        ms_len = 2*K;
+    if (opts.mainspec_type != fnft_kdvp_mstype_FLOQUET) {
+        // update ms_len because K has been updated
+        if (opts.mainspec_type == fnft_kdvp_mstype_AMPLITUDES_MODULI_FREQS)
+            ms_len = 3*K;
+        else
+            ms_len = 2*K;
+    }
 
     /* Allocate memory for outputs and convert results */
 
@@ -211,6 +220,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* Free memory that is no longer needed */
 
     mxFree(main_spec);
+    mxFree(aux_spec);
     mxFree(q);
     return;
 
