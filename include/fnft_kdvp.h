@@ -46,7 +46,7 @@ typedef struct {
 fnft_kdvp_opts_t fnft_kdvp_default_opts();
 
 FNFT_INT fnft_kdvp( const FNFT_UINT D,
-                    FNFT_COMPLEX const * const q,
+                    FNFT_COMPLEX * const q,
                     FNFT_REAL const * const T,
                     FNFT_REAL const * E,
                     FNFT_UINT * const K_ptr,

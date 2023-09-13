@@ -107,11 +107,55 @@ static inline int gtm1(LogNumber num)
 }
 
 /**
+ * This wrapper is there to circumvent the problem that kdv_scatter_matrix does not
+ * work at E=0 because the AKNS basis transformation becomes singular at this point.
+ * For the vanishing case that is no problem, for the periodic case we somethings
+ * might hit E=0. In such cases, this wrapper circumvents the problem by exploiting
+ * that adding a offset to the potential of the Schroedinger operator underlying
+ * the KdV-NFT is equivalent to shifting the scattering matrix on the E axis.
+ */
+static inline INT kdv_scatter_matrix_wrapper(const UINT D, COMPLEX * const q,
+        COMPLEX const * const r, const REAL eps_t, const REAL Ei, const REAL eps_E, 
+        COMPLEX lambda, COMPLEX scatter_matrix[4], INT * const W_ptr, 
+        fnft_kdvp_opts_t const * const opts_ptr)
+{
+    INT ret_code;
+    UINT i;
+    
+    if (CABS(lambda) >= 0.5*eps_E) {
+
+        ret_code = kdv_scatter_matrix(D, q, r, eps_t, 0/*kappa*/, 1/*K*/,
+            &lambda, scatter_matrix, W_ptr, opts_ptr->discretization, 0/*derivative_flag*/);
+        CHECK_RETCODE(ret_code, leave_fun);
+
+    } else {
+
+        const REAL E_shift = 2*eps_E;
+        lambda = E_to_lambda(Ei + E_shift);
+
+        for (i=0; i<D; i++) 
+            q[i] -= E_shift; 
+
+        // compute the scattering matrix of q(t)-E_shift at E=E_shift, which is equal
+        // to the scattering matrix of q(t) at E=0
+        ret_code = kdv_scatter_matrix(D, q, r, eps_t, 0/*kappa*/, 1/*K*/,
+            &lambda, scatter_matrix, W_ptr, opts_ptr->discretization, 0/*derivative_flag*/);
+        CHECK_RETCODE(ret_code, leave_fun);
+
+        for (i=0; i<D; i++)
+            q[i] += E_shift;
+    }
+
+leave_fun:
+    return ret_code;
+}
+
+/**
  * Nonlinear Fourier transform for the Korteweg-de Vries
  * equation with periodic boundary conditions.
  */
 INT fnft_kdvp(  const UINT D,
-                COMPLEX const * const q,
+                COMPLEX * const q,
                 REAL const * const T,
                 REAL const * const E,
                 UINT * const K_ptr,
@@ -127,7 +171,7 @@ INT fnft_kdvp(  const UINT D,
         return E_INVALID_ARGUMENT(q);
     if (T == NULL || T[0] >= T[1])
         return E_INVALID_ARGUMENT(T);
-    if (E == NULL || E[0] >= E[1] || E[0] == 0 || E[1] == 0)
+    if (E == NULL || E[0] >= E[1])
         return E_INVALID_ARGUMENT(E);
     if (K_ptr == NULL)
         return E_INVALID_ARGUMENT(K_ptr);
@@ -177,12 +221,7 @@ INT fnft_kdvp(  const UINT D,
         for (i=0; i<L; i++) {
             Ei = E[0] + i*eps_E;
             lambda = E_to_lambda(Ei);
-            if (lambda == 0) {
-                main_spec[i] = NAN; // currently kdv_scatter_matrix fails for lambda==0
-                continue;
-            }
-            ret_code = kdv_scatter_matrix(D, q, r, eps_t, 0/*kappa*/, 1/*K*/,
-                    &lambda, scatter_matrix, W_ptr, opts_ptr->discretization, 0/*derivative_flag*/);
+            ret_code = kdv_scatter_matrix_wrapper(D, q, r, eps_t, Ei, eps_E, lambda, scatter_matrix, W_ptr, opts_ptr);
             CHECK_RETCODE(ret_code, leave_fun);
 
             const REAL scl = POW(2, W);
@@ -212,8 +251,7 @@ INT fnft_kdvp(  const UINT D,
 
         Ei_prev = E[0];
         lambda = E_to_lambda(Ei_prev);
-        ret_code = kdv_scatter_matrix(D, q, r, eps_t, 0/*kappa*/, 1/*K*/,
-            &lambda, scatter_matrix, W_ptr, opts_ptr->discretization, 0/*derivative_flag*/);
+        ret_code = kdv_scatter_matrix_wrapper(D, q, r, eps_t, Ei_prev, eps_E, lambda, scatter_matrix, W_ptr, opts_ptr);
         CHECK_RETCODE(ret_code, leave_fun);
 
         REAL tmp = 0.5*CREAL(scatter_matrix[0] + scatter_matrix[3]);
@@ -221,6 +259,8 @@ INT fnft_kdvp(  const UINT D,
                                     // the scatter matrix (unless normalization_flag is false)
         if (normalization_flag)
             DEL_prev_LN = (LogNumber){.sign = get_sign(tmp), .log2A = LOG2(FABS(tmp)) + W};
+        else
+            DEL_prev_LN = (LogNumber){.sign = 0, .log2A = 0 }; // to avoid uninitialized variable warning
 
         al21n_prev = CREAL(-I/(2*lambda)*(scatter_matrix[0] + scatter_matrix[1] - scatter_matrix[2] - scatter_matrix[3]));
         al21_prev = POW(2,W)*al21n_prev;
@@ -230,12 +270,7 @@ INT fnft_kdvp(  const UINT D,
         for (i=1; i<L; i++) {
             Ei = E[0] + i*eps_E;
             lambda = E_to_lambda(Ei);
-            // Catch that KdV scattering currently fails at lambda=0 because the AKNS change
-            // of basis matrix becomes singular at this point.
-            if (lambda == 0)
-                continue;
-            ret_code = kdv_scatter_matrix(D, q, r, eps_t, 0/*kappa*/, 1/*K*/,
-                    &lambda, scatter_matrix, W_ptr, opts_ptr->discretization, 0/*derivative_flag*/);
+            ret_code = kdv_scatter_matrix_wrapper(D, q, r, eps_t, Ei, eps_E, lambda, scatter_matrix, W_ptr, opts_ptr);
             CHECK_RETCODE(ret_code, leave_fun);
 
             /* Main spectrum */
