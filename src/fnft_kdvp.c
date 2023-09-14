@@ -107,44 +107,50 @@ static inline int gtm1(LogNumber num)
 }
 
 /**
- * This wrapper is there to circumvent the problem that kdv_scatter_matrix does not
- * work at E=0 because the AKNS basis transformation becomes singular at this point.
- * For the vanishing case that is no problem, for the periodic case we somethings
- * might hit E=0. In such cases, this wrapper circumvents the problem by exploiting
- * that adding a offset to the potential of the Schroedinger operator underlying
- * the KdV-NFT is equivalent to shifting the scattering matrix on the E axis.
+ * Computes the quantities Delta(E) and alpha_21(E) as given e.g. the Eqs. 3.11 and 3.12 of Osborne,
+ * Math. Comput. Simul. 37 (1994), 431-450, https://doi.org/10.1016/0378-4754(94)00029-8
  */
-static inline INT kdv_scatter_matrix_wrapper(const UINT D, COMPLEX * const q,
-        COMPLEX const * const r, const REAL eps_t, const REAL Ei, const REAL eps_E, 
-        COMPLEX lambda, COMPLEX scatter_matrix[4], INT * const W_ptr, 
-        fnft_kdvp_opts_t const * const opts_ptr)
+static inline INT compute_DEL_and_al21(const UINT D, COMPLEX * const q, COMPLEX const * const r,
+        const REAL eps_t, const REAL Ei, REAL * const DEL, LogNumber * const DEL_LN, REAL * al21,
+        REAL * al21n, INT * W_ptr, fnft_kdvp_opts_t * opts_ptr)
 {
-    INT ret_code;
-    UINT i;
-    
-    if (CABS(lambda) >= 0.5*eps_E) {
+    COMPLEX scatter_matrix[4];
+    COMPLEX lambda;
+    INT ret_code = SUCCESS;
 
-        ret_code = kdv_scatter_matrix(D, q, r, eps_t, 0/*kappa*/, 1/*K*/,
-            &lambda, scatter_matrix, W_ptr, opts_ptr->discretization, 0/*derivative_flag*/);
-        CHECK_RETCODE(ret_code, leave_fun);
+    lambda = E_to_lambda(Ei);
+    ret_code = kdv_scatter_matrix(D, q, r, eps_t, 0/*kappa*/, 1/*K*/,
+        &lambda, scatter_matrix, W_ptr, opts_ptr->discretization, 0/*derivative_flag*/);
+    CHECK_RETCODE(ret_code, leave_fun);
 
+    /* Compute the Floquet discriminant DeltaE) */
+
+    REAL tmp = 0.5*CREAL(scatter_matrix[0] + scatter_matrix[3]);
+    if (opts_ptr->normalization_flag) {
+        *DEL = POW(2, *W_ptr)*tmp;
+        *DEL_LN = (LogNumber){.sign = get_sign(tmp), .log2A = LOG2(FABS(tmp)) + *W_ptr};
     } else {
-
-        const REAL E_shift = 2*eps_E;
-        lambda = E_to_lambda(Ei + E_shift);
-
-        for (i=0; i<D; i++) 
-            q[i] -= E_shift; 
-
-        // compute the scattering matrix of q(t)-E_shift at E=E_shift, which is equal
-        // to the scattering matrix of q(t) at E=0
-        ret_code = kdv_scatter_matrix(D, q, r, eps_t, 0/*kappa*/, 1/*K*/,
-            &lambda, scatter_matrix, W_ptr, opts_ptr->discretization, 0/*derivative_flag*/);
-        CHECK_RETCODE(ret_code, leave_fun);
-
-        for (i=0; i<D; i++)
-            q[i] += E_shift;
+        *DEL = tmp;
+        *DEL_LN = (LogNumber){.sign = get_sign(tmp), .log2A = LOG2(FABS(tmp))};
     }
+
+    /* Compute al21(E) */
+
+    // The straight-forward implementation would be
+    //   al21n = CREAL(-I/(2*lambda)*(scatter_matrix[0] + scatter_matrix[1] - scatter_matrix[2] - scatter_matrix[3]));
+    //   al21 = POW(2, W)*al21n;
+    if (CIMAG(lambda) == 0) // Note: by construction, for some x>=0, either lambda=x or lambda=I*x
+        *al21n = CIMAG(scatter_matrix[0] + scatter_matrix[1] - scatter_matrix[2] - scatter_matrix[3]);
+    else
+        *al21n = -CREAL(scatter_matrix[0] + scatter_matrix[1] - scatter_matrix[2] - scatter_matrix[3]);
+    if (opts_ptr->normalization_flag)
+        *al21 = POW(2, *W_ptr)* *al21n;
+    else
+        *al21 = *al21n;
+    if (CIMAG(lambda) == 0)
+        *al21 /= 2*CREAL(lambda);
+    else
+        *al21 /= 2*CIMAG(lambda);
 
 leave_fun:
     return ret_code;
@@ -157,7 +163,7 @@ leave_fun:
 INT fnft_kdvp(  const UINT D,
                 COMPLEX * const q,
                 REAL const * const T,
-                REAL const * const E,
+                REAL * const E,
                 UINT * const K_ptr,
                 REAL * const main_spec, 
                 UINT * const M_ptr,
@@ -192,18 +198,17 @@ INT fnft_kdvp(  const UINT D,
     if (opts_ptr->discretization != kdv_discretization_BO)
         return E_NOT_YET_IMPLEMENTED(opts_ptr->discretization, Use the BO discretization);
 
-    COMPLEX scatter_matrix[4] = {0};
     COMPLEX * r = NULL;
-    COMPLEX lambda = 0;
     REAL Ei = 0, Ei_prev = 0;
     REAL DEL = 0, DEL_prev = 0;
     REAL al21 = 0, al21_prev = 0;
-    LogNumber DEL_prev_LN, DEL_LN;
+    LogNumber DEL_prev_LN = {0}, DEL_LN = {0};
     INT W = 0, W_prev = 0;
     REAL al21n = 0, al21n_prev = 0;
     const INT normalization_flag = opts_ptr->normalization_flag;
+    REAL E_shift = 0;
     INT * const W_ptr = (normalization_flag) ? &W : NULL;
-    UINT N_bands = 0;
+    UINT K = 0, M = 0, N_bands = 0;
     UINT i = 0;
     INT ret_code = SUCCESS;
 
@@ -217,68 +222,44 @@ INT fnft_kdvp(  const UINT D,
     const REAL eps_t = (T[1] - T[0])/D;
     const REAL eps_E = (E[1] - E[0])/(L - 1);
 
+    // Note that kdv_scatter_matrix currently fails at E=0 because a transformation matrix becomes singular at this point.
+    // We therefore just skip a grid point in the E-domain if it is close to zero, which effectivly increases the
+    // E-step size by a factor of two for a moment. For the FLOQUET mode, we just put NANs (not a problem for plotting).
+    const REAL close_to_zero = 0.49*eps_E; // threshold to identify when we are problematically close to E=0
+    
     if (opts_ptr->mainspec_type == kdvp_mstype_FLOQUET) { // implies auxspec_type == ALPHA21
+                                                          
         for (i=0; i<L; i++) {
             Ei = E[0] + i*eps_E;
-            lambda = E_to_lambda(Ei);
-            ret_code = kdv_scatter_matrix_wrapper(D, q, r, eps_t, Ei, eps_E, lambda, scatter_matrix, W_ptr, opts_ptr);
-            CHECK_RETCODE(ret_code, leave_fun);
-
-            const REAL scl = POW(2, W);
-            DEL = 0.5*scl*CREAL(scatter_matrix[0] + scatter_matrix[3]);
-            main_spec[i] = DEL;
-
-            //al21n = CREAL(-I/(2*lambda)*(scatter_matrix[0] + scatter_matrix[1] - scatter_matrix[2] - scatter_matrix[3]));
-            if (Ei < 0)
-                al21n = CREAL(-(scatter_matrix[0] + scatter_matrix[1] - scatter_matrix[2] - scatter_matrix[3]));
-            else
-                al21n = CIMAG(-(scatter_matrix[0] + scatter_matrix[1] - scatter_matrix[2] - scatter_matrix[3]));
-            if (Ei == 0)
-                misc_print_buf(4, scatter_matrix, "scatter_matrix");
-            al21 = scl*al21n;
-            aux_spec[i] = al21;
+            if (FABS(Ei) >= close_to_zero) {
+                ret_code = compute_DEL_and_al21(D, q, r, eps_t, Ei, &main_spec[i], &DEL_LN, &aux_spec[i], &al21n, W_ptr, opts_ptr);
+                CHECK_RETCODE(ret_code, leave_fun);
+            } else {
+                main_spec[i] = NAN;
+                aux_spec[i] = NAN;
+            }
         }
+
     } else {
 
-        // Commmon step for all other mainspec_types: Find the main spectrum, i.e., the +/-1 crossings
-        // E_i of the Floquet discriminant Delta(E). For efficiency reasons, the auxiliary spectrum is
-        // computed here as well.
-        
-        // Using normalization is a bit more complicated here because we only have Delta(E)=A*2^W in a
-        // normalized form, not Delta(E)+1 and Delta(E)-1. The approach below is to utilize a logarithmic
-        // number system, in which we represent Delta(E) = sign*2^log2(A)*2^W = sign*2^(log2(A)+w), for
-        // the comparisons Delta(E) >= +/-1 and Delta(E) <= +/-1.
-
+        UINT i0 = 0;
         Ei_prev = E[0];
-        lambda = E_to_lambda(Ei_prev);
-        ret_code = kdv_scatter_matrix_wrapper(D, q, r, eps_t, Ei_prev, eps_E, lambda, scatter_matrix, W_ptr, opts_ptr);
+        if (FABS(Ei_prev) < close_to_zero) {
+            Ei_prev = E[0] + eps_E;
+            i0 = 1;
+        }
+        ret_code = compute_DEL_and_al21(D, q, r, eps_t, Ei_prev, &DEL_prev, &DEL_prev_LN, &al21_prev, &al21n_prev, W_ptr, opts_ptr);
         CHECK_RETCODE(ret_code, leave_fun);
 
-        REAL tmp = 0.5*CREAL(scatter_matrix[0] + scatter_matrix[3]);
-        DEL_prev = POW(2,W)*tmp;    // required because kdv_scatter_matrix normalizes
-                                    // the scatter matrix (unless normalization_flag is false)
-        if (normalization_flag)
-            DEL_prev_LN = (LogNumber){.sign = get_sign(tmp), .log2A = LOG2(FABS(tmp)) + W};
-        else
-            DEL_prev_LN = (LogNumber){.sign = 0, .log2A = 0 }; // to avoid uninitialized variable warning
-
-        al21n_prev = CREAL(-I/(2*lambda)*(scatter_matrix[0] + scatter_matrix[1] - scatter_matrix[2] - scatter_matrix[3]));
-        al21_prev = POW(2,W)*al21n_prev;
-
-        UINT K = 0;
-        UINT M = 0;
-        for (i=1; i<L; i++) {
+        for (i=i0; i<L; i++) {
             Ei = E[0] + i*eps_E;
-            lambda = E_to_lambda(Ei);
-            ret_code = kdv_scatter_matrix_wrapper(D, q, r, eps_t, Ei, eps_E, lambda, scatter_matrix, W_ptr, opts_ptr);
+            if (FABS(Ei) < close_to_zero)
+                continue;
+
+            ret_code = compute_DEL_and_al21(D, q, r, eps_t, Ei, &DEL, &DEL_LN, &al21, &al21n, W_ptr, opts_ptr);
             CHECK_RETCODE(ret_code, leave_fun);
 
             /* Main spectrum */
-    
-            REAL tmp = 0.5*CREAL(scatter_matrix[0] + scatter_matrix[3]);
-            DEL = POW(2,W)*tmp;
-            if (normalization_flag)
-                DEL_LN = (LogNumber){.sign = get_sign(tmp), .log2A = LOG2(FABS(tmp)) + W};
 
             // Check if Delta(Ei) crossed +/-1.
             REAL s = 0;
@@ -332,32 +313,20 @@ INT fnft_kdvp(  const UINT D,
                 }
 
                 // regula falsi for DEL-s, the "-s" terms in the denominator cancel
-                main_spec[2*K] = (Ei_prev*(DEL-s) - Ei*(DEL_prev-s))/(DEL - DEL_prev);
+                main_spec[2*K] = (Ei_prev*(DEL-s) - Ei*(DEL_prev-s))/(DEL - DEL_prev) - E_shift;
                 main_spec[2*K+1] = s;
                 K++;
             }
 
             /* Auxiliary spectrum */
 
-            // The naive implementation would just be to use
-            //   al21n = CREAL(-I/(2*lambda)*(scatter_matrix[0] + scatter_matrix[1] - scatter_matrix[2] - scatter_matrix[3]));
-            //   al21 = POW(2, W)*al21n;
-            if (CIMAG(lambda) == 0) // Note: by construction, for some x>=0, either lambda=x or lambda=I*x
-                al21n = CIMAG(scatter_matrix[0] + scatter_matrix[1] - scatter_matrix[2] - scatter_matrix[3]);
-            else
-                al21n = -CREAL(scatter_matrix[0] + scatter_matrix[1] - scatter_matrix[2] - scatter_matrix[3]);
-            al21 = POW(2,W)*al21n;
-            if (CIMAG(lambda) == 0)
-                al21 /= 2*CREAL(lambda);
-            else
-                al21 /= 2*CIMAG(lambda);
             if (al21n_prev*al21n<0) { // zero-crossing detected
                 if (M>=*M_ptr) {
                     ret_code = E_OTHER("Found more than *M_ptr auxiliary spectrum points found. Increase *M_ptr and try again.")
                     goto leave_fun;
                 }
                 // regula falsi for al21
-                aux_spec[M] = (Ei_prev*al21 - Ei*al21_prev)/(al21 - al21_prev);
+                aux_spec[M] = (Ei_prev*al21 - Ei*al21_prev)/(al21 - al21_prev) - E_shift;
                 M++;
             }
  
