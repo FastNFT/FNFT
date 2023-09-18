@@ -142,7 +142,7 @@ static inline INT compute_DEL_and_al21(const UINT D, COMPLEX * const q, COMPLEX 
     if (CIMAG(lambda) == 0) // Note: by construction, for some x>=0, either lambda=x or lambda=I*x
         *al21n = CIMAG(scatter_matrix[0] + scatter_matrix[1] - scatter_matrix[2] - scatter_matrix[3]);
     else
-        *al21n = -CREAL(scatter_matrix[0] + scatter_matrix[1] - scatter_matrix[2] - scatter_matrix[3]);
+        *al21n = CREAL(scatter_matrix[0] + scatter_matrix[1] - scatter_matrix[2] - scatter_matrix[3]);
     if (opts_ptr->normalization_flag)
         *al21 = POW(2, *W_ptr)* *al21n;
     else
@@ -225,7 +225,9 @@ INT fnft_kdvp(  const UINT D,
     // Note that kdv_scatter_matrix currently fails at E=0 because a transformation matrix becomes singular at this point.
     // We therefore just skip a grid point in the E-domain if it is close to zero, which effectivly increases the
     // E-step size by a factor of two for a moment. For the FLOQUET mode, we just put NANs (not a problem for plotting).
-    const REAL close_to_zero = 0.49*eps_E; // threshold to identify when we are problematically close to E=0
+
+    const REAL close_to_zero = sqrt(EPSILON) < 0.49*eps_E ? sqrt(EPSILON) : 0.49*eps_E; // threshold to identify when we
+                                                                                        // are problematically close to E=0
     
     if (opts_ptr->mainspec_type == kdvp_mstype_FLOQUET) { // implies auxspec_type == ALPHA21
                                                           
