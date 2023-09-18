@@ -38,14 +38,39 @@ void misc_print_buf(const UINT len, COMPLEX const * const buf,
     printf("];\n");
 }
 
+void misc_print_buf_real(const UINT len, REAL const * const buf,
+                    char const * const varname)
+{
+    UINT i;
+    printf("%s = [", varname);
+    for (i = 0; i < len; i++) {
+        printf("%1.12e", buf[i]);
+        if (i != len-1)
+            printf(", ");
+    }
+    printf("];\n");
+}
+
 REAL misc_rel_err(const UINT len, COMPLEX const * const vec_numer,
     COMPLEX const * const vec_exact)
 {
     UINT i;
-    double n = 0.0, d = 0.0;
+    REAL n = 0.0, d = 0.0;
     for (i=0; i<len; i++) {
         n += CABS(vec_numer[i] - vec_exact[i]);
         d += CABS(vec_exact[i]);
+    }
+    return n/d;
+}
+
+REAL misc_rel_err_real(const UINT len, REAL const * const vec_numer,
+    REAL const * const vec_exact)
+{
+    UINT i;
+    REAL n = 0.0, d = 0.0;
+    for (i=0; i<len; i++) {
+        n += FABS(vec_numer[i] - vec_exact[i]);
+        d += FABS(vec_exact[i]);
     }
     return n/d;
 }

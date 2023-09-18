@@ -32,7 +32,7 @@
 #include <string.h>
 
 /**
- * @brief Helper function for debugging. Prints an array in MATLAB style.
+ * @brief Helper function for debugging. Prints a complex array in MATLAB style.
  *
  * @ingroup misc
  * This function prints an array in MATLAB style.
@@ -44,7 +44,19 @@ void fnft__misc_print_buf(const FNFT_UINT len, FNFT_COMPLEX const * const buf,
                           char const * const varname);
 
 /**
- * @brief Relative l1 error between two vectors.
+ * @brief Helper function for debugging. Prints a real array in MATLAB style.
+ *
+ * @ingroup misc
+ * This function prints an array in MATLAB style.
+ * @param[in] len Length of the array to be printed.
+ * @param[in] buf Array to be printed.
+ * @param[in] varname Name of the array being printed.
+ */
+void fnft__misc_print_buf_real(const FNFT_UINT len, FNFT_REAL const * const buf,
+                          char const * const varname);
+
+/**
+ * @brief Relative l1 error between two complex vectors.
  *
  * @ingroup misc
  * This function computes the relative l1 error between two vectors.\n
@@ -56,6 +68,20 @@ void fnft__misc_print_buf(const FNFT_UINT len, FNFT_COMPLEX const * const buf,
  */
 FNFT_REAL fnft__misc_rel_err(const FNFT_UINT len,
     FNFT_COMPLEX const * const vec_numer, FNFT_COMPLEX const * const vec_exact);
+
+/**
+ * @brief Relative l1 error between two real vectors.
+ *
+ * @ingroup misc
+ * This function computes the relative l1 error between two vectors.\n
+ * \f$err = \frac{\sum_{i=0}^{i=len-1} |vec\_numer[i]-vec\_exact[i]|}{\sum_{i=0}^{i=len-1} |vec\_exact[i]|}\f$.
+ * @param[in] len Length of the vectors
+ * @param[in] vec_numer Real array of numerically computed result of length len.
+ * @param[in] vec_exact Real array of exact result of length len.
+ * @return Returns the real valued relative error err.
+ */
+FNFT_REAL fnft__misc_rel_err_real(const FNFT_UINT len,
+    FNFT_REAL const * const vec_numer, FNFT_REAL const * const vec_exact);
 
 /**
  * @brief Hausdorff distance between two vectors.
@@ -429,7 +455,9 @@ static inline FNFT_INT fnft__misc_normalize_vector(const FNFT_UINT len, FNFT_COM
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define misc_print_buf(...) fnft__misc_print_buf(__VA_ARGS__)
+#define misc_print_buf_real(...) fnft__misc_print_buf_real(__VA_ARGS__)
 #define misc_rel_err(...) fnft__misc_rel_err(__VA_ARGS__)
+#define misc_rel_err_real(...) fnft__misc_rel_err_real(__VA_ARGS__)
 #define misc_hausdorff_dist(...) fnft__misc_hausdorff_dist(__VA_ARGS__)
 #define misc_sech(...) fnft__misc_sech(__VA_ARGS__)
 #define misc_l2norm2(...) fnft__misc_l2norm2(__VA_ARGS__)
