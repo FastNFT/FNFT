@@ -125,24 +125,29 @@ static inline INT compute_DEL_and_al21(const UINT D, COMPLEX * const q, COMPLEX 
 
     /* Compute the Floquet discriminant DeltaE) */
 
-    REAL tmp = 0.5*CREAL(scatter_matrix[0] + scatter_matrix[3]);
+    REAL trace = 0.5*CREAL(scatter_matrix[0] + scatter_matrix[3]);
     if (opts_ptr->normalization_flag) {
-        *DEL = POW(2, *W_ptr)*tmp;
-        *DEL_LN = (LogNumber){.sign = get_sign(tmp), .log2A = LOG2(FABS(tmp)) + *W_ptr};
+        *DEL = POW(2, *W_ptr)*trace;
+        *DEL_LN = (LogNumber){.sign = get_sign(trace), .log2A = LOG2(FABS(trace)) + *W_ptr};
     } else {
-        *DEL = tmp;
-        *DEL_LN = (LogNumber){.sign = get_sign(tmp), .log2A = LOG2(FABS(tmp))};
+        *DEL = trace;
+        *DEL_LN = (LogNumber){.sign = get_sign(trace), .log2A = LOG2(FABS(trace))};
     }
 
     /* Compute al21(E) */
 
+    const COMPLEX sumof = scatter_matrix[0] - scatter_matrix[1] + scatter_matrix[2] - scatter_matrix[3];
     // The straight-forward implementation would be
-    //   al21n = CREAL(-I/(2*lambda)*(scatter_matrix[0] + scatter_matrix[1] - scatter_matrix[2] - scatter_matrix[3]));
-    //   al21 = POW(2, W)*al21n;
+    //   *al21n = CREAL(-I/(2*lambda)*sumof);
+    //   *al21 = POW(2, *W_ptr)**al21n;
+    // (Note that the signs in sumof differ from the ones in the paper of Osborne. The
+    // reason should be that we use the slightly different S-basis instead of the basis
+    // of Osborne. See Appendix C-C of Prins and Wahls, IEEE Access, Jul. 2019.)
+    // The variant below pulls the I/lambda term out of al21n.
     if (CIMAG(lambda) == 0) // Note: by construction, for some x>=0, either lambda=x or lambda=I*x
-        *al21n = CIMAG(scatter_matrix[0] + scatter_matrix[1] - scatter_matrix[2] - scatter_matrix[3]);
+        *al21n = CIMAG(sumof);
     else
-        *al21n = CREAL(scatter_matrix[0] + scatter_matrix[1] - scatter_matrix[2] - scatter_matrix[3]);
+        *al21n = -CREAL(sumof);
     if (opts_ptr->normalization_flag)
         *al21 = POW(2, *W_ptr)* *al21n;
     else
@@ -151,7 +156,6 @@ static inline INT compute_DEL_and_al21(const UINT D, COMPLEX * const q, COMPLEX 
         *al21 /= 2*CREAL(lambda);
     else
         *al21 /= 2*CIMAG(lambda);
-
 leave_fun:
     return ret_code;
 }
@@ -195,18 +199,17 @@ INT fnft_kdvp(  const UINT D,
         return E_INVALID_ARGUMENT(opts_ptr->grid_spacing);
     if (opts_ptr->mainspec_type == kdvp_mstype_FLOQUET && *K_ptr != *M_ptr)
         return E_INVALID_ARGUMENT(*K_ptr != *M_ptr for mainspec_type FLOQUET);
-    if (opts_ptr->discretization != kdv_discretization_BO)
-        return E_NOT_YET_IMPLEMENTED(opts_ptr->discretization, Use the BO discretization);
+    if (opts_ptr->discretization != kdv_discretization_BO && opts_ptr->discretization != kdv_discretization_BO_VANILLA)
+        return E_NOT_YET_IMPLEMENTED(opts_ptr->discretization, Use the BO or BO_VANILLA discretizations);
 
     COMPLEX * r = NULL;
     REAL Ei = 0, Ei_prev = 0;
     REAL DEL = 0, DEL_prev = 0;
     REAL al21 = 0, al21_prev = 0;
     LogNumber DEL_prev_LN = {0}, DEL_LN = {0};
-    INT W = 0, W_prev = 0;
+    INT W = 0;
     REAL al21n = 0, al21n_prev = 0;
     const INT normalization_flag = opts_ptr->normalization_flag;
-    REAL E_shift = 0;
     INT * const W_ptr = (normalization_flag) ? &W : NULL;
     UINT K = 0, M = 0, N_bands = 0;
     UINT i = 0;
@@ -315,27 +318,33 @@ INT fnft_kdvp(  const UINT D,
                 }
 
                 // regula falsi for DEL-s, the "-s" terms in the denominator cancel
-                main_spec[2*K] = (Ei_prev*(DEL-s) - Ei*(DEL_prev-s))/(DEL - DEL_prev) - E_shift;
+                main_spec[2*K] = (Ei_prev*(DEL-s) - Ei*(DEL_prev-s))/(DEL - DEL_prev);
                 main_spec[2*K+1] = s;
                 K++;
             }
 
             /* Auxiliary spectrum */
 
+            // Note that the normalized al21 always has a zero at E=0 because
+            // it does not have the I/k term (it's in al21). However, since we are
+            // skipping E=0 anyways, this does not create a spurious aux spectrum point.
             if (al21n_prev*al21n<0) { // zero-crossing detected
                 if (M>=*M_ptr) {
                     ret_code = E_OTHER("Found more than *M_ptr auxiliary spectrum points found. Increase *M_ptr and try again.")
                     goto leave_fun;
                 }
                 // regula falsi for al21
-                aux_spec[M] = (Ei_prev*al21 - Ei*al21_prev)/(al21 - al21_prev) - E_shift;
+                aux_spec[M] = (Ei_prev*al21 - Ei*al21_prev)/(al21 - al21_prev);
+                ret_code = compute_DEL_and_al21(D, q, r, eps_t, aux_spec[M], &DEL, &DEL_LN, &al21, &al21n, W_ptr, opts_ptr);
+                CHECK_RETCODE(ret_code, leave_fun);
+
+
                 M++;
             }
  
             Ei_prev = Ei;
             DEL_prev = DEL;
             DEL_prev_LN = DEL_LN;
-            W_prev = W;
             al21_prev = al21;
             al21n_prev = al21n;
         }
