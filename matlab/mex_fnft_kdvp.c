@@ -31,7 +31,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     FNFT_UINT i;
     FNFT_INT k;
     FNFT_UINT K, M;
-    FNFT_REAL * main_spec, * aux_spec;
+    FNFT_REAL * main_spec, * aux_spec, * sheet_indices;
     FNFT_UINT ms_len = 0;
     double *re;
     char msg[128]; // buffer for error messages
@@ -173,7 +173,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     main_spec = mxMalloc(ms_len * sizeof(FNFT_REAL));
     aux_spec = mxMalloc(M * sizeof(FNFT_REAL));
-    if (main_spec == NULL || aux_spec == NULL) {
+    sheet_indices = mxMalloc(M * sizeof(FNFT_REAL));
+    if (main_spec == NULL || aux_spec == NULL || sheet_indices == NULL) {
         snprintf(msg, sizeof msg, "Out of memory.");
         goto on_error;
     }
@@ -186,7 +187,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     /* Call the C routine */
 
-    ret_code = fnft_kdvp(D, q, T, E, &K, main_spec, &M, aux_spec, NULL, &opts);
+    ret_code = fnft_kdvp(D, q, T, E, &K, main_spec, &M, aux_spec, sheet_indices, &opts);
     if (ret_code != FNFT_SUCCESS) {
         snprintf(msg, sizeof msg, "fnft_kdvp failed (error code %i).",
                 ret_code);
@@ -204,7 +205,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     plhs[0] = mxCreateDoubleMatrix(1, ms_len, mxREAL);
     plhs[1] = mxCreateDoubleMatrix(1, M, mxREAL);
-    if (plhs[0] == NULL || plhs[1] == NULL) {
+    plhs[2] = mxCreateDoubleMatrix(1, M, mxREAL);
+    if (plhs[0] == NULL || plhs[1] == NULL || plhs[2] == NULL) {
         snprintf(msg, sizeof msg, "Out of memory.");
         goto on_error;
     }
@@ -217,10 +219,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     for (i=0; i<M; i++)
         re[i] = aux_spec[i];
 
+    re = mxGetPr(plhs[2]);
+    for (i=0; i<M; i++)
+        re[i] = sheet_indices[i];
+
     /* Free memory that is no longer needed */
 
     mxFree(main_spec);
     mxFree(aux_spec);
+    mxFree(sheet_indices);
     mxFree(q);
     return;
 

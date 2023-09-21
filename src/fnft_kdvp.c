@@ -123,7 +123,7 @@ static inline INT compute_DEL_and_al21(const UINT D, COMPLEX * const q, COMPLEX 
         &lambda, scatter_matrix, W_ptr, opts_ptr->discretization, 0/*derivative_flag*/);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    /* Compute the Floquet discriminant DeltaE) */
+    /* Compute the Floquet discriminant Delta(E) */
 
     REAL trace = 0.5*CREAL(scatter_matrix[0] + scatter_matrix[3]);
     if (opts_ptr->normalization_flag) {
@@ -161,6 +161,28 @@ leave_fun:
 }
 
 /**
+ * Computes the sheet index as given e.g. in Eq. 3.13 of Osborne, Math. Comput. Simul. 37 (1994),
+ * 431-450, https://doi.org/10.1016/0378-4754(94)00029-8
+ */
+static inline INT compute_sheet_index(const UINT D, COMPLEX * const q, COMPLEX const * const r,
+        const REAL eps_t, const REAL Ei, REAL * const sheet_index, INT * W_ptr, fnft_kdvp_opts_t * opts_ptr)
+{
+    COMPLEX scatter_matrix[4];
+    COMPLEX lambda;
+    INT ret_code = SUCCESS;
+
+    lambda = E_to_lambda(Ei);
+    ret_code = kdv_scatter_matrix(D, q, r, eps_t, 0/*kappa*/, 1/*K*/,
+        &lambda, scatter_matrix, W_ptr, opts_ptr->discretization, 0/*derivative_flag*/);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    *sheet_index = get_sign(scatter_matrix[1] + scatter_matrix[2]);
+
+leave_fun:
+    return ret_code;
+}
+
+/**
  * Nonlinear Fourier transform for the Korteweg-de Vries
  * equation with periodic boundary conditions.
  */
@@ -191,8 +213,8 @@ INT fnft_kdvp(  const UINT D,
         return E_INVALID_ARGUMENT(M_ptr);   
     if (aux_spec == NULL)
         return E_INVALID_ARGUMENT(aux_spec); 
-    if (sheet_indices != NULL)
-        return E_NOT_YET_IMPLEMENTED(sheet_indices, Pass sheet_indices="NULL");
+    if (sheet_indices == NULL)
+        return E_INVALID_ARGUMENT(sheet_indices);
     if (opts_ptr == NULL)
         opts_ptr = &default_opts;
     if (opts_ptr->mainspec_type != kdvp_mstype_FLOQUET && opts_ptr->grid_spacing <= 0)
@@ -323,6 +345,9 @@ INT fnft_kdvp(  const UINT D,
                 K++;
             }
 
+            DEL_prev = DEL;
+            DEL_prev_LN = DEL_LN;
+
             /* Auxiliary spectrum */
 
             // Note that the normalized al21 always has a zero at E=0 because
@@ -333,18 +358,17 @@ INT fnft_kdvp(  const UINT D,
                     ret_code = E_OTHER("Found more than *M_ptr auxiliary spectrum points found. Increase *M_ptr and try again.")
                     goto leave_fun;
                 }
+
                 // regula falsi for al21
                 aux_spec[M] = (Ei_prev*al21 - Ei*al21_prev)/(al21 - al21_prev);
-                ret_code = compute_DEL_and_al21(D, q, r, eps_t, aux_spec[M], &DEL, &DEL_LN, &al21, &al21n, W_ptr, opts_ptr);
+                
+                ret_code = compute_sheet_index(D, q, r, eps_t, aux_spec[M], &sheet_indices[M], W_ptr, opts_ptr);
                 CHECK_RETCODE(ret_code, leave_fun);
-
 
                 M++;
             }
  
             Ei_prev = Ei;
-            DEL_prev = DEL;
-            DEL_prev_LN = DEL_LN;
             al21_prev = al21;
             al21n_prev = al21n;
         }
