@@ -41,6 +41,8 @@ typedef struct {
     FNFT_INT normalization_flag;
     fnft_kdv_discretization_t discretization;
     FNFT_REAL grid_spacing;
+    FNFT_UINT niter;
+    FNFT_REAL tol;
 } fnft_kdvp_opts_t;
 
 fnft_kdvp_opts_t fnft_kdvp_default_opts();

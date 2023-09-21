@@ -26,7 +26,9 @@ static fnft_kdvp_opts_t default_opts = {
     .mainspec_type = kdvp_mstype_EDGEPOINTS_AND_SIGNS,
     .normalization_flag = 1,
     .discretization = kdv_discretization_BO,
-    .grid_spacing = 0
+    .grid_spacing = 0,
+    .niter = 100,
+    .tol = -1.0 // auto
 };
 
 /**
@@ -182,6 +184,74 @@ leave_fun:
     return ret_code;
 }
 
+static inline INT refine_mainspec(const UINT D, COMPLEX * const q, COMPLEX const * const r,
+        const REAL eps_t, REAL E_left, REAL E_right, REAL * const E_ptr, const REAL s, INT * W_ptr, fnft_kdvp_opts_t * opts_ptr)
+{
+    COMPLEX scatter_matrix[8];
+    INT ret_code = SUCCESS;
+    const UINT niter = opts_ptr->niter;
+    const REAL tol = opts_ptr->tol<0 ? 100*EPSILON : opts_ptr->tol;
+
+    const REAL E0 = *E_ptr;
+    REAL E = E0;
+    for (UINT i=0; i<niter; i++) {
+        COMPLEX lambda = E_to_lambda(E);
+        ret_code = kdv_scatter_matrix(D, q, r, eps_t, 0/*kappa*/, 1/*K*/,
+            &lambda, scatter_matrix, W_ptr, opts_ptr->discretization, 1/*derivative_flag*/);
+        CHECK_RETCODE(ret_code, leave_fun);
+
+        const INT W = W_ptr == NULL ? 0 : *W_ptr;
+        const COMPLEX DELn = 0.5*(scatter_matrix[0] + scatter_matrix[3]);
+        const COMPLEX DELn_prime = 0.5*(scatter_matrix[4] + scatter_matrix[7]);
+        const COMPLEX DELn_ms = DELn - POW(2, -W)*s;
+        const COMPLEX incr = DELn_ms/DELn_prime;
+        lambda -= incr;
+        E = CREAL(lambda*lambda);
+        if (!(E>=E_left) || !(E<=E_right)) {
+            E = E0;
+            break;
+        }
+        if (CABS(incr)<=tol || CABS(DELn_ms)<=tol)
+            break;
+    }
+    *E_ptr = E;
+leave_fun:
+    return ret_code;
+}
+
+static inline INT refine_auxspec(const UINT D, COMPLEX * const q, COMPLEX const * const r,
+        const REAL eps_t, REAL E_left, REAL E_right, REAL * const mu_ptr, INT * W_ptr, fnft_kdvp_opts_t * opts_ptr)
+{
+    COMPLEX scatter_matrix[8];
+    INT ret_code = SUCCESS;
+    const UINT niter = opts_ptr->niter;
+    const REAL tol = opts_ptr->tol<0 ? 100*EPSILON : opts_ptr->tol;
+
+    const REAL mu0 = *mu_ptr;
+    REAL mu = mu0;
+    for (UINT i=0; i<niter; i++) {
+        COMPLEX lambda = E_to_lambda(mu);
+        ret_code = kdv_scatter_matrix(D, q, r, eps_t, 0/*kappa*/, 1/*K*/,
+            &lambda, scatter_matrix, W_ptr, opts_ptr->discretization, 1/*derivative_flag*/);
+        CHECK_RETCODE(ret_code, leave_fun);
+
+        const COMPLEX sumof = scatter_matrix[0] - scatter_matrix[1] + scatter_matrix[2] - scatter_matrix[3];
+        const COMPLEX sumof_prime = scatter_matrix[4] - scatter_matrix[5] + scatter_matrix[6] - scatter_matrix[7];
+        const COMPLEX incr = sumof/sumof_prime;
+        lambda -= incr;
+        mu = CREAL(lambda*lambda);
+        if (!(mu>=E_left) || !(mu<=E_right)) {
+            mu = mu0;
+            break;
+        }
+        if (CABS(incr)<=tol || CABS(sumof)<=tol)
+            break;
+    }
+    *mu_ptr = mu;
+leave_fun:
+    return ret_code;
+}
+
 /**
  * Nonlinear Fourier transform for the Korteweg-de Vries
  * equation with periodic boundary conditions.
@@ -320,6 +390,10 @@ INT fnft_kdvp(  const UINT D,
                 for (INT j=-1; j<=1; j+=2) {
                     main_spec[2*K] = (Ei_prev*(DEL-j) - Ei*(DEL_prev-j))/(DEL - DEL_prev);
                     main_spec[2*K+1] = j;
+
+                    ret_code = refine_mainspec(D, q, r, eps_t, Ei_prev, Ei, &main_spec[2*K], j, W_ptr, opts_ptr);
+                    CHECK_RETCODE(ret_code, leave_fun);
+
                     K++;
                 }
 
@@ -342,6 +416,10 @@ INT fnft_kdvp(  const UINT D,
                 // regula falsi for DEL-s, the "-s" terms in the denominator cancel
                 main_spec[2*K] = (Ei_prev*(DEL-s) - Ei*(DEL_prev-s))/(DEL - DEL_prev);
                 main_spec[2*K+1] = s;
+
+                ret_code = refine_mainspec(D, q, r, eps_t, Ei_prev, Ei, &main_spec[2*K], s, W_ptr, opts_ptr);
+                CHECK_RETCODE(ret_code, leave_fun);
+
                 K++;
             }
 
@@ -361,7 +439,10 @@ INT fnft_kdvp(  const UINT D,
 
                 // regula falsi for al21
                 aux_spec[M] = (Ei_prev*al21 - Ei*al21_prev)/(al21 - al21_prev);
-                
+               
+                ret_code = refine_auxspec(D, q, r, eps_t, Ei_prev, Ei, &aux_spec[M], W_ptr, opts_ptr);
+                CHECK_RETCODE(ret_code, leave_fun);
+
                 ret_code = compute_sheet_index(D, q, r, eps_t, aux_spec[M], &sheet_indices[M], W_ptr, opts_ptr);
                 CHECK_RETCODE(ret_code, leave_fun);
 

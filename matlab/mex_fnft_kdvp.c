@@ -122,6 +122,34 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
             opts.mainspec_type = fnft_kdvp_mstype_AMPLITUDES_MODULI_FREQS;
 
+        } else if ( strcmp(str, "niter") == 0 ) {
+            
+            /* Extract desired number of iterations */
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+            || mxGetNumberOfElements(prhs[k+1]) != 1
+                    || mxGetScalar(prhs[k+1]) < 0.0 ) {
+                snprintf(msg, sizeof msg, "'niter' should be followed by a non-negative real scalar.");
+                goto on_error;
+            }
+            opts.niter = (FNFT_UINT)mxGetScalar(prhs[k+1]);
+            
+            /* Increase k to account for vector of initial guesses */
+    	    k++;
+
+        } else if ( strcmp(str, "tol") == 0 ) {
+
+            /* Extract desired number of iterations */
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+            || mxGetNumberOfElements(prhs[k+1]) != 1
+                    || mxGetScalar(prhs[k+1]) < 0.0 ) {
+                snprintf(msg, sizeof msg, "'tol' should be followed by a non-negative real scalar.");
+                goto on_error;
+            }
+            opts.tol = (FNFT_REAL)mxGetScalar(prhs[k+1]);
+
+            /* Increase k to account for vector of initial guesses */
+    	    k++;
+
         } else if ( strcmp(str, "skip_normalization") == 0 ) {
 
             opts.normalization_flag = 0;
