@@ -154,6 +154,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
             opts.normalization_flag = 0;
 
+        } else if ( strcmp(str, "keep_degenerate") == 0 ) {
+
+            opts.keep_degenerate_flag = 1;
+
         } else if ( strcmp(str, "quiet") == 0 ) {
 
             fnft_errwarn_setprintf(NULL);
