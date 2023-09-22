@@ -39,6 +39,7 @@ typedef enum {
 typedef struct {
     fnft_kdvp_mstype_t mainspec_type;
     FNFT_INT normalization_flag;
+    FNFT_INT keep_degenerate_flag;
     fnft_kdv_discretization_t discretization;
     FNFT_REAL grid_spacing;
     FNFT_UINT niter;

@@ -25,6 +25,7 @@
 static fnft_kdvp_opts_t default_opts = {
     .mainspec_type = kdvp_mstype_EDGEPOINTS_AND_SIGNS,
     .normalization_flag = 1,
+    .keep_degenerate_flag = 0,
     .discretization = kdv_discretization_BO,
     .grid_spacing = 0,
     .niter = 100,
@@ -283,8 +284,6 @@ INT fnft_kdvp(  const UINT D,
         return E_INVALID_ARGUMENT(M_ptr);   
     if (aux_spec == NULL)
         return E_INVALID_ARGUMENT(aux_spec); 
-    if (sheet_indices == NULL)
-        return E_INVALID_ARGUMENT(sheet_indices);
     if (opts_ptr == NULL)
         opts_ptr = &default_opts;
     if (opts_ptr->mainspec_type != kdvp_mstype_FLOQUET && opts_ptr->grid_spacing <= 0)
@@ -294,6 +293,9 @@ INT fnft_kdvp(  const UINT D,
     if (opts_ptr->discretization != kdv_discretization_BO && opts_ptr->discretization != kdv_discretization_BO_VANILLA)
         return E_NOT_YET_IMPLEMENTED(opts_ptr->discretization, Use the BO or BO_VANILLA discretizations);
 
+    const INT aux_spec_flag = (aux_spec == NULL || M_ptr == NULL || *M_ptr == 0) ? 0 : 1;
+    const INT sheet_indices_flag = (sheet_indices == NULL || !aux_spec_flag) ? 0 : 1;
+
     COMPLEX * r = NULL;
     REAL Ei = 0, Ei_prev = 0;
     REAL DEL = 0, DEL_prev = 0;
@@ -302,6 +304,7 @@ INT fnft_kdvp(  const UINT D,
     INT W = 0;
     REAL al21n = 0, al21n_prev = 0;
     const INT normalization_flag = opts_ptr->normalization_flag;
+    const INT keep_degenerate_flag = opts_ptr->keep_degenerate_flag;
     INT * const W_ptr = (normalization_flag) ? &W : NULL;
     UINT K = 0, M = 0, N_bands = 0;
     UINT i = 0;
@@ -356,6 +359,33 @@ INT fnft_kdvp(  const UINT D,
             ret_code = compute_DEL_and_al21(D, q, r, eps_t, Ei, &DEL, &DEL_LN, &al21, &al21n, W_ptr, opts_ptr);
             CHECK_RETCODE(ret_code, leave_fun);
 
+            /* Auxiliary spectrum */
+
+            // Note that the normalized al21 always has a zero at E=0 because
+            // it does not have the I/k term (it's in al21). However, since we are
+            // skipping E=0 anyways, this does not create a spurious aux spectrum point.
+            const INT found_auxspec_flag = aux_spec_flag && al21n_prev*al21n < 0;
+            if (found_auxspec_flag) { // zero-crossing detected
+                if (M>=*M_ptr) {
+                    ret_code = E_OTHER("Found more than *M_ptr auxiliary spectrum points found. Increase *M_ptr and try again.")
+                    goto leave_fun;
+                }
+
+                // regula falsi for al21
+                aux_spec[M] = (Ei_prev*al21 - Ei*al21_prev)/(al21 - al21_prev);
+               
+                ret_code = refine_auxspec(D, q, r, eps_t, Ei_prev, Ei, &aux_spec[M], W_ptr, opts_ptr);
+                CHECK_RETCODE(ret_code, leave_fun);
+
+                if (sheet_indices_flag) {
+                    ret_code = compute_sheet_index(D, q, r, eps_t, aux_spec[M], &sheet_indices[M], W_ptr, opts_ptr);
+                    CHECK_RETCODE(ret_code, leave_fun);
+                }
+
+
+                M++;
+            }
+ 
             /* Main spectrum */
 
             // Check if Delta(Ei) crossed +/-1.
@@ -380,6 +410,7 @@ INT fnft_kdvp(  const UINT D,
                     s = -1; // one edge point s.t. delta=-1
             }
 
+            // Process zero-crossings
             if (s == 2 || s == -2) { // two edge points between two grid points
                 if (K+1>=*K_ptr) {
                     ret_code = E_OTHER("Found more than *K_ptr main spectrum points. Increase *K_ptr and try again.")
@@ -423,43 +454,55 @@ INT fnft_kdvp(  const UINT D,
                 K++;
             }
 
+            // If no zero-crossings for Delta(E) +/- 1 were found, there could still be a pair of co-located
+            // degenerate eigenvalues at which Delta(E) just touches, but does not cross, +/- 1. Such cases
+            // are indicated by a co-located auxiliary spectrum point at seems to be not in an open band.
+            // This is what we check next.
+            
+            INT in_open_band_flag;
+            if (!normalization_flag)
+                in_open_band_flag = !((DEL_prev >= -1 && DEL_prev <= 1) && (DEL >= -1 && DEL <= 1));
+            else
+                in_open_band_flag = !((gtm1(DEL_prev_LN) && lt1(DEL_prev_LN)) && (gtm1(DEL_LN) && lt1(DEL_LN)));
+
+            if (!in_open_band_flag && found_auxspec_flag) { // looks as if we missed a pair of degenerate
+                                                            // main spectrum points
+                if (keep_degenerate_flag) {
+                    if (K+1>=*K_ptr) {
+                        ret_code = E_OTHER("More than *K_ptr initial guesses for bound states found. Increase *K_ptr and try again.")
+                        goto leave_fun;
+                    }
+                
+                    if (!normalization_flag)
+                        s = get_sign(DEL);
+                    else
+                        s = DEL_LN.sign;
+                
+                    main_spec[2*K] = aux_spec[M-1];
+                    main_spec[2*K+1] = s;
+                    K++;
+
+                    main_spec[2*K] = aux_spec[M-1];
+                    main_spec[2*K+1] = s;
+                    K++;
+                } else {
+                    M--;
+                }
+            }
+
+            Ei_prev = Ei;
             DEL_prev = DEL;
             DEL_prev_LN = DEL_LN;
-
-            /* Auxiliary spectrum */
-
-            // Note that the normalized al21 always has a zero at E=0 because
-            // it does not have the I/k term (it's in al21). However, since we are
-            // skipping E=0 anyways, this does not create a spurious aux spectrum point.
-            if (al21n_prev*al21n<0) { // zero-crossing detected
-                if (M>=*M_ptr) {
-                    ret_code = E_OTHER("Found more than *M_ptr auxiliary spectrum points found. Increase *M_ptr and try again.")
-                    goto leave_fun;
-                }
-
-                // regula falsi for al21
-                aux_spec[M] = (Ei_prev*al21 - Ei*al21_prev)/(al21 - al21_prev);
-               
-                ret_code = refine_auxspec(D, q, r, eps_t, Ei_prev, Ei, &aux_spec[M], W_ptr, opts_ptr);
-                CHECK_RETCODE(ret_code, leave_fun);
-
-                ret_code = compute_sheet_index(D, q, r, eps_t, aux_spec[M], &sheet_indices[M], W_ptr, opts_ptr);
-                CHECK_RETCODE(ret_code, leave_fun);
-
-                M++;
-            }
- 
-            Ei_prev = Ei;
             al21_prev = al21;
             al21n_prev = al21n;
         }
         *M_ptr = M;
 
-        // We so far have the usual representation of the main spectrum (i.e., the Ei). If the user requested
-        // another representation, we convert it now.
+        /* Change representation of the main spectrum if requested by the user. */
+
         switch (opts_ptr->mainspec_type) {
         case kdvp_mstype_EDGEPOINTS_AND_SIGNS:
-            *K_ptr = K;
+            *K_ptr = K; // no changes, this is what we computed above
             break;
 
         case kdvp_mstype_OPENBANDS:

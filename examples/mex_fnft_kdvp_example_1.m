@@ -55,13 +55,14 @@ q = lam*u1*sech((x-L/2)/L1).^2;
 
 E = [-0.03 0.015];      % Spectral interval
 R = 1000;               % Number of grid points for the Floquet diagram
-grid_spacing = 0.0001;  % Max. allowed distance between consecutive grid
+grid_spacing = 0.001;   % Max. allowed distance between consecutive grid
                         % points on the spectral interval
 
-[floq_det, al21] =      mex_fnft_kdvp(q, [0 L], E, 'mstype_floquet', R);
-[main_spec, aux_spec] = mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing);
-bands =                 mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing, 'mstype_openbands');
-ampmodfreq =            mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing, 'mstype_amplitudes_moduli_freqs');
+[floq_det, al21] = mex_fnft_kdvp(q, [0 L], E, 'mstype_floquet', R);
+[main_spec, aux_spec, sheet_idx] = ...
+                   mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing, 'keep_degenerate');
+bands =            mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing, 'mstype_openbands');
+ampmodfreq =       mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing, 'mstype_amplitudes_moduli_freqs');
 
 %% Compute the soliton amplitudes
 
