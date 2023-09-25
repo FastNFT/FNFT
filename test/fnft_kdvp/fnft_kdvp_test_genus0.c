@@ -99,16 +99,21 @@ static INT run_test()
 
 #ifdef DEBUG
     misc_print_buf_real(K, main_spec, "main_spec");
+    misc_print_buf_real(M, aux_spec, "aux_spec");
 #endif
     if (K != 1) {
         ret_code = E_TEST_FAILED;
         goto leave_fun;
     }
+    if (M != 0) {
+        ret_code = E_TEST_FAILED;
+        goto leave_fun;
+    }
     err = FABS(-1 - main_spec[0]);
 #ifdef DEBUG
-    printf("err = %g\n", opts.grid_spacing, err);
+    printf("err = %g\n", err);
 #endif
-    if (err > 1e-5) {
+    if (err > 10*EPSILON) {
         ret_code = E_TEST_FAILED;
         goto leave_fun;
     }

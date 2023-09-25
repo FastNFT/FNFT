@@ -47,14 +47,18 @@ static INT run_test(const UINT D, const REAL err_bounds[3])
     const REAL lam = al/(6*be);
 
     // Generate the signal, Eq. 52
-    COMPLEX q[D];
+    COMPLEX q[D], q_shifted[D];
     const REAL L1 = SQRT(12*be/(al*u1));
     REAL X[2] = {0, L};
     const REAL eps_x = (X[1] - X[0])/D;
     for (UINT i=0; i<D; i++) {
-        const REAL x = X[0] + i*eps_x;
+        REAL x = X[0] + i*eps_x;
         q[i] = misc_sech((x-L/2)/L1);
         q[i] *= lam*u1*q[i];
+
+        x -= eps_x/2;
+        q_shifted[i] = misc_sech((x-L/2)/L1);
+        q_shifted[i] *= lam*u1*q_shifted[i];
     }
 
     COMPLEX q_reconstructed[D];
@@ -72,8 +76,8 @@ static INT run_test(const UINT D, const REAL err_bounds[3])
     opts.grid_spacing = 0.001;
 
     // Run some tests
-ret_code = fnft_kdvp(D, q, X, E, &K, main_spec, &M, aux_spec, NULL/*sheet_indices*/, &opts);
-CHECK_RETCODE(ret_code, leave_fun);
+    ret_code = fnft_kdvp(D, q, X, E, &K, main_spec, &M, aux_spec, NULL/*sheet_indices*/, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
 
     if (K != 3) {
         ret_code = E_TEST_FAILED;
@@ -110,7 +114,7 @@ CHECK_RETCODE(ret_code, leave_fun);
 #ifdef DEBUG
     printf("err(A) = %g, err_bounds[1] = %g\n", err, err_bounds[1]);
 #endif
-    if (!(err <= 0.003)) {
+    if (!(err <= err_bounds[1])) {
         ret_code = E_TEST_FAILED;
         goto leave_fun;
     }
@@ -144,7 +148,7 @@ CHECK_RETCODE(ret_code, leave_fun);
         q[D-1] = q0;
     }
 
-    err = misc_rel_err(D, q_reconstructed, q);
+    err = misc_rel_err(D, q_reconstructed, q_shifted);
 #ifdef DEBUG
     printf("err(q_reconstructed) = %g, err_bounds[2] = %g\n\n", err, err_bounds[2]);
 #endif
@@ -159,17 +163,22 @@ leave_fun:
 
 int main()
 {
-    REAL err_bounds[3] = {2e-4, 0.003, 0.07};
-    if (run_test(128, err_bounds) != SUCCESS)
+    UINT D = 128;
+    REAL err_bounds[3] = {3e-5, 6e-4, 0.0014};
+    if (run_test(D, err_bounds) != SUCCESS)
         return EXIT_FAILURE;
 
-    err_bounds[0] = 1e-4;
-    err_bounds[1] = 0.002;
-    err_bounds[2] = 0.04;
-    if (run_test(256, err_bounds) != SUCCESS)
+    D *= 2;
+    err_bounds[0] /= 4;
+    err_bounds[1] = 7e-5;
+    err_bounds[2] = 0.0009;
+    if (run_test(D, err_bounds) != SUCCESS)
         return EXIT_FAILURE;
 
-    err_bounds[2] = 0.02;
+    D *= 2;
+    err_bounds[0] /= 4;
+    err_bounds[1] = 4e-5;
+    err_bounds[2] = 0.0007;
     if (run_test(512, err_bounds) != SUCCESS)
         return EXIT_FAILURE;
 
