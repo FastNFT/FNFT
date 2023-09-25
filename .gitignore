@@ -22,6 +22,7 @@
 !/test/fnft__kdv_finvscatter/
 !/test/fnft__kdv_scatter/
 !/test/fnft_kdvv/
+!/test/fnft_kdvp/
 !/test/fnft__manakov_fscatter/
 !/test/fnft__manakov_scatter/
 !/test/fnft_manakovv/
