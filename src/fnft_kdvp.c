@@ -197,6 +197,9 @@ static inline INT refine_mainspec(const UINT D, COMPLEX * const q, COMPLEX const
     REAL E = E0;
     for (UINT i=0; i<niter; i++) {
         COMPLEX lambda = E_to_lambda(E);
+        if (lambda == 0) // Can't scatter at zero => stop
+            break;
+
         ret_code = kdv_scatter_matrix(D, q, r, eps_t, 0/*kappa*/, 1/*K*/,
             &lambda, scatter_matrix, W_ptr, opts_ptr->discretization, 1/*derivative_flag*/);
         CHECK_RETCODE(ret_code, leave_fun);
@@ -206,13 +209,17 @@ static inline INT refine_mainspec(const UINT D, COMPLEX * const q, COMPLEX const
         const COMPLEX DELn_prime = 0.5*(scatter_matrix[4] + scatter_matrix[7]);
         const COMPLEX DELn_ms = DELn - POW(2, -W)*s;
         const COMPLEX incr = DELn_ms/DELn_prime;
+
+        if (incr != incr) // Can't compute increment => stop
+            break;
         lambda -= incr;
         E = CREAL(lambda*lambda);
-        if (!(E>=E_left) || !(E<=E_right)) {
+
+        if (!(E>=E_left) || !(E<=E_right)) { // Newton's method diverges => stop
             E = E0;
             break;
         }
-        if (CABS(incr)<=tol || CABS(DELn_ms)<=tol)
+        if (CABS(incr)<=tol || CABS(DELn_ms)<=tol) // We converged => stop
             break;
     }
     *E_ptr = E;
@@ -232,20 +239,28 @@ static inline INT refine_auxspec(const UINT D, COMPLEX * const q, COMPLEX const 
     REAL mu = mu0;
     for (UINT i=0; i<niter; i++) {
         COMPLEX lambda = E_to_lambda(mu);
+        if (lambda == 0) // Can't scatter at zero => stop
+            break;
+
         ret_code = kdv_scatter_matrix(D, q, r, eps_t, 0/*kappa*/, 1/*K*/,
             &lambda, scatter_matrix, W_ptr, opts_ptr->discretization, 1/*derivative_flag*/);
         CHECK_RETCODE(ret_code, leave_fun);
 
         const COMPLEX sumof = scatter_matrix[0] - scatter_matrix[1] + scatter_matrix[2] - scatter_matrix[3];
         const COMPLEX sumof_prime = scatter_matrix[4] - scatter_matrix[5] + scatter_matrix[6] - scatter_matrix[7];
-        const COMPLEX incr = sumof/sumof_prime;
-        lambda -= incr;
+        //const COMPLEX incr = (-I/(2*lambda))*sumof/(I/(2*lambda*lambda)*sumof + -I/(2*lambda)*sumof_prime);
+        const COMPLEX incr = -sumof/(sumof/lambda - sumof_prime); // equivalent to the line above
+
+        if (incr != incr) // Can't compute increment => stop
+            break;
+        lambda -= incr;        
         mu = CREAL(lambda*lambda);
-        if (!(mu>=E_left) || !(mu<=E_right)) {
+
+        if (!(mu>=E_left) || !(mu<=E_right)) { // Newton's method seems to diverge => stop
             mu = mu0;
             break;
         }
-        if (CABS(incr)<=tol || CABS(sumof)<=tol)
+        if (CABS(incr)<=tol || CABS(sumof)<=tol) // We converged => stop
             break;
     }
     *mu_ptr = mu;
