@@ -296,11 +296,6 @@ FNFT_UINT fnft__misc_nextpowerof2(const FNFT_UINT number);
  * bandlimited interpolation to obtain signal samples at new locations
  * \f$q(t_{n}+\delta)\f$ from samples given at \f$q(t_{n})\f$ for \f$n=0,1,...,D-1\f$.
  * This is required for the CF4_2, CF4_3, CF5_3, CF6_4, 4SPLIT4A and 4SPLIT4B discretizations.
- * The routine checks the difference between the l2-norm of the complete spectrum 
- * and approximately 90% of the spectrum. The following warning is issued if
- * the difference is high. "Signal does not appear to be bandlimited. Interpolation 
- * step may be inaccurate. Try to reduce the step size, or switch to a discretization 
- * that does not require interpolation".
  * @param[in] D Number of samples in array q.
  * @param[in] eps_t Step-size of t.
  * @param[in] q Complex valued array to be resampled.
@@ -310,7 +305,6 @@ FNFT_UINT fnft__misc_nextpowerof2(const FNFT_UINT number);
  */
 FNFT_INT fnft__misc_resample(const FNFT_UINT D, const FNFT_REAL eps_t, FNFT_COMPLEX const * const q,
     const FNFT_REAL delta, FNFT_COMPLEX *const q_new);
-
 /**
  * @brief Multiples two complex valued matrices of any compatible size.
  *
