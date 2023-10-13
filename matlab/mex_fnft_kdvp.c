@@ -30,7 +30,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     FNFT_REAL * E;
     FNFT_UINT i;
     FNFT_INT k;
-    FNFT_UINT K, M;
+    FNFT_UINT K = 0, M = 0;
     FNFT_REAL * main_spec, * aux_spec, * sheet_indices;
     FNFT_UINT ms_len = 0;
     double *re;
@@ -158,6 +158,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
             opts.keep_degenerate_flag = 1;
 
+        } else if ( strcmp(str, "spec_size") == 0 ) {
+            
+            /* Extract desired number of iterations */
+            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
+            || mxGetNumberOfElements(prhs[k+1]) != 1
+                    || mxGetScalar(prhs[k+1]) < 0.0 ) {
+                snprintf(msg, sizeof msg, "'spec_size' should be followed by a non-negative real scalar.");
+                goto on_error;
+            }
+            K = (FNFT_UINT)mxGetScalar(prhs[k+1]);
+            M = K;
+            
+            /* Increase k to account for vector of initial guesses */
+    	    k++;
+
+
         } else if ( strcmp(str, "quiet") == 0 ) {
 
             fnft_errwarn_setprintf(NULL);
@@ -182,16 +198,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         goto on_error;
     }
 
-    M = D;
+    if (M == 0)
+        M = D;
     switch (opts.mainspec_type) {
     case fnft_kdvp_mstype_AMPLITUDES_MODULI_FREQS:
-        K = D;
+        if (K == 0)
+            K = D;
         ms_len = 3*K;
         break;
     case fnft_kdvp_mstype_OPENBANDS:
         // fallthrough
     case fnft_kdvp_mstype_EDGEPOINTS_AND_SIGNS:
-        K = D;
+        if (K == 0)
+            K = D;
         ms_len = 2*K;
         break;
     case fnft_kdvp_mstype_FLOQUET:
