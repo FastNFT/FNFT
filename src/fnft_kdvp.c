@@ -544,7 +544,7 @@ INT fnft_kdvp(  const UINT D,
             // replace main spectrum points E_i with amplitudes and signs with moduli
             UINT cnt = 0;
             UINT i_ref = 0;
-            REAL E_ref = 0; // reference level
+            REAL E_ref = FNFT_INF; // reference level
             INT in_radiation = 0; // flag to signal that we reached the radiation
                                   // part of the nonlinear spectrum
             for (i=1; i<K-1; i+=2) {
