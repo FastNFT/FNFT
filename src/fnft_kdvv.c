@@ -1029,6 +1029,8 @@ static inline INT kdvv_refine_bound_states_newton(
                 break; // next line will cause an error if it is of higher order
             if (aprime_val == 0.0)
                 return E_DIV_BY_ZERO;
+            if (a_val != a_val || aprime_val != aprime_val) // got a NaN, likely due
+                break;                                      // to numerical issues
 
             // Perform Newton updates: lam[i] <- lam[i] - a(lam[i])/a'(lam[i])
             // We don't have to scale a and a' by 2^W because that factor cancels.
