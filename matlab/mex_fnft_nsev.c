@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018, 2022.
+* Sander Wahls (TU Delft) 2017-2018, 2022; (KIT) 2025.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
 * Peter J. Prins (2021).
 * Sander Wahls (KIT) 2023.
@@ -22,7 +22,9 @@
 
 #include <string.h>
 #include "mex.h"
+#ifndef SKIP_MATRIX_H
 #include "matrix.h"
+#endif
 #include "fnft_nsev.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])

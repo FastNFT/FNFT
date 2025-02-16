@@ -14,14 +14,16 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018, 2023.
+* Sander Wahls (TU Delft) 2017-2018, 2023; (KIT) 2025.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
 * Peter J. Prins (TU Delft) 2021.
 */
 
 #include <string.h>
 #include "mex.h"
+#ifndef SKIP_MATRIX_H
 #include "matrix.h"
+#endif
 #include "fnft_kdvv.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
