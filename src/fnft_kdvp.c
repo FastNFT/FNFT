@@ -269,6 +269,100 @@ leave_fun:
 }
 
 /**
+ * Converts a main spectrum im EDGEPOINTS_AND_SIGNS format as returned by fnft_kdvp into amplitudes, moduli and frequencies.
+ */
+INT fnft_kdvp_ampmodfreq(UINT * const K_ptr, REAL const * const main_spec, REAL * const ampmodfreq)
+{
+    if (K_ptr == NULL)
+        return E_INVALID_ARGUMENT(K_ptr);
+    if (main_spec == NULL)
+        return E_INVALID_ARGUMENT(main_spec);
+    if (ampmodfreq == NULL)
+        return E_INVALID_ARGUMENT(ampmodfreq);
+
+    const UINT K = *K_ptr;
+    if (K < 3) { // nothing to do
+        *K_ptr = 0;
+        return SUCCESS;
+    }
+    UINT i = 0;
+
+    // replace main spectrum points E_i with amplitudes and signs with moduli
+    UINT cnt = 0;
+    UINT i_ref = 0;
+    REAL E_ref = FNFT_INF; // reference level
+    INT in_radiation = 0; // flag to signal that we reached the radiation
+                          // part of the nonlinear spectrum
+    for (i=1; i<K-1; i+=2) {
+        const REAL E_2i = main_spec[2*i];
+        const REAL E_2ip1 = main_spec[2*(i+1)];
+        const REAL E_2im1 = main_spec[2*(i-1)];
+        const REAL modulus = (E_2ip1 - E_2i)/(E_2ip1 - E_2im1);
+        ampmodfreq[3*cnt+1] = modulus;
+        if (modulus >= 0.99 && !in_radiation) { // soliton
+            i_ref = cnt;
+            E_ref = E_2ip1;
+            ampmodfreq[3*cnt] = E_2i; // reference level is added later
+        } else { // radiation
+            ampmodfreq[3*cnt] = 0.5*(E_2ip1 - E_2i);
+            in_radiation = 1;
+        }
+        ampmodfreq[3*cnt+2] = 0.5*(E_2ip1 + E_2i); // needed for nonlinear frequencies (below)
+        cnt++;
+    }
+
+    // finalize the soliton amplitudes
+    if (E_ref < FNFT_INF) {
+        for (i=0; i<=i_ref; i++)
+            ampmodfreq[3*i] = 2*(E_ref - ampmodfreq[3*i]);
+    }
+
+    // finalize the nonlinear frequencies, see Eqs. A.2 and A.3 in Bruehl et al,
+    // Wave Motion 111 (2022), https://doi.org/10.1016/j.wavemoti.2022.102905
+    for (i=0; i<cnt; i++) {
+        const REAL E_bar = ampmodfreq[3*i+2] - E_ref;
+        if (E_bar < 0)
+            ampmodfreq[3*i+2] = -SQRT(-E_bar);
+        else
+            ampmodfreq[3*i+2] = SQRT(E_bar);
+    }
+
+    *K_ptr = cnt;
+
+    return SUCCESS;
+}
+
+/**
+ * Converts a main spectrum im EDGEPOINTS_AND_SIGNS format as returned by fnft_kdvp into open bands.
+ */
+INT fnft_kdvp_openbands(UINT * const K_ptr, REAL const * const main_spec, REAL * const open_bands)
+{
+    if (K_ptr == NULL)
+        return E_INVALID_ARGUMENT(K_ptr);
+    if (main_spec == NULL)
+        return E_INVALID_ARGUMENT(main_spec);
+    if (open_bands == NULL)
+        return E_INVALID_ARGUMENT(open_bands);
+
+    const UINT K = *K_ptr;
+    UINT i = 0, N_bands = 0;
+
+    for (i=1; i<K; i++) {
+        if (main_spec[2*i-1] == main_spec[2*i+1]) { // same signs s => open band
+            const REAL left_edge = main_spec[2*i-2];
+            const REAL right_edge = main_spec[2*i];
+            open_bands[2*N_bands] = left_edge;
+            open_bands[2*N_bands+1] = right_edge;
+            N_bands++;
+            i++; // required when a tiny band on the opposite side is missed
+        }
+    }
+
+    *K_ptr = N_bands;
+    return SUCCESS;
+}
+
+/**
  * Nonlinear Fourier transform for the Korteweg-de Vries
  * equation with periodic boundary conditions.
  */
@@ -321,7 +415,7 @@ INT fnft_kdvp(  const UINT D,
     const INT normalization_flag = opts_ptr->normalization_flag;
     const INT keep_degenerate_flag = opts_ptr->keep_degenerate_flag;
     INT * const W_ptr = (normalization_flag) ? &W : NULL;
-    UINT K = 0, M = 0, N_bands = 0;
+    UINT K = 0, M = 0;
     UINT i = 0;
     INT ret_code = SUCCESS;
 
@@ -521,67 +615,15 @@ INT fnft_kdvp(  const UINT D,
             break;
 
         case kdvp_mstype_OPENBANDS:
-            for (i=1; i<K; i++) {
-                if (main_spec[2*i-1] == main_spec[2*i+1]) { // same signs s => open band
-                    const REAL left_edge = main_spec[2*i-2];
-                    const REAL right_edge = main_spec[2*i];
-                    main_spec[2*N_bands] = left_edge;
-                    main_spec[2*N_bands+1] = right_edge;
-                    N_bands++;
-                    i++; // required when a tiny band on the opposite side is missed
-                }
-            }
-
-            *K_ptr = N_bands;
+            *K_ptr = K;
+            ret_code = fnft_kdvp_openbands(K_ptr, main_spec, main_spec);
+            CHECK_RETCODE(ret_code, leave_fun)
             break;
 
         case kdvp_mstype_AMPLITUDES_MODULI_FREQS:
-            if (K < 3) { // nothing to do
-                *K_ptr = 0;
-                break;
-            }
-
-            // replace main spectrum points E_i with amplitudes and signs with moduli
-            UINT cnt = 0;
-            UINT i_ref = 0;
-            REAL E_ref = FNFT_INF; // reference level
-            INT in_radiation = 0; // flag to signal that we reached the radiation
-                                  // part of the nonlinear spectrum
-            for (i=1; i<K-1; i+=2) {
-                const REAL E_2i = main_spec[2*i];
-                const REAL E_2ip1 = main_spec[2*(i+1)];
-                const REAL E_2im1 = main_spec[2*(i-1)];
-                const REAL modulus = (E_2ip1 - E_2i)/(E_2ip1 - E_2im1);
-                main_spec[3*cnt+1] = modulus;
-                if (modulus >= 0.99 && !in_radiation) { // soliton
-                    i_ref = cnt;
-                    E_ref = E_2ip1;
-                    main_spec[3*cnt] = E_2i; // reference level is added later
-                } else { // radiation
-                    main_spec[3*cnt] = 0.5*(E_2ip1 - E_2i);
-                    in_radiation = 1;
-                }
-                main_spec[3*cnt+2] = 0.5*(E_2ip1 + E_2i); // needed for nonlinear frequencies (below)
-                cnt++;
-            }
-
-            // finalize the soliton amplitudes
-            if (E_ref < FNFT_INF) {
-                for (i=0; i<=i_ref; i++)
-                    main_spec[3*i] = 2*(E_ref - main_spec[3*i]);
-            }
-
-            // finalize the nonlinear frequencies, see Eqs. A.2 and A.3 in Bruehl et al,
-            // Wave Motion 111 (2022), https://doi.org/10.1016/j.wavemoti.2022.102905
-            for (i=0; i<cnt; i++) {
-                const REAL E_bar = main_spec[3*i+2] - E_ref;
-                if (E_bar < 0)
-                    main_spec[3*i+2] = -SQRT(-E_bar);
-                else
-                    main_spec[3*i+2] = SQRT(E_bar);
-            }
-
-            *K_ptr = cnt;
+            *K_ptr = K;
+            ret_code = fnft_kdvp_ampmodfreq(K_ptr, main_spec, main_spec);
+            CHECK_RETCODE(ret_code, leave_fun)
             break;
 
         default:
@@ -594,3 +636,5 @@ leave_fun:
     free(r);
     return ret_code;
 }
+
+
