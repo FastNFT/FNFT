@@ -59,6 +59,14 @@ FNFT_INT fnft_kdvp( const FNFT_UINT D,
                     FNFT_REAL * const sheet_indices,
                     fnft_kdvp_opts_t * opts_ptr);
 
+FNFT_INT fnft_kdvp_ampmodfreq( FNFT_UINT * const K_ptr,
+                               FNFT_REAL const * const main_spec,
+                               FNFT_REAL * const ampmodfreq);
+
+FNFT_INT fnft_kdvp_openbands( FNFT_UINT * const K_ptr,
+                              FNFT_REAL const * const main_spec,
+                              FNFT_REAL * const openbands);
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define kdvp_mstype_FLOQUET fnft_kdvp_mstype_FLOQUET
 #define kdvp_mstype_EDGEPOINTS_AND_SIGNS fnft_kdvp_mstype_EDGEPOINTS_AND_SIGNS

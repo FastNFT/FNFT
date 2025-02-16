@@ -13,7 +13,7 @@
 % along with this program. If not, see <http://www.gnu.org/licenses/>.
 %
 % Contributors:
-% Sander Wahls (KIT) 2023.
+% Sander Wahls (KIT) 2023, 2025.
 
 %% Periodic nonlinear Fourier transform of a Korteweg-de Vries soliton
 
@@ -61,8 +61,8 @@ grid_spacing = 0.001;   % Max. allowed distance between consecutive grid
 [floq_det, al21] = mex_fnft_kdvp(q, [0 L], E, 'mstype_floquet', R);
 [main_spec, aux_spec, sheet_idx] = ...
                    mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing, 'keep_degenerate');
-bands =            mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing, 'mstype_openbands');
-ampmodfreq =       mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing, 'mstype_amplitudes_moduli_freqs');
+bands =            mex_fnft_kdvp_openbands(main_spec);
+ampmodfreq =       mex_fnft_kdvp_ampmodfreq(main_spec);
 
 %% Compute the soliton amplitudes
 
