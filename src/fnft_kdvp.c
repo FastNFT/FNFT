@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (KIT) 2023.
+ * Sander Wahls (KIT) 2023, 2025.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -23,7 +23,6 @@
 #include "fnft__kdv_scatter.h"
 
 static fnft_kdvp_opts_t default_opts = {
-    .mainspec_type = kdvp_mstype_EDGEPOINTS_AND_SIGNS,
     .normalization_flag = 1,
     .keep_degenerate_flag = 0,
     .discretization = kdv_discretization_BO,
@@ -366,6 +365,74 @@ INT fnft_kdvp_openbands(UINT * const K_ptr, REAL const * const main_spec, REAL *
 }
 
 /**
+ * Compute the Floquet discriminant Delta(E) and alpha_21(E) underlying the nonlinear Fourier transform
+ * for the Korteweg-de Vries equation with periodic boundary conditions.
+ */
+INT fnft_kdvp_floquet(  const UINT D,
+                COMPLEX * const q,
+                REAL const * const T,
+                REAL * const E,
+                const UINT L,
+                REAL * const DEL, 
+                REAL * const al21,
+                fnft_kdvp_opts_t * opts_ptr)
+{
+    if (D < 2)
+        return E_INVALID_ARGUMENT(D);
+    if (q == NULL)
+        return E_INVALID_ARGUMENT(q);
+    if (T == NULL || T[0] >= T[1])
+        return E_INVALID_ARGUMENT(T);
+    if (E == NULL || E[0] >= E[1])
+        return E_INVALID_ARGUMENT(E);
+    if (DEL == NULL)
+        return E_INVALID_ARGUMENT(main_spec);
+    if (al21 == NULL)
+        return E_INVALID_ARGUMENT(aux_spec); 
+    if (opts_ptr == NULL)
+        opts_ptr = &default_opts;
+
+    COMPLEX * r = NULL;
+    REAL Ei = 0;
+    LogNumber DEL_LN = {0};
+    REAL al21n = 0;
+    INT W = 0;
+    INT * const W_ptr = (opts_ptr->normalization_flag) ? &W : NULL;
+    UINT i = 0;
+    INT ret_code = SUCCESS;
+
+    r = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(r, ret_code, leave_fun);
+
+    for (i=0; i<D; i++)
+        r[i] = -1;
+
+    const REAL eps_t = (T[1] - T[0])/D;
+    const REAL eps_E = (E[1] - E[0])/(L - 1);
+
+    // Note that kdv_scatter_matrix currently fails at E=0 because a transformation matrix becomes singular at this point.
+    // We just put NANs (not a problem for plotting).
+
+    const REAL close_to_zero = sqrt(EPSILON) < 0.49*eps_E ? sqrt(EPSILON) : 0.49*eps_E; // threshold to identify when we
+                                                                                        // are problematically close to E=0
+    
+    for (i=0; i<L; i++) {
+        Ei = E[0] + i*eps_E;
+        if (FABS(Ei) >= close_to_zero) {
+            ret_code = compute_DEL_and_al21(D, q, r, eps_t, Ei, &DEL[i], &DEL_LN, &al21[i], &al21n, W_ptr, opts_ptr);
+            CHECK_RETCODE(ret_code, leave_fun);
+        } else {
+            DEL[i] = NAN;
+            al21[i] = NAN;
+        }
+    }
+
+leave_fun:
+    free(r);
+    return ret_code;
+}
+
+/**
  * Nonlinear Fourier transform for the Korteweg-de Vries
  * equation with periodic boundary conditions.
  */
@@ -398,10 +465,8 @@ INT fnft_kdvp(  const UINT D,
         return E_INVALID_ARGUMENT(aux_spec); 
     if (opts_ptr == NULL)
         opts_ptr = &default_opts;
-    if (opts_ptr->mainspec_type != kdvp_mstype_FLOQUET && opts_ptr->grid_spacing <= 0)
+    if (opts_ptr->grid_spacing <= 0)
         return E_INVALID_ARGUMENT(opts_ptr->grid_spacing);
-    if (opts_ptr->mainspec_type == kdvp_mstype_FLOQUET && *K_ptr != *M_ptr)
-        return E_INVALID_ARGUMENT(*K_ptr != *M_ptr for mainspec_type FLOQUET);
     if (opts_ptr->discretization != kdv_discretization_BO && opts_ptr->discretization != kdv_discretization_BO_VANILLA)
         return E_NOT_YET_IMPLEMENTED(opts_ptr->discretization, Use the BO or BO_VANILLA discretizations);
 
@@ -428,7 +493,7 @@ INT fnft_kdvp(  const UINT D,
     for (i=0; i<D; i++)
         r[i] = -1;
 
-    const UINT L = (opts_ptr->mainspec_type == kdvp_mstype_FLOQUET) ? *K_ptr : CEIL((E[1] - E[0]) / opts_ptr->grid_spacing);
+    const UINT L = CEIL((E[1] - E[0]) / opts_ptr->grid_spacing);
     const REAL eps_t = (T[1] - T[0])/D;
     const REAL eps_E = (E[1] - E[0])/(L - 1);
 
@@ -439,201 +504,162 @@ INT fnft_kdvp(  const UINT D,
     const REAL close_to_zero = sqrt(EPSILON) < 0.49*eps_E ? sqrt(EPSILON) : 0.49*eps_E; // threshold to identify when we
                                                                                         // are problematically close to E=0
     
-    if (opts_ptr->mainspec_type == kdvp_mstype_FLOQUET) { // implies auxspec_type == ALPHA21
-                                                          
-        for (i=0; i<L; i++) {
-            Ei = E[0] + i*eps_E;
-            if (FABS(Ei) >= close_to_zero) {
-                ret_code = compute_DEL_and_al21(D, q, r, eps_t, Ei, &main_spec[i], &DEL_LN, &aux_spec[i], &al21n, W_ptr, opts_ptr);
-                CHECK_RETCODE(ret_code, leave_fun);
-            } else {
-                main_spec[i] = NAN;
-                aux_spec[i] = NAN;
-            }
-        }
+    UINT i0 = 0;
+    Ei_prev = E[0];
+    if (FABS(Ei_prev) < close_to_zero) {
+        Ei_prev = E[0] + eps_E;
+        i0 = 1;
+    }
+    ret_code = compute_DEL_and_al21(D, q, r, eps_t, Ei_prev, &DEL_prev, &DEL_prev_LN, &al21_prev, &al21n_prev, W_ptr, opts_ptr);
+    CHECK_RETCODE(ret_code, leave_fun);
 
-    } else {
+    for (i=i0; i<L; i++) {
+        Ei = E[0] + i*eps_E;
+        if (FABS(Ei) < close_to_zero)
+            continue;
 
-        UINT i0 = 0;
-        Ei_prev = E[0];
-        if (FABS(Ei_prev) < close_to_zero) {
-            Ei_prev = E[0] + eps_E;
-            i0 = 1;
-        }
-        ret_code = compute_DEL_and_al21(D, q, r, eps_t, Ei_prev, &DEL_prev, &DEL_prev_LN, &al21_prev, &al21n_prev, W_ptr, opts_ptr);
+        ret_code = compute_DEL_and_al21(D, q, r, eps_t, Ei, &DEL, &DEL_LN, &al21, &al21n, W_ptr, opts_ptr);
         CHECK_RETCODE(ret_code, leave_fun);
 
-        for (i=i0; i<L; i++) {
-            Ei = E[0] + i*eps_E;
-            if (FABS(Ei) < close_to_zero)
-                continue;
+        /* Auxiliary spectrum */
 
-            ret_code = compute_DEL_and_al21(D, q, r, eps_t, Ei, &DEL, &DEL_LN, &al21, &al21n, W_ptr, opts_ptr);
+        // Note that the normalized al21 always has a zero at E=0 because
+        // it does not have the I/k term (it's in al21). However, since we are
+        // skipping E=0 anyways, this does not create a spurious aux spectrum point.
+        const INT found_auxspec_flag = aux_spec_flag && al21n_prev*al21n < 0;
+        if (found_auxspec_flag) { // zero-crossing detected
+            if (M>=*M_ptr) {
+                ret_code = E_OTHER("Found more than *M_ptr auxiliary spectrum points found. Increase *M_ptr and try again.")
+                goto leave_fun;
+            }
+
+            // regula falsi for al21
+            aux_spec[M] = (Ei_prev*al21 - Ei*al21_prev)/(al21 - al21_prev);
+           
+            ret_code = refine_auxspec(D, q, r, eps_t, Ei_prev, Ei, &aux_spec[M], W_ptr, opts_ptr);
             CHECK_RETCODE(ret_code, leave_fun);
 
-            /* Auxiliary spectrum */
-
-            // Note that the normalized al21 always has a zero at E=0 because
-            // it does not have the I/k term (it's in al21). However, since we are
-            // skipping E=0 anyways, this does not create a spurious aux spectrum point.
-            const INT found_auxspec_flag = aux_spec_flag && al21n_prev*al21n < 0;
-            if (found_auxspec_flag) { // zero-crossing detected
-                if (M>=*M_ptr) {
-                    ret_code = E_OTHER("Found more than *M_ptr auxiliary spectrum points found. Increase *M_ptr and try again.")
-                    goto leave_fun;
-                }
-
-                // regula falsi for al21
-                aux_spec[M] = (Ei_prev*al21 - Ei*al21_prev)/(al21 - al21_prev);
-               
-                ret_code = refine_auxspec(D, q, r, eps_t, Ei_prev, Ei, &aux_spec[M], W_ptr, opts_ptr);
+            if (sheet_indices_flag) {
+                ret_code = compute_sheet_index(D, q, r, eps_t, aux_spec[M], &sheet_indices[M], W_ptr, opts_ptr);
                 CHECK_RETCODE(ret_code, leave_fun);
-
-                if (sheet_indices_flag) {
-                    ret_code = compute_sheet_index(D, q, r, eps_t, aux_spec[M], &sheet_indices[M], W_ptr, opts_ptr);
-                    CHECK_RETCODE(ret_code, leave_fun);
-                }
-
-
-                M++;
-            }
- 
-            /* Main spectrum */
-
-            // Check if Delta(Ei) crossed +/-1.
-            REAL s = 0;
-            if (!normalization_flag) { // compare in the linear domain
-                if (DEL_prev<=-1 && DEL>=1)
-                    s = 2; // two edge points with delta increasing
-                else if (DEL_prev>=1 && DEL<=-1)
-                    s = -2; // two edge points with delta decreasing
-                else if ((DEL_prev<=1 && DEL>=1) || (DEL_prev>=1 && DEL<=1))
-                    s = 1; // one edge point s.t. delta=1
-                else if ((DEL_prev>=-1 && DEL<=-1) || (DEL_prev<=-1 && DEL>=-1))
-                    s = -1; // one edge point s.t. delta=-1
-            } else { // compare in the logarithmic domain
-                if (ltm1(DEL_prev_LN) && gt1(DEL_LN))
-                    s = 2; // two edge points with delta increasing
-                else if (gt1(DEL_prev_LN) && ltm1(DEL_LN))              
-                    s = -2; // two edge points with delta decreasing
-                else if ((lt1(DEL_prev_LN) && gt1(DEL_LN)) || (gt1(DEL_prev_LN) && lt1(DEL_LN)))
-                    s = 1; // one edge point s.t. delta=1
-                else if ((gtm1(DEL_prev_LN) && ltm1(DEL_LN)) || (ltm1(DEL_prev_LN) && gtm1(DEL_LN)))
-                    s = -1; // one edge point s.t. delta=-1
             }
 
-            // Process zero-crossings
-            if (s == 2 || s == -2) { // two edge points between two grid points
-                if (K+1>=*K_ptr) {
-                    ret_code = E_OTHER("Found more than *K_ptr main spectrum points. Increase *K_ptr and try again.")
-                    goto leave_fun;
-                }
 
-                // regula falsi for DEL-j with j=-1,1; the "-j" terms in the denominator cancel
-                for (INT j=-1; j<=1; j+=2) {
-                    main_spec[2*K] = (Ei_prev*(DEL-j) - Ei*(DEL_prev-j))/(DEL - DEL_prev);
-                    main_spec[2*K+1] = j;
+            M++;
+        }
 
-                    ret_code = refine_mainspec(D, q, r, eps_t, Ei_prev, Ei, &main_spec[2*K], j, W_ptr, opts_ptr);
-                    CHECK_RETCODE(ret_code, leave_fun);
+        /* Main spectrum */
 
-                    K++;
-                }
+        // Check if Delta(Ei) crossed +/-1.
+        REAL s = 0;
+        if (!normalization_flag) { // compare in the linear domain
+            if (DEL_prev<=-1 && DEL>=1)
+                s = 2; // two edge points with delta increasing
+            else if (DEL_prev>=1 && DEL<=-1)
+                s = -2; // two edge points with delta decreasing
+            else if ((DEL_prev<=1 && DEL>=1) || (DEL_prev>=1 && DEL<=1))
+                s = 1; // one edge point s.t. delta=1
+            else if ((DEL_prev>=-1 && DEL<=-1) || (DEL_prev<=-1 && DEL>=-1))
+                s = -1; // one edge point s.t. delta=-1
+        } else { // compare in the logarithmic domain
+            if (ltm1(DEL_prev_LN) && gt1(DEL_LN))
+                s = 2; // two edge points with delta increasing
+            else if (gt1(DEL_prev_LN) && ltm1(DEL_LN))              
+                s = -2; // two edge points with delta decreasing
+            else if ((lt1(DEL_prev_LN) && gt1(DEL_LN)) || (gt1(DEL_prev_LN) && lt1(DEL_LN)))
+                s = 1; // one edge point s.t. delta=1
+            else if ((gtm1(DEL_prev_LN) && ltm1(DEL_LN)) || (ltm1(DEL_prev_LN) && gtm1(DEL_LN)))
+                s = -1; // one edge point s.t. delta=-1
+        }
 
-                // fix ordering if necessary
-                if (s == -2) {
-                    REAL tmp = main_spec[2*(K-2)];
-                    main_spec[2*(K-2)] = main_spec[2*(K-1)];
-                    main_spec[2*(K-1)] = tmp;
-                    tmp = main_spec[2*(K-2)+1];
-                    main_spec[2*(K-2)+1] = main_spec[2*(K-1)+1];
-                    main_spec[2*(K-1)+1] = tmp;
-                }
+        // Process zero-crossings
+        if (s == 2 || s == -2) { // two edge points between two grid points
+            if (K+1>=*K_ptr) {
+                ret_code = E_OTHER("Found more than *K_ptr main spectrum points. Increase *K_ptr and try again.")
+                goto leave_fun;
+            }
 
-            } else if (s == 1 || s == -1) { // one edge point between two grid points
-                if (K>=*K_ptr) {
-                    ret_code = E_OTHER("More than *K_ptr initial guesses for bound states found. Increase *K_ptr and try again.")
-                    goto leave_fun;
-                }
+            // regula falsi for DEL-j with j=-1,1; the "-j" terms in the denominator cancel
+            for (INT j=-1; j<=1; j+=2) {
+                main_spec[2*K] = (Ei_prev*(DEL-j) - Ei*(DEL_prev-j))/(DEL - DEL_prev);
+                main_spec[2*K+1] = j;
 
-                // regula falsi for DEL-s, the "-s" terms in the denominator cancel
-                main_spec[2*K] = (Ei_prev*(DEL-s) - Ei*(DEL_prev-s))/(DEL - DEL_prev);
-                main_spec[2*K+1] = s;
-
-                ret_code = refine_mainspec(D, q, r, eps_t, Ei_prev, Ei, &main_spec[2*K], s, W_ptr, opts_ptr);
+                ret_code = refine_mainspec(D, q, r, eps_t, Ei_prev, Ei, &main_spec[2*K], j, W_ptr, opts_ptr);
                 CHECK_RETCODE(ret_code, leave_fun);
 
                 K++;
             }
 
-            // If no zero-crossings for Delta(E) +/- 1 were found, there could still be a pair of co-located
-            // degenerate eigenvalues at which Delta(E) just touches, but does not cross, +/- 1. Such cases
-            // are indicated by a co-located auxiliary spectrum point at seems to be not in an open band.
-            // This is what we check next.
-            
-            INT in_open_band_flag;
-            if (!normalization_flag)
-                in_open_band_flag = !((DEL_prev >= -1 && DEL_prev <= 1) && (DEL >= -1 && DEL <= 1));
-            else
-                in_open_band_flag = !((gtm1(DEL_prev_LN) && lt1(DEL_prev_LN)) && (gtm1(DEL_LN) && lt1(DEL_LN)));
-
-            if (!in_open_band_flag && found_auxspec_flag) { // looks as if we missed a pair of degenerate
-                                                            // main spectrum points
-                if (keep_degenerate_flag) {
-                    if (K+1>=*K_ptr) {
-                        ret_code = E_OTHER("More than *K_ptr initial guesses for bound states found. Increase *K_ptr and try again.")
-                        goto leave_fun;
-                    }
-                
-                    if (!normalization_flag)
-                        s = get_sign(DEL);
-                    else
-                        s = DEL_LN.sign;
-                
-                    main_spec[2*K] = aux_spec[M-1];
-                    main_spec[2*K+1] = s;
-                    K++;
-
-                    main_spec[2*K] = aux_spec[M-1];
-                    main_spec[2*K+1] = s;
-                    K++;
-                } else {
-                    M--;
-                }
+            // fix ordering if necessary
+            if (s == -2) {
+                REAL tmp = main_spec[2*(K-2)];
+                main_spec[2*(K-2)] = main_spec[2*(K-1)];
+                main_spec[2*(K-1)] = tmp;
+                tmp = main_spec[2*(K-2)+1];
+                main_spec[2*(K-2)+1] = main_spec[2*(K-1)+1];
+                main_spec[2*(K-1)+1] = tmp;
             }
 
-            Ei_prev = Ei;
-            DEL_prev = DEL;
-            DEL_prev_LN = DEL_LN;
-            al21_prev = al21;
-            al21n_prev = al21n;
+        } else if (s == 1 || s == -1) { // one edge point between two grid points
+            if (K>=*K_ptr) {
+                ret_code = E_OTHER("More than *K_ptr initial guesses for bound states found. Increase *K_ptr and try again.")
+                goto leave_fun;
+            }
+
+            // regula falsi for DEL-s, the "-s" terms in the denominator cancel
+            main_spec[2*K] = (Ei_prev*(DEL-s) - Ei*(DEL_prev-s))/(DEL - DEL_prev);
+            main_spec[2*K+1] = s;
+
+            ret_code = refine_mainspec(D, q, r, eps_t, Ei_prev, Ei, &main_spec[2*K], s, W_ptr, opts_ptr);
+            CHECK_RETCODE(ret_code, leave_fun);
+
+            K++;
         }
-        *M_ptr = M;
 
-        /* Change representation of the main spectrum if requested by the user. */
+        // If no zero-crossings for Delta(E) +/- 1 were found, there could still be a pair of co-located
+        // degenerate eigenvalues at which Delta(E) just touches, but does not cross, +/- 1. Such cases
+        // are indicated by a co-located auxiliary spectrum point at seems to be not in an open band.
+        // This is what we check next.
+        
+        INT in_open_band_flag;
+        if (!normalization_flag)
+            in_open_band_flag = !((DEL_prev >= -1 && DEL_prev <= 1) && (DEL >= -1 && DEL <= 1));
+        else
+            in_open_band_flag = !((gtm1(DEL_prev_LN) && lt1(DEL_prev_LN)) && (gtm1(DEL_LN) && lt1(DEL_LN)));
 
-        switch (opts_ptr->mainspec_type) {
-        case kdvp_mstype_EDGEPOINTS_AND_SIGNS:
-            *K_ptr = K; // no changes, this is what we computed above
-            break;
+        if (!in_open_band_flag && found_auxspec_flag) { // looks as if we missed a pair of degenerate
+                                                        // main spectrum points
+            if (keep_degenerate_flag) {
+                if (K+1>=*K_ptr) {
+                    ret_code = E_OTHER("More than *K_ptr initial guesses for bound states found. Increase *K_ptr and try again.")
+                    goto leave_fun;
+                }
+            
+                if (!normalization_flag)
+                    s = get_sign(DEL);
+                else
+                    s = DEL_LN.sign;
+            
+                main_spec[2*K] = aux_spec[M-1];
+                main_spec[2*K+1] = s;
+                K++;
 
-        case kdvp_mstype_OPENBANDS:
-            *K_ptr = K;
-            ret_code = fnft_kdvp_openbands(K_ptr, main_spec, main_spec);
-            CHECK_RETCODE(ret_code, leave_fun)
-            break;
-
-        case kdvp_mstype_AMPLITUDES_MODULI_FREQS:
-            *K_ptr = K;
-            ret_code = fnft_kdvp_ampmodfreq(K_ptr, main_spec, main_spec);
-            CHECK_RETCODE(ret_code, leave_fun)
-            break;
-
-        default:
-            ret_code = E_INVALID_ARGUMENT(opts_ptr->mainspec_type);
-            goto leave_fun;
+                main_spec[2*K] = aux_spec[M-1];
+                main_spec[2*K+1] = s;
+                K++;
+            } else {
+                M--;
+            }
         }
+
+        Ei_prev = Ei;
+        DEL_prev = DEL;
+        DEL_prev_LN = DEL_LN;
+        al21_prev = al21;
+        al21n_prev = al21n;
     }
+    *M_ptr = M;
+    *K_ptr = K;
 
 leave_fun:
     free(r);

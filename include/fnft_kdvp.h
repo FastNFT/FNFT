@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (KIT) 2023.
+* Sander Wahls (KIT) 2023, 2025.
 */
 
 /**
@@ -29,15 +29,7 @@
 
 #include "fnft__kdv_discretization.h"
 
-typedef enum {
-    fnft_kdvp_mstype_FLOQUET,
-    fnft_kdvp_mstype_EDGEPOINTS_AND_SIGNS,
-    fnft_kdvp_mstype_OPENBANDS,
-    fnft_kdvp_mstype_AMPLITUDES_MODULI_FREQS
-} fnft_kdvp_mstype_t;
-
 typedef struct {
-    fnft_kdvp_mstype_t mainspec_type;
     FNFT_INT normalization_flag;
     FNFT_INT keep_degenerate_flag;
     fnft_kdv_discretization_t discretization;
@@ -59,6 +51,15 @@ FNFT_INT fnft_kdvp( const FNFT_UINT D,
                     FNFT_REAL * const sheet_indices,
                     fnft_kdvp_opts_t * opts_ptr);
 
+FNFT_INT fnft_kdvp_floquet( const FNFT_UINT D,
+                            FNFT_COMPLEX * const q,
+                            FNFT_REAL const * const T,
+                            FNFT_REAL * const E,
+                            const FNFT_UINT L,
+                            FNFT_REAL * const DEL, 
+                            FNFT_REAL * const al21,
+                            fnft_kdvp_opts_t * opts_ptr);
+
 FNFT_INT fnft_kdvp_ampmodfreq( FNFT_UINT * const K_ptr,
                                FNFT_REAL const * const main_spec,
                                FNFT_REAL * const ampmodfreq);
@@ -66,13 +67,5 @@ FNFT_INT fnft_kdvp_ampmodfreq( FNFT_UINT * const K_ptr,
 FNFT_INT fnft_kdvp_openbands( FNFT_UINT * const K_ptr,
                               FNFT_REAL const * const main_spec,
                               FNFT_REAL * const openbands);
-
-#ifdef FNFT_ENABLE_SHORT_NAMES
-#define kdvp_mstype_FLOQUET fnft_kdvp_mstype_FLOQUET
-#define kdvp_mstype_EDGEPOINTS_AND_SIGNS fnft_kdvp_mstype_EDGEPOINTS_AND_SIGNS
-#define kdvp_mstype_OPENBANDS fnft_kdvp_mstype_OPENBANDS
-#define kdvp_mstype_AMPLITUDES_MODULI_FREQS fnft_kdvp_mstype_AMPLITUDES_MODULI_FREQS
-#endif
-
 
 #endif

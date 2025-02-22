@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (KIT) 2023.
+ * Sander Wahls (KIT) 2023, 2025.
  **/
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -97,18 +97,16 @@ static INT run_test(const UINT D, const REAL err_bounds[3])
         goto leave_fun;
     }
 
-    opts.mainspec_type = kdvp_mstype_AMPLITUDES_MODULI_FREQS;
-    K = D;
-    M = D;
-    ret_code = fnft_kdvp(D, q, X, E, &K, main_spec, &M, aux_spec, NULL/*sheet_indices*/, &opts);
+    REAL ampmodfreq[3];
+    ret_code = fnft_kdvp_ampmodfreq(&K, main_spec, ampmodfreq);
     CHECK_RETCODE(ret_code, leave_fun);
 
     if (K != 1) {
         ret_code = E_TEST_FAILED;
         goto leave_fun;
     }
-    const REAL A = main_spec[0];
-    const REAL m = main_spec[1];
+    const REAL A = ampmodfreq[0];
+    const REAL m = ampmodfreq[1];
 
     err = FABS(A - lam*u1)/FABS(A);
 #ifdef DEBUG
@@ -128,7 +126,6 @@ static INT run_test(const UINT D, const REAL err_bounds[3])
     }
 
     // Reconstruct q[i] sample by sample using Eq. 13 (and run some tests)
-    opts.mainspec_type = kdvp_mstype_EDGEPOINTS_AND_SIGNS;
     for (UINT i=0; i<D; i++) {
 
         K = D;

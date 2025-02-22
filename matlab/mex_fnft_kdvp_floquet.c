@@ -34,8 +34,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     FNFT_REAL * E;
     FNFT_UINT i;
     FNFT_INT k;
-    FNFT_UINT K = 0, M = 0;
-    FNFT_REAL * main_spec, * aux_spec, * sheet_indices;
+    FNFT_UINT L;
+    FNFT_REAL * DEL, * al21;
     double *re;
     char msg[128]; // buffer for error messages
     fnft_kdvp_opts_t opts;
@@ -54,6 +54,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     D = mxGetNumberOfElements(prhs[0]);
     T = mxGetPr(prhs[1]);
     E = mxGetPr(prhs[2]);
+    L = D;
 
     /* Check values of first four inputs */
 
@@ -89,71 +90,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
 
         /* Try to interpret value of string input */
-        if ( strcmp(str, "grid_spacing") == 0 ) {
+        if ( strcmp(str, "L") == 0 ) {
 
-            /* Extract desired number of iterations */
             if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
-            || mxGetNumberOfElements(prhs[k+1]) != 1
-                    || mxGetScalar(prhs[k+1]) <= 0.0 ) {
-                snprintf(msg, sizeof msg, "'grid_spacing' should be followed by a positive real scalar.");
+                 || mxGetNumberOfElements(prhs[k+1]) != 1
+                 || mxGetScalar(prhs[k+1]) < 0.0 ) {
+                snprintf(msg, sizeof msg, "'L' should be followed by a non-negative real scalar.");
                 goto on_error;
             }
-            opts.grid_spacing = (FNFT_REAL)mxGetScalar(prhs[k+1]);
-
-            /* Increase k to account for the passed value */
+            L = (FNFT_UINT)mxGetScalar(prhs[k+1]);
             k++;
-
-        } else if ( strcmp(str, "niter") == 0 ) {
-            
-            /* Extract desired number of iterations */
-            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
-            || mxGetNumberOfElements(prhs[k+1]) != 1
-                    || mxGetScalar(prhs[k+1]) < 0.0 ) {
-                snprintf(msg, sizeof msg, "'niter' should be followed by a non-negative real scalar.");
-                goto on_error;
-            }
-            opts.niter = (FNFT_UINT)mxGetScalar(prhs[k+1]);
-            
-            /* Increase k to account for vector of initial guesses */
-    	    k++;
-
-        } else if ( strcmp(str, "tol") == 0 ) {
-
-            /* Extract desired number of iterations */
-            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
-            || mxGetNumberOfElements(prhs[k+1]) != 1
-                    || mxGetScalar(prhs[k+1]) < 0.0 ) {
-                snprintf(msg, sizeof msg, "'tol' should be followed by a non-negative real scalar.");
-                goto on_error;
-            }
-            opts.tol = (FNFT_REAL)mxGetScalar(prhs[k+1]);
-
-            /* Increase k to account for vector of initial guesses */
-    	    k++;
 
         } else if ( strcmp(str, "skip_normalization") == 0 ) {
 
             opts.normalization_flag = 0;
-
-        } else if ( strcmp(str, "keep_degenerate") == 0 ) {
-
-            opts.keep_degenerate_flag = 1;
-
-        } else if ( strcmp(str, "spec_size") == 0 ) {
-            
-            /* Extract desired number of iterations */
-            if ( k+1 == nrhs || !mxIsDouble(prhs[k+1])
-            || mxGetNumberOfElements(prhs[k+1]) != 1
-                    || mxGetScalar(prhs[k+1]) < 0.0 ) {
-                snprintf(msg, sizeof msg, "'spec_size' should be followed by a non-negative real scalar.");
-                goto on_error;
-            }
-            K = (FNFT_UINT)mxGetScalar(prhs[k+1]);
-            M = K;
-            
-            /* Increase k to account for vector of initial guesses */
-    	    k++;
-
 
         } else if ( strcmp(str, "quiet") == 0 ) {
 
@@ -179,15 +129,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         goto on_error;
     }
 
-    if (M == 0)
-        M = D;
-    if (K == 0)
-        K = D;
-
-    main_spec = mxMalloc(2*K * sizeof(FNFT_REAL));
-    aux_spec = mxMalloc(M * sizeof(FNFT_REAL));
-    sheet_indices = mxMalloc(M * sizeof(FNFT_REAL));
-    if (main_spec == NULL || aux_spec == NULL || sheet_indices == NULL) {
+    DEL = mxMalloc(L * sizeof(FNFT_REAL));
+    al21 = mxMalloc(L * sizeof(FNFT_REAL));
+    if (DEL == NULL || al21 == NULL) {
         snprintf(msg, sizeof msg, "Out of memory.");
         goto on_error;
     }
@@ -200,40 +144,34 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     /* Call the C routine */
 
-    ret_code = fnft_kdvp(D, q, T, E, &K, main_spec, &M, aux_spec, sheet_indices, &opts);
+    ret_code = fnft_kdvp_floquet(D, q, T, E, L, DEL, al21, &opts);
     if (ret_code != FNFT_SUCCESS) {
-        snprintf(msg, sizeof msg, "fnft_kdvp failed (error code %i).",
+        snprintf(msg, sizeof msg, "fnft_kdvp_floquet failed (error code %i).",
                 ret_code);
         goto on_error;
     }
 
     /* Allocate memory for outputs and convert results */
 
-    plhs[0] = mxCreateDoubleMatrix(1, 2*K, mxREAL);
-    plhs[1] = mxCreateDoubleMatrix(1, M, mxREAL);
-    plhs[2] = mxCreateDoubleMatrix(1, M, mxREAL);
-    if (plhs[0] == NULL || plhs[1] == NULL || plhs[2] == NULL) {
+    plhs[0] = mxCreateDoubleMatrix(1, L, mxREAL);
+    plhs[1] = mxCreateDoubleMatrix(1, L, mxREAL);
+    if (plhs[0] == NULL || plhs[1] == NULL) {
         snprintf(msg, sizeof msg, "Out of memory.");
         goto on_error;
     }
  
     re = mxGetPr(plhs[0]);
-    for (i=0; i<2*K; i++)
-        re[i] = main_spec[i];
+    for (i=0; i<L; i++)
+        re[i] = DEL[i];
 
     re = mxGetPr(plhs[1]);
-    for (i=0; i<M; i++)
-        re[i] = aux_spec[i];
-
-    re = mxGetPr(plhs[2]);
-    for (i=0; i<M; i++)
-        re[i] = sheet_indices[i];
+    for (i=0; i<L; i++)
+        re[i] = al21[i];
 
     /* Free memory that is no longer needed */
 
-    mxFree(main_spec);
-    mxFree(aux_spec);
-    mxFree(sheet_indices);
+    mxFree(DEL);
+    mxFree(al21);
     mxFree(q);
     return;
 

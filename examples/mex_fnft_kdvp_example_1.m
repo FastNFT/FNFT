@@ -33,7 +33,7 @@ close all
 g = 981;    % Gravity [cm/s^2]
 h = 5;      % Water depth [cm]
 u1 = 4;     % Soliton amplitude [cm]
-L = 100;    % Period [cm]
+P = 100;    % Period [cm]
 
 %% Compute KdV and normalization parameters (Page 27 of the paper)
 
@@ -45,24 +45,24 @@ lam = al/(6*be);
 %% Generate the signal (Eq. 52 in the paper)
 
 D = 256;                    % number of samples
-x = linspace(0, L, D+1);    % note the D+1
+x = linspace(0, P, D+1);    % note the D+1
 x = x(1:D);                 % exclude x=L because it already belongs to the
                             % next period
-L1 = sqrt(12*be/(al*u1));
-q = lam*u1*sech((x-L/2)/L1).^2;
+P1 = sqrt(12*be/(al*u1));
+q = lam*u1*sech((x-P/2)/P1).^2;
 
 %% Compute various representations of the nonlinear Fourier spectrum
 
 E = [-0.03 0.015];      % Spectral interval
-R = 1000;               % Number of grid points for the Floquet diagram
+L = 1000;               % Number of grid points for the Floquet diagram
 grid_spacing = 0.001;   % Max. allowed distance between consecutive grid
                         % points on the spectral interval
 
-[floq_det, al21] = mex_fnft_kdvp(q, [0 L], E, 'mstype_floquet', R);
 [main_spec, aux_spec, sheet_idx] = ...
-                   mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing, 'keep_degenerate');
+                   mex_fnft_kdvp(q, [0 P], E, 'grid_spacing', grid_spacing, 'keep_degenerate');
 bands =            mex_fnft_kdvp_openbands(main_spec);
 ampmodfreq =       mex_fnft_kdvp_ampmodfreq(main_spec);
+[floq_det, al21] = mex_fnft_kdvp_floquet(q, [0 P], E, 'L', L);
 
 %% Compute the soliton amplitudes
 
@@ -89,7 +89,7 @@ ix = abs(al21) > 1;
 al21_scaled = real(al21);
 al21_scaled(ix) = sign(real(al21(ix))).*(1+log(abs(al21(ix))));
 
-Es = linspace(E(1), E(2), R);
+Es = linspace(E(1), E(2), L);
 B = [bands(1:2:end) ; bands(2:2:end)];
 
 subplot(2,1,2)

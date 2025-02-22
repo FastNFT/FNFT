@@ -13,12 +13,12 @@
 % along with this program. If not, see <http://www.gnu.org/licenses/>.
 %
 % Contributors:
-% Sander Wahls (KIT) 2023.
+% Sander Wahls (KIT) 2023, 2025.
 
 %% Periodic nonlinear Fourier transform of the Zabusky-Kruskal signal
 
-% This example recreates the right panel of Figure 1 in the paper "Hidden 
-% solitons in the Zabusky–Kruskal experiment: Analysis using the periodic, 
+% This example recreates the right panel of Figure 1 in the paper "Hidden
+% solitons in the Zabusky–Kruskal experiment: Analysis using the periodic,
 % inverse scattering transform" by I.C. Christov, Math. Comput. Simul.
 % 82, 2012, 1069-1078, https://dx.doi.org/10.1016/j.matcom.2010.05.021
 %
@@ -30,7 +30,7 @@ close all
 
 %% Set parameters (page 1071 in the paper)
 
-del = 0.022;    % Nonlinearity parameter for the partly normalized KdV 
+del = 0.022;    % Nonlinearity parameter for the partly normalized KdV
 L = 2;          % Period [cm]
 
 %% Compute the parameters of the corresponding dimensional KdV equation (page 1071)
@@ -59,10 +59,11 @@ E = [-2000 2500];   % spectral interval
 grid_spacing = 1;   % Max. allowed distance between consecutive grid
                     % points on the spectral interval
 
-ampmodfreqs = mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing, 'mstype_amplitudes_moduli_freqs');
-A = ampmodfreqs(1:3:end)/(a*lam);    % amplitudes
-m = ampmodfreqs(2:3:end);            % moduli
-F = ampmodfreqs(3:3:end)/pi;         % nonlinear frequencies (not used here)
+[main_spec, aux_spec] = mex_fnft_kdvp(q, [0 L], E, 'grid_spacing', grid_spacing);
+ampmodfreq =            mex_fnft_kdvp_ampmodfreq(main_spec);
+A = ampmodfreq(1:3:end)/(a*lam);    % amplitudes
+m = ampmodfreq(2:3:end);            % moduli
+F = ampmodfreq(3:3:end)/pi;         % nonlinear frequencies (not used here)
 
 %% Recreate Fig. 1 (right panel) from the paper
 

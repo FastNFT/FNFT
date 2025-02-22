@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (KIT) 2023.
+ * Sander Wahls (KIT) 2023, 2025.
  **/
 
 /* The genus one solution of the KdV equation is passed to fnft_kdvp and the
