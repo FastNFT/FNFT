@@ -268,7 +268,7 @@ leave_fun:
 }
 
 /**
- * Converts a main spectrum im EDGEPOINTS_AND_SIGNS format as returned by fnft_kdvp into amplitudes, moduli and frequencies.
+ * Converts a main spectrum as returned by fnft_kdvp into amplitudes, moduli and frequencies.
  */
 INT fnft_kdvp_ampmodfreq(UINT * const K_ptr, REAL const * const main_spec, REAL * const ampmodfreq)
 {
@@ -334,7 +334,7 @@ INT fnft_kdvp_ampmodfreq(UINT * const K_ptr, REAL const * const main_spec, REAL 
 }
 
 /**
- * Converts a main spectrum im EDGEPOINTS_AND_SIGNS format as returned by fnft_kdvp into open bands.
+ * Converts a main spectrum as returned by fnft_kdvp into open bands.
  */
 INT fnft_kdvp_openbands(UINT * const K_ptr, REAL const * const main_spec, REAL * const open_bands)
 {
@@ -543,7 +543,6 @@ INT fnft_kdvp(  const UINT D,
                 ret_code = compute_sheet_index(D, q, r, eps_t, aux_spec[M], &sheet_indices[M], W_ptr, opts_ptr);
                 CHECK_RETCODE(ret_code, leave_fun);
             }
-
 
             M++;
         }
