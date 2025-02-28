@@ -297,8 +297,7 @@ INT fnft_kdvp_ampmodfreq(UINT * const K_ptr, REAL const * const main_spec, REAL 
         const REAL E_2ip1 = main_spec[2*(i+1)];
         const REAL E_2im1 = main_spec[2*(i-1)];
         const REAL modulus = (E_2ip1 - E_2i)/(E_2ip1 - E_2im1);
-        if (modulus == 0) // skip degenerate bands
-            break;
+
         ampmodfreq[3*cnt+1] = modulus;
         if (modulus >= 0.99 && !in_radiation) { // soliton
             i_ref = cnt;
@@ -321,11 +320,13 @@ INT fnft_kdvp_ampmodfreq(UINT * const K_ptr, REAL const * const main_spec, REAL 
     // finalize the nonlinear frequencies, see Eqs. A.2 and A.3 in Bruehl et al,
     // Wave Motion 111 (2022), https://doi.org/10.1016/j.wavemoti.2022.102905
     for (i=0; i<cnt; i++) {
-        const REAL E_bar = ampmodfreq[3*i+2] - E_ref;
+        REAL E_bar = ampmodfreq[3*i+2];
+        if (E_ref < FNFT_INF)
+            E_bar -= E_ref;
         if (E_bar < 0)
-            ampmodfreq[3*i+2] = -SQRT(-E_bar);
+            ampmodfreq[3*i+2] = -SQRT(-E_bar)/FNFT_PI;
         else
-            ampmodfreq[3*i+2] = SQRT(E_bar);
+            ampmodfreq[3*i+2] = SQRT(E_bar)/FNFT_PI;
     }
 
     *K_ptr = cnt;
