@@ -304,7 +304,12 @@ INT fnft_kdvp_ampmodfreq(UINT * const K_ptr, REAL const * const main_spec, REAL 
             E_ref = E_2ip1;
             ampmodfreq[3*cnt] = E_2i; // reference level is added later
         } else { // radiation
-            ampmodfreq[3*cnt] = 0.5*(E_2ip1 - E_2i);
+            ampmodfreq[3*cnt] = E_2ip1 - E_2i; // in the literature, there is usually an
+                                               // additional factor 0.5 here ...
+                                               // we return twice the amplitude in analogy
+                                               // to the single-sided FFT, so that the
+                                               // amplitudes of sine waves are reproduced
+                                               // correctly in the linear limit
             in_radiation = 1;
         }
         ampmodfreq[3*cnt+2] = 0.5*(E_2ip1 + E_2i); // needed for nonlinear frequencies (below)
@@ -319,6 +324,7 @@ INT fnft_kdvp_ampmodfreq(UINT * const K_ptr, REAL const * const main_spec, REAL 
 
     // finalize the nonlinear frequencies, see Eqs. A.2 and A.3 in Bruehl et al,
     // Wave Motion 111 (2022), https://doi.org/10.1016/j.wavemoti.2022.102905
+    // we slightly deviate from these formulas, as frequencies are returned in Hz
     for (i=0; i<cnt; i++) {
         REAL E_bar = ampmodfreq[3*i+2];
         if (E_ref < FNFT_INF)
@@ -331,37 +337,6 @@ INT fnft_kdvp_ampmodfreq(UINT * const K_ptr, REAL const * const main_spec, REAL 
 
     *K_ptr = cnt;
 
-    return SUCCESS;
-}
-
-/**
- * Converts a main spectrum as returned by fnft_kdvp into open bands.
- */
-INT fnft_kdvp_openbands(UINT * const K_ptr, REAL const * const main_spec, REAL * const open_bands)
-{
-    if (K_ptr == NULL)
-        return E_INVALID_ARGUMENT(K_ptr);
-    if (main_spec == NULL)
-        return E_INVALID_ARGUMENT(main_spec);
-    if (open_bands == NULL)
-        return E_INVALID_ARGUMENT(open_bands);
-
-    const UINT K = *K_ptr;
-    UINT i = 0, N_bands = 0;
-
-    for (i=1; i<K; i++) {
-        if (main_spec[2*i-1] == main_spec[2*i+1]) { // same signs s => open band
-            const REAL left_edge = main_spec[2*i-2];
-            const REAL right_edge = main_spec[2*i];
-            open_bands[2*N_bands] = left_edge;
-            open_bands[2*N_bands+1] = right_edge;
-            if (left_edge < right_edge) // skip degenerate bands
-                N_bands++;
-            i++; // required when a tiny band on the opposite side is missed
-        }
-    }
-
-    *K_ptr = N_bands;
     return SUCCESS;
 }
 

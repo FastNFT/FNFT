@@ -58,9 +58,8 @@ L = 1000;               % Number of grid points for the Floquet diagram
 grid_spacing = 0.001;   % Max. allowed distance between consecutive grid
                         % points on the spectral interval
 
-[main_spec, aux_spec, sheet_idx] = ...
+[main_spec, aux_spec, ~] = ...
                    mex_fnft_kdvp(q, [0 P], E, 'grid_spacing', grid_spacing, 'keep_degenerate');
-bands =            mex_fnft_kdvp_openbands(main_spec);
 ampmodfreq =       mex_fnft_kdvp_ampmodfreq(main_spec);
 [floq_det, al21] = mex_fnft_kdvp_floquet(q, [0 P], E, 'L', L);
 
@@ -90,14 +89,12 @@ al21_scaled = real(al21);
 al21_scaled(ix) = sign(real(al21(ix))).*(1+log(abs(al21(ix))));
 
 Es = linspace(E(1), E(2), L);
-B = [bands(1:2:end) ; bands(2:2:end)];
 
 subplot(2,1,2)
 plot(Es, floq_scaled)
 xlim(E);
 hold on
 plot(Es, al21_scaled, '--')
-plot(B, 0*B, '-g', 'LineWidth', 1.2)
 plot(main_spec(1:2:end), main_spec(2:2:end), 'ro')
 plot(aux_spec, 0*aux_spec, 'rs')
 plot([E(1) E(2)], [1 1], '-k')
@@ -105,7 +102,7 @@ plot([E(1) E(2)], [-1 -1], '-k')
 hold off
 grid on
 xlabel('E');
-legend('\Delta(E) (scaled)', '\alpha_{21}(E) (scaled)', 'Open bands', 'Main spectrum', 'Aux. spectrum');
+legend('\Delta(E) (scaled)', '\alpha_{21}(E) (scaled)', 'Main spectrum', 'Aux. spectrum');
 
 %% Plot the soliton amplitudes
 

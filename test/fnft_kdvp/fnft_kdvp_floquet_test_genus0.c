@@ -73,8 +73,8 @@ static INT run_test()
     REAL err = fnft__misc_rel_err_real(L, floq_det, floq_det_exact);
 #ifdef DEBUG
     misc_print_buf(D, q, "q");
-    misc_print_buf_real(K, floq_det, "floq_det");
-    misc_print_buf_real(K, floq_det_exact, "floq_det_exact");
+    misc_print_buf_real(L, floq_det, "floq_det");
+    misc_print_buf_real(L, floq_det_exact, "floq_det_exact");
     printf("err = %g\n", err);
 #endif
     if (err > 10*EPSILON) {
