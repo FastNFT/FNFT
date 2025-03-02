@@ -26,6 +26,11 @@ FNFT is a software library for the numerical computation of (inverse) nonlinear 
         * Bound states (eigenvalues)
         * Norming constants and/or residues
 
+    * Periodic boundary conditions
+        * Main spectrum
+        * Auxiliary spectrum
+        * Amplitudes, moduli and frequencies
+
 * Manakov equation
 
     * Vanishing boundary conditions
@@ -46,7 +51,7 @@ Please join the FNFT mailing list if you want to be notified about new releases 
 
 ## Citation
 
-If you use FNFT for your academic work, please cite the accompanying [software paper](https://doi.org/10.21105/joss.00597).  Latex users can use the following BibTex entry.
+If you use FNFT for your academic work, please cite the accompanying [software paper](https://doi.org/10.21105/joss.00597). Latex users can use the following BibTex entry.
 
 ```
 @article{FNFT2018,
@@ -119,3 +124,5 @@ The algorithms in FNFT utilize ideas from the following references. More informa
 - S. Medvedev, I. Vaseva, I. Chekhovskoy and M. Fedoruk, ["Exponential fourth order schemes for direct Zakharov-Shabat problem"](https://doi.org/10.1364/OE.377140), Optics Express, vol. 28, pp. 20--39, 2020.
 - J. Mertsching, ["Quasiperiodie Solutions of the Nonlinear Schroedinger Equation"](https://doi.org/10.1002/prop.2190350704), Fortschritte der Physik, vol. 35, pp. 519--536, 1987.
 - L. de Vries, ["Fast Numerical Nonlinear Fourier Transform Algorithms for the Manakov Equation"](http://resolver.tudelft.nl/uuid:0276e693-3408-4472-9749-b754c2114183"), Master thesis, TU Delft, 2021.
+- A. R. Osborne and L. Bergamasco, ["The solitons of Zabusky and Kruskal revisited: Perspective in terms of the periodic spectral transform"](https://doi.org/10.1016/0167-2789(86)90160-0), Physica D, vol. 18, pp. 26--46, 1986.
+- M. Brühl et al., ["Comparative analysis of bore propagation over long distances using conventional linear and KdV-based nonlinear Fourier transform"](https://doi.org/10.1016/j.wavemoti.2022.102905), Wave Motion, vol. 111, pp. 102905, 2022.
