@@ -14,8 +14,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2018.
- * Peter J. Prins (TU Delft) 2021.
+ * Sander Wahls (TU Delft) 2018 and (KIT) 2025.
+ * Peter J. Prins (TU Delft) 2021
  */
 
 // This example demonstrates the use of the function fnft_kdvv, which 
@@ -71,6 +71,9 @@ int main()
 
     // Default options
     fnft_kdvv_opts_t opts = fnft_kdvv_default_opts();
+
+    // Set grid spacing used during the localization of main and auxiliary spectra
+    opts.grid_spacing = 0.001;
 
     // Uncomment the next line to compute residues instead of norming constants
     //opts.discspec_type = fnft_kdvv_dstype_RESIDUES;
