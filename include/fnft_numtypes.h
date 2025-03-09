@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (KIT) 2025.
 */
 
 /**
@@ -128,6 +129,12 @@ typedef size_t FNFT_UINT;
 #define FNFT_ATAN(X) atan(X)
 
 /**
+ * Arc tangent with two \link FNFT_REAL \endlink arguments.
+ * @ingroup numtype
+ */
+#define FNFT_ATAN2(X,Y) atan2(X,Y)
+
+/**
  * Natural logarithm of a \link FNFT_REAL \endlink.
  * @ingroup numtype
  */
@@ -222,6 +229,12 @@ typedef size_t FNFT_UINT;
 #define FNFT_CPOW(X,Y) cpow(X,Y)
 
 /**
+ * Exponential of a \link FNFT_REAL \endlink argument.
+ * @ingroup numtype
+ */
+#define FNFT_EXP(X) exp(X)
+
+/**
  * Complex exponential of a \link FNFT_COMPLEX \endlink.
  * @ingroup numtype
  */
@@ -287,6 +300,7 @@ typedef size_t FNFT_UINT;
 #define COS(X)          FNFT_COS(X)
 #define SIN(X)          FNFT_SIN(X)
 #define ATAN(X)         FNFT_ATAN(X)
+#define ATAN2(X,Y)      FNFT_ATAN2(X,Y)
 #define SQRT(X)         FNFT_SQRT(X)
 #define EPSILON         FNFT_EPSILON
 #define CSINH(X)        FNFT_CSINH(X)
@@ -301,6 +315,7 @@ typedef size_t FNFT_UINT;
 #define CIMAG(X)        FNFT_CIMAG(X)
 #define CONJ(X)         FNFT_CONJ(X)
 #define CSQRT(X)        FNFT_CSQRT(X)
+#define EXP(X)          FNFT_EXP(X)
 #define CEXP(X)         FNFT_CEXP(X)
 #define CARG(X)         FNFT_CARG(X)
 #define PI        	    FNFT_PI

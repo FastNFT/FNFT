@@ -17,7 +17,7 @@
 * Sander Wahls (TU Delft) 2017-2018, 2023.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
 * Peter J Prins (TU Delft) 2020-2021.
-* Sander Wahls (KIT) 2023.
+* Sander Wahls (KIT) 2023, 2025.
 */
 
 /**
@@ -62,11 +62,20 @@
  *  parameter \link fnft_kdvv_opts_t::grid_spacing \endlink. This parameter therefore must
  *  be set if this algorithm is used.
  *  The sign changes of \f$ a(\xi) \f$ on this grid are used as initial
- *  guesses for the bound states, which are then refined as in `fnft_kdvv_bsloc_NEWTON`.
+ *  guesses for the bound states, which are then refined as in `fnft_kdvv_bsloc_NEWTON`. \n \n
+ *  fnft_kdvv_bsloc_ACCOUNTING: An accounting function is combined with a bisection method
+ *  to localize the bound states. The method is very reliable and is guaranteed to find all
+ *  eigenvalues. Currently only works together with second order discretizations. See the
+ *  paper <a href="https://doi.org/10.1016/j.amc.2022.127361">&quot;Reliable computation of
+ *  the eigenvalues of the discrete KdV spectrum&quot;</a> by Prins and Wahls, Applied Mathematics
+ *  and Computation 433, No. 2022 for more information. We currently only implement the
+ *  second order accounting function and only use bisection. The full algorithm from that paper is
+ *  currently NOT implemented.
  */
 typedef enum {
     fnft_kdvv_bsloc_NEWTON,
-    fnft_kdvv_bsloc_GRIDSEARCH_AND_REFINE
+    fnft_kdvv_bsloc_GRIDSEARCH_AND_REFINE,
+    fnft_kdvv_bsloc_ACCOUNTING
 } fnft_kdvv_bsloc_t;
 
 /**
@@ -331,10 +340,10 @@ FNFT_INT fnft_kdvv(const FNFT_UINT D, FNFT_COMPLEX const * const q,
     FNFT_COMPLEX * const normconsts_or_residues, //const FNFT_INT kappa,
     fnft_kdvv_opts_t *opts);
 
-
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define kdvv_bsloc_NEWTON fnft_kdvv_bsloc_NEWTON
 #define kdvv_bsloc_GRIDSEARCH_AND_REFINE fnft_kdvv_bsloc_GRIDSEARCH_AND_REFINE
+#define kdvv_bsloc_ACCOUNTING fnft_kdvv_bsloc_ACCOUNTING
 #define kdvv_dstype_NORMING_CONSTANTS fnft_kdvv_dstype_NORMING_CONSTANTS
 #define kdvv_dstype_RESIDUES fnft_kdvv_dstype_RESIDUES
 #define kdvv_dstype_BOTH fnft_kdvv_dstype_BOTH

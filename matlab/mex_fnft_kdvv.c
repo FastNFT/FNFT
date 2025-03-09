@@ -147,6 +147,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
             opts.bound_state_localization = fnft_kdvv_bsloc_GRIDSEARCH_AND_REFINE;
 
+        } else if ( strcmp(str, "bsloc_accounting") == 0 ) {
+
+            opts.bound_state_localization = fnft_kdvv_bsloc_ACCOUNTING;
+
 
         } else if ( strcmp(str, "bsloc_niter") == 0 ) {
 

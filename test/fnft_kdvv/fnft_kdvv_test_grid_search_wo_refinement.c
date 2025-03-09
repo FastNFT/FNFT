@@ -16,7 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018, 2023.
 * Peter J Prins (TU Delft) 2020.
-* Sander Wahls (KIT) 2023.
+* Sander Wahls (KIT) 2023, 2025.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -29,6 +29,7 @@ INT test(const UINT D, const REAL eb[6], fnft_kdv_discretization_t discretizatio
     fnft_kdvv_opts_t opts = fnft_kdvv_default_opts();
     const kdvv_testcases_t tc = kdvv_testcases_SECH_SQUARED;
     opts.discretization = discretization;
+    opts.bound_state_localization = kdvv_bsloc_GRIDSEARCH_AND_REFINE;
     opts.grid_spacing = grid_spacing;
 
     opts.niter = 0; // no Newton refinement!

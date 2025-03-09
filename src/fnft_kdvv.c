@@ -18,7 +18,7 @@
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Marius Brehler (TU Dortmund) 2018.
  * Peter J Prins (TU Delft) 2020-2021.
- * Sander Wahls (KIT) 2023.
+ * Sander Wahls (KIT) 2023, 2025.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -108,6 +108,21 @@ static inline INT kdvv_refine_bound_states_newton(const UINT D,
         UINT const niter,
         REAL const * const bounding_box,
         const INT normalization_flag);
+
+static inline INT kdvv_accounting_function(const UINT D,
+        COMPLEX const * const q,
+        const REAL T[2],
+        const REAL kappa,
+        UINT * const s_ptr);
+
+static inline INT kdvv_localize_bound_states_using_accounting(const UINT D,
+        COMPLEX const * const q,
+        const REAL T[2],
+        const REAL kappa_range[2],
+        const REAL tol,
+        UINT * const K_ptr,
+        COMPLEX * const bound_states,
+        kdv_discretization_t discretization_slow);
 
 /**
  * Fast nonlinear Fourier transform for the nonlinear Schroedinger
@@ -683,6 +698,15 @@ static inline INT kdvv_compute_boundstates(
 
             break;
 
+        case kdvv_bsloc_ACCOUNTING:
+
+            ; // empty statement to avoid compiler warning "a label can only be part of a statement and a declaration is not a statement"
+            REAL kappa_range[2] = {0, bounding_box[3]};
+            ret_code = kdvv_localize_bound_states_using_accounting(D, q, T, kappa_range, 100*EPSILON, &K, bound_states, opts_slow.discretization);
+            CHECK_RETCODE(ret_code, leave_fun);
+
+            break;
+
         default:
 
             return E_INVALID_ARGUMENT(opts->bound_state_localization);
@@ -1049,3 +1073,193 @@ static inline INT kdvv_refine_bound_states_newton(
     leave_fun:
         return ret_code;
 }
+
+// Auxiliary function to compute an accouting function, which tells us how many
+// bound states are larger than a given values of kappa. The routine implements
+// the second-order accounting function specified by the Equations 8, 14 and 16
+// of the paper
+// 
+//   "Reliable computation of the eigenvalues of the discrete KdV spectrum"
+//
+//   by Prins and Wahls, Applied Mathematics and Computation 433,
+//   Nov. 2022, https://doi.org/10.1016/j.amc.2022.127361
+// 
+// using the discretization in the Equations 11 and 12 (BO in C-basis).
+//
+// The routine internally scatters using a BO-type discretization, so that q
+// should not be upsampled! Also note that it requires kappa instead of E=kappa^2.
+static inline INT kdvv_accounting_function(const UINT D,
+                                           COMPLEX const * const q,
+                                           const REAL T[2],
+                                           const REAL kappa,
+                                           UINT * const s_ptr)
+{
+    const REAL eps_t = (T[1] - T[0])/(D - 1);
+    const REAL kappa_square = kappa*kappa;
+
+    UINT s = 0;
+
+    // initialize phi (Eq. 9)
+
+    //REAL phi1 = EXP(kappa*(T[0] - 0.5*eps_t));
+    //REAL phi2 = phi1*kappa;
+    //(the exponential factor is not needed because we rescale below)
+    REAL phi1 = 1;
+    REAL phi2 = kappa;
+
+    for (UINT n=0; n<D; n++) {
+
+        // normalize phi so that the maximum absolute value of phi1 and
+        // phi2 is in the interval [1,2) to avoid numerical overflow
+        // this will not impact the zero-crossings
+        REAL abs_phi1 = FABS(phi1);
+        REAL abs_phi2 = FABS(phi2);
+        REAL max_abs;
+        if (abs_phi1 > abs_phi2)
+            max_abs = abs_phi1;
+        else
+            max_abs = abs_phi2;
+        const FNFT_REAL a = FNFT_FLOOR( FNFT_LOG2(max_abs) );
+        const FNFT_REAL scl = FNFT_POW( 2, -a );
+        phi1 *= scl;
+        phi2 *= scl;
+
+        // propagate phi (Eqs. 11 and 12) 
+        
+        const REAL phi1_old = phi1;
+        const REAL phi2_old = phi2;
+        const COMPLEX gamma = CSQRT(q[n] - kappa_square);
+        const COMPLEX gameps = gamma*eps_t;
+        const REAL tmp = CREAL(CCOS(gameps)); 
+
+        phi1 = tmp*phi1_old + eps_t*CREAL(misc_CSINC(gameps))*phi2_old;
+        phi2 = -CREAL(gamma*CSIN(gameps))*phi1_old + tmp*phi2_old;
+
+        // increase the accounting function (Eq. 14)
+
+        INT incr = 0;
+        if (phi1 >= 0)
+            incr = 1;
+        if (phi1_old >= 0)
+            incr -= 1;
+
+        if (CREAL(gameps*gameps) < 9) {
+            if (incr < 0)
+                incr *= -1;
+        } else {
+            const REAL th_u = ATAN2(CREAL(gamma)*phi1, phi2);
+            const REAL th_l = ATAN2(CREAL(gamma)*phi1_old, phi2_old);
+            incr += 2*ROUND((eps_t*CREAL(gamma) - th_u + th_l) / (2*FNFT_PI));
+        }
+
+        if (incr>=0)
+            s += (UINT)incr;
+        else
+            return E_ASSERTION_FAILED;
+    }
+
+    // increase accouting function due to the upper tail (Eq. 16)
+    
+    if (phi1<0 && kappa*phi1+phi2>0)
+        s++;
+    if (phi1>=0 && kappa*phi1+phi2<0)
+        s++;
+
+    *s_ptr = s;
+    return SUCCESS;
+}
+
+// Auxiliary function that uses the accounting function to localize the bound states using bisection..
+static inline INT kdvv_localize_bound_states_using_accounting(const UINT D,
+                                                              COMPLEX const * const q,
+                                                              const REAL T[2],
+                                                              const REAL kappa_range[2],
+                                                              const REAL tol,
+                                                              UINT * const K_ptr,
+                                                              COMPLEX * const bound_states,
+                                                              kdv_discretization_t discretization_slow)
+{
+    if (D < 1)
+        return E_INVALID_ARGUMENT(D);
+    if (q == NULL)
+        return E_INVALID_ARGUMENT(q);
+    if (T[1] <= T[0])
+        return E_INVALID_ARGUMENT(T);
+    if (kappa_range == NULL)
+        return E_INVALID_ARGUMENT(kappa_range);
+    if (kappa_range[0] < 0)
+        return E_INVALID_ARGUMENT(kappa_range[0]);
+    if (kappa_range[1] <= kappa_range[0])
+        return E_INVALID_ARGUMENT(kappa_range[1]);
+    if (tol <= 0)
+        return E_INVALID_ARGUMENT(tol);
+    if (K_ptr == NULL)
+        return E_INVALID_ARGUMENT(K_ptr);
+    if (bound_states == NULL)
+        return E_INVALID_ARGUMENT(bound_states);
+    // Since the accounting function internally always uses the BO discretization at the moment
+    if (discretization_slow != kdv_discretization_BO && discretization_slow != kdv_discretization_BO_VANILLA)
+        return E_NOT_YET_IMPLEMENTED(slow_opts->discretization!=BO or BO_VANILLA, Please use a second order discretization with the accounting function bound localization method; alternatively change the bound state localization method.);
+ 
+    REAL lb = kappa_range[0];
+    REAL ub = kappa_range[1];
+
+    UINT sl = 0, su = 0, s = 0;
+
+    INT ret_code = kdvv_accounting_function(D, q, T, lb, &sl);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    ret_code = kdvv_accounting_function(D, q, T, ub, &su);
+    CHECK_RETCODE(ret_code, leave_fun);
+    const UINT s_at_kappa_range_one = su;
+
+    const UINT K = sl - su; // number of eigenvalues in the interval
+    if (K>*K_ptr) {          
+        ret_code = E_OTHER("More than *K_ptr initial guesses for bound states found. Increase *K_ptr and try again.")
+        CHECK_RETCODE(ret_code, leave_fun);
+    }
+    *K_ptr = K;
+    INT warn_flag = 0;
+
+    for (UINT k=0; k<K; k++) {
+        REAL bracket_size_old = FNFT_INF;
+        while (1) {
+            const REAL kappa = 0.5*(lb + ub);
+            ret_code = kdvv_accounting_function(D, q, T, kappa, &s);
+            CHECK_RETCODE(ret_code, leave_fun);
+
+            if (s == sl) {
+                lb = kappa;
+            } else {
+                ub = kappa;
+                su = s;
+            }
+            
+            const REAL bracket_size = ub-lb;
+            // abort if the bracket is small enough and contains exactly one eigenvalue
+            if (bracket_size<tol && sl-su==1) {
+                bound_states[k] = I*kappa;
+                lb = ub;
+                ub = kappa_range[1];
+
+                ret_code = kdvv_accounting_function(D, q, T, lb, &sl);
+                CHECK_RETCODE(ret_code, leave_fun);
+                su = s_at_kappa_range_one;
+
+                break;
+            // or if the bracket size stops decreasing
+            } else if (bracket_size >= bracket_size_old) {
+                warn_flag = 1;
+                break;
+            }
+            bracket_size_old = bracket_size;
+        }
+    }
+
+    if (warn_flag)
+        WARN("Bracket size stopped decreasing at least once.");
+
+leave_fun:
+    return ret_code;
+}
+

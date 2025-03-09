@@ -16,6 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018, 2021.
 * Peter J Prins (TU Delft) 2020.
+* Sander Wahls (KIT) 2025.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -26,6 +27,7 @@ INT main()
 {
     INT ret_code;
     fnft_kdvv_opts_t opts = fnft_kdvv_default_opts();
+    opts.bound_state_localization = kdvv_bsloc_GRIDSEARCH_AND_REFINE;
     opts.grid_spacing = 0.01;
     const kdvv_testcases_t tc = kdvv_testcases_SECH_SQUARED_LOW_BANDWIDTH;
     opts.discretization = kdv_discretization_2SPLIT2_MODAL_VANILLA;

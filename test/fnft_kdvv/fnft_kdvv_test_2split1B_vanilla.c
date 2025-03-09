@@ -16,6 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
 * Peter J Prins (TU Delft) 2020.
+* Sander Wahls (KIT) 2025.q
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -27,6 +28,7 @@ INT main()
     INT ret_code;
     fnft_kdvv_opts_t opts = fnft_kdvv_default_opts();
     opts.grid_spacing = 0.01;
+    opts.bound_state_localization = kdvv_bsloc_GRIDSEARCH_AND_REFINE;
     opts.discretization = kdv_discretization_2SPLIT1B_VANILLA;
 
     // Test staircase potential
