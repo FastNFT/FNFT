@@ -473,7 +473,7 @@ INT akns_scatter_bound_states(UINT const D,
     COMPLEX *tmp1 = NULL, *tmp2 = NULL, *tmp3 = NULL, *tmp4 = NULL, *eps_t_scaled = NULL;
 
     INT * WPHI = NULL; // for storing intermediate scaling factors 
-    INT * WPSI = NULL; // if normalization is enabled
+    INT * WPSI = NULL; // if ntormalization is enabled
                        
     // Allocating memory for storing PHI and PSI at all D_given points as
     // there are required to find the right value of b.
@@ -493,9 +493,9 @@ INT akns_scatter_bound_states(UINT const D,
     // forward-backward computation of b if normalization is on
     const INT normalization_flag = Ws != NULL;
     if (normalization_flag && !skip_b_flag) {
-        WPHI = malloc((D_given + 1)*sizeof(COMPLEX));
+        WPHI = calloc((D_given + 1), sizeof(COMPLEX)); // calloc initializes to zero
         CHECK_NOMEM(WPHI, ret_code, leave_fun);
-        WPSI = malloc((D_given + 1)*sizeof(COMPLEX));
+        WPSI = calloc((D_given + 1), sizeof(COMPLEX)); // calloc initializes to zero
         CHECK_NOMEM(WPHI, ret_code, leave_fun);
     }
 
@@ -842,8 +842,9 @@ INT akns_scatter_bound_states(UINT const D,
                 }
                 for (UINT i=0; i<2; i++) {
                     b_temp[i] = phi_S[i]/psi_S[i];
-                    if (normalization_flag)
+                    if (normalization_flag) {
                         b_temp[i] *= POW(2, WPHI[n] - WPSI[n]);
+                    }
                 }
                 if (PDE!=akns_pde_KdV || CREAL(b_temp[0]*b_temp[1])>0) {
                     tmp = FABS( 0.5* LOG( (REAL)CABS( b_temp[1]/b_temp[0] ) ) );
