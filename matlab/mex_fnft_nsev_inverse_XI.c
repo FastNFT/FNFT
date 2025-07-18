@@ -42,12 +42,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     if (nrhs < 3)
         mexErrMsgTxt("At least three inputs expected.");
-    if ( !mxIsDouble(prhs[0]) || mxGetNumberOfElements(prhs[0]) != 1 )
-        mexErrMsgTxt("Fourth input D should be a scalar.");
-    if ( !mxIsDouble(prhs[1]) || mxGetM(prhs[1]) != 1 || mxGetN(prhs[1]) != 2 )
-        mexErrMsgTxt("Second input T should be a double 1x2 vector.");
-    if ( !mxIsDouble(prhs[2]) || mxGetNumberOfElements(prhs[2]) != 1 )
-        mexErrMsgTxt("Third input M should be a scalar.");
+    if ( mxIsComplex(prhs[0]) || !mxIsDouble(prhs[0]) || mxGetNumberOfElements(prhs[0]) != 1 )
+        mexErrMsgTxt("First input D should be a real scalar (double precision).");
+    if ( mxIsComplex(prhs[1]) || !mxIsDouble(prhs[1]) || mxGetM(prhs[1]) != 1 || mxGetN(prhs[1]) != 2 )
+        mexErrMsgTxt("Second input T should be a real 1x2 vector (double precision).");
+    if ( mxIsComplex(prhs[2]) || !mxIsDouble(prhs[2]) || mxGetNumberOfElements(prhs[2]) != 1 )
+        mexErrMsgTxt("Third input M should be a real scalar (double precision).");
 
     D = (FNFT_UINT) FNFT_ROUND(mxGetScalar(prhs[0]));
     T = mxGetPr(prhs[1]);

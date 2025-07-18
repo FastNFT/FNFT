@@ -52,12 +52,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* Check types and dimensions of the first three inputs: q, T, kappa */
     if (nrhs < 3)
         mexErrMsgTxt("At least three inputs expected.");
-    if ( !mxIsComplex(prhs[0]) || mxGetM(prhs[0]) != 1)
-        mexErrMsgTxt("First input q should be a complex row vector. Try passing complex(q).");
+    if ( !mxIsDouble(prhs[0]) || !mxIsComplex(prhs[0]) || mxGetM(prhs[0]) != 1)
+        mexErrMsgTxt("First input q should be a complex row vector (double precision). Try passing complex(double(q(:)')).");
     if ( !mxIsDouble(prhs[1]) || mxGetM(prhs[1]) != 1 || mxGetN(prhs[1]) != 2 )
-        mexErrMsgTxt("Second input T should be a double 1x2 vector.");
+        mexErrMsgTxt("Second input T should be a real 1x2 vector (double precision).");
     if ( !mxIsDouble(prhs[2]) || mxGetNumberOfElements(prhs[2]) != 1 )
-        mexErrMsgTxt("Third input kappa should be a scalar.");
+        mexErrMsgTxt("Third input kappa should be a real scalar (double precision).");
 
     D = mxGetNumberOfElements(prhs[0]);
     K = D;

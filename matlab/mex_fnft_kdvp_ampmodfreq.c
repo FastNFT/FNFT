@@ -39,8 +39,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     if (nrhs < 1)
         mexErrMsgTxt("At least one input expected.");
-    if ( mxIsComplex(prhs[0]) || mxGetM(prhs[0]) != 1)
-        mexErrMsgTxt("First input q should be a real row vector.");
+    if ( !mxIsDouble(prhs[0]) || mxIsComplex(prhs[0]) || mxGetM(prhs[0]) != 1)
+        mexErrMsgTxt("First input main_spec should be a real row vector (double precision).");
 
     /* Check first input */
 

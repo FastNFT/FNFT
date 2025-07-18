@@ -61,12 +61,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     if (nrhs < 3)
         mexErrMsgTxt("At least three inputs expected.");
-    if ( mxIsComplex(prhs[0]) || mxGetM(prhs[0]) != 1)
-        mexErrMsgTxt("First input q should be a real row vector. Try passing complex(q).");
-    if ( !mxIsDouble(prhs[1]) || mxGetM(prhs[1]) != 1 || mxGetN(prhs[1]) != 2 )
-        mexErrMsgTxt("Second input T should be a double 1x2 vector.");
-    if ( !mxIsDouble(prhs[2]) || mxGetM(prhs[2]) != 1 || mxGetN(prhs[2]) != 2 )
-        mexErrMsgTxt("Third input XI should be a double 1x2 vector.");
+    if ( !mxIsDouble(prhs[0]) || mxIsComplex(prhs[0]) || mxGetM(prhs[0]) != 1)
+        mexErrMsgTxt("First input q should be a real row vector (double precision). Try passing double(real(q(:)')).");
+    if ( !mxIsDouble(prhs[1]) || mxIsComplex(prhs[1]) || mxGetM(prhs[1]) != 1 || mxGetN(prhs[1]) != 2 )
+        mexErrMsgTxt("Second input T should be a real 1x2 vector (double precision).");
+    if ( !mxIsDouble(prhs[2]) || mxIsComplex(prhs[2]) || mxGetM(prhs[2]) != 1 || mxGetN(prhs[2]) != 2 )
+        mexErrMsgTxt("Third input XI should be a real 1x2 vector (double precision).");
 
     D = mxGetNumberOfElements(prhs[0]);
     K = D;

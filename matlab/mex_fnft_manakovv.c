@@ -66,16 +66,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     if (nrhs < 5)
         mexErrMsgTxt("At least five inputs expected.");
-    if ( !mxIsComplex(prhs[0]) || mxGetM(prhs[0]) != 1)
-        mexErrMsgTxt("First input q1 should be a complex row vector. Try passing complex(q1).");
-    if ( !mxIsComplex(prhs[1]) || mxGetM(prhs[1]) != 1)
-        mexErrMsgTxt("Second input q2 should be a complex row vector. Try passing complex(q2).");
-    if ( !mxIsDouble(prhs[2]) || mxGetM(prhs[2]) != 1 || mxGetN(prhs[2]) != 2 )
-        mexErrMsgTxt("Third input T should be a double 1x2 vector.");
-    if ( !mxIsDouble(prhs[3]) || mxGetM(prhs[3]) != 1 || mxGetN(prhs[3]) != 2 )
-        mexErrMsgTxt("Fourth input XI should be a double 1x2 vector.");
-    if ( !mxIsDouble(prhs[4]) || mxGetNumberOfElements(prhs[4]) != 1 )
-        mexErrMsgTxt("Fifth input kappa should be a scalar.");
+    if ( !mxIsDouble(prhs[0]) || !mxIsComplex(prhs[0]) || mxGetM(prhs[0]) != 1)
+        mexErrMsgTxt("First input q1 should be a complex row vector (double precision). Try passing complex(double(q1(:)')).");
+    if ( !mxIsDouble(prhs[1]) || !mxIsComplex(prhs[1]) || mxGetM(prhs[1]) != 1)
+        mexErrMsgTxt("Second input q2 should be a complex row vector (double precision). Try passing complex(double(q2(:)')).");
+    if ( mxIsComplex(prhs[2]) || !mxIsDouble(prhs[2]) || mxGetM(prhs[2]) != 1 || mxGetN(prhs[2]) != 2 )
+        mexErrMsgTxt("Third input T should be a real 1x2 vector (double precision).");
+    if ( mxIsComplex(prhs[3]) || !mxIsDouble(prhs[3]) || mxGetM(prhs[3]) != 1 || mxGetN(prhs[3]) != 2 )
+        mexErrMsgTxt("Fourth input XI should be a real 1x2 vector (double precision).");
+    if ( mxIsComplex(prhs[4]) || !mxIsDouble(prhs[4]) || mxGetNumberOfElements(prhs[4]) != 1 )
+        mexErrMsgTxt("Fifth input kappa should be a real scalar (double precision).");
     
     // Here we copy the values passed via prhs (the inputs) to variables we can use in this C file
     D = mxGetNumberOfElements(prhs[0]);     // This is the number of samples from q
