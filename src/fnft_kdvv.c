@@ -700,9 +700,7 @@ static inline INT kdvv_compute_boundstates(
 
         case kdvv_bsloc_ACCOUNTING:
 
-            ; // empty statement to avoid compiler warning "a label can only be part of a statement and a declaration is not a statement"
-            REAL kappa_range[2] = {0, bounding_box[3]};
-            ret_code = kdvv_localize_bound_states_using_accounting(D, q, T, kappa_range, 100*EPSILON, &K, bound_states, opts_slow.discretization);
+            ret_code = kdvv_localize_bound_states_using_accounting(D, q, T, &bounding_box[2], 100*EPSILON, &K, bound_states, opts_slow.discretization);
             CHECK_RETCODE(ret_code, leave_fun);
 
             break;
@@ -1169,7 +1167,7 @@ static inline INT kdvv_accounting_function(const UINT D,
     return SUCCESS;
 }
 
-// Auxiliary function that uses the accounting function to localize the bound states using bisection..
+// Auxiliary function that uses the accounting function to localize the bound states using bisection.q
 static inline INT kdvv_localize_bound_states_using_accounting(const UINT D,
                                                               COMPLEX const * const q,
                                                               const REAL T[2],
@@ -1212,7 +1210,7 @@ static inline INT kdvv_localize_bound_states_using_accounting(const UINT D,
     ret_code = kdvv_accounting_function(D, q, T, ub, &su);
     CHECK_RETCODE(ret_code, leave_fun);
     const UINT s_at_kappa_range_one = su;
-
+    
     const UINT K = sl - su; // number of eigenvalues in the interval
     if (K>*K_ptr) {          
         ret_code = E_OTHER("More than *K_ptr initial guesses for bound states found. Increase *K_ptr and try again.")
