@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018, 2023; (KIT) 2025.
+* Sander Wahls (TU Delft) 2017-2018, 2023; (KIT) 2025-2026.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
 * Peter J. Prins (TU Delft) 2021.
 */
@@ -338,20 +338,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* Allocate memory */
 
     q = mxMalloc(D * sizeof(FNFT_COMPLEX));
-    if (q == NULL) {
-        snprintf(msg, sizeof msg, "Out of memory.");
-        goto on_error;
-    }
-
     if (skip_contspec_flag == 0) {
         if (opts.contspec_type == fnft_kdvv_cstype_AB)
             contspec = mxMalloc(2*M * sizeof(FNFT_COMPLEX));
         else
             contspec = mxMalloc(M * sizeof(FNFT_COMPLEX));
-        if (contspec == NULL) {
-            snprintf(msg, sizeof msg, "Out of memory.");
-            goto on_error;
-        }
     }
 
     if (skip_bound_states_flag == 0) {
@@ -359,18 +350,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             K = 1024; // Arbitrary number
             bound_states = mxMalloc(K * sizeof(FNFT_COMPLEX));
         }
-        if (bound_states == NULL) {
-            snprintf(msg, sizeof msg, "Out of memory.");
-            goto on_error;
-        }
     }
 
     if (skip_normconsts_flag == 0) {
         normconsts_or_residuals = mxMalloc(K * sizeof(FNFT_COMPLEX));
-        if (normconsts_or_residuals == NULL) {
-            snprintf(msg, sizeof msg, "Out of memory.");
-            goto on_error;
-        }
     }
 
     /* Convert input */
@@ -438,7 +421,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
     } else if (nlhs >= 3) {
         plhs[2] = mxCreateDoubleMatrix(0, 0, mxCOMPLEX);
-
     }
 
     /* Free memory that is no longer needed */

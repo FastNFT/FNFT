@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018, 2020-2021; (KIT) 2025.
+* Sander Wahls (TU Delft) 2017-2018, 2020-2021; (KIT) 2025-2026.
 * Shrinivas Chimmalgi (TU Delft) 2020.
 */
 
@@ -41,15 +41,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     size_t i, j;
     ptrdiff_t k;
     double *re, *im;
-    double *msr, *msi, *asr, *asi;
     char msg[256]; // buffer for error messages
     fnft_nsep_opts_t opts;
     int ret_code;
 
     /* To suppress unused parameter warning */
+    
     (void) nlhs;
 
     /* Check types and dimensions of the first three inputs: q, T, kappa */
+    
     if (nrhs < 3)
         mexErrMsgTxt("At least three inputs expected.");
     if ( !mxIsDouble(prhs[0]) || !mxIsComplex(prhs[0]) || mxGetM(prhs[0]) != 1)
@@ -66,6 +67,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     kappa = (int)mxGetScalar(prhs[2]);
 
     /* Check values of first three inputs */
+    
     if ( D<2 || (D & (D-1)) != 0 )
         mexErrMsgTxt("Length of the first input q should be >=2 and a power of two.");
     if ( T[0] >= T[1] )
@@ -74,12 +76,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mexErrMsgTxt("Third input kappa should be +1.0 or -1.0.");
 
     // Default options for fnft_nsep
+    
     opts = fnft_nsep_default_opts();
 
     /* Redirect FNFT error messages and warnings to Matlabs command window */
+    
     fnft_errwarn_setprintf(mexPrintf);
 
     /* Check remaining inputs, if any */
+    
     for (k=3; k<nrhs; k++) {
 
         /* Check if current input is a string as desired and convert it */
@@ -139,7 +144,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             phase_shift = (FNFT_REAL)mxGetScalar(prhs[k+1]);
             k++;
 
-        }else if ( strcmp(str, "loc_mixed") == 0 ) {
+        } else if ( strcmp(str, "loc_mixed") == 0 ) {
 
             opts.localization = fnft_nsep_loc_MIXED;
 
@@ -254,6 +259,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
 
     /* Allocate memory */
+    
     q = mxMalloc(D * sizeof(double complex));
     if (M > 0)
         sheet_indices = mxMalloc(M * sizeof(int));
@@ -271,19 +277,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         K /= opts.points_per_spine;
     }
 
-    if ( q == NULL || (K>0 && main_spec == NULL) || (M > 0 && aux_spec == NULL)
-         || (M > 0 && sheet_indices == NULL) ) {
-        snprintf(msg, sizeof msg, "Out of memory.");
-        goto on_error;
-    }
-
     /* Convert input */
+    
     re = mxGetPr(prhs[0]);
     im = mxGetPi(prhs[0]);
     for (i=0; i<D; i++)
         q[i] = re[i] + I*im[i];
 
     /* Call the C routine */
+    
     ret_code = fnft_nsep(D, q, T, phase_shift, &K, main_spec, &M, aux_spec, NULL, kappa,
         &opts);
     if (ret_code != FNFT_SUCCESS) {
@@ -292,25 +294,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         goto on_error;
     }
 
-    /* Allocate memory for the outputs */
+    /* Allocate memory and convert outputs */
+    
     plhs[0] = mxCreateDoubleMatrix(1, K, mxCOMPLEX);
-    plhs[1] = mxCreateDoubleMatrix(1, M, mxCOMPLEX);
-
-    /* Convert outputs */
-    msr = mxGetPr(plhs[0]);
-    msi = mxGetPi(plhs[0]);
-    asr = mxGetPr(plhs[1]);
-    asi = mxGetPi(plhs[1]);
+    re = mxGetPr(plhs[0]);
+    im = mxGetPi(plhs[0]);
     for (i=0; i<K; i++) {
-        msr[i] = creal(main_spec[i]);
-        msi[i] = cimag(main_spec[i]);
+        re[i] = creal(main_spec[i]);
+        im[i] = cimag(main_spec[i]);
     }
-    for (i=0; i<M; i++) {
-        asr[i] = creal(aux_spec[i]);
-        asi[i] = cimag(aux_spec[i]);
+    
+    if (nlhs >= 2) { 
+        plhs[1] = mxCreateDoubleMatrix(1, M, mxCOMPLEX);
+        re = mxGetPr(plhs[1]);
+        im = mxGetPi(plhs[1]);
+        for (i=0; i<M; i++) {
+            re[i] = creal(aux_spec[i]);
+            im[i] = cimag(aux_spec[i]);
+        }
     }
 
     /* Free memory that is no longer needed */
+    
     mxFree(q);
     mxFree(main_spec);
     mxFree(aux_spec);

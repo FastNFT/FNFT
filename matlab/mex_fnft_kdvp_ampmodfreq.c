@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (KIT) 2025.
+* Sander Wahls (KIT) 2025-2026.
 */
 
 #include <string.h>
@@ -34,6 +34,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     double * re = NULL;
     char msg[128]; // buffer for error messages
     int ret_code;
+
+    (void) nlhs;
 
     /* Check types and dimensions of the first input: main_spec */
 

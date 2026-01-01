@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (KIT) 2023, 2025.
+* Sander Wahls (KIT) 2023, 2025-2026.
 */
 
 #include <string.h>
@@ -174,23 +174,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* Allocate memory */
 
     q = mxMalloc(D * sizeof(FNFT_COMPLEX));
-    if (q == NULL) {
-        snprintf(msg, sizeof msg, "Out of memory.");
-        goto on_error;
-    }
-
     if (M == 0)
         M = D;
     if (K == 0)
         K = D;
-
     main_spec = mxMalloc(2*K * sizeof(FNFT_REAL));
     aux_spec = mxMalloc(M * sizeof(FNFT_REAL));
     sheet_indices = mxMalloc(M * sizeof(FNFT_REAL));
-    if (main_spec == NULL || aux_spec == NULL || sheet_indices == NULL) {
-        snprintf(msg, sizeof msg, "Out of memory.");
-        goto on_error;
-    }
     
     /* Convert input */
 
@@ -210,24 +200,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* Allocate memory for outputs and convert results */
 
     plhs[0] = mxCreateDoubleMatrix(1, 2*K, mxREAL);
-    plhs[1] = mxCreateDoubleMatrix(1, M, mxREAL);
-    plhs[2] = mxCreateDoubleMatrix(1, M, mxREAL);
-    if (plhs[0] == NULL || plhs[1] == NULL || plhs[2] == NULL) {
-        snprintf(msg, sizeof msg, "Out of memory.");
-        goto on_error;
-    }
- 
     re = mxGetPr(plhs[0]);
     for (i=0; i<2*K; i++)
         re[i] = main_spec[i];
 
-    re = mxGetPr(plhs[1]);
-    for (i=0; i<M; i++)
-        re[i] = aux_spec[i];
+    if (nlhs >= 2) {
+        plhs[1] = mxCreateDoubleMatrix(1, M, mxREAL);
+        re = mxGetPr(plhs[1]);
+        for (i=0; i<M; i++)
+            re[i] = aux_spec[i];
+    }
 
-    re = mxGetPr(plhs[2]);
-    for (i=0; i<M; i++)
-        re[i] = sheet_indices[i];
+    if (nlhs >= 3) {
+        plhs[2] = mxCreateDoubleMatrix(1, M, mxREAL);
+        re = mxGetPr(plhs[2]);
+        for (i=0; i<M; i++)
+            re[i] = sheet_indices[i];
+    }
 
     /* Free memory that is no longer needed */
 
