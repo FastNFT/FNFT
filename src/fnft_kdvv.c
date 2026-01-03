@@ -14,11 +14,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2017-2018, 2023.
+ * Sander Wahls (TU Delft) 2017-2018, 2023; (KIT) 2023, 2025-2026.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Marius Brehler (TU Dortmund) 2018.
  * Peter J Prins (TU Delft) 2020-2021.
- * Sander Wahls (KIT) 2023, 2025.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES

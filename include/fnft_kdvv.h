@@ -65,12 +65,11 @@
  *  guesses for the bound states, which are then refined as in `fnft_kdvv_bsloc_NEWTON`. \n \n
  *  fnft_kdvv_bsloc_ACCOUNTING: An accounting function is combined with a bisection method
  *  to localize the bound states. The method is very reliable and is guaranteed to find all
- *  eigenvalues. Currently only works together with second order discretizations. See the
+ *  eigenvalues. Currently only works together with BO, CF4_2, MODAL and XsplitY discretizations. See the
  *  paper <a href="https://doi.org/10.1016/j.amc.2022.127361">&quot;Reliable computation of
  *  the eigenvalues of the discrete KdV spectrum&quot;</a> by Prins and Wahls, Applied Mathematics
- *  and Computation 433, No. 2022 for more information. We currently only implement the
- *  second order accounting function and only use bisection. The full algorithm from that paper is
- *  currently NOT implemented.
+ *  and Computation 433, No. 2022 for more information. We currently only use bisection. The full
+ *  algorithm from that paper, which additionally uses Newton refinements, is currently NOT implemented.
  */
 typedef enum {
     fnft_kdvv_bsloc_NEWTON,
@@ -190,16 +189,15 @@ typedef struct {
  * default settings.
  *
  * @returns A \link fnft_kdvv_opts_t \endlink object with the following options.\n
- *  bound_state_filtering = fnft_kdvv_bsfilt_FULL\n
- *  bound_state_localization = fnft_kdvv_bsloc_SUBSAMPLE_AND_REFINE\n
+ *  bound_state_localization = kdvv_bsloc_ACCOUNTING\n
  *  niter = 10\n
- *  discspec_type = fnft_kdvv_dstype_NORMING_CONSTANTS\n
- *  contspec_type = fnft_kdvv_cstype_REFLECTION_COEFFICIENT\n
+ *  discspec_type = kdvv_dstype_NORMING_CONSTANTS\n
+ *  contspec_type = kdvv_cstype_REFLECTION_COEFFICIENT\n
  *  normalization_flag = 1\n
- *  discretization = fnft_kdv_discretization_2SPLIT4B\n
+ *  discretization = kdv_discretization_2SPLIT4B\n
  *  richardson_extrapolation_flag = 0\n
- *
-  * @ingroup fnft
+ *  grid_spacing = 0
+ * @ingroup fnft
  */
 fnft_kdvv_opts_t fnft_kdvv_default_opts();
 
