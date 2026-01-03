@@ -139,7 +139,7 @@ int main()
 
     printf("Amplitudes, moduli and wave numbers of the hyperelliptic modes:\n");
     for (FNFT_UINT i=0; i<K; i++) {
-        printf("  A = %g, m = %g, f = %g\n",
+        printf("  A = %g, m = %g, k = %g\n",
                 (double)ampmodfreq[3*i]/lam,
                 (double)ampmodfreq[3*i+1],
                 (double)ampmodfreq[3*i+2]
