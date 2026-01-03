@@ -26,10 +26,11 @@
 // of the discrete KdV spectrum" by Prins and Wahls, Appl. Math. Comput. 422,
 // Nov. 2022, https://doi.org/10.1016/j.amc.2022.127361
 
-INT run_test(const UINT D, const REAL err_bnd)
+INT run_test(const UINT D, const REAL err_bnd, const fnft_kdv_discretization_t discr)
 {
     fnft_kdvv_opts_t opts = fnft_kdvv_default_opts();
     opts.bound_state_localization = kdvv_bsloc_ACCOUNTING;
+    opts.discretization = discr; 
 
     COMPLEX q[D];
     const REAL T[2] = {-10, 10};
@@ -69,11 +70,14 @@ leave_fun:
     return ret_code;
 }
 
+
+
 int main() {
     UINT D = 256;
-    REAL err_bnd = 0.008;
+    REAL err_bnd = 10*0.008;
+    fnft_kdv_discretization_t discr = kdv_discretization_BO;
 
-    INT ret_code = run_test(D, err_bnd);
+    INT ret_code = run_test(D, err_bnd, discr);
     if (ret_code != SUCCESS)
         return EXIT_FAILURE;
 
@@ -81,13 +85,35 @@ int main() {
 
     D *= 2;
     err_bnd /= 4;
-    ret_code = run_test(D, err_bnd);
+    ret_code = run_test(D, err_bnd, discr);
     if (ret_code != SUCCESS)
         return EXIT_FAILURE;
 
     D *= 2;
     err_bnd /= 4;
-    ret_code = run_test(D, err_bnd);
+    ret_code = run_test(D, err_bnd, discr);
+    if (ret_code != SUCCESS)
+        return EXIT_FAILURE;
+
+    D = 256;
+    err_bnd = 2e-5;
+    discr = kdv_discretization_CF4_2;
+
+    ret_code = run_test(D, err_bnd, discr);
+    if (ret_code != SUCCESS)
+        return EXIT_FAILURE;
+
+    // check for fourth order convergence
+
+    D *= 2;
+    err_bnd /= 16;
+    ret_code = run_test(D, err_bnd, discr);
+    if (ret_code != SUCCESS)
+        return EXIT_FAILURE;
+
+    D *= 2;
+    err_bnd /= 16;
+    ret_code = run_test(D, err_bnd, discr);
     if (ret_code != SUCCESS)
         return EXIT_FAILURE;
 

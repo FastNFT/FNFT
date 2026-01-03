@@ -111,7 +111,7 @@ static inline INT kdvv_refine_bound_states_newton(const UINT D,
 
 static inline INT kdvv_accounting_function(const UINT D,
         COMPLEX const * const q,
-        const REAL T[2],
+        const REAL eps_t,
         const REAL kappa,
         UINT * const s_ptr);
 
@@ -1088,11 +1088,10 @@ static inline INT kdvv_refine_bound_states_newton(
 // should not be upsampled! Also note that it requires kappa instead of E=kappa^2.
 static inline INT kdvv_accounting_function(const UINT D,
                                            COMPLEX const * const q,
-                                           const REAL T[2],
+                                           const REAL eps_t,
                                            const REAL kappa,
                                            UINT * const s_ptr)
 {
-    const REAL eps_t = (T[1] - T[0])/(D - 1);
     const REAL kappa_square = kappa*kappa;
 
     UINT s = 0;
@@ -1167,7 +1166,7 @@ static inline INT kdvv_accounting_function(const UINT D,
     return SUCCESS;
 }
 
-// Auxiliary function that uses the accounting function to localize the bound states using bisection.q
+// Auxiliary function that uses the accounting function to localize the bound states using bisection.
 static inline INT kdvv_localize_bound_states_using_accounting(const UINT D,
                                                               COMPLEX const * const q,
                                                               const REAL T[2],
@@ -1195,19 +1194,34 @@ static inline INT kdvv_localize_bound_states_using_accounting(const UINT D,
         return E_INVALID_ARGUMENT(K_ptr);
     if (bound_states == NULL)
         return E_INVALID_ARGUMENT(bound_states);
-    // Since the accounting function internally always uses the BO discretization at the moment
-    if (discretization_slow != kdv_discretization_BO && discretization_slow != kdv_discretization_BO_VANILLA)
-        return E_NOT_YET_IMPLEMENTED(slow_opts->discretization!=BO or BO_VANILLA, Please use a second order discretization with the accounting function bound localization method; alternatively change the bound state localization method.);
- 
+
+    REAL eps_t;
+    switch (discretization_slow) {
+    case kdv_discretization_BO:
+    case kdv_discretization_BO_VANILLA: 
+        eps_t = (T[1] - T[0])/(D - 1);
+        break;
+    case kdv_discretization_CF4_2:
+    case kdv_discretization_CF4_2_VANILLA:
+        // The CF4_2 case can be reduced to the BO case. We only need to half the step size
+        // and pass the preprocessed samples. See Sec. 3.4 in Prins and Wahls, Appl. Math.
+        // Comput. 433, Nov. 2022. The given samples are already preprocessed, so that D here
+        // is twice the number of the original samples.
+        eps_t = (T[1] - T[0])/(D/2 - 1)/2;
+        break;
+    default:
+        return E_OTHER("Bound state localization using the accounting function does not work with the chosen discretization. Choose one of the BO, CF4_2 or XsplitY discretizations, or use another bound state localization method.");
+    }
+    
     REAL lb = kappa_range[0];
     REAL ub = kappa_range[1];
 
     UINT sl = 0, su = 0, s = 0;
 
-    INT ret_code = kdvv_accounting_function(D, q, T, lb, &sl);
+    INT ret_code = kdvv_accounting_function(D, q, eps_t, lb, &sl);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    ret_code = kdvv_accounting_function(D, q, T, ub, &su);
+    ret_code = kdvv_accounting_function(D, q, eps_t, ub, &su);
     CHECK_RETCODE(ret_code, leave_fun);
     const UINT s_at_kappa_range_one = su;
     
@@ -1223,7 +1237,7 @@ static inline INT kdvv_localize_bound_states_using_accounting(const UINT D,
         REAL bracket_size_old = FNFT_INF;
         while (1) {
             const REAL kappa = 0.5*(lb + ub);
-            ret_code = kdvv_accounting_function(D, q, T, kappa, &s);
+            ret_code = kdvv_accounting_function(D, q, eps_t, kappa, &s);
             CHECK_RETCODE(ret_code, leave_fun);
 
             if (s == sl) {
@@ -1240,7 +1254,7 @@ static inline INT kdvv_localize_bound_states_using_accounting(const UINT D,
                 lb = ub;
                 ub = kappa_range[1];
 
-                ret_code = kdvv_accounting_function(D, q, T, lb, &sl);
+                ret_code = kdvv_accounting_function(D, q, eps_t, lb, &sl);
                 CHECK_RETCODE(ret_code, leave_fun);
                 su = s_at_kappa_range_one;
 
