@@ -14,7 +14,7 @@
 %
 % Contributors:
 % Shrinivas Chimmalgi (TU Delft) 2020.
-% Sander Wahls (TU Delft) 2020.
+% Sander Wahls (TU Delft) 2020, 2026.
 % Peter J. Prins (TU Delft) 2021.
 
 % This example shows the feature of computing bound states using the slow 
@@ -46,11 +46,8 @@ normconsts_exact = [-9e6, 729e18];
 
 t = linspace(T(1),T(2),D);
 q = double(q_fun(t)); % signal samples
-dxi = sqrt(max(q)) / 1000; % use approximately 1000 grid points for the
-% bound state localization step
 [~,bound_states_computed,normconsts_computed]=mex_fnft_kdvv(q, T, XI,... 
-    'discr_CF4_2','bsloc_gridsearch_refine', 'grid_spacing', dxi, ...
-    'skip_cs', 'bsloc_niter',20);
+    'discr_CF4_2', 'skip_cs');
 
 %%% Plot results %%%
 

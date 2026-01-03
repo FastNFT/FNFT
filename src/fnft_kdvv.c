@@ -26,7 +26,7 @@
 #include "fnft_kdvv.h"
 
 static fnft_kdvv_opts_t default_opts = {
-    .bound_state_localization = kdvv_bsloc_GRIDSEARCH_AND_REFINE,
+    .bound_state_localization = kdvv_bsloc_ACCOUNTING,
     .niter = 10,
     .discspec_type = kdvv_dstype_NORMING_CONSTANTS,
     .contspec_type = kdvv_cstype_REFLECTION_COEFFICIENT,
@@ -1210,7 +1210,7 @@ static inline INT kdvv_localize_bound_states_using_accounting(const UINT D,
         eps_t = (T[1] - T[0])/(D/2 - 1)/2;
         break;
     default:
-        return E_OTHER("Bound state localization using the accounting function does not work with the chosen discretization. Choose one of the BO, CF4_2 or XsplitY discretizations, or use another bound state localization method.");
+        return E_OTHER("Bound state localization using the accounting function does not work with the chosen discretization. Choose one of the BO, CF4_2, modal or XsplitY discretizations, or use another bound state localization method.");
     }
     
     REAL lb = kappa_range[0];

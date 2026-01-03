@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (KIT) 2025.
+ * Sander Wahls (KIT) 2025-2026.
  */
 
 // This example demonstrates the use of the functions fnft_kdvp and 
@@ -89,9 +89,6 @@ int main()
 
     // Default options
     fnft_kdvp_opts_t opts = fnft_kdvp_default_opts();
-
-    // Set grid spacing used during the localization of main and auxiliary spectra
-    opts.grid_spacing = 0.001;
 
     // See the header file fnft_kdvp.h for more options
 

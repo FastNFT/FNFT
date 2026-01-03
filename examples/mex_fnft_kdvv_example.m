@@ -13,7 +13,7 @@
 % along with this program. If not, see <http://www.gnu.org/licenses/>.
 %
 % Contributors:
-% Sander Wahls (TU Delft) 2017-2018.
+% Sander Wahls (TU Delft) 2017-2018, 2026.
 % Peter J. Prins (TU Delft) 2021.
 
 % This examples demonstrates how the nonlinear Fourier transform with
@@ -25,7 +25,6 @@ clear all;
 close all;
 
 %%% Setup parameters %%%
-
 
 D = 2^8;            % location of the 1st and last sample in the time domain
 T = [-10, 10];      % number of samples
@@ -39,10 +38,7 @@ q = 16*sech(t).^2;
 
 %%% Compute the nonlinear Fourier transform %%%
 
-dxi = sqrt(max(q)) / 1000; % use approximately 1000 grid points for the
-% bound state localization step
-[contspec, bound_states, norming_constants] = mex_fnft_kdvv(q, T, XI, ...
-    'grid_spacing', dxi);
+[contspec, bound_states, norming_constants] = mex_fnft_kdvv(q, T, XI);
 % mex_fnft_kdvv has many options => run "help mex_fnft_kdvv" to learn more
 
 %%% Plot the results %%%
