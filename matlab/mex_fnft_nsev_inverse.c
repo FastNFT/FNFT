@@ -14,12 +14,14 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018.
+* Sander Wahls (TU Delft) 2017-2018; (KIT) 2025.
 */
 
 #include <string.h>
 #include "mex.h"
+#ifndef SKIP_MATRIX_H
 #include "matrix.h"
+#endif
 #include "fnft_nsev_inverse.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
@@ -49,20 +51,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     if ( nrhs < 7 )
         mexErrMsgTxt("At least seven inputs expected.");
-    if ( !mxIsEmpty(prhs[0]) && (!mxIsComplex(prhs[0]) || mxGetM(prhs[0]) != 1) )
-        mexErrMsgTxt("First input contspec should be a complex row vector or []. Try passing complex(contspec).");
-    if ( !mxIsDouble(prhs[1]) || mxGetM(prhs[1]) != 1 || mxGetN(prhs[1]) != 2 )
-        mexErrMsgTxt("Second input XI should be a double 1x2 vector.");
-    if ( !mxIsEmpty(prhs[2]) && (!mxIsComplex(prhs[2]) || mxGetM(prhs[2]) != 1) )
-        mexErrMsgTxt("Third input bound_states should be a complex row vector or []. Try passing complex(bound_states).");
-    if ( !mxIsEmpty(prhs[3]) && (!mxIsComplex(prhs[3]) || mxGetM(prhs[3]) != 1) )
-        mexErrMsgTxt("Fourth input normconsts_or_residues should be a complex row vector or []. Try passing complex(normconsts_or_residues).");
-    if ( !mxIsDouble(prhs[4]) || mxGetNumberOfElements(prhs[4]) != 1 )
-        mexErrMsgTxt("Fifth input D should be a scalar.");
-    if ( !mxIsDouble(prhs[5]) || mxGetM(prhs[5]) != 1 || mxGetN(prhs[5]) != 2 )
-        mexErrMsgTxt("Sixth input T should be a double 1x2 vector.");
-    if ( !mxIsDouble(prhs[6]) || mxGetNumberOfElements(prhs[6]) != 1 )
-        mexErrMsgTxt("Seventh input kappa should be a scalar.");
+    if ( !mxIsEmpty(prhs[0]) && (!mxIsDouble(prhs[0]) || !mxIsComplex(prhs[0]) || mxGetM(prhs[0]) != 1) )
+        mexErrMsgTxt("First input contspec should be a complex row vector (double precision) or []. Try passing complex(double(contspec(:)')).");
+    if ( mxIsComplex(prhs[1]) || !mxIsDouble(prhs[1]) || mxGetM(prhs[1]) != 1 || mxGetN(prhs[1]) != 2 )
+        mexErrMsgTxt("Second input XI should be a real 1x2 vector (double precision).");
+    if ( !mxIsEmpty(prhs[2]) && (!mxIsDouble(prhs[2]) || !mxIsComplex(prhs[2]) || mxGetM(prhs[2]) != 1) )
+        mexErrMsgTxt("Third input bound_states should be a complex row vector (double precision) or []. Try passing complex(double(bound_states(:)')).");
+    if ( !mxIsEmpty(prhs[3]) && (!mxIsDouble(prhs[3]) || !mxIsComplex(prhs[3]) || mxGetM(prhs[3]) != 1) )
+        mexErrMsgTxt("Fourth input normconsts_or_residues should be a complex row vector (double precision) or []. Try passing complex(double(normconsts_or_residues(:)')).");
+    if ( mxIsComplex(prhs[4]) || !mxIsDouble(prhs[4]) || mxGetNumberOfElements(prhs[4]) != 1 )
+        mexErrMsgTxt("Fifth input D should be a real scalar (double precision).");
+    if ( mxIsComplex(prhs[5]) || !mxIsDouble(prhs[5]) || mxGetM(prhs[5]) != 1 || mxGetN(prhs[5]) != 2 )
+        mexErrMsgTxt("Sixth input T should be a real 1x2 vector (double precision).");
+    if ( mxIsComplex(prhs[6]) || !mxIsDouble(prhs[6]) || mxGetNumberOfElements(prhs[6]) != 1 )
+        mexErrMsgTxt("Seventh input kappa should be a real scalar (double precision).");
 
     M = mxGetNumberOfElements(prhs[0]);
     K = mxGetNumberOfElements(prhs[2]);

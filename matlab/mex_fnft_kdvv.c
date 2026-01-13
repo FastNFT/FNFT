@@ -14,14 +14,16 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018, 2023.
+* Sander Wahls (TU Delft) 2017-2018, 2023; (KIT) 2025-2026.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
 * Peter J. Prins (TU Delft) 2021.
 */
 
 #include <string.h>
 #include "mex.h"
+#ifndef SKIP_MATRIX_H
 #include "matrix.h"
+#endif
 #include "fnft_kdvv.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
@@ -59,12 +61,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     if (nrhs < 3)
         mexErrMsgTxt("At least three inputs expected.");
-    if ( mxIsComplex(prhs[0]) || mxGetM(prhs[0]) != 1)
-        mexErrMsgTxt("First input q should be a real row vector. Try passing complex(q).");
-    if ( !mxIsDouble(prhs[1]) || mxGetM(prhs[1]) != 1 || mxGetN(prhs[1]) != 2 )
-        mexErrMsgTxt("Second input T should be a double 1x2 vector.");
-    if ( !mxIsDouble(prhs[2]) || mxGetM(prhs[2]) != 1 || mxGetN(prhs[2]) != 2 )
-        mexErrMsgTxt("Third input XI should be a double 1x2 vector.");
+    if ( !mxIsDouble(prhs[0]) || mxIsComplex(prhs[0]) || mxGetM(prhs[0]) != 1)
+        mexErrMsgTxt("First input q should be a real row vector (double precision). Try passing double(real(q(:)')).");
+    if ( !mxIsDouble(prhs[1]) || mxIsComplex(prhs[1]) || mxGetM(prhs[1]) != 1 || mxGetN(prhs[1]) != 2 )
+        mexErrMsgTxt("Second input T should be a real 1x2 vector (double precision).");
+    if ( !mxIsDouble(prhs[2]) || mxIsComplex(prhs[2]) || mxGetM(prhs[2]) != 1 || mxGetN(prhs[2]) != 2 )
+        mexErrMsgTxt("Third input XI should be a real 1x2 vector (double precision).");
 
     D = mxGetNumberOfElements(prhs[0]);
     K = D;
@@ -144,6 +146,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "bsloc_gridsearch_refine") == 0 ) {
 
             opts.bound_state_localization = fnft_kdvv_bsloc_GRIDSEARCH_AND_REFINE;
+
+        } else if ( strcmp(str, "bsloc_accounting") == 0 ) {
+
+            opts.bound_state_localization = fnft_kdvv_bsloc_ACCOUNTING;
 
 
         } else if ( strcmp(str, "bsloc_niter") == 0 ) {
@@ -332,20 +338,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* Allocate memory */
 
     q = mxMalloc(D * sizeof(FNFT_COMPLEX));
-    if (q == NULL) {
-        snprintf(msg, sizeof msg, "Out of memory.");
-        goto on_error;
-    }
-
     if (skip_contspec_flag == 0) {
         if (opts.contspec_type == fnft_kdvv_cstype_AB)
             contspec = mxMalloc(2*M * sizeof(FNFT_COMPLEX));
         else
             contspec = mxMalloc(M * sizeof(FNFT_COMPLEX));
-        if (contspec == NULL) {
-            snprintf(msg, sizeof msg, "Out of memory.");
-            goto on_error;
-        }
     }
 
     if (skip_bound_states_flag == 0) {
@@ -353,18 +350,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             K = 1024; // Arbitrary number
             bound_states = mxMalloc(K * sizeof(FNFT_COMPLEX));
         }
-        if (bound_states == NULL) {
-            snprintf(msg, sizeof msg, "Out of memory.");
-            goto on_error;
-        }
     }
 
     if (skip_normconsts_flag == 0) {
         normconsts_or_residuals = mxMalloc(K * sizeof(FNFT_COMPLEX));
-        if (normconsts_or_residuals == NULL) {
-            snprintf(msg, sizeof msg, "Out of memory.");
-            goto on_error;
-        }
     }
 
     /* Convert input */
@@ -432,7 +421,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
     } else if (nlhs >= 3) {
         plhs[2] = mxCreateDoubleMatrix(0, 0, mxCOMPLEX);
-
     }
 
     /* Free memory that is no longer needed */

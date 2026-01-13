@@ -14,15 +14,17 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2017-2018, 2022.
+* Sander Wahls (TU Delft) 2017-2018, 2022; (KIT) 2025.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
 * Peter J. Prins (2021).
-* Sander Wahls (KIT) 2023.
+* Sander Wahls (KIT) 2023, 2025.
 */
 
 #include <string.h>
 #include "mex.h"
+#ifndef SKIP_MATRIX_H
 #include "matrix.h"
+#endif
 #include "fnft_nsev.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
@@ -61,14 +63,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     if (nrhs < 4)
         mexErrMsgTxt("At least four inputs expected.");
-    if ( !mxIsComplex(prhs[0]) || mxGetM(prhs[0]) != 1)
-        mexErrMsgTxt("First input q should be a complex row vector. Try passing complex(q).");
-    if ( !mxIsDouble(prhs[1]) || mxGetM(prhs[1]) != 1 || mxGetN(prhs[1]) != 2 )
-        mexErrMsgTxt("Second input T should be a double 1x2 vector.");
-    if ( !mxIsDouble(prhs[2]) || mxGetM(prhs[2]) != 1 || mxGetN(prhs[2]) != 2 )
-        mexErrMsgTxt("Third input XI should be a double 1x2 vector.");
-    if ( !mxIsDouble(prhs[3]) || mxGetNumberOfElements(prhs[3]) != 1 )
-        mexErrMsgTxt("Fourth input kappa should be a scalar.");
+    if ( !mxIsDouble(prhs[0]) || !mxIsComplex(prhs[0]) || mxGetM(prhs[0]) != 1)
+        mexErrMsgTxt("First input q should be a complex row vector (double precision). Try passing complex(double(q(:)')).");
+    if ( mxIsComplex(prhs[1]) || !mxIsDouble(prhs[1]) || mxGetM(prhs[1]) != 1 || mxGetN(prhs[1]) != 2 )
+        mexErrMsgTxt("Second input T should be a real 1x2 vector (double precision).");
+    if ( mxIsComplex(prhs[2]) || !mxIsDouble(prhs[2]) || mxGetM(prhs[2]) != 1 || mxGetN(prhs[2]) != 2 )
+        mexErrMsgTxt("Third input XI should be a real 1x2 vector (double precision).");
+    if ( mxIsComplex(prhs[3]) || !mxIsDouble(prhs[3]) || mxGetNumberOfElements(prhs[3]) != 1 )
+        mexErrMsgTxt("Fourth input kappa should be a scalar (double precision).");
     
     D = mxGetNumberOfElements(prhs[0]);
     K = D;

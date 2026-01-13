@@ -243,9 +243,9 @@ FNFT_UINT fnft_manakovv_max_K(const FNFT_UINT D, fnft_manakovv_opts_t const* con
  *       - fnft_manakov_discretization_2SPLIT6B
  *       - fnft_manakov_discretization_4SPLIT4A
  *       - fnft_manakov_discretization_4SPLIT4B
- * 	     - fnft_manakov_discretization_4SPLIT6B
- * 		 - fnft_manakov_discretization_FTES4_4A
- * 		 - fnft_manakov_discretization_FTES4_suzuki
+ * 	 - fnft_manakov_discretization_4SPLIT6B
+ * 	 - fnft_manakov_discretization_FTES4_4A
+ * 	 - fnft_manakov_discretization_FTES4_suzuki
  *
  * The following discretizations use classical algorithms which have a computational
  * complexity of \f$ \mathcal{O}(D^2)\f$ for \f$ D\f$ point continuous spectrum given \f$ D\f$ samples:
@@ -273,8 +273,8 @@ FNFT_UINT fnft_manakovv_max_K(const FNFT_UINT D, fnft_manakovv_opts_t const* con
  *  reflection coefficient and/or NFT coefficient a, b1, b2) should be computed.
  * @param[out] contspec Array of length 2*M, 3*M or 5*M dependent on desired contspec of type \link fnft_manakovv_cstype_t \endlink
  *  in which the routine will store the reflection coefficients \f$ \rho \f$ and/or the NFT coefficients a, b1, b2
- *  in ascending order: \f$ \rho_1(\xi_m) = b1(\xi_m)/a(\xi_m) \f$
- *  followed by \f$ \rho_1(\xi_m) = b1(\xi_m)/a(\xi_m) \f$ if only the reflection coefficients are requested,
+ *  in ascending order: \f$ \rho_1(\xi_m) = b_1(\xi_m)/a(\xi_m) \f$
+ *  followed by \f$ \rho_2(\xi_m) = b_2(\xi_m)/a(\xi_m) \f$ if only the reflection coefficients are requested,
  *  where \f$ \xi_m = XI[0]+m(XI[1]-XI[0])/(M-1) \f$ and \f$m=0,1,\dots,M-1\f$.
  *  \f$ a(\xi_m) \f$, \f$ b_1(\xi_m) \f$ followed by \f$ b_2(\xi_m) \f$ if the NFT coefficients are requested and
  *  both these arrays if both are requested. If NULL is passed instead, the

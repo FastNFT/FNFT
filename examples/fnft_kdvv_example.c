@@ -14,8 +14,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (TU Delft) 2018.
- * Peter J. Prins (TU Delft) 2021.
+ * Sander Wahls (TU Delft) 2018 and (KIT) 2025.
+ * Peter J. Prins (TU Delft) 2021
  */
 
 // This example demonstrates the use of the function fnft_kdvv, which 
@@ -77,7 +77,7 @@ int main()
 
     // See the header file fnft_kdvv.h for the options
 
-    /** Step 3: Call fnft_nsev and check for errors **/
+    /** Step 3: Call fnft_kdvv and check for errors **/
 
     int ret_code = fnft_kdvv(D, q, T, M, contspec, XI, &K, bound_states,
                              normconsts, &opts);
