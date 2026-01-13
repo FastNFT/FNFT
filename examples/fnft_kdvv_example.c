@@ -72,15 +72,12 @@ int main()
     // Default options
     fnft_kdvv_opts_t opts = fnft_kdvv_default_opts();
 
-    // Set grid spacing used during the localization of main and auxiliary spectra
-    opts.grid_spacing = 0.001;
-
     // Uncomment the next line to compute residues instead of norming constants
     //opts.discspec_type = fnft_kdvv_dstype_RESIDUES;
 
     // See the header file fnft_kdvv.h for the options
 
-    /** Step 3: Call fnft_nsev and check for errors **/
+    /** Step 3: Call fnft_kdvv and check for errors **/
 
     int ret_code = fnft_kdvv(D, q, T, M, contspec, XI, &K, bound_states,
                              normconsts, &opts);

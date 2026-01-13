@@ -23,7 +23,7 @@
 %                   This method performs bisection on the accounting
 %                   function to localize the bound states. The method is
 %                   fully automatic, but only works for the BO, CF4_2,
-%                   modal and XsplitY discrizations.                   
+%                   modal and XSPLITYZ discretizations.                   
 %   'bsloc_gridsearch_refine' Default bound state localization method.
 %                   The algorithm evaluates a(xi) on the grid 
 %                   xi = 1i*[eps(1-eps(1)),h*(1:(N-2)),(N-1)h-eps((N-1)h)], where

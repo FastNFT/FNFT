@@ -34,12 +34,12 @@
  *
  * Please read the file README.md first if you are new to FNFT.
  *
+ * To get started, check the examples folder. It contains both C and Matlab examples.
+ *
  * The C interface is separated into a public part ("fnft_" prefix) and a private
  * part ("fnft__" prefix).
- *
- * To get started with the public part of the C interface, study the modules
- * \ref fnft and \ref fnft_inverse, and try the examples in the examples
- * directory.
+ * The modules \ref fnft and \ref fnft_inverse are a good starting point for learning
+ * more about the public part of the C interface.
  */
 
 /* Define groups for Doxygen documentation */
@@ -101,12 +101,22 @@
  */
 
 /**
- * \defgroup kdv PRIVATE: Internals related to the Korteweg-de Vries \
+ * \defgroup manakov PRIVATE: Internals related to the Manakov \
  *  equation
  */
 
 /**
+ * \defgroup akns PRIVATE: Internals related to generic AKNS \
+ *  scattering problems
+ */
+
+/**
  * \defgroup fft_wrapper PRIVATE: Wrapper for fast Fourier transform routines
+ */
+
+/**
+ * \defgroup kdv PRIVATE: Internals related to the Korteweg-de Vries \
+ *  equation
  */
 
 #endif

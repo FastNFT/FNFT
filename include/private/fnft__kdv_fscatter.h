@@ -36,7 +36,7 @@
  * @brief Returns the length of transfer_matrix to be allocated based on the number
  * of samples and discretization.
  *
- * @ingroup kiv
+ * @ingroup kdv
  * This routine returns the length 4*D*(kdv_discretization_degree(discretization) + 1)
  * to be allocated based on the number
  * of samples and discretization of type discretization.

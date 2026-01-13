@@ -1,6 +1,6 @@
 # FNFT: Fast Nonlinear Fourier Transforms
 
-[![Version](https://img.shields.io/github/v/release/FastNFT/FNFT)](https://github.com/FastNFT/FNFT/releases) [![Documentation](https://img.shields.io/badge/-documentation-informational)](https://fastnft.github.io/FNFT/) [![Build Status](https://api.travis-ci.com/FastNFT/FNFT.svg?branch=master)](https://travis-ci.com/github/FastNFT/FNFT) [![DOI](http://joss.theoj.org/papers/10.21105/joss.00597/status.svg)](https://doi.org/10.21105/joss.00597) 
+[![Version](https://img.shields.io/github/v/release/FastNFT/FNFT)](https://github.com/FastNFT/FNFT/releases) [![Documentation](https://img.shields.io/badge/-documentation-informational)](https://fastnft.github.io/FNFT/) [![DOI](http://joss.theoj.org/papers/10.21105/joss.00597/status.svg)](https://doi.org/10.21105/joss.00597) 
 
 FNFT is a software library for the numerical computation of (inverse) nonlinear Fourier transforms, which are also known as (inverse) scattering transforms. The focus of the library is on fast algorithms, but it also contains non-fast methods. FNFT is written in C and comes with a MATLAB interface. A [Python interface](https://github.com/xmhk/FNFTpy) is available separately.
 
@@ -126,3 +126,4 @@ The algorithms in FNFT utilize ideas from the following references. More informa
 - L. de Vries, ["Fast Numerical Nonlinear Fourier Transform Algorithms for the Manakov Equation"](http://resolver.tudelft.nl/uuid:0276e693-3408-4472-9749-b754c2114183"), Master thesis, TU Delft, 2021.
 - A. R. Osborne and L. Bergamasco, ["The solitons of Zabusky and Kruskal revisited: Perspective in terms of the periodic spectral transform"](https://doi.org/10.1016/0167-2789(86)90160-0), Physica D, vol. 18, pp. 26--46, 1986.
 - M. Brühl et al., ["Comparative analysis of bore propagation over long distances using conventional linear and KdV-based nonlinear Fourier transform"](https://doi.org/10.1016/j.wavemoti.2022.102905), Wave Motion, vol. 111, pp. 102905, 2022.
+- P. J. Prins and S. Wahls, ["Reliable computation of the eigenvalues of the discrete KdV spectrum"](https://doi.org/10.1016/j.amc.2022.127361), Applied Mathematics and Computation, vol. 433, 127361, Nov. 2022.

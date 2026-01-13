@@ -90,9 +90,12 @@ int main()
     // Default options
     fnft_kdvp_opts_t opts = fnft_kdvp_default_opts();
 
+    // At the moment, the grid spacing option must be set by the user
+    opts.grid_spacing = (E[1] - E[0])/100;
+
     // See the header file fnft_kdvp.h for more options
 
-    /** Step 3: Call fnft_nsev and check for errors **/
+    /** Step 3: Call fnft_kdvp and check for errors **/
 
     int ret_code = fnft_kdvp(D, q, T, E, &K, main_spec, &M, aux_spec,
                              sheet_indices, &opts);
@@ -119,7 +122,7 @@ int main()
         );
     }
 
-    /** Step 5: Compute ampltiudes, moduli and frequencies **/
+    /** Step 5: Compute amplitiudes, moduli and frequencies **/
 
     // Buffer for result: Amplitudes, moduli and wave numbers
     // (instead of frequencies since we consider a space series)

@@ -78,7 +78,7 @@
  * 
  * Slow methods implemented for the Manakov equation:\n
  * `fnft_manakov_discretization_CF4_2`: base method for the 4SPLITYZ methods\n
- * `fnft_manakov_discretization_BO`: base method for the 2SPLITYZ methods\n
+ * `fnft_manakov_discretization_BO: base method for the 2SPLITYZ methods\n
  *
  * Used in \link fnft_manakovv_opts_t \endlink.
  *

@@ -62,10 +62,10 @@
  *  parameter \link fnft_kdvv_opts_t::grid_spacing \endlink. This parameter therefore must
  *  be set if this algorithm is used.
  *  The sign changes of \f$ a(\xi) \f$ on this grid are used as initial
- *  guesses for the bound states, which are then refined as in `fnft_kdvv_bsloc_NEWTON`. \n \n
+ *  guesses for the bound states, which are then refined as in `fnft_kdvv_bsloc_NEWTON. \n \n
  *  fnft_kdvv_bsloc_ACCOUNTING: An accounting function is combined with a bisection method
  *  to localize the bound states. The method is very reliable and is guaranteed to find all
- *  eigenvalues. Currently only works together with BO, CF4_2, MODAL and XsplitY discretizations. See the
+ *  eigenvalues. Currently only works together with BO, CF4_2, MODAL and XSPLITYZ discretizations. See the
  *  paper <a href="https://doi.org/10.1016/j.amc.2022.127361">&quot;Reliable computation of
  *  the eigenvalues of the discrete KdV spectrum&quot;</a> by Prins and Wahls, Applied Mathematics
  *  and Computation 433, No. 2022 for more information. We currently only use bisection. The full
@@ -212,21 +212,25 @@ fnft_kdvv_opts_t fnft_kdvv_default_opts();
  * Phys. Rev. Lett., 1967</a>)
  * for initial conditions with vanishing boundaries
  * \f[ \lim_{t\to \pm \infty }q(x_0,t) = 0 \text{ sufficiently rapidly.} \f]
- * Fast algorithms are used if the discretization supports it.
- * \n
+ * Fast algorithms are used for the continuous spectrum if the discretization supports it.
  * The main references are:
  *      - Wahls and Poor,<a href="http://dx.doi.org/10.1109/ICASSP.2013.6638772">&quot;Introducing the fast nonlinear Fourier transform,&quot;</a> Proc. ICASSP 2013.
  *      - Wahls and Poor, <a href="http://dx.doi.org/10.1109/TIT.2015.2485944">&quot;Fast numerical nonlinear Fourier transforms,&quot;</a> IEEE Trans. Inform. Theor. 61(12), 2015.
  *      - Prins and Wahls, <a href="https://doi.org/10.1109/ICASSP.2018.8461708">&quot; Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot; </a>Proc. ICASSP 2018, pp. 4524-4528
  *
- * The routine also utilizes ideas from the following papers:
+ * The discrete spectrum is found using conventional algorithms. The default algorithm for the bound states is a partial implementation of
+ *      - Prins and Wahls, <a href="https://doi.org/10.1016/j.amc.2022.127361">&quot;Reliable computation of the eigenvalues of the discrete KdV spectrum,&quot;</a> Appl. Math. Comput. 433, Nov. 2022
+ *
+ * that implements only bisection, not Newton refinements. Alternatively, a grid search with Newton refinements can be used. For the norming constants, the approach from
+ *      - Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2932256">&quot; Soliton Phase Shift Calculation for the Korteweg–De Vries Equation,&quot;</a> IEEE Access, vol. 7, pp. 122914--122930, July 2019.
+ *
+ * is used. The routine also utilizes ideas from the following papers:
  *      - Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot;Computation of the direct scattering transform for the nonlinear Schroedinger equation,&quot;</a> J. Comput. Phys. 102(2), 1992.
  *      - Aref, <a href="https://arxiv.org/abs/1605.06328">&quot;Control and Detection of Discrete Spectral Amplitudes in Nonlinear Fourier Spectrum,&quot;</a> Preprint, arXiv:1605.06328 [math.NA], May 2016.
  *      - Hari and Kschischang, <a href="https://doi.org/10.1109/JLT.2016.2577702">&quot;Bi-Directional Algorithm for Computing Discrete Spectral Amplitudes in the NFT,&quot; </a>J. Lightwave Technol. 34(15), 2016.
  *      - Aref et al., <a href="https://doi.org/10.1109/JLT.2018.2794475">"Modulation Over Nonlinear Fourier Spectrum: Continuous and Discrete Spectrum"</a>, J. Lightwave Technol. 36(6), 2018.
- *      - Aurentz et al., <a href="https://arxiv.org/abs/1611.02435">&quot;Roots of Polynomials: on twisted QR methods for companion matrices and pencils,&quot;</a> Preprint, arXiv:1611.02435 [math.NA]</a>, Dec. 2016.
+ *      - Aurentz et al., <a href="https://arxiv.org/abs/1611.02435">&quot;Roots of Polynomials: on twisted QR methods for companion matrices and pencils,&quot;</a> Preprint, arXiv:1611.02435 [math.NA], Dec. 2016.
  *      - Chimmalgi, Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2945480">&quot;Fast Nonlinear Fourier Transform Algorithms Using Higher Order Exponential Integrators,&quot;</a> IEEE Access 7, 2019.
- *      - Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2932256">&quot; Soliton Phase Shift Calculation for the Korteweg–De Vries Equation,&quot;</a> IEEE Access, vol. 7, pp. 122914--122930, July 2019.
  *      - Medvedev, Vaseva, Chekhovskoy and  Fedoruk, <a href="https://doi.org/10.1364/OE.377140">&quot; Exponential fourth order schemes for direct Zakharov-Shabat problem,&quot;</a> Optics Express, vol. 28, pp. 20--39, 2020.
  *
  * The routine supports all discretizations of type \link fnft_kdv_discretization_t \endlink. The following discretizations use fast
@@ -253,7 +257,7 @@ fnft_kdvv_opts_t fnft_kdvv_default_opts();
  *       - fnft_kdv_discretization_4SPLIT4A(_VANILLA)
  *       - fnft_kdv_discretization_4SPLIT4B(_VANILLA)
  *
- * The discretizations nft_kdv_discretization_2SPLIT2_MODAL(_VANILLA) require that q[i] * eps_t^2 is unequal to -1 for all samples i.
+ * The discretizations nft_kdv_discretization_2SPLIT2_MODAL(_VANILLA) require that `q[i] * eps_t^2` is unequal to `-1` for all samples `q[i]`, where `eps_t` is the step size in the time domain.
  *
  * The following discretizations use classical algorithms which have a computational
  * complexity of \f$ \mathcal{O}(D^2)\f$ for \f$ D\f$ point continuous spectrum given \f$ D\f$ samples:

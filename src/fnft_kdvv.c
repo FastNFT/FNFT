@@ -1083,8 +1083,7 @@ static inline INT kdvv_refine_bound_states_newton(
 // 
 // using the discretization in the Equations 11 and 12 (BO in C-basis).
 //
-// The routine internally scatters using a BO-type discretization, so that q
-// should not be upsampled! Also note that it requires kappa instead of E=kappa^2.
+// Note that that the routine requires kappa instead of E=kappa^2.
 static inline INT kdvv_accounting_function(const UINT D,
                                            COMPLEX const * const q,
                                            const REAL eps_t,

@@ -44,6 +44,13 @@
  *  accuracy of the results. By default, normalization is enabled (i.e., the
  *  flag is one). To disable, set the flag to zero.\n\n
  *
+ * @var fnft_kdvp_opts_t::keep_degenerate_flag
+ *  Controls if degenerate bands, which consist of a pair of main spectrum points
+ *  trapping an auxiliary point (i.e. all three have the same value), are returned
+ *  to the user, or not. They do not influence the solution, but it can sometimes
+ *  be instructive to see their locations. By default, the are not returned (i.e.,
+ *  the flag is zero). To enable, set the flag to one.\n\n
+ *
  * @var fnft_kdvp_opts_t::discretization
  *  Controls which discretization is used to compute the monodromy matrix.
  *  See \link fnft_kdv_discretization_t \endlink. Currently,
@@ -97,24 +104,23 @@ fnft_kdvp_opts_t fnft_kdvp_default_opts();
  * This routine computes the nonlinear Fourier transform for the
  * Korteweg-de Vries equation
  * \f[ q_x + 6qq_{t} + q_{ttt}=0, \quad  q=q(x,t), \f]
- * of Gardner et al. (<a href="https://doi.org/10.1103/PhysRevLett.19.1095">
- * Phys. Rev. Lett., 1967</a>)
  * for initial conditions with periodic boundaries:
  * \f[ q(x_0,t) = q(x_0,t+P), P>0. \f]
- * Currently, fast algorithms are NOT used. The complexity is O(D*L), where
- * D is the number of signal samples and L is the number of grid points needed
- * to achieve a grid spacing of at most opts_ptr->grid_spacing on a spectral
- * interval given by the user.\n
  * 
- * The definition of the NFT for the periodic KdV equation can be found in the paper
+ * Specficially, he routine computes the main spectrum, auxiliary spectrum and sheet indices as defined in the paper
  *      - Osborne, <a href="https://doi.org/10.1016/0378-4754(94)00029-8">&quot;Automatic algorithm for the numerical inverse scattering transform of the Korteweg–de Vries equation&quot;</a> Math. Comput. Simul. 37(4-5), 1994.
  *
- * This routine however does NOT implement the automatic algorithm proposed in that paper at the moment.
+ * The main spectrum can be converted into a set of amplitudes, moduli and frequencies using the separate
+ * routine \link fnft_kdvp_ampmodfreq \endlink.
+ *
+ * This routine does NOT implement the automatic algorithm proposed in the paper of Osborne at the moment.
  * Instead, fnft_kdvp first combines simple grid searches with regula falsi to obtain initial guesses for the
- * main and auxliary spectrum, respectively, which are then further refined using Newton's method. Since the grid_spacing
+ * main and auxliary spectrum, respectively, which are then further refined using Newton's method. **Since the grid_spacing
  * parameter is of crucial importance, the user must set it manually (via the opts_ptr parameter). The default
- * value will lead to an error. For the future, it is planned to use an "automatic" algorithm that does not rely
- * on grid search.
+ * value will lead to an error.** This approach is NOT fast. The complexity is \f$\mathcal{O}(DL)\f$, where
+ * \f$D\f$ is the number of signal samples and \f$L\f$ is the number of grid points needed
+ * to achieve a grid spacing of at most `opts_ptr->grid_spacing` on a spectral
+ * interval given by the user.
  *
  * The routine utilizes \link fnft__kdv_scatter_matrix \endlink to compute the monodromy matrix. Currently,
  * only two discretizations of the type \link fnft_kdv_discretization_t \endlink are supported:
@@ -172,21 +178,16 @@ FNFT_INT fnft_kdvp( const FNFT_UINT D,
                     FNFT_REAL * const sheet_indices,
                     fnft_kdvp_opts_t * opts_ptr);
 /**
- * @brief Floquet discriminant and the element alpha_21 of the monodromy
- * matrix used to define the nonlinear Fourier transform for the Korteweg-de
- * Vries equation with periodic boundary conditions.
- *
- * This routine computes the Floquet discriminent and the function alpha_21(E)
- * as defined e.g. in 
- *  
- * The definition of the NFT for the periodic KdV equation can be found in the paper
- *      - Osborne, <a href="https://doi.org/10.1016/0378-4754(94)00029-8">&quot;Automatic algorithm for the numerical inverse scattering transform of the Korteweg–de Vries equation&quot;</a> Math. Comput. Simul. 37(4-5), 1994.
- *
+ * @brief This routine computes the Floquet discriminant \f$ \Delta(E) \f$ and the
+ * element \f$ \alpha_{21}(E) \f$ of the monodromy matrix used to define the nonlinear
+ * Fourier transform for the Korteweg-de Vries equation with periodic boundary conditions.
  * Both are intermediate quantities that are normally not interesting for end
- * users it iself. One use of this routine is to choose the spectral interval
+ * users in iself. One use of this routine is to choose the spectral interval
  * and grid spacing to enable the use of \link fnft_kdvp \endlink and
- * \link fnft_kdvp_ampmodfreq \endlink. The underlying numerical method is
- * described at \link fnft_kdvp \endlink.
+ * \link fnft_kdvp_ampmodfreq \endlink by visual inspection of examples. 
+ *
+ * The corresponding definitions can be found e.g. in the paper
+ *      - Osborne, <a href="https://doi.org/10.1016/0378-4754(94)00029-8">&quot;Automatic algorithm for the numerical inverse scattering transform of the Korteweg–de Vries equation&quot;</a> Math. Comput. Simul. 37(4-5), 1994.
  *
  * @param[in] D Number of samples
  * @param[in] q Array of length D, contains samples \f$ q(t_n)=q(x_0, t_n) \f$,
@@ -228,28 +229,35 @@ FNFT_INT fnft_kdvp_floquet( const FNFT_UINT D,
                             FNFT_REAL * const al21,
                             fnft_kdvp_opts_t * opts_ptr);
 /**
- * @brief Convert main spectra into amplitudes, moduli and frequencies.
+ * @brief Converts main spectra computed by \link fnft_kdvp \endlink into amplitudes, moduli and frequencies.
  *
  * This routine takes a main spectrum computed by \link fnft_kdvp \endlink
  * and determines the amplitudes, moduli and frequencies of the corresponding
  * hyperelliptic modes. The idea goes back to Osborne and coworkers.
  * See, e.g., 
- *      - Osborne and Bergamasco, <a href="https://doi.org/10.1016/0167-2789(86)90160-0">&quot;The solitons of Zabusky and Kruskal revisited: Perspective in terms of the periodic spectral transform&quot;</a>, Physica D 18(1-3), 1986.
+ *	- Osborne and Bergamasco, <a href="https://doi.org/10.1016/0167-2789(86)90160-0">&quot;The solitons of Zabusky and Kruskal revisited: Perspective in terms of the periodic spectral transform&quot;</a>, Physica D 18(1-3), 1986.
+ *
  * Various slightly different definitions can be found in the literature. This
  * algorithm uses the ones described in
- *      - Brühl et al., <a href="https://doi.org/10.1016/j.wavemoti.2022.102905">&quot;Comparative analysis of bore propagation over long distances using conventional linear and KdV-based nonlinear Fourier transform&quot;</a>, Wave Motion 111, 2022.
+ *	- Brühl et al., <a href="https://doi.org/10.1016/j.wavemoti.2022.102905">&quot;Comparative analysis of bore propagation over long distances using conventional linear and KdV-based nonlinear Fourier transform&quot;</a>, Wave Motion 111, 2022.
+ *
  * with the small exception that the frequencies are scaled to be in Hz, and
  * the ampltiudes of the radiation modes are scaled by two (like the single-sided FFT).
  *
- * @param[in] K_ptr
+ * Please note that the method is heuristic and has known issues. See the discussions in
+ *	- Deng et al., <a href="https://doi.org/10.1016/j.physd.2016.03.003">&quot;Small dispersion limit of the Korteweg–de Vries equation with periodic initial conditions and analytical description of the Zabusky–Kruskal experiment&quot;</a>, Physica D 333, Oct. 2016, Sec. 4.2
+ *	- Lee and Wahls, <a href="https://doi.org/10.1016/j.wavemoti.2025.103542">&quot;Impact of directional spreading on nonlinear KdV-soliton spectra in intermediate water&quot;</a>, Wave Motion 137, Aug. 2025, Sec. 4.3
+ *
  * @param[in] K_ptr Initially, 2*(*K_ptr) is size of the array main_spec provided by the
  *  user. Later, the routine updates *K_ptr to the detected number of hyperelliptic modes.
  * @param[out] main_spec Main spectrum computed by \link fnft_kdvp \endlink
- * @param[out] ampmodspec Contains the amplitudes A_i, moduli m_i and frequencies f_i
+ * @param[out] ampmodfreq Contains the amplitudes A_i, moduli m_i and frequencies f_i
  *  of the hyperelliptic modes, where i=0,1,...,Kout-1 with Kout being the value of *K_ptr
  *  upon exit. The ordering of the data is A_1, m_1, f_1, ..., A_Kout, m_Kout, f_Kout.
  *  Needs to be preallocated by the user and to be of size 3*Kin, where Kin is the value
  *  *K_ptr upon entry. 
+ *
+ * @ingroup fnft
  */
 FNFT_INT fnft_kdvp_ampmodfreq( FNFT_UINT * const K_ptr,
                                FNFT_REAL const * const main_spec,
