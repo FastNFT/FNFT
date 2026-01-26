@@ -23,70 +23,10 @@
 #include <stdio.h> // for printf
 
 
-// INT input_multisoliton_E_pairs(
-//     UINT const K,
-//     COMPLEX const * const bound_states,
-//     COMPLEX const * const normconsts_or_residues,
-//     const UINT D,
-//     COMPLEX * const q,
-//     REAL const * const T)
-// {
-//     INT ret_code = SUCCESS;
-
-//     // Initialize local variables
-//     COMPLEX tmp;
-//     COMPLEX * bnd_states = NULL;
-//     COMPLEX * norm_consts = NULL;
-
-//     bnd_states = malloc(K * sizeof(COMPLEX));
-//     CHECK_NOMEM(bnd_states, ret_code, leave_fun);
-//     norm_consts = malloc(K * sizeof(COMPLEX));
-//     CHECK_NOMEM(norm_consts, ret_code, leave_fun);
-
-//     //sorting bnd_states and according norm_const in descending order based on magnitude of imaginary part
-//     for (UINT i = 0; i < K; ++i){
-//         for (UINT j = i + 1; j < K; ++j){
-//             if (CIMAG(bnd_states[i]) < CIMAG(bnd_states[j])){
-//                 tmp =  bnd_states[i];
-//                 bnd_states[i] = bnd_states[j];
-//                 bnd_states[j] = tmp;
-//                 tmp =  norm_consts[i];
-//                 norm_consts[i] = norm_consts[j];
-//                 norm_consts[j] = tmp;
-//             }
-//         }
-//     }
-
-    
-
-//     // Apply normconst
-//     //TODO
-
-//     // Classic Crum transformation
-
-//     UINT N_rest = K;
-    
-//     while(N_rest > 0){
-
-//         // Scale trajectories
-//         //TODO  
-
-//         ret_code = add_two_solitons_E(q, x_grid, );
-//         CHECK_RETCODE(ret_code, leave_fun);
-//     }
-
-// leave_fun:
-//     free(bound_states);
-//     free(norm_consts);
-
-//     return ret_code;
-// }
-
-
 INT add_one_soliton_E(
-    COMPLEX const * const bound_state,
-    REAL const * const theta_E1,
-    REAL const * const theta_E2,
+    COMPLEX const bound_state,
+    COMPLEX const * const theta_E1,
+    COMPLEX const * const theta_E2,
     REAL const * const x_grid,
     const UINT D,
     COMPLEX * const q)
@@ -98,7 +38,7 @@ INT add_one_soliton_E(
     CHECK_NOMEM(M_min1_11, ret_code, leave_fun);
 
     // Transformation into a real number.
-    COMPLEX k1 = bound_state[0]*I;
+    COMPLEX k1 = bound_state*I;
 
     // printf("Marker1");
 
@@ -265,36 +205,70 @@ INT fnft_kdvv_inverse(
         x_grid[n]= T[0] + n*eps_t;
     }
 
-    // Initialize theta_E
-    REAL * theta_E1 = NULL;
-    theta_E1 = malloc(D * sizeof(REAL));
+    // Initialize new storage for bound states and normconsts for later sorting
+    COMPLEX tmp;
+
+    COMPLEX * bound_states_sorted = NULL;
+    bound_states_sorted = malloc(K * sizeof(COMPLEX));
+    CHECK_NOMEM(bound_states_sorted, ret_code, leave_fun);
+
+    COMPLEX * normconsts_sorted = NULL;
+    normconsts_sorted = malloc(K * sizeof(COMPLEX));
+    CHECK_NOMEM(normconsts_sorted, ret_code, leave_fun);
+
+    for (UINT i=0; i<K; i++){
+        bound_states_sorted[i] = bound_states[i];
+        normconsts_sorted[i] = normconsts_or_residues[i];
+    }
+
+    //sorting bound_states and according norm_const in descending order based on magnitude of imaginary part
+    for (UINT i = 0; i < K; ++i){
+        for (UINT j = i + 1; j < K; ++j){
+            if (CIMAG(bound_states_sorted[i]) < CIMAG(bound_states_sorted[j])){
+                tmp =  bound_states_sorted[i];
+                bound_states_sorted[i] = bound_states_sorted[j];
+                bound_states_sorted[j] = tmp;
+                tmp =  normconsts_sorted[i];
+                normconsts_sorted[i] = normconsts_sorted[j];
+                normconsts_sorted[j] = tmp;
+            }
+        }
+    }
+
+    // Shift Sign of norm_consts if K even
+    if (K%2 == 0){
+        for (UINT i=0; i<K; i++){
+            normconsts_sorted[i] = -1*normconsts_sorted[i];
+        }
+    }    
+
+    // Declare theta_E
+    COMPLEX * theta_E1 = NULL;
+    theta_E1 = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(theta_E1, ret_code, leave_fun);
 
-    REAL * theta_E2 = NULL;
-    theta_E2 = malloc(D * sizeof(REAL));
+    COMPLEX * theta_E2 = NULL;
+    theta_E2 = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(theta_E2, ret_code, leave_fun);
-
-    //TODO: only temporary solution!
-    for (UINT i=0; i<D; i++){
-        theta_E1[i]=1;
-        theta_E2[i]=10;
-    }
 
     // Add solitions
     for (UINT i=0; i<K; i++){
-        ret_code = add_one_soliton_E(bound_states, theta_E1, theta_E2, x_grid, D, q);
+
+        // Assign values to theta_E dependend on next eigenvalue to add
+        for (UINT j=0; j<D; j++){
+            theta_E1[j] = 1;
+            theta_E2[j] = normconsts_sorted[i];
+        }
+
+        // Crum-Transformation step
+        ret_code = add_one_soliton_E(bound_states_sorted[i], theta_E1, theta_E2, x_grid, D, q);
+        CHECK_RETCODE(ret_code, leave_fun);
     }
-
-
-
-    // For Debugging:
-    // for (UINT n=0; n<D; n++){
-    //     q[n] = x_grid[n];
-    // }
-        
 
 leave_fun:
     free(x_grid);
+    free(bound_states_sorted);
+    free(normconsts_sorted);
     free(theta_E1);
     free(theta_E2);
     return ret_code;
