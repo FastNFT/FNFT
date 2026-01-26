@@ -89,8 +89,7 @@ INT add_one_soliton_E(
     REAL const * const theta_E2,
     REAL const * const x_grid,
     const UINT D,
-    COMPLEX * const q,
-    REAL const * const T)
+    COMPLEX * const q)
 {
     INT ret_code = SUCCESS;
 
@@ -98,7 +97,7 @@ INT add_one_soliton_E(
     M_min1_11 = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(M_min1_11, ret_code, leave_fun);
 
-    //TODO: I weg!!
+    // Transformation into a real number.
     COMPLEX k1 = bound_state[0]*I;
 
     // printf("Marker1");
@@ -206,28 +205,7 @@ INT add_one_soliton_E(
 
     // Update output
     for (UINT i=0; i<D; i++){
-        q[i] = -q[i] + 4 * M_min1_11[i];
-        // q[i] = x_grid[i];
-        // q[i] = M_min1_11[i];
-
-        // if (i<n_neg){
-        //     // q[i] = prefactor_neg[i];
-        //     // q[i] = w_n_inv[i];
-        //     // q[i] = th1_neg[i] + th2_neg[i] + x_neg[i];
-        //     q[i] = th1_neg[i];
-        // } else {
-        //     // q[i] = prefactor_pos[i-n_neg];
-        //     // q[i] = w_p_inv[i-n_neg];
-        //     // q[i] = th1_pos[i-i_pos] + th2_pos[i-i_pos] + x_pos[i-i_pos];
-        //     q[i] = th1_pos[i-i_pos];
-        // }
-
-        // if (i<n_neg){
-        //     q[i] = CEXP(-2*k1*x_neg[i]);
-        // } else {
-        //     q[i] = CEXP(2*k1*x_pos[i-n_neg]);
-        // }
-        
+        q[i] = -q[i] + 4 * M_min1_11[i];      
     }
 
 leave_fun:
@@ -244,20 +222,6 @@ leave_fun:
 
     return ret_code;
 }
-
-
-// INT add_two_solitons_E(
-//     UINT const K,
-//     COMPLEX const * const bound_states,
-//     COMPLEX const * const normconsts_or_residues,
-//     const UINT D,
-//     COMPLEX * const q,
-//     REAL const * const T)
-// {
-//     COMPLEX k1;
-//     COMPLEX k2;
-// }
-
 
 
 INT fnft_kdvv_inverse(
@@ -282,12 +246,10 @@ INT fnft_kdvv_inverse(
     /* Tests
     number of normconsts = number bound_states
     */
-
    
     INT ret_code = SUCCESS;
 
     // Initialize q
-
     for (UINT n=0; n<D; n++){
         q[n] = 0;
     }
@@ -304,7 +266,6 @@ INT fnft_kdvv_inverse(
     }
 
     // Initialize theta_E
-
     REAL * theta_E1 = NULL;
     theta_E1 = malloc(D * sizeof(REAL));
     CHECK_NOMEM(theta_E1, ret_code, leave_fun);
@@ -313,17 +274,20 @@ INT fnft_kdvv_inverse(
     theta_E2 = malloc(D * sizeof(REAL));
     CHECK_NOMEM(theta_E2, ret_code, leave_fun);
 
+    //TODO: only temporary solution!
     for (UINT i=0; i<D; i++){
         theta_E1[i]=1;
         theta_E2[i]=10;
     }
 
     // Add solitions
-
     for (UINT i=0; i<K; i++){
-        ret_code = add_one_soliton_E(bound_states, theta_E1, theta_E2, x_grid, D, q, T);
+        ret_code = add_one_soliton_E(bound_states, theta_E1, theta_E2, x_grid, D, q);
     }
 
+
+
+    // For Debugging:
     // for (UINT n=0; n<D; n++){
     //     q[n] = x_grid[n];
     // }
@@ -331,7 +295,8 @@ INT fnft_kdvv_inverse(
 
 leave_fun:
     free(x_grid);
-
+    free(theta_E1);
+    free(theta_E2);
     return ret_code;
 }
 
