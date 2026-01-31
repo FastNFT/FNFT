@@ -17,19 +17,19 @@ The sources for the examples can be found in the same directory. The example bin
 
     VERBOSE=1 make -j4
 
-If the MATLAB interface has been built, try the following in MATLAB
+If the MATLAB interface has been built, try the following in MATLAB (adapt the paths to your system):
 
     addpath ~/FNFT/matlab/
+    mex_fnft_version
     cd ~/FNFT/examples
-    mex_fnft_nsev_example
-    mex_fnft_nsep_example
-    mex_fnft_kdvv_example
+    mex_fnft_kdvv_example_1
+    mex_fnft_kdvp_example_1
+    mex_fnft_nsev_example_1
+    mex_fnft_nsep_example_1
     mex_fnft_nsev_inverse_example_1
-    mex_fnft_nsev_inverse_example_2
-    mex_fnft_nsev_inverse_example_3
-    mex_fnft_nsev_slow_example_1
-    mex_fnft_nsev_slow_example_2
-
+    
+The same commands should work with GNU Octave. Note that for use with Octave, the mex interface must be build manually (see INSTALL.md).
+    
 ## Documentation
 
 The documentation of the C interface is available online at
@@ -38,12 +38,13 @@ The documentation of the C interface is available online at
 
 The C interface is separated into a public part ('fnft_' prefix) and a private part ('fnft__' prefix). The public part corresponds to the header files directly inside the 'include' folder. The header files in the subdirectories of the 'include' folder are considered private. To build the documentation yourself, run doxygen in the main folder of the library. It can then be found in the doc folder. Simply open the file '~/FNFT/doc/html/index.html' in your web browser.
 
-The MATLAB interface is documented in the usual way. Run the commands
+The MATLAB/GNU Octave interface is documented in the usual way. Run the commands
 
+    help mex_fnft_version
+    help mex_fnft_kdvv
+    help mex_fnft_kdvp
     help mex_fnft_nsev
     help mex_fnft_nsep
-    help mex_fnft_kdvv
     help mex_fnft_nsev_inverse
-    help mex_fnft_nsev_slow
 
-in MATLAB to get more information.
+in MATLAB or Octave to get more information.

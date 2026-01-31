@@ -43,6 +43,11 @@ To test that everything works as expected, run the command
 If MATLAB is installed, the MATLAB interface should have been built
 automatically. It can be found in the `matlab` folder.
 
+To use the Matlab interface with GNU Octave instead, start Octave and run the commands
+
+    cd ~/FNFT/matlab
+    build_with_octave
+
 ### System-wide installation
 
 To make FNFT available for all users of the system, run the commands
