@@ -67,16 +67,16 @@ INT add_one_soliton(
     // -- Crum Transform --
     // Calculation for positive x
     for (UINT i = i_pos; i<D; i++){
-        w_inv[i] = 1/(th1[i] + th2[i]*CEXP(2*k1*x_grid[i]));
-        prefactor[i] = 2*k1*k1*th1[i]*th2[i]*w_inv[i]*w_inv[i];
-        M_min1_11[i]=prefactor[i]*CEXP(2*k1*x_grid[i]);
+        w_inv[i] = 1/(th1[i] + th2[i] * CEXP(2*k1*x_grid[i]));
+        prefactor[i] = 2 * k1*k1 * th1[i] * th2[i] * w_inv[i]*w_inv[i];
+        M_min1_11[i] = prefactor[i] * CEXP(2*k1*x_grid[i]);
     }    
 
     // Calculation for negative x
     for (UINT i = 0; i<i_pos; i++){
-        w_inv[i] = 1/(th1[i]*CEXP(-2*k1*x_grid[i]) + th2[i]);
-        prefactor[i] = 2*k1*k1*th1[i]*th2[i]*w_inv[i]*w_inv[i];
-        M_min1_11[i]=prefactor[i]*CEXP(-2*k1*x_grid[i]);
+        w_inv[i] = 1/(th1[i] * CEXP(-2*k1*x_grid[i]) + th2[i]);
+        prefactor[i] = 2 * k1*k1 * th1[i] * th2[i] * w_inv[i]*w_inv[i];
+        M_min1_11[i] = prefactor[i] *  CEXP(-2*k1*x_grid[i]);
 
     }
 
@@ -202,7 +202,7 @@ INT add_two_solitons(
     
     pm0_jZ[2*N_bound_states_left] = 0;
     
-    // dimension if sp is dependend on number of bound states left
+    // dimension of s is dependend on number of bound states left
     COMPLEX * s = NULL;
     s = malloc(D * N_pm0_jZ * sizeof(COMPLEX));
     CHECK_NOMEM(s, ret_code, leave_fun);
@@ -245,7 +245,8 @@ INT add_two_solitons(
     for (UINT i=i_pos; i<D; i++){
         t1[i] = th11[i] + th12[i] * CEXP(-2*k1*x_grid[i]);
         t2[i] = th21[i] + th22[i] * CEXP(-2*k2*x_grid[i]);
-        w_inv[i] = 1/(t1[i] * k2 * (th21[i] - th22[i] * CEXP(-2*k2*x_grid[i])) - t2[i] * k1 * (th11[i] - th12[i] * CEXP(-2*k1*x_grid[i])));
+        w_inv[i] = 1/(t1[i] * k2 * (th21[i] - th22[i] * CEXP(-2*k2*x_grid[i])) - 
+                    t2[i] * k1 * (th11[i] - th12[i] * CEXP(-2*k1*x_grid[i])));
         prefactor[i] = 2 * (k2*k2 - k1*k1) * w_inv[i]*w_inv[i];
 
         for (UINT j=0; j<N_pm0_jZ; j++) {
@@ -260,8 +261,8 @@ INT add_two_solitons(
     for (UINT i=0; i<i_pos; i++){
         t1[i] = th11[i] * CEXP(2*k1*x_grid[i]) + th12[i];
         t2[i] = th21[i] * CEXP(2*k2*x_grid[i]) + th22[i];
-
-        w_inv[i] = 1/(t1[i] * k2 * (th21[i] * CEXP(2*k2*x_grid[i]) - th22[i]) - t2[i] * k1 * (th11[i] * CEXP(2*k1*x_grid[i]) - th12[i]));
+        w_inv[i] = 1/(t1[i] * k2 * (th21[i] * CEXP(2*k2*x_grid[i]) - th22[i]) - 
+                    t2[i] * k1 * (th11[i] * CEXP(2*k1*x_grid[i]) - th12[i]));
         prefactor[i] = 2 * (k2*k2 - k1*k1) * w_inv[i]*w_inv[i];
 
         for (UINT j=0; j<N_pm0_jZ; j++) {
@@ -496,18 +497,30 @@ INT fnft_kdvv_inverse(
             theta_E1[j*D+i] = 1;
             theta_E2[j*D+i] = normconsts_sorted[j];
         }
-        
     }
 
     UINT N_rest = K;
     UINT step_idx = 0;
+    UINT N_step;
 
     // Add solitions
     while (N_rest > 0){
 
+        // Select indices for this step and for the remaining eigenvalues to add
         // If the number of eigenvalues left is odd, then only one solition should be added
-        if (N_rest%2==1){
-            // Crum-Transformation step
+        if (N_rest%2==1){ N_step = 1; }
+        else { N_step = 2; }
+        
+        // Scale trajectories (magnitudes of th1 and th2 symmetric around 0)
+        for (UINT i=0; i<D; i++){
+            for (UINT j=0; j<N_step; j++){
+                theta_E1[j*D+i] = theta_E1[j*D+i] * CPOW(2, ROUND( (LOG2(CABS(theta_E1[j*D+i])) + LOG2(CABS(theta_E2[j*D+i])))/2 ));
+                theta_E2[j*D+i] = theta_E2[j*D+i] * CPOW(2, ROUND( (LOG2(CABS(theta_E1[j*D+i])) + LOG2(CABS(theta_E2[j*D+i])))/2 ));
+            }
+        }
+
+        // Crum-Transformation step
+        if (N_step==1){
             ret_code = add_one_soliton(&bound_states_sorted[step_idx], 
                                         &bound_states_sorted[step_idx+1],
                                         N_rest-1,
@@ -517,14 +530,7 @@ INT fnft_kdvv_inverse(
                                         D, 
                                         q);
             CHECK_RETCODE(ret_code, leave_fun);
-
-            step_idx++;
-            N_rest--;
-        } 
-        // If the number of eigenvalues left is even, then two solitions
-        // should be added        
-        else {
-            // Crum-Transformation step
+        } else {
             ret_code = add_two_solitons(&bound_states_sorted[step_idx], 
                                         &bound_states_sorted[step_idx+2],
                                         N_rest-2,
@@ -534,33 +540,17 @@ INT fnft_kdvv_inverse(
                                         D, 
                                         q);
             CHECK_RETCODE(ret_code, leave_fun);
-
-            step_idx += 2;
-            N_rest -= 2;
         }
+
+        N_rest = N_rest-N_step;
+        step_idx = step_idx + N_step;
 
         // Filter out errors that result in negative values
         for (UINT i=0; i<D; i++){
-            if (CREAL(q[i]) < 0){
-                q[i] = 0;
-            }
+            if (CREAL(q[i]) < 0){ q[i] = 0; }
         }
 
     }
-
-    // for (UINT i=0; i<K; i++){
-
-    //     // Assign values to theta_E dependend on next eigenvalue to add
-    //     for (UINT j=0; j<D; j++){
-    //         theta_E1_1[j] = 1;
-    //         theta_E2_1[j] = normconsts_sorted[i];
-    //     }
-
-    //     // Crum-Transformation step
-    //     ret_code = add_one_soliton_E(&bound_states_sorted[i], theta_E1_1, theta_E2_1, x_grid, D, q);
-    //     CHECK_RETCODE(ret_code, leave_fun);
-    // }
-
 
 leave_fun:
     free(x_grid);
