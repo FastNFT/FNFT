@@ -20,28 +20,39 @@
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft_kdvv_inverse.h"
-#include <stdio.h> // for printf
 
-
-INT add_one_soliton_E(
-    COMPLEX const * const bound_state,
-    COMPLEX const * const theta_E1,
-    COMPLEX const * const theta_E2,
+INT add_one_soliton(
+    COMPLEX const * const bound_state_to_add,
+    COMPLEX const * const bound_states_left,
+    UINT const N_bound_states_left,
+    COMPLEX * const theta_E1,
+    COMPLEX * const theta_E2,
     REAL const * const x_grid,
     const UINT D,
     COMPLEX * const q)
 {
+    // Initialize variables and arrays
     INT ret_code = SUCCESS;
 
     COMPLEX * M_min1_11 = NULL;
     M_min1_11 = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(M_min1_11, ret_code, leave_fun);
 
-    // Transformation into a real number.
-    COMPLEX k1 = bound_state[0]*I;
+    COMPLEX * w_inv = NULL;
+    w_inv = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(w_inv, ret_code, leave_fun);
 
-    fnft_printf_ptr_t printf_ptr = fnft_errwarn_getprintf();
-    printf_ptr("Marker! %d \n", ret_code);
+    COMPLEX * prefactor = NULL;
+    prefactor = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(prefactor, ret_code, leave_fun);
+
+    // Defining theta vectors out of theta_E vectors, belonging to the bound states to add
+    // These vectors are used in the Crum-Transformation step
+    COMPLEX * th1 = &theta_E1[0];
+    COMPLEX * th2 = &theta_E2[0];
+
+    // Transformation into a real number
+    COMPLEX k1 = bound_state_to_add[0];
 
     // Determine where x>0
     UINT i_pos;
@@ -53,29 +64,18 @@ INT add_one_soliton_E(
         }
     }
 
-    COMPLEX * w_inv = NULL;
-    w_inv = malloc(D * sizeof(COMPLEX));
-    CHECK_NOMEM(w_inv, ret_code, leave_fun);
-
-    COMPLEX * prefactor = NULL;
-    prefactor = malloc(D * sizeof(COMPLEX));
-    CHECK_NOMEM(prefactor, ret_code, leave_fun);
-    
-
+    // -- Crum Transform --
     // Calculation for positive x
-    
     for (UINT i = i_pos; i<D; i++){
-        w_inv[i] = 1/(theta_E1[i] + theta_E2[i]*CEXP(2*k1*x_grid[i]));
-        prefactor[i] = 2*k1*k1*theta_E1[i]*theta_E2[i]*w_inv[i]*w_inv[i];
+        w_inv[i] = 1/(th1[i] + th2[i]*CEXP(2*k1*x_grid[i]));
+        prefactor[i] = 2*k1*k1*th1[i]*th2[i]*w_inv[i]*w_inv[i];
         M_min1_11[i]=prefactor[i]*CEXP(2*k1*x_grid[i]);
-
     }    
 
     // Calculation for negative x
-
     for (UINT i = 0; i<i_pos; i++){
-        w_inv[i] = 1/(theta_E1[i]*CEXP(-2*k1*x_grid[i]) + theta_E2[i]);
-        prefactor[i] = 2*k1*k1*theta_E1[i]*theta_E2[i]*w_inv[i]*w_inv[i];
+        w_inv[i] = 1/(th1[i]*CEXP(-2*k1*x_grid[i]) + th2[i]);
+        prefactor[i] = 2*k1*k1*th1[i]*th2[i]*w_inv[i]*w_inv[i];
         M_min1_11[i]=prefactor[i]*CEXP(-2*k1*x_grid[i]);
 
     }
@@ -86,9 +86,15 @@ INT add_one_soliton_E(
     }
 
     // -- Update Jost Solution --
-    COMPLEX * jZ0 = NULL; // Eigenvalues to add here
-    COMPLEX * jZ = NULL; // Eigenvalues Left
-    UINT N_jZ = sizeof(jZ);
+    // Check, if Jost has to be updated. Only when there are bound states left, that are not added yet
+    UINT const N_jZ = N_bound_states_left;        // Only because shorter name
+    UINT const is_Jost_to_update = N_jZ != 0;
+
+    // theta vectors according to the bound states left, which corresponds to the Jost solutions
+    COMPLEX * th1_jZ = &theta_E1[D*1];
+    COMPLEX * th2_jZ = &theta_E2[D*1];
+
+    // TODO: sind jZ komplex oder reell gemacht worden?
 
     // Create C_E Matrix (for Updating Jost Solution)
     UINT n_C_E = 2*2*D*N_jZ; 
@@ -100,58 +106,68 @@ INT add_one_soliton_E(
         C_E[i] = 0;
     }
 
-    COMPLEX * C_E_1_1 = &C_E[0*0*D*N_jZ];
-    COMPLEX * C_E_2_2 = &C_E[1*1*D*N_jZ];
+    COMPLEX * C_E_1_1 = &C_E[0*D*N_jZ];
+    COMPLEX * C_E_1_2 = &C_E[1*D*N_jZ];
+    COMPLEX * C_E_2_1 = &C_E[2*D*N_jZ];
+    COMPLEX * C_E_2_2 = &C_E[3*D*N_jZ];
 
     for (UINT i=0; i<D; i++){
         for (UINT j=0; j<N_jZ; j++){
-            C_E_1_1[i*N_jZ+j] = jZ[j];
-            C_E_2_2[i*N_jZ+j] = -jZ[j];
+            C_E_1_1[j*D+i] = bound_states_left[j];
+            C_E_2_2[j*D+i] = -bound_states_left[j];
         }
     }
 
-    // Compute a newcprefactor for C_E (for Updating Jost Solution)
-    // COMPLEX * prefactor_C_E_pos = NULL;
-    // prefactor_C_E_pos = malloc(n_pos * sizeof(COMPLEX));
-    // CHECK_NOMEM(prefactor_C_E_pos, ret_code, leave_fun);
+    // Compute a new prefactor for C_E (for Updating Jost Solution)
+    COMPLEX * prefactor_C_E = NULL;
+    prefactor_C_E = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(prefactor_C_E, ret_code, leave_fun);
 
-    // COMPLEX * prefactor_C_E_neg = NULL;
-    // prefactor_C_E_neg = malloc(n_neg * sizeof(COMPLEX));
-    // CHECK_NOMEM(prefactor_C_E_neg, ret_code, leave_fun);
+    // Calculation for positive x
+    for (UINT i=i_pos; i<D && is_Jost_to_update; i++){
+        prefactor_C_E[i] = bound_state_to_add[0] * (th1[i] - th2[i] * CEXP(2*bound_state_to_add[0]*x_grid[i])) * w_inv[i];
 
-    // for (UINT i=0; i<n_pos; i++){
-    //     prefactor_C_E_pos[i] = jZ0[0] * (th1_pos[i] - th2_pos[i] * CEXP(2*jZ0[0]*x_pos[i])) * w_p_inv[i];
-    // }
+        for (UINT j=0; j<N_jZ; j++){
+            C_E_1_1[j*D+i] = C_E_1_1[j*D+i] + prefactor_C_E[i] + M_min1_11[i] * 1/bound_states_left[j];
+            C_E_1_2[j*D+i] = C_E_1_2[j*D+i] + prefactor[i] * CEXP(2*(bound_state_to_add[0]+bound_states_left[j])*x_grid[i])*1/bound_states_left[j];
+            C_E_2_1[j*D+i] = C_E_2_1[j*D+i] - prefactor[i] * CEXP(2*(bound_state_to_add[0]-bound_states_left[j])*x_grid[i])*1/bound_states_left[j];
+            C_E_2_2[j*D+i] = C_E_2_2[j*D+i] + prefactor_C_E[i] - M_min1_11[i] * 1/bound_states_left[j];
+        }
+    }
 
-    // for (UINT i=0; i<n_neg; i++){
-    //     prefactor_C_E_neg[i] = jZ0[0] * (th1_neg[i] * CEXP(-2*jZ0[0]*x_neg[i]) - th2_neg[i]) * w_n_inv[i];
-    // }
+    // Calculation for negative x
+    for (UINT i=0; i<i_pos && is_Jost_to_update; i++){
+        prefactor_C_E[i] = bound_state_to_add[0] * (th1[i] * CEXP(-2*bound_state_to_add[0]*x_grid[i]) - th2[i]) * w_inv[i];
 
-    // for (UINT i=i_pos; i<D; i++){
-    //     for (UINT j=0; j<N_jZ; j++){
-    //         C_E_1_1[i*N_jZ+j] = C_E_1_1[i*N_jZ+j] + prefactor_C_E_pos[i-i_pos] + M_min1_11;
-    //         C_E_2_2[i*N_jZ+j] = C_E_2_2[i*N_jZ+j] + prefactor_C_E_pos[i-i_pos];
-    //     }
-    // }
-
-
-
+        for (UINT j=0; j<N_jZ; j++){
+            C_E_1_1[j*D+i] = C_E_1_1[j*D+i] + prefactor_C_E[i] + M_min1_11[i] * 1/bound_states_left[j];
+            C_E_1_2[j*D+i] = C_E_1_2[j*D+i] + prefactor[i] * CEXP(-2*(bound_state_to_add[0]-bound_states_left[j])*x_grid[i])*1/bound_states_left[j];
+            C_E_2_1[j*D+i] = C_E_2_1[j*D+i] - prefactor[i] * CEXP(-2*(bound_state_to_add[0]+bound_states_left[j])*x_grid[i])*1/bound_states_left[j];
+            C_E_2_2[j*D+i] = C_E_2_2[j*D+i] + prefactor_C_E[i] - M_min1_11[i] * 1/bound_states_left[j];
+        }
+    }
 
 
-
+    // Map Jost solution
+    for (UINT i=0; i<D && is_Jost_to_update; i++){
+        for (UINT j=0; j<N_jZ; j++){
+            th1_jZ[j*D+i] = C_E_1_1[j*D+i] * th1_jZ[j*D+i] + C_E_1_2[j*D+i] * th2_jZ[j*D+i];
+            th2_jZ[j*D+i] = C_E_2_1[j*D+i] * th1_jZ[j*D+i] + C_E_2_2[j*D+i] * th2_jZ[j*D+i];
+        }
+    }
 
 leave_fun:
+    free(M_min1_11);
     free(w_inv);
     free(prefactor);
     free(C_E);
-    // free(prefactor_C_E_pos);
-    // free(prefactor_C_E_neg);
+    free(prefactor_C_E);
 
     return ret_code;
 }
 
 
-INT add_two_solitons_E(
+INT add_two_solitons(
     COMPLEX const * const bound_states,
     COMPLEX const * const theta_E11,
     COMPLEX const * const theta_E12,
@@ -275,7 +291,6 @@ INT add_two_solitons_E(
 
 
     // Calculation for positive x
-    
     COMPLEX * w_p_inv = NULL;
     w_p_inv = malloc(n_pos * sizeof(COMPLEX));
     CHECK_NOMEM(w_p_inv, ret_code, leave_fun);
@@ -298,7 +313,6 @@ INT add_two_solitons_E(
     
 
     // Calculation for negative x
-
     COMPLEX * w_n_inv = NULL;
     w_n_inv = malloc(n_neg * sizeof(COMPLEX));
     CHECK_NOMEM(w_n_inv, ret_code, leave_fun);
@@ -397,14 +411,14 @@ INT fnft_kdvv_inverse(
     CHECK_NOMEM(normconsts_sorted, ret_code, leave_fun);
 
     for (UINT i=0; i<K; i++){
-        bound_states_sorted[i] = bound_states[i];
+        bound_states_sorted[i] = bound_states[i]*I; // bound states should be real for further computing
         normconsts_sorted[i] = normconsts_or_residues[i];
     }
 
     //sorting bound_states and according norm_const in descending order based on magnitude of imaginary part
     for (UINT i = 0; i < K; ++i){
         for (UINT j = i + 1; j < K; ++j){
-            if (CIMAG(bound_states_sorted[i]) < CIMAG(bound_states_sorted[j])){
+            if (CABS(bound_states_sorted[i]) < CABS(bound_states_sorted[j])){
                 tmp =  bound_states_sorted[i];
                 bound_states_sorted[i] = bound_states_sorted[j];
                 bound_states_sorted[j] = tmp;
@@ -423,21 +437,21 @@ INT fnft_kdvv_inverse(
     }    
 
     // Declare theta_E
-    COMPLEX * theta_E11 = NULL;
-    theta_E11 = malloc(D * sizeof(COMPLEX));
-    CHECK_NOMEM(theta_E11, ret_code, leave_fun);
+    COMPLEX * theta_E1 = NULL;
+    theta_E1 = malloc(D * K * sizeof(COMPLEX));
+    CHECK_NOMEM(theta_E1, ret_code, leave_fun);
 
-    COMPLEX * theta_E12 = NULL;
-    theta_E12 = malloc(D * sizeof(COMPLEX));
-    CHECK_NOMEM(theta_E12, ret_code, leave_fun);
+    COMPLEX * theta_E2 = NULL;
+    theta_E2 = malloc(D * K * sizeof(COMPLEX));
+    CHECK_NOMEM(theta_E2, ret_code, leave_fun);
 
-    COMPLEX * theta_E21 = NULL;
-    theta_E21 = malloc(D * sizeof(COMPLEX));
-    CHECK_NOMEM(theta_E21, ret_code, leave_fun);
-
-    COMPLEX * theta_E22 = NULL;
-    theta_E22 = malloc(D * sizeof(COMPLEX));
-    CHECK_NOMEM(theta_E22, ret_code, leave_fun);
+    for (UINT i=0; i<D; i++){
+        for (UINT j=0; j<K; j++){
+            theta_E1[j*D+i] = 1;
+            theta_E2[j*D+i] = normconsts_sorted[j];
+        }
+        
+    }
 
     UINT N_rest = K;
     UINT step_idx = 0;
@@ -445,17 +459,18 @@ INT fnft_kdvv_inverse(
     // Add solitions
     while (N_rest > 0){
 
-        // If the number of eigenvalues left is odd, then only one solition 
-        // should be added
-        if (N_rest%2==1){
-
-            for (UINT j=0; j<D; j++){
-                theta_E11[j] = 1;
-                theta_E12[j] = normconsts_sorted[step_idx];
-            }
-
+        // If the number of eigenvalues left is odd, then only one solition should be added
+        // if (N_rest%2==1){
+        if (N_rest){
             // Crum-Transformation step
-            ret_code = add_one_soliton_E(&bound_states_sorted[step_idx], theta_E11, theta_E12, x_grid, D, q);
+            ret_code = add_one_soliton(&bound_states_sorted[step_idx], 
+                                        &bound_states_sorted[step_idx+1],
+                                        N_rest-1,
+                                        &theta_E1[step_idx*D],
+                                        &theta_E2[step_idx*D],
+                                        x_grid, 
+                                        D, 
+                                        q);
             CHECK_RETCODE(ret_code, leave_fun);
 
             step_idx++;
@@ -465,6 +480,13 @@ INT fnft_kdvv_inverse(
         // should be added        
         else {
             
+        }
+
+        // Filter out errors that result in negative values
+        for (UINT i=0; i<D; i++){
+            if (CREAL(q[i]) < 0){
+                q[i] = 0;
+            }
         }
 
     }
@@ -487,8 +509,8 @@ leave_fun:
     free(x_grid);
     free(bound_states_sorted);
     free(normconsts_sorted);
-    free(theta_E11);
-    free(theta_E12);
+    free(theta_E1);
+    free(theta_E2);
     return ret_code;
 }
 
