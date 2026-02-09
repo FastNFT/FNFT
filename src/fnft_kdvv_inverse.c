@@ -27,7 +27,7 @@ INT add_one_soliton(
     UINT const N_bound_states_left,
     COMPLEX * const theta_E1,
     COMPLEX * const theta_E2,
-    REAL const * const x_grid,
+    COMPLEX const * const x_grid,
     const UINT D,
     COMPLEX * const q)
 {
@@ -58,7 +58,7 @@ INT add_one_soliton(
     UINT i_pos;
     
     for (UINT i = 0; i < D; i++){
-        if (x_grid[i] > 0){
+        if (CREAL(x_grid[i]) > 0){
             i_pos = i;
             break;
         }
@@ -79,12 +79,12 @@ INT add_one_soliton(
         M_min1_11[i] = prefactor[i] *  CEXP(-2*k1*x_grid[i]);
 
     }
-
+    
     // Update output
     for (UINT i=0; i<D; i++){
         q[i] = -q[i] + 4 * M_min1_11[i];      
     }
-
+    
     // -- Update Jost Solution --
     // Check, if Jost has to be updated. Only when there are bound states left, that are not added yet
     UINT const N_jZ = N_bound_states_left;        // Only because shorter name
@@ -145,7 +145,6 @@ INT add_one_soliton(
         }
     }
 
-
     // Map Jost solution
     for (UINT i=0; i<D && is_Jost_to_update; i++){
         for (UINT j=0; j<N_jZ; j++){
@@ -171,7 +170,7 @@ INT add_two_solitons(
     UINT const N_bound_states_left,
     COMPLEX * const theta_E1,
     COMPLEX * const theta_E2,
-    REAL const * const x_grid,
+    COMPLEX const * const x_grid,
     const UINT D,
     COMPLEX * const q)
 {
@@ -215,7 +214,7 @@ INT add_two_solitons(
     UINT i_pos;
     
     for (UINT i = 0; i < D; i++){
-        if (x_grid[i] > 0){
+        if (CREAL(x_grid[i]) > 0){
             i_pos = i;
             break;
         }
@@ -436,11 +435,11 @@ INT fnft_kdvv_inverse(
     }
 
     // Initialize spatial grid with D points between T[0] and T[1]
-    REAL * x_grid = NULL;
-    x_grid = malloc(D * sizeof(REAL));
+    COMPLEX * x_grid = NULL;
+    x_grid = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(x_grid, ret_code, leave_fun);
 
-    const REAL eps_t = (T[1] - T[0])/(D - 1);
+    const COMPLEX eps_t = (T[1] - T[0])/(D - 1);
 
     for (UINT n=0; n<D; n++) {
         x_grid[n]= T[0] + n*eps_t;
@@ -512,10 +511,13 @@ INT fnft_kdvv_inverse(
         else { N_step = 2; }
         
         // Scale trajectories (magnitudes of th1 and th2 symmetric around 0)
+        COMPLEX tmp_scaling_factor;
+
         for (UINT i=0; i<D; i++){
-            for (UINT j=0; j<N_step; j++){
-                theta_E1[j*D+i] = theta_E1[j*D+i] * CPOW(2, ROUND( (LOG2(CABS(theta_E1[j*D+i])) + LOG2(CABS(theta_E2[j*D+i])))/2 ));
-                theta_E2[j*D+i] = theta_E2[j*D+i] * CPOW(2, ROUND( (LOG2(CABS(theta_E1[j*D+i])) + LOG2(CABS(theta_E2[j*D+i])))/2 ));
+            for (UINT j=step_idx; j<step_idx+N_step; j++){
+                tmp_scaling_factor = CPOW(2, -ROUND( (LOG2(CABS(theta_E1[j*D+i])) + LOG2(CABS(theta_E2[j*D+i])))/2 ));
+                theta_E1[j*D+i] = theta_E1[j*D+i] * tmp_scaling_factor;
+                theta_E2[j*D+i] = theta_E2[j*D+i] * tmp_scaling_factor;
             }
         }
 
