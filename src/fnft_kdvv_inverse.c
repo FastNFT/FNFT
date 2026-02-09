@@ -48,8 +48,8 @@ INT add_one_soliton(
 
     // Defining theta vectors out of theta_E vectors, belonging to the bound state to add
     // These vectors are used in the Crum-Transformation step
-    COMPLEX * th1 = &theta_E1[0];
-    COMPLEX * th2 = &theta_E2[0];
+    COMPLEX * const th1 = &theta_E1[0];
+    COMPLEX * const th2 = &theta_E2[0];
 
     // Transformation into a real number
     COMPLEX k1 = bound_state_to_add[0];
@@ -111,8 +111,8 @@ INT add_one_soliton(
 
     for (UINT i=0; i<D; i++){
         for (UINT j=0; j<N_jZ; j++){
-            C_E_1_1[j*D+i] = bound_states_left[j];
-            C_E_2_2[j*D+i] = -bound_states_left[j];
+            C_E_1_1[j*D+i] = -bound_states_left[j];
+            C_E_2_2[j*D+i] = bound_states_left[j];
         }
     }
 
@@ -132,11 +132,11 @@ INT add_one_soliton(
             C_E_2_2[j*D+i] = C_E_2_2[j*D+i] + prefactor_C_E[i] - M_min1_11[i] * 1/bound_states_left[j];
         }
     }
-
+    
     // Calculation for negative x
     for (UINT i=0; i<i_pos && is_Jost_to_update; i++){
         prefactor_C_E[i] = k1 * (th1[i] * CEXP(-2*k1*x_grid[i]) - th2[i]) * w_inv[i];
-
+        
         for (UINT j=0; j<N_jZ; j++){
             C_E_1_1[j*D+i] = C_E_1_1[j*D+i] + prefactor_C_E[i] + M_min1_11[i] * 1/bound_states_left[j];
             C_E_1_2[j*D+i] = C_E_1_2[j*D+i] + prefactor[i] * CEXP(-2*(k1-bound_states_left[j])*x_grid[i])*1/bound_states_left[j];
@@ -144,12 +144,18 @@ INT add_one_soliton(
             C_E_2_2[j*D+i] = C_E_2_2[j*D+i] + prefactor_C_E[i] - M_min1_11[i] * 1/bound_states_left[j];
         }
     }
-
+    
     // Map Jost solution
+    COMPLEX tmp_th1;
+    COMPLEX tmp_th2;
+
     for (UINT i=0; i<D && is_Jost_to_update; i++){
         for (UINT j=0; j<N_jZ; j++){
-            th1_jZ[j*D+i] = C_E_1_1[j*D+i] * th1_jZ[j*D+i] + C_E_1_2[j*D+i] * th2_jZ[j*D+i];
-            th2_jZ[j*D+i] = C_E_2_1[j*D+i] * th1_jZ[j*D+i] + C_E_2_2[j*D+i] * th2_jZ[j*D+i];
+            tmp_th1 = th1_jZ[j*D+i];
+            tmp_th2 = th2_jZ[j*D+i];
+
+            th1_jZ[j*D+i] = C_E_1_1[j*D+i] * tmp_th1 + C_E_1_2[j*D+i] * tmp_th2;
+            th2_jZ[j*D+i] = C_E_2_1[j*D+i] * tmp_th1 + C_E_2_2[j*D+i] * tmp_th2;
         }
     }
 
@@ -480,7 +486,7 @@ INT fnft_kdvv_inverse(
         for (UINT i=0; i<K; i++){
             normconsts_sorted[i] = -1*normconsts_sorted[i];
         }
-    }    
+    } 
 
     // Declare theta_E
     COMPLEX * theta_E1 = NULL;
