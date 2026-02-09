@@ -201,8 +201,8 @@ INT add_two_solitons(
     CHECK_NOMEM(pm0_jZ, ret_code, leave_fun);
     
     for (UINT i=0; i<N_bound_states_left; i++){
-        pm0_jZ[i] = -bound_states_left[i];
-        pm0_jZ[2*i+1] = bound_states_left[i];
+        pm0_jZ[i] = bound_states_left[i];
+        pm0_jZ[i+N_bound_states_left] = -bound_states_left[i];
     }
     
     pm0_jZ[2*N_bound_states_left] = 0;
@@ -228,11 +228,11 @@ INT add_two_solitons(
 
     // Defining theta vectors out of theta_E vectors, belonging to the bound states to add
     // These vectors are used in the Crum-Transformation step
-    // 1. eigenvalue
+    // thetas according to 1. eigenvalue
     COMPLEX * th11 = &theta_E1[0];
     COMPLEX * th12 = &theta_E2[0];
 
-    //2. eigenvalue
+    // thetas according to 2. eigenvalue
     COMPLEX * th21 = &theta_E1[D];
     COMPLEX * th22 = &theta_E2[D];
 
@@ -283,7 +283,6 @@ INT add_two_solitons(
         q[i] = q[i] + 4 * dq[i];      
     }
 
-
     // -- Update Jost Solution --
 
     // Check, if Jost has to be updated. Only when there are bound states left, that are not added yet
@@ -291,8 +290,13 @@ INT add_two_solitons(
     UINT const is_Jost_to_update = N_jZ != 0;
 
     // theta vectors according to the bound states left, which corresponds to the Jost solutions
-    COMPLEX * th1_jZ = &theta_E1[D];
-    COMPLEX * th2_jZ = &theta_E2[D];
+    COMPLEX * th1_jZ = &theta_E1[2*D];
+    COMPLEX * th2_jZ = &theta_E2[2*D];
+
+    // misc_print_buf(D, th1_jZ, "th1_jZ1");
+    // misc_print_buf(D, th2_jZ, "th2_jZ1");
+    // misc_print_buf(D, &th1_jZ[D], "th1_jZ2");
+    // misc_print_buf(D, &th2_jZ[D], "th2_jZ2");
 
     // Create C_E Matrix (for Updating Jost Solution)
     UINT n_C_E = 2*2*D*N_jZ; 
@@ -319,8 +323,9 @@ INT add_two_solitons(
     COMPLEX prefactor1;
     COMPLEX M_0_11;
     COMPLEX prefactor2;
-    COMPLEX mpjZinv;
     COMPLEX mpjZinv_0;
+    COMPLEX mpjZinv_1;
+    COMPLEX mpjZinv_2;
     COMPLEX M_min1_11_jZinv;
 
     // Calculation for positive x
@@ -329,66 +334,77 @@ INT add_two_solitons(
         M_0_11 = -(k1*k1 + k2*k2)/2 + prefactor[i] * (k2*k2 - k1*k1)/4 * t1[i]*t1[i] * t2[i]*t2[i];
         prefactor2 = prefactor[i] * k1 * k2;
         
-
-        mpjZinv_0 = (  k2 * th21[i] * th22[i] * (th11[i]*th11[i] - th12[i]*th12[i] * 
+        mpjZinv_0 = (k2 * th21[i] * th22[i] * (th11[i]*th11[i] - th12[i]*th12[i] * 
                     CEXP(-4*k1*x_grid[i])) * CEXP(-2*(k2) * x_grid[i]) + 
                     -k1 * th11[i] * th12[i] * (th21[i]*th21[i] - th22[i]*th22[i] * 
                     CEXP(-4*k2*x_grid[i])) * CEXP(-2*(k1) * x_grid[i]));
 
-
         for (UINT j=0; j<N_jZ; j++){
-            mpjZinv = (  k2 * th21[i] * th22[i] * (th11[i]*th11[i] - th12[i]*th12[i] * 
+            mpjZinv_1 = (k2 * th21[i] * th22[i] * (th11[i]*th11[i] - th12[i]*th12[i] * 
                         CEXP(-4*k1*x_grid[i])) * CEXP(-2*(k2-pm0_jZ[j]) * x_grid[i]) + 
                         -k1 * th11[i] * th12[i] * (th21[i]*th21[i] - th22[i]*th22[i] * 
                         CEXP(-4*k2*x_grid[i])) * CEXP(-2*(k1-pm0_jZ[j]) * x_grid[i])  
                     ) * 1/bound_states_left[j];
-            
+
+            mpjZinv_2 = (k2 * th21[i] * th22[i] * (th11[i]*th11[i] - th12[i]*th12[i] * 
+                        CEXP(-4*k1*x_grid[i])) * CEXP(-2*(k2-pm0_jZ[j+N_jZ]) * x_grid[i]) + 
+                        -k1 * th11[i] * th12[i] * (th21[i]*th21[i] - th22[i]*th22[i] * 
+                        CEXP(-4*k2*x_grid[i])) * CEXP(-2*(k1-pm0_jZ[j+N_jZ]) * x_grid[i])  
+                    ) * 1/bound_states_left[j];
 
             M_min1_11_jZinv = prefactor2 * mpjZinv_0 * 1/bound_states_left[j];
 
             C_E_1_1[j*D+i] = C_E_1_1[j*D+i] + prefactor1 * bound_states_left[j] + M_0_11 + M_min1_11_jZinv;
-            C_E_1_2[j*D+i] = C_E_1_2[j*D+i] + prefactor[i] * s[j*D+i] + prefactor2 * mpjZinv;
-            C_E_2_1[j*D+i] = C_E_2_1[j*D+i] + prefactor[i] * s[(j+N_jZ)*D+i] - prefactor2 * mpjZinv;
+            C_E_1_2[j*D+i] = C_E_1_2[j*D+i] + prefactor[i] * s[j*D+i] + prefactor2 * mpjZinv_1;
+            C_E_2_1[j*D+i] = C_E_2_1[j*D+i] + prefactor[i] * s[(j+N_jZ)*D+i] - prefactor2 * mpjZinv_2;
             C_E_2_2[j*D+i] = C_E_2_2[j*D+i] - prefactor1 * bound_states_left[j] + M_0_11 - M_min1_11_jZinv;
         }
     }
 
     // Calculation for negative x
-    for (UINT i=i_pos; i<D && is_Jost_to_update; i++){
+    for (UINT i=0; i<i_pos && is_Jost_to_update; i++){
         prefactor1 = (k2*k2 - k1*k1) * t1[i] * t2[i] * w_inv[i];
         M_0_11 = -(k1*k1 + k2*k2)/2 + prefactor[i] * (k2*k2 - k1*k1)/4 * t1[i]*t1[i] * t2[i]*t2[i];
         prefactor2 = prefactor[i] * k1 * k2;
-        
 
-        mpjZinv = (  k2 * th21[i] * th22[i] * (th11[i]*th11[i] * CEXP(4*k1*x_grid[i]) - th12[i]*th12[i]) *               
+        mpjZinv_0 = (k2 * th21[i] * th22[i] * (th11[i]*th11[i] * CEXP(4*k1*x_grid[i]) - th12[i]*th12[i]) *               
                     CEXP(2*(k2) * x_grid[i]) +
                     -k1 * th11[i] * th12[i] * (th21[i]*th21[i] * CEXP(4*k2*x_grid[i]) - th22[i]*th22[i]) *
                     CEXP(2*(k1) * x_grid[i]) );
 
-
-
         for (UINT j=0; j<N_jZ; j++){
-            mpjZinv = (  k2 * th21[i] * th22[i] * (th11[i]*th11[i] * CEXP(4*k1*x_grid[i]) - 
+            mpjZinv_1 = (k2 * th21[i] * th22[i] * (th11[i]*th11[i] * CEXP(4*k1*x_grid[i]) - 
                         th12[i]*th12[i]) * CEXP(2*(k2+pm0_jZ[j]) * x_grid[i]) +
                         -k1 * th11[i] * th12[i] * (th21[i]*th21[i] * CEXP(4*k2*x_grid[i]) - 
                         th22[i]*th22[i]) * CEXP(2*(k1+pm0_jZ[j]) * x_grid[i])
                     ) * 1/bound_states_left[j];
 
+            mpjZinv_2 = (k2 * th21[i] * th22[i] * (th11[i]*th11[i] * CEXP(4*k1*x_grid[i]) - 
+                        th12[i]*th12[i]) * CEXP(2*(k2+pm0_jZ[j+N_jZ]) * x_grid[i]) +
+                        -k1 * th11[i] * th12[i] * (th21[i]*th21[i] * CEXP(4*k2*x_grid[i]) - 
+                        th22[i]*th22[i]) * CEXP(2*(k1+pm0_jZ[j+N_jZ]) * x_grid[i])
+                    ) * 1/bound_states_left[j];
+
             M_min1_11_jZinv = prefactor2 * mpjZinv_0 * 1/bound_states_left[j];
 
             C_E_1_1[j*D+i] = C_E_1_1[j*D+i] + prefactor1 * bound_states_left[j] + M_0_11 + M_min1_11_jZinv;
-            C_E_1_2[j*D+i] = C_E_1_2[j*D+i] + prefactor[i] * s[j*D+i] + prefactor2 * mpjZinv;
-            C_E_2_1[j*D+i] = C_E_2_1[j*D+i] + prefactor[i] * s[(j+N_jZ)*D+i] - prefactor2 * mpjZinv;
+            C_E_1_2[j*D+i] = C_E_1_2[j*D+i] + prefactor[i] * s[j*D+i] + prefactor2 * mpjZinv_1;
+            C_E_2_1[j*D+i] = C_E_2_1[j*D+i] + prefactor[i] * s[(j+N_jZ)*D+i] - prefactor2 * mpjZinv_2;
             C_E_2_2[j*D+i] = C_E_2_2[j*D+i] - prefactor1 * bound_states_left[j] + M_0_11 - M_min1_11_jZinv;
         }
     }
 
-
     // Map Jost solution
+    COMPLEX tmp_th1;
+    COMPLEX tmp_th2;
+
     for (UINT i=0; i<D && is_Jost_to_update; i++){
         for (UINT j=0; j<N_jZ; j++){
-            th1_jZ[j*D+i] = C_E_1_1[j*D+i] * th1_jZ[j*D+i] + C_E_1_2[j*D+i] * th2_jZ[j*D+i];
-            th2_jZ[j*D+i] = C_E_2_1[j*D+i] * th1_jZ[j*D+i] + C_E_2_2[j*D+i] * th2_jZ[j*D+i];
+            tmp_th1 = th1_jZ[j*D+i];
+            tmp_th2 = th2_jZ[j*D+i];
+
+            th1_jZ[j*D+i] = C_E_1_1[j*D+i] * tmp_th1 + C_E_1_2[j*D+i] * tmp_th2;
+            th2_jZ[j*D+i] = C_E_2_1[j*D+i] * tmp_th1 + C_E_2_2[j*D+i] * tmp_th2;
         }
     }
 
