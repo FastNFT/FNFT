@@ -21,50 +21,36 @@
 
 #include "fnft_kdvv_inverse.h"
 
-INT add_one_soliton(
-    COMPLEX const * const bound_state_to_add,
-    COMPLEX const * const bound_states_left,
-    UINT const N_bound_states_left,
-    COMPLEX * const theta_E1,
-    COMPLEX * const theta_E2,
-    COMPLEX const * const x_grid,
-    const UINT D,
-    COMPLEX * const q)
+static INT find_first_positive_value(
+    COMPLEX const * const array,
+    const UINT length,
+    UINT * const i_pos_ptr)
 {
-    // Initialize variables and arrays
     INT ret_code = SUCCESS;
-
-    COMPLEX * M_min1_11 = NULL;
-    M_min1_11 = malloc(D * sizeof(COMPLEX));
-    CHECK_NOMEM(M_min1_11, ret_code, leave_fun);
-
-    COMPLEX * w_inv = NULL;
-    w_inv = malloc(D * sizeof(COMPLEX));
-    CHECK_NOMEM(w_inv, ret_code, leave_fun);
-
-    COMPLEX * prefactor = NULL;
-    prefactor = malloc(D * sizeof(COMPLEX));
-    CHECK_NOMEM(prefactor, ret_code, leave_fun);
-
-    // Defining theta vectors out of theta_E vectors, belonging to the bound state to add
-    // These vectors are used in the Crum-Transformation step
-    COMPLEX * const th1 = &theta_E1[0];
-    COMPLEX * const th2 = &theta_E2[0];
-
-    // Transformation into a real number
-    COMPLEX k1 = bound_state_to_add[0];
-
-    // Determine where x>0
-    UINT i_pos;
     
-    for (UINT i = 0; i < D; i++){
-        if (CREAL(x_grid[i]) > 0){
-            i_pos = i;
+    for (UINT i = 0; i < length; i++){
+        if (CREAL(array[i]) > 0){
+            *i_pos_ptr = i;
             break;
         }
     }
 
-    // -- Crum Transform --
+    return ret_code;
+}
+
+static INT one_solition_crum_transformation(
+    COMPLEX const k1,
+    COMPLEX const * const th1,
+    COMPLEX const * const th2,
+    const UINT D,
+    const UINT i_pos,
+    COMPLEX const * const x_grid,
+    COMPLEX * const w_inv,
+    COMPLEX * const prefactor,
+    COMPLEX * const M_min1_11)
+{
+    INT ret_code = SUCCESS;
+
     // Calculation for positive x
     for (UINT i = i_pos; i<D; i++){
         w_inv[i] = 1/(th1[i] + th2[i] * CEXP(2*k1*x_grid[i]));
@@ -77,22 +63,104 @@ INT add_one_soliton(
         w_inv[i] = 1/(th1[i] * CEXP(-2*k1*x_grid[i]) + th2[i]);
         prefactor[i] = 2 * k1*k1 * th1[i] * th2[i] * w_inv[i]*w_inv[i];
         M_min1_11[i] = prefactor[i] *  CEXP(-2*k1*x_grid[i]);
+    }
 
+    return ret_code;
+}
+
+static INT two_solitions_crum_transformation(
+    COMPLEX const k1,
+    COMPLEX const k2,
+    const UINT N_pm0_jZ,
+    COMPLEX const * const pm0_jZ,
+    COMPLEX const * const theta_E1,
+    COMPLEX const * const theta_E2,
+    COMPLEX * const t1,
+    COMPLEX * const t2,
+    const UINT D,
+    const UINT i_pos,
+    COMPLEX const * const x_grid,
+    COMPLEX * const w_inv,
+    COMPLEX * const prefactor,
+    COMPLEX * const dq,
+    COMPLEX * const s)
+{
+    INT ret_code = SUCCESS;
+
+    // Defining theta vectors out of theta_E vectors, belonging to the bound states to add
+    // These vectors are used in the Crum-Transformation step
+    // thetas according to 1. eigenvalue
+    COMPLEX const * const th11 = &theta_E1[0];
+    COMPLEX const * const th12 = &theta_E2[0];
+
+    // thetas according to 2. eigenvalue
+    COMPLEX const * const th21 = &theta_E1[D];
+    COMPLEX const * const th22 = &theta_E2[D];
+
+    // for positive x
+    for (UINT i=i_pos; i<D; i++){
+        t1[i] = th11[i] + th12[i] * CEXP(-2*k1*x_grid[i]);
+        t2[i] = th21[i] + th22[i] * CEXP(-2*k2*x_grid[i]);
+        w_inv[i] = 1/(t1[i] * k2 * (th21[i] - th22[i] * CEXP(-2*k2*x_grid[i])) - 
+                    t2[i] * k1 * (th11[i] - th12[i] * CEXP(-2*k1*x_grid[i])));
+        prefactor[i] = 2 * (k2*k2 - k1*k1) * w_inv[i]*w_inv[i];
+
+        for (UINT j=0; j<N_pm0_jZ; j++) {
+            s[j*D+i] =  t2[i]*t2[i] * k1*k1 * th11[i] * th12[i] * CEXP(-2*(k1-pm0_jZ[j])*x_grid[i]) -
+                        t1[i]*t1[i] * k2*k2 * th21[i] * th22[i] * CEXP(-2*(k2-pm0_jZ[j])*x_grid[i]);
+        }
+
+        dq[i] = prefactor[i] * s[(N_pm0_jZ-1)*D+i];
     }
-    
-    // Update output
-    for (UINT i=0; i<D; i++){
-        q[i] = -q[i] + 4 * M_min1_11[i];      
+
+    // for negative x
+    for (UINT i=0; i<i_pos; i++){
+        t1[i] = th11[i] * CEXP(2*k1*x_grid[i]) + th12[i];
+        t2[i] = th21[i] * CEXP(2*k2*x_grid[i]) + th22[i];
+        w_inv[i] = 1/(t1[i] * k2 * (th21[i] * CEXP(2*k2*x_grid[i]) - th22[i]) - 
+                    t2[i] * k1 * (th11[i] * CEXP(2*k1*x_grid[i]) - th12[i]));
+        prefactor[i] = 2 * (k2*k2 - k1*k1) * w_inv[i]*w_inv[i];
+
+        for (UINT j=0; j<N_pm0_jZ; j++) {
+            s[j*D+i] =  t2[i]*t2[i] * k1*k1 * th11[i] * th12[i] * CEXP(2*(k1+pm0_jZ[j])*x_grid[i]) -
+                        t1[i]*t1[i] * k2*k2 * th21[i] * th22[i] * CEXP(2*(k2+pm0_jZ[j])*x_grid[i]);
+        }
+
+        dq[i] = prefactor[i] * s[(N_pm0_jZ-1)*D+i];
     }
-    
-    // -- Update Jost Solution --
+
+leave_fun:
+
+    return ret_code;
+}
+
+
+
+static INT one_solition_update_Jost(
+    const COMPLEX k1,
+    const UINT N_jZ,
+    COMPLEX const * const bound_states_left,
+    COMPLEX * const theta_E1,
+    COMPLEX * const theta_E2,
+    const UINT D,
+    const UINT i_pos,
+    COMPLEX const * const x_grid,
+    COMPLEX const * const w_inv,
+    COMPLEX const * const prefactor,
+    COMPLEX const * const M_min1_11)
+{
+    INT ret_code = SUCCESS;
+
     // Check, if Jost has to be updated. Only when there are bound states left, that are not added yet
-    UINT const N_jZ = N_bound_states_left;        // Only because shorter name
     UINT const is_Jost_to_update = N_jZ != 0;
 
+    // Defining theta vectors out of theta_E vectors, belonging to the bound state to add
+    COMPLEX const * const th1 = &theta_E1[0];
+    COMPLEX const * const th2 = &theta_E2[0];
+
     // theta vectors according to the bound states left, which corresponds to the Jost solutions
-    COMPLEX * th1_jZ = &theta_E1[D];
-    COMPLEX * th2_jZ = &theta_E2[D];
+    COMPLEX * const th1_jZ = &theta_E1[D];
+    COMPLEX * const th2_jZ = &theta_E2[D];
 
     // Create C_E Matrix (for Updating Jost Solution)
     UINT n_C_E = 2*2*D*N_jZ; 
@@ -116,7 +184,7 @@ INT add_one_soliton(
         }
     }
 
-    // Compute a new prefactor for C_E (for Updating Jost Solution)
+    // Compute a new prefactor for C_E
     COMPLEX * prefactor_C_E = NULL;
     prefactor_C_E = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(prefactor_C_E, ret_code, leave_fun);
@@ -160,143 +228,47 @@ INT add_one_soliton(
     }
 
 leave_fun:
-    free(M_min1_11);
-    free(w_inv);
-    free(prefactor);
     free(C_E);
     free(prefactor_C_E);
 
     return ret_code;
 }
 
-
-INT add_two_solitons(
-    COMPLEX const * const bound_states_to_add,
+static INT two_solitions_update_Jost(
+    const COMPLEX k1,
+    const COMPLEX k2,
+    const UINT N_jZ,
     COMPLEX const * const bound_states_left,
-    UINT const N_bound_states_left,
+    COMPLEX const * const pm0_jZ,
     COMPLEX * const theta_E1,
     COMPLEX * const theta_E2,
-    COMPLEX const * const x_grid,
+    COMPLEX const * const t1,
+    COMPLEX const * const t2,
     const UINT D,
-    COMPLEX * const q)
+    const UINT i_pos,
+    COMPLEX const * const x_grid,
+    COMPLEX const * const w_inv,
+    COMPLEX const * const prefactor,
+    COMPLEX const * const s)
 {
     INT ret_code = SUCCESS;
 
-    COMPLEX * w_inv = NULL;
-    w_inv = malloc(D * sizeof(COMPLEX));
-    CHECK_NOMEM(w_inv, ret_code, leave_fun);
-
-    COMPLEX * prefactor = NULL;
-    prefactor = malloc(D * sizeof(COMPLEX));
-    CHECK_NOMEM(prefactor, ret_code, leave_fun);
-
-    COMPLEX * dq = NULL;
-    dq = malloc(D * sizeof(COMPLEX));
-    CHECK_NOMEM(dq, ret_code, leave_fun);
-
-    // Initialize pm0_jZ
-    UINT N_pm0_jZ = 2 * N_bound_states_left + 1;
-    COMPLEX * pm0_jZ = NULL;
-    pm0_jZ = malloc((2*N_bound_states_left+1) * sizeof(COMPLEX));
-    CHECK_NOMEM(pm0_jZ, ret_code, leave_fun);
-    
-    for (UINT i=0; i<N_bound_states_left; i++){
-        pm0_jZ[i] = bound_states_left[i];
-        pm0_jZ[i+N_bound_states_left] = -bound_states_left[i];
-    }
-    
-    pm0_jZ[2*N_bound_states_left] = 0;
-    
-    // dimension of s is dependend on number of bound states left
-    COMPLEX * s = NULL;
-    s = malloc(D * N_pm0_jZ * sizeof(COMPLEX));
-    CHECK_NOMEM(s, ret_code, leave_fun);
-
-    // Change Sign of the bound states to add
-    COMPLEX k1 = -bound_states_to_add[0];
-    COMPLEX k2 = -bound_states_to_add[1];
-
-    // Determine where x>0
-    UINT i_pos;
-    
-    for (UINT i = 0; i < D; i++){
-        if (CREAL(x_grid[i]) > 0){
-            i_pos = i;
-            break;
-        }
-    }
+    // Check, if Jost has to be updated. Only when there are bound states left, that are not added yet
+    UINT const is_Jost_to_update = N_jZ != 0;
 
     // Defining theta vectors out of theta_E vectors, belonging to the bound states to add
     // These vectors are used in the Crum-Transformation step
     // thetas according to 1. eigenvalue
-    COMPLEX * th11 = &theta_E1[0];
-    COMPLEX * th12 = &theta_E2[0];
+    COMPLEX const * const th11 = &theta_E1[0];
+    COMPLEX const * const th12 = &theta_E2[0];
 
     // thetas according to 2. eigenvalue
-    COMPLEX * th21 = &theta_E1[D];
-    COMPLEX * th22 = &theta_E2[D];
-
-    // Intermediate variables
-    COMPLEX * t1 = NULL;
-    COMPLEX * t2 = NULL;
-
-    t1 = malloc(D * sizeof(COMPLEX));
-    CHECK_NOMEM(t1, ret_code, leave_fun);
-    t2 = malloc(D * sizeof(COMPLEX));
-    CHECK_NOMEM(t2, ret_code, leave_fun);
-
-    // -- Crum-Transformation --
-    // for positive x
-    for (UINT i=i_pos; i<D; i++){
-        t1[i] = th11[i] + th12[i] * CEXP(-2*k1*x_grid[i]);
-        t2[i] = th21[i] + th22[i] * CEXP(-2*k2*x_grid[i]);
-        w_inv[i] = 1/(t1[i] * k2 * (th21[i] - th22[i] * CEXP(-2*k2*x_grid[i])) - 
-                    t2[i] * k1 * (th11[i] - th12[i] * CEXP(-2*k1*x_grid[i])));
-        prefactor[i] = 2 * (k2*k2 - k1*k1) * w_inv[i]*w_inv[i];
-
-        for (UINT j=0; j<N_pm0_jZ; j++) {
-            s[j*D+i] =  t2[i]*t2[i] * k1*k1 * th11[i] * th12[i] * CEXP(-2*(k1-pm0_jZ[j])*x_grid[i]) -
-                        t1[i]*t1[i] * k2*k2 * th21[i] * th22[i] * CEXP(-2*(k2-pm0_jZ[j])*x_grid[i]);
-        }
-
-        dq[i] = prefactor[i] * s[(N_pm0_jZ-1)*D+i];
-    }
-
-    // for negative x
-    for (UINT i=0; i<i_pos; i++){
-        t1[i] = th11[i] * CEXP(2*k1*x_grid[i]) + th12[i];
-        t2[i] = th21[i] * CEXP(2*k2*x_grid[i]) + th22[i];
-        w_inv[i] = 1/(t1[i] * k2 * (th21[i] * CEXP(2*k2*x_grid[i]) - th22[i]) - 
-                    t2[i] * k1 * (th11[i] * CEXP(2*k1*x_grid[i]) - th12[i]));
-        prefactor[i] = 2 * (k2*k2 - k1*k1) * w_inv[i]*w_inv[i];
-
-        for (UINT j=0; j<N_pm0_jZ; j++) {
-            s[j*D+i] =  t2[i]*t2[i] * k1*k1 * th11[i] * th12[i] * CEXP(2*(k1+pm0_jZ[j])*x_grid[i]) -
-                        t1[i]*t1[i] * k2*k2 * th21[i] * th22[i] * CEXP(2*(k2+pm0_jZ[j])*x_grid[i]);
-        }
-
-        dq[i] = prefactor[i] * s[(N_pm0_jZ-1)*D+i];
-    }
-
-    // Update output
-    for (UINT i=0; i<D; i++){
-        q[i] = q[i] + 4 * dq[i];      
-    }
-
-    // -- Update Jost Solution --
-
-    // Check, if Jost has to be updated. Only when there are bound states left, that are not added yet
-    UINT const N_jZ = N_bound_states_left;        // Only because shorter name
-    UINT const is_Jost_to_update = N_jZ != 0;
+    COMPLEX const * const th21 = &theta_E1[D];
+    COMPLEX const * const th22 = &theta_E2[D];
 
     // theta vectors according to the bound states left, which corresponds to the Jost solutions
-    COMPLEX * th1_jZ = &theta_E1[2*D];
-    COMPLEX * th2_jZ = &theta_E2[2*D];
-
-    // misc_print_buf(D, th1_jZ, "th1_jZ1");
-    // misc_print_buf(D, th2_jZ, "th2_jZ1");
-    // misc_print_buf(D, &th1_jZ[D], "th1_jZ2");
-    // misc_print_buf(D, &th2_jZ[D], "th2_jZ2");
+    COMPLEX * const th1_jZ = &theta_E1[2*D];
+    COMPLEX * const th2_jZ = &theta_E2[2*D];
 
     // Create C_E Matrix (for Updating Jost Solution)
     UINT n_C_E = 2*2*D*N_jZ; 
@@ -409,6 +381,196 @@ INT add_two_solitons(
     }
 
 leave_fun:
+    free(C_E);
+
+    return ret_code;
+}
+
+
+static INT add_one_soliton(
+    COMPLEX const * const bound_states,
+    UINT const N_bound_states,
+    COMPLEX * const theta_E1,
+    COMPLEX * const theta_E2,
+    COMPLEX const * const x_grid,
+    const UINT D,
+    COMPLEX * const q)
+{
+    // Initialize variables and arrays
+    INT ret_code = SUCCESS;
+
+    COMPLEX * M_min1_11 = NULL;
+    COMPLEX * w_inv = NULL;
+    COMPLEX * prefactor = NULL;
+    M_min1_11 = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(M_min1_11, ret_code, leave_fun);
+    w_inv = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(w_inv, ret_code, leave_fun);
+    prefactor = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(prefactor, ret_code, leave_fun);
+
+    // Determine where x>0
+    UINT i_pos;
+    ret_code = find_first_positive_value(x_grid, D, &i_pos);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    // -- Crum Transform --
+    COMPLEX bound_state_added_here = bound_states[0];
+    ret_code = one_solition_crum_transformation(    bound_state_added_here,
+                                                    &theta_E1[0],           // thetas belonging to the bound state to add
+                                                    &theta_E2[0],           // thetas belonging to the bound state to add
+                                                    D,
+                                                    i_pos,
+                                                    x_grid,
+                                                    w_inv,
+                                                    prefactor,
+                                                    M_min1_11);
+    CHECK_RETCODE(ret_code, leave_fun);                                                
+    
+    // Update output
+    for (UINT i=0; i<D; i++){
+        q[i] = -q[i] + 4 * M_min1_11[i];      
+    }
+    
+    // Update Jost Solution only when there are further bound states left, which are not added yet
+    UINT N_bound_states_left = N_bound_states - 1; 
+    if (N_bound_states_left) {
+        COMPLEX const * const bound_states_left = &bound_states[1];
+        ret_code = one_solition_update_Jost(    bound_state_added_here,
+                                                N_bound_states_left,        
+                                                bound_states_left,
+                                                theta_E1,
+                                                theta_E2,
+                                                D,
+                                                i_pos,
+                                                x_grid,
+                                                w_inv,
+                                                prefactor,
+                                                M_min1_11);
+        CHECK_RETCODE(ret_code, leave_fun);                                            
+    }
+
+leave_fun:
+    free(M_min1_11);
+    free(w_inv);
+    free(prefactor);
+
+    return ret_code;
+}
+
+
+INT add_two_solitons(
+    COMPLEX const * const bound_states,
+    UINT const N_bound_states,
+    COMPLEX * const theta_E1,
+    COMPLEX * const theta_E2,
+    COMPLEX const * const x_grid,
+    const UINT D,
+    COMPLEX * const q)
+{
+    INT ret_code = SUCCESS;
+
+    COMPLEX * w_inv = NULL;
+    COMPLEX * prefactor = NULL;
+    COMPLEX * dq = NULL;
+    w_inv = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(w_inv, ret_code, leave_fun);
+    prefactor = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(prefactor, ret_code, leave_fun);
+    dq = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(dq, ret_code, leave_fun);
+
+    // For the bound states, which are not 
+    const UINT N_bound_states_left = N_bound_states - 2;
+    UINT const is_Jost_to_update = N_bound_states_left != 0;
+
+    COMPLEX const * bound_states_left = NULL;
+
+    if (is_Jost_to_update) {
+        bound_states_left = &bound_states[2];
+    }
+
+    // Initialize pm0_jZ
+    UINT N_pm0_jZ = 2 * N_bound_states_left + 1;
+    COMPLEX * pm0_jZ = NULL;
+    pm0_jZ = malloc((2*N_bound_states_left+1) * sizeof(COMPLEX));
+    CHECK_NOMEM(pm0_jZ, ret_code, leave_fun);
+    
+    for (UINT i=0; i<N_bound_states_left && is_Jost_to_update; i++){
+        pm0_jZ[i] = bound_states_left[i];
+        pm0_jZ[i+N_bound_states_left] = -bound_states_left[i];
+    }
+    
+    pm0_jZ[2*N_bound_states_left] = 0;
+
+    // dimension of s is dependend on number of bound states left
+    COMPLEX * s = NULL;
+    s = malloc(D * N_pm0_jZ * sizeof(COMPLEX));
+    CHECK_NOMEM(s, ret_code, leave_fun);
+
+    // Intermediate variables
+    COMPLEX * t1 = NULL;
+    COMPLEX * t2 = NULL;
+
+    t1 = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(t1, ret_code, leave_fun);
+    t2 = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(t2, ret_code, leave_fun);
+    
+    // Change Sign of the bound states to add
+    COMPLEX k1 = -bound_states[0];
+    COMPLEX k2 = -bound_states[1];
+
+    // Determine where x>0
+    UINT i_pos;
+    ret_code = find_first_positive_value(x_grid, D, &i_pos);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    // -- Crum-Transformation --
+    ret_code = two_solitions_crum_transformation(   k1,
+                                                    k2,
+                                                    N_pm0_jZ,
+                                                    pm0_jZ,
+                                                    theta_E1,
+                                                    theta_E2,
+                                                    t1,
+                                                    t2,
+                                                    D,
+                                                    i_pos,
+                                                    x_grid,
+                                                    w_inv,
+                                                    prefactor,
+                                                    dq,
+                                                    s   );
+    CHECK_RETCODE(ret_code, leave_fun);
+
+
+    // Update output
+    for (UINT i=0; i<D; i++){
+        q[i] = q[i] + 4 * dq[i];      
+    }
+
+    // -- Update Jost Solution --
+    if (is_Jost_to_update) {
+        ret_code = two_solitions_update_Jost(   k1,
+                                                k2,
+                                                N_bound_states_left,
+                                                bound_states_left,
+                                                pm0_jZ,
+                                                theta_E1,
+                                                theta_E2,
+                                                t1,
+                                                t2,
+                                                D,
+                                                i_pos,
+                                                x_grid,
+                                                w_inv,
+                                                prefactor,
+                                                s   );
+        CHECK_RETCODE(ret_code, leave_fun);
+    }
+
+leave_fun:
     free(w_inv);
     free(prefactor);
     free(dq);
@@ -416,7 +578,6 @@ leave_fun:
     free(s);
     free(t1);
     free(t2);
-    free(C_E);
     
     return ret_code;
 }
@@ -545,9 +706,8 @@ INT fnft_kdvv_inverse(
 
         // Crum-Transformation step
         if (N_step==1){
-            ret_code = add_one_soliton(&bound_states_sorted[step_idx], 
-                                        &bound_states_sorted[step_idx+1],
-                                        N_rest-1,
+            ret_code = add_one_soliton( &bound_states_sorted[step_idx], 
+                                        N_rest,
                                         &theta_E1[step_idx*D],
                                         &theta_E2[step_idx*D],
                                         x_grid, 
@@ -556,8 +716,7 @@ INT fnft_kdvv_inverse(
             CHECK_RETCODE(ret_code, leave_fun);
         } else {
             ret_code = add_two_solitons(&bound_states_sorted[step_idx], 
-                                        &bound_states_sorted[step_idx+2],
-                                        N_rest-2,
+                                        N_rest,
                                         &theta_E1[step_idx*D],
                                         &theta_E2[step_idx*D],
                                         x_grid, 
