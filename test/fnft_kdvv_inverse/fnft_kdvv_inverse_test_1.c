@@ -51,16 +51,13 @@ INT main()
 
     ret_code = fnft_kdvv_inverse(M, contspec_i, XI, K_i, bound_states_i, normconsts_i, D, q, T, NULL);
     CHECK_RETCODE(ret_code, leave_fun);
-
-    // printf("function inverse: %d \n", ret_code);
     
-    // // variables for the result of the forward fnft_kdvv
-
+    // Prepare forward fnft_kdvv
     COMPLEX * contspec_r = NULL;
     contspec_r = malloc(M * sizeof(COMPLEX));
     CHECK_NOMEM(contspec_r, ret_code, leave_fun);
 
-    UINT K_r = 5;
+    UINT K_r = K_i;
 
     COMPLEX * bound_states_r = NULL;
     bound_states_r = malloc(K_r * sizeof(COMPLEX));
@@ -75,15 +72,37 @@ INT main()
     ret_code = fnft_kdvv(D, q, T, M, contspec_r, XI, &K_r, bound_states_r, normconsts_r, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    
-    if (ret_code != FNFT_SUCCESS) {
-        printf("An error occured!\n");
-        return EXIT_FAILURE;
+    // Check result
+    // bound_states_r is in ascending order -> start from the end
+    for (UINT i=0; i<K_i; i++){
+        COMPLEX bsi = bound_states_i[i];   
+        COMPLEX nci = normconsts_i[i];
+        COMPLEX bsr = bound_states_r[i];
+        COMPLEX ncr = normconsts_r[i];
+
+        UINT is_bsr_pure_imaginary = CABS(CREAL(bsr)) < 1e-8;
+        UINT is_bsr_positive_imaginary = (CIMAG(bsr) > 0) && is_bsr_pure_imaginary;
+        UINT is_bsr_in_tolerance = CABS(bsr - bsi)/CABS(bsr) < 1e-3;
+
+        UINT is_ncr_real = CABS(CIMAG(ncr)) < 1e-8;
+        UINT is_ncr_in_tolerance = CABS(ncr - nci)/CABS(ncr) < 1e-2;
+
+        if (is_bsr_pure_imaginary &&
+            is_bsr_positive_imaginary &&
+            is_bsr_in_tolerance &&
+            is_ncr_real &&
+            is_ncr_in_tolerance) 
+        {
+            ret_code = SUCCESS;
+        } 
+        else {
+            ret_code = FNFT_EC_TEST_FAILED;
+            break;
+        }
     }
     
 
-    /** Step 4: Print the results **/
-
+    // Print the results
     printf("Number of samples:\n  D = %u\n", (unsigned int)D);
 
     FNFT_REAL eps_xi = (XI[1] - XI[0]) / (M - 1);
