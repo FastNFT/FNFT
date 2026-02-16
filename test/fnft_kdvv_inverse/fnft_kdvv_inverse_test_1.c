@@ -1,0 +1,123 @@
+/*
+* This file is part of FNFT.  
+*                                                                  
+* FNFT is free software; you can redistribute it and/or
+* modify it under the terms of the version 2 of the GNU General
+* Public License as published by the Free Software Foundation.
+*
+* FNFT is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*                                                                      
+* You should have received a copy of the GNU General Public License
+* along with this program. If not, see <http://www.gnu.org/licenses/>.
+*
+* Contributors:
+*/
+
+#define FNFT_ENABLE_SHORT_NAMES
+
+#include <stdio.h>
+
+#include "fnft__kdvv_inverse_testcases.h"
+#include "fnft__errwarn.h"
+#include "fnft__misc.h"
+
+INT main()
+{
+    INT ret_code = SUCCESS;
+    
+    // General parameters
+    UINT M = 0;
+    REAL XI[2] = {-2.0, 2.0};
+    UINT D = 1001;
+    REAL T[2] = {-10.0, 10.0};
+
+    COMPLEX * q = NULL;
+    q = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(q, ret_code, leave_fun);
+
+    // Initialize variables for a specific test case without continuous spectrum
+    COMPLEX * contspec_i = NULL;
+    contspec_i = malloc(M * sizeof(COMPLEX));
+    const UINT K_i = 5;
+    COMPLEX bound_states_i[5] = {I*SQRT(1.0/2.0), I*SQRT(2.0/2.0), I*SQRT(3.0/2.0), I*SQRT(4.0/2.0), I*SQRT(5.0/2.0)};
+    COMPLEX normconsts_i[5] = {1*10, -1*0.1, 1*1, -1*0.00001, 1*10000000};
+
+    // const UINT K_i = 1;
+    // COMPLEX bound_states_i[1] = {SQRT(1.0/2)*I};
+    // COMPLEX normconsts_i[1] = {1*10};
+
+    ret_code = fnft_kdvv_inverse(M, contspec_i, XI, K_i, bound_states_i, normconsts_i, D, q, T, NULL);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    // printf("function inverse: %d \n", ret_code);
+    
+    // // variables for the result of the forward fnft_kdvv
+
+    COMPLEX * contspec_r = NULL;
+    contspec_r = malloc(M * sizeof(COMPLEX));
+    CHECK_NOMEM(contspec_r, ret_code, leave_fun);
+
+    UINT K_r = 5;
+
+    COMPLEX * bound_states_r = NULL;
+    bound_states_r = malloc(K_r * sizeof(COMPLEX));
+    CHECK_NOMEM(bound_states_r, ret_code, leave_fun);
+
+    COMPLEX * normconsts_r = NULL;
+    normconsts_r = malloc(K_r * sizeof(COMPLEX));
+    CHECK_NOMEM(normconsts_r, ret_code, leave_fun);
+
+    fnft_kdvv_opts_t opts = fnft_kdvv_default_opts();
+
+    ret_code = fnft_kdvv(D, q, T, M, contspec_r, XI, &K_r, bound_states_r, normconsts_r, &opts);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    
+    if (ret_code != FNFT_SUCCESS) {
+        printf("An error occured!\n");
+        return EXIT_FAILURE;
+    }
+    
+
+    /** Step 4: Print the results **/
+
+    printf("Number of samples:\n  D = %u\n", (unsigned int)D);
+
+    FNFT_REAL eps_xi = (XI[1] - XI[0]) / (M - 1);
+    printf("Continuous spectrum:\n");
+    for (FNFT_UINT i=0; i<M; i++) {
+        FNFT_REAL xi = XI[0] + i*eps_xi;
+        printf("  continuous_spectrum(xi=%f) \t= %g + %gI\n",
+            (double)xi,
+            (double)FNFT_CREAL(contspec_r[i]),
+            (double)FNFT_CIMAG(contspec_r[i])
+        );
+    }
+
+    printf("Discrete spectrum:\n");
+    for (FNFT_UINT i=0; i<K_r; i++) {
+        printf("  bound state at %g + %gI with norming constant %g + %gI\n",
+            (double)FNFT_CREAL(bound_states_r[i]),
+            (double)FNFT_CIMAG(bound_states_r[i]),
+            (double)FNFT_CREAL(normconsts_r[i]),
+            (double)FNFT_CIMAG(normconsts_r[i])
+        );
+    }
+
+
+leave_fun:
+    free(q);
+    free(contspec_i);
+    free(contspec_r);
+    free(bound_states_r);
+    free(normconsts_r);
+
+    if (ret_code != SUCCESS)
+        return EXIT_FAILURE;
+    else
+	    return EXIT_SUCCESS;
+}
+

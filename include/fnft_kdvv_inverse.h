@@ -28,6 +28,8 @@
 #define FNFT_KDVV_INVERSE_H
 
 #include "fnft__errwarn.h"
+#include "fnft__misc.h"
+#include "fnft_numtypes.h"
 
 /**
  * @brief Fast inverse nonlinear Fourier transform for the 

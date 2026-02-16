@@ -584,8 +584,6 @@ leave_fun:
 
 
 
-
-
 INT fnft_kdvv_inverse(
     const UINT M,
     COMPLEX * const contspec,
@@ -604,11 +602,6 @@ INT fnft_kdvv_inverse(
     out     output of transformation
 
     */
-
-    /* Tests
-    number of normconsts = number bound_states
-    */
-
 
     INT ret_code = SUCCESS;
 
@@ -687,7 +680,6 @@ INT fnft_kdvv_inverse(
 
     // Add solitions
     while (N_rest > 0){
-
         // Select indices for this step and for the remaining eigenvalues to add
         // If the number of eigenvalues left is odd, then only one solition should be added
         if (N_rest%2==1){ N_step = 1; }
@@ -732,7 +724,6 @@ INT fnft_kdvv_inverse(
         for (UINT i=0; i<D; i++){
             if (CREAL(q[i]) < 0){ q[i] = 0; }
         }
-
     }
 
 leave_fun:

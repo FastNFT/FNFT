@@ -35,6 +35,7 @@
 !/test/fnft__poly/
 !/test/fnft_version_test/
 !/test/fnft_version_test.c/
+!/test/fnft_kdvv_inverse/
 
 # Ignore MacOS hidden files in subdirectories
 /**/*.DS_Store
