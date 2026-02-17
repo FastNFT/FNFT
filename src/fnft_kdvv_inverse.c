@@ -17,6 +17,8 @@
  * Sander Wahls (KIT) 2026
  */
 
+// TODO comment matlab
+
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft_kdvv_inverse.h"
@@ -35,6 +37,8 @@ static INT find_first_positive_value(
         }
     }
 
+    // TODO wenn kein positive value?!
+
     return ret_code;
 }
 
@@ -44,7 +48,7 @@ static INT one_solition_crum_transformation(
     COMPLEX const * const th2,
     const UINT D,
     const UINT i_pos,
-    COMPLEX const * const x_grid,
+    COMPLEX const * const t_grid,
     COMPLEX * const w_inv,
     COMPLEX * const prefactor,
     COMPLEX * const M_min1_11)
@@ -53,16 +57,16 @@ static INT one_solition_crum_transformation(
 
     // Calculation for positive x
     for (UINT i = i_pos; i<D; i++){
-        w_inv[i] = 1/(th1[i] + th2[i] * CEXP(2*k1*x_grid[i]));
+        w_inv[i] = 1/(th1[i] + th2[i] * CEXP(2*k1*t_grid[i]));
         prefactor[i] = 2 * k1*k1 * th1[i] * th2[i] * w_inv[i]*w_inv[i];
-        M_min1_11[i] = prefactor[i] * CEXP(2*k1*x_grid[i]);
+        M_min1_11[i] = prefactor[i] * CEXP(2*k1*t_grid[i]);
     }    
 
     // Calculation for negative x
     for (UINT i = 0; i<i_pos; i++){
-        w_inv[i] = 1/(th1[i] * CEXP(-2*k1*x_grid[i]) + th2[i]);
+        w_inv[i] = 1/(th1[i] * CEXP(-2*k1*t_grid[i]) + th2[i]);
         prefactor[i] = 2 * k1*k1 * th1[i] * th2[i] * w_inv[i]*w_inv[i];
-        M_min1_11[i] = prefactor[i] *  CEXP(-2*k1*x_grid[i]);
+        M_min1_11[i] = prefactor[i] *  CEXP(-2*k1*t_grid[i]);
     }
 
     return ret_code;
@@ -75,11 +79,11 @@ static INT two_solitions_crum_transformation(
     COMPLEX const * const pm0_jZ,
     COMPLEX const * const theta_E1,
     COMPLEX const * const theta_E2,
-    COMPLEX * const t1,
-    COMPLEX * const t2,
+    COMPLEX * const tmp_t1,
+    COMPLEX * const tmp_t2,
     const UINT D,
     const UINT i_pos,
-    COMPLEX const * const x_grid,
+    COMPLEX const * const t_grid,
     COMPLEX * const w_inv,
     COMPLEX * const prefactor,
     COMPLEX * const dq,
@@ -99,15 +103,15 @@ static INT two_solitions_crum_transformation(
 
     // for positive x
     for (UINT i=i_pos; i<D; i++){
-        t1[i] = th11[i] + th12[i] * CEXP(-2*k1*x_grid[i]);
-        t2[i] = th21[i] + th22[i] * CEXP(-2*k2*x_grid[i]);
-        w_inv[i] = 1/(t1[i] * k2 * (th21[i] - th22[i] * CEXP(-2*k2*x_grid[i])) - 
-                    t2[i] * k1 * (th11[i] - th12[i] * CEXP(-2*k1*x_grid[i])));
+        tmp_t1[i] = th11[i] + th12[i] * CEXP(-2*k1*t_grid[i]);
+        tmp_t2[i] = th21[i] + th22[i] * CEXP(-2*k2*t_grid[i]);
+        w_inv[i] = 1/(tmp_t1[i] * k2 * (th21[i] - th22[i] * CEXP(-2*k2*t_grid[i])) - 
+                    tmp_t2[i] * k1 * (th11[i] - th12[i] * CEXP(-2*k1*t_grid[i])));
         prefactor[i] = 2 * (k2*k2 - k1*k1) * w_inv[i]*w_inv[i];
 
         for (UINT j=0; j<N_pm0_jZ; j++) {
-            s[j*D+i] =  t2[i]*t2[i] * k1*k1 * th11[i] * th12[i] * CEXP(-2*(k1-pm0_jZ[j])*x_grid[i]) -
-                        t1[i]*t1[i] * k2*k2 * th21[i] * th22[i] * CEXP(-2*(k2-pm0_jZ[j])*x_grid[i]);
+            s[j*D+i] =  tmp_t2[i]*tmp_t2[i] * k1*k1 * th11[i] * th12[i] * CEXP(-2*(k1-pm0_jZ[j])*t_grid[i]) -
+                        tmp_t1[i]*tmp_t1[i] * k2*k2 * th21[i] * th22[i] * CEXP(-2*(k2-pm0_jZ[j])*t_grid[i]);
         }
 
         dq[i] = prefactor[i] * s[(N_pm0_jZ-1)*D+i];
@@ -115,15 +119,15 @@ static INT two_solitions_crum_transformation(
 
     // for negative x
     for (UINT i=0; i<i_pos; i++){
-        t1[i] = th11[i] * CEXP(2*k1*x_grid[i]) + th12[i];
-        t2[i] = th21[i] * CEXP(2*k2*x_grid[i]) + th22[i];
-        w_inv[i] = 1/(t1[i] * k2 * (th21[i] * CEXP(2*k2*x_grid[i]) - th22[i]) - 
-                    t2[i] * k1 * (th11[i] * CEXP(2*k1*x_grid[i]) - th12[i]));
+        tmp_t1[i] = th11[i] * CEXP(2*k1*t_grid[i]) + th12[i];
+        tmp_t2[i] = th21[i] * CEXP(2*k2*t_grid[i]) + th22[i];
+        w_inv[i] = 1/(tmp_t1[i] * k2 * (th21[i] * CEXP(2*k2*t_grid[i]) - th22[i]) - 
+                    tmp_t2[i] * k1 * (th11[i] * CEXP(2*k1*t_grid[i]) - th12[i]));
         prefactor[i] = 2 * (k2*k2 - k1*k1) * w_inv[i]*w_inv[i];
 
         for (UINT j=0; j<N_pm0_jZ; j++) {
-            s[j*D+i] =  t2[i]*t2[i] * k1*k1 * th11[i] * th12[i] * CEXP(2*(k1+pm0_jZ[j])*x_grid[i]) -
-                        t1[i]*t1[i] * k2*k2 * th21[i] * th22[i] * CEXP(2*(k2+pm0_jZ[j])*x_grid[i]);
+            s[j*D+i] =  tmp_t2[i]*tmp_t2[i] * k1*k1 * th11[i] * th12[i] * CEXP(2*(k1+pm0_jZ[j])*t_grid[i]) -
+                        tmp_t1[i]*tmp_t1[i] * k2*k2 * th21[i] * th22[i] * CEXP(2*(k2+pm0_jZ[j])*t_grid[i]);
         }
 
         dq[i] = prefactor[i] * s[(N_pm0_jZ-1)*D+i];
@@ -144,7 +148,7 @@ static INT one_solition_update_Jost(
     COMPLEX * const theta_E2,
     const UINT D,
     const UINT i_pos,
-    COMPLEX const * const x_grid,
+    COMPLEX const * const t_grid,
     COMPLEX const * const w_inv,
     COMPLEX const * const prefactor,
     COMPLEX const * const M_min1_11)
@@ -191,24 +195,24 @@ static INT one_solition_update_Jost(
 
     // Calculation for positive x
     for (UINT i=i_pos; i<D && is_Jost_to_update; i++){
-        prefactor_C_E[i] = k1 * (th1[i] - th2[i] * CEXP(2*k1*x_grid[i])) * w_inv[i];
+        prefactor_C_E[i] = k1 * (th1[i] - th2[i] * CEXP(2*k1*t_grid[i])) * w_inv[i];
 
         for (UINT j=0; j<N_jZ; j++){
             C_E_1_1[j*D+i] = C_E_1_1[j*D+i] + prefactor_C_E[i] + M_min1_11[i] * 1/bound_states_left[j];
-            C_E_1_2[j*D+i] = C_E_1_2[j*D+i] + prefactor[i] * CEXP(2*(k1+bound_states_left[j])*x_grid[i])*1/bound_states_left[j];
-            C_E_2_1[j*D+i] = C_E_2_1[j*D+i] - prefactor[i] * CEXP(2*(k1-bound_states_left[j])*x_grid[i])*1/bound_states_left[j];
+            C_E_1_2[j*D+i] = C_E_1_2[j*D+i] + prefactor[i] * CEXP(2*(k1+bound_states_left[j])*t_grid[i])*1/bound_states_left[j];
+            C_E_2_1[j*D+i] = C_E_2_1[j*D+i] - prefactor[i] * CEXP(2*(k1-bound_states_left[j])*t_grid[i])*1/bound_states_left[j];
             C_E_2_2[j*D+i] = C_E_2_2[j*D+i] + prefactor_C_E[i] - M_min1_11[i] * 1/bound_states_left[j];
         }
     }
     
     // Calculation for negative x
     for (UINT i=0; i<i_pos && is_Jost_to_update; i++){
-        prefactor_C_E[i] = k1 * (th1[i] * CEXP(-2*k1*x_grid[i]) - th2[i]) * w_inv[i];
+        prefactor_C_E[i] = k1 * (th1[i] * CEXP(-2*k1*t_grid[i]) - th2[i]) * w_inv[i];
         
         for (UINT j=0; j<N_jZ; j++){
             C_E_1_1[j*D+i] = C_E_1_1[j*D+i] + prefactor_C_E[i] + M_min1_11[i] * 1/bound_states_left[j];
-            C_E_1_2[j*D+i] = C_E_1_2[j*D+i] + prefactor[i] * CEXP(-2*(k1-bound_states_left[j])*x_grid[i])*1/bound_states_left[j];
-            C_E_2_1[j*D+i] = C_E_2_1[j*D+i] - prefactor[i] * CEXP(-2*(k1+bound_states_left[j])*x_grid[i])*1/bound_states_left[j];
+            C_E_1_2[j*D+i] = C_E_1_2[j*D+i] + prefactor[i] * CEXP(-2*(k1-bound_states_left[j])*t_grid[i])*1/bound_states_left[j];
+            C_E_2_1[j*D+i] = C_E_2_1[j*D+i] - prefactor[i] * CEXP(-2*(k1+bound_states_left[j])*t_grid[i])*1/bound_states_left[j];
             C_E_2_2[j*D+i] = C_E_2_2[j*D+i] + prefactor_C_E[i] - M_min1_11[i] * 1/bound_states_left[j];
         }
     }
@@ -242,11 +246,11 @@ static INT two_solitions_update_Jost(
     COMPLEX const * const pm0_jZ,
     COMPLEX * const theta_E1,
     COMPLEX * const theta_E2,
-    COMPLEX const * const t1,
-    COMPLEX const * const t2,
+    COMPLEX const * const temp_t1,
+    COMPLEX const * const temp_t2,
     const UINT D,
     const UINT i_pos,
-    COMPLEX const * const x_grid,
+    COMPLEX const * const t_grid,
     COMPLEX const * const w_inv,
     COMPLEX const * const prefactor,
     COMPLEX const * const s)
@@ -302,26 +306,26 @@ static INT two_solitions_update_Jost(
 
     // Calculation for positive x
     for (UINT i=i_pos; i<D && is_Jost_to_update; i++){
-        prefactor1 = (k2*k2 - k1*k1) * t1[i] * t2[i] * w_inv[i];
-        M_0_11 = -(k1*k1 + k2*k2)/2 + prefactor[i] * (k2*k2 - k1*k1)/4 * t1[i]*t1[i] * t2[i]*t2[i];
+        prefactor1 = (k2*k2 - k1*k1) * temp_t1[i] * temp_t2[i] * w_inv[i];
+        M_0_11 = -(k1*k1 + k2*k2)/2 + prefactor[i] * (k2*k2 - k1*k1)/4 * temp_t1[i]*temp_t1[i] * temp_t2[i]*temp_t2[i];
         prefactor2 = prefactor[i] * k1 * k2;
         
         mpjZinv_0 = (k2 * th21[i] * th22[i] * (th11[i]*th11[i] - th12[i]*th12[i] * 
-                    CEXP(-4*k1*x_grid[i])) * CEXP(-2*(k2) * x_grid[i]) + 
+                    CEXP(-4*k1*t_grid[i])) * CEXP(-2*(k2) * t_grid[i]) + 
                     -k1 * th11[i] * th12[i] * (th21[i]*th21[i] - th22[i]*th22[i] * 
-                    CEXP(-4*k2*x_grid[i])) * CEXP(-2*(k1) * x_grid[i]));
+                    CEXP(-4*k2*t_grid[i])) * CEXP(-2*(k1) * t_grid[i]));
 
         for (UINT j=0; j<N_jZ; j++){
             mpjZinv_1 = (k2 * th21[i] * th22[i] * (th11[i]*th11[i] - th12[i]*th12[i] * 
-                        CEXP(-4*k1*x_grid[i])) * CEXP(-2*(k2-pm0_jZ[j]) * x_grid[i]) + 
+                        CEXP(-4*k1*t_grid[i])) * CEXP(-2*(k2-pm0_jZ[j]) * t_grid[i]) + 
                         -k1 * th11[i] * th12[i] * (th21[i]*th21[i] - th22[i]*th22[i] * 
-                        CEXP(-4*k2*x_grid[i])) * CEXP(-2*(k1-pm0_jZ[j]) * x_grid[i])  
+                        CEXP(-4*k2*t_grid[i])) * CEXP(-2*(k1-pm0_jZ[j]) * t_grid[i])  
                     ) * 1/bound_states_left[j];
 
             mpjZinv_2 = (k2 * th21[i] * th22[i] * (th11[i]*th11[i] - th12[i]*th12[i] * 
-                        CEXP(-4*k1*x_grid[i])) * CEXP(-2*(k2-pm0_jZ[j+N_jZ]) * x_grid[i]) + 
+                        CEXP(-4*k1*t_grid[i])) * CEXP(-2*(k2-pm0_jZ[j+N_jZ]) * t_grid[i]) + 
                         -k1 * th11[i] * th12[i] * (th21[i]*th21[i] - th22[i]*th22[i] * 
-                        CEXP(-4*k2*x_grid[i])) * CEXP(-2*(k1-pm0_jZ[j+N_jZ]) * x_grid[i])  
+                        CEXP(-4*k2*t_grid[i])) * CEXP(-2*(k1-pm0_jZ[j+N_jZ]) * t_grid[i])  
                     ) * 1/bound_states_left[j];
 
             M_min1_11_jZinv = prefactor2 * mpjZinv_0 * 1/bound_states_left[j];
@@ -335,26 +339,26 @@ static INT two_solitions_update_Jost(
 
     // Calculation for negative x
     for (UINT i=0; i<i_pos && is_Jost_to_update; i++){
-        prefactor1 = (k2*k2 - k1*k1) * t1[i] * t2[i] * w_inv[i];
-        M_0_11 = -(k1*k1 + k2*k2)/2 + prefactor[i] * (k2*k2 - k1*k1)/4 * t1[i]*t1[i] * t2[i]*t2[i];
+        prefactor1 = (k2*k2 - k1*k1) * temp_t1[i] * temp_t2[i] * w_inv[i];
+        M_0_11 = -(k1*k1 + k2*k2)/2 + prefactor[i] * (k2*k2 - k1*k1)/4 * temp_t1[i]*temp_t1[i] * temp_t2[i]*temp_t2[i];
         prefactor2 = prefactor[i] * k1 * k2;
 
-        mpjZinv_0 = (k2 * th21[i] * th22[i] * (th11[i]*th11[i] * CEXP(4*k1*x_grid[i]) - th12[i]*th12[i]) *               
-                    CEXP(2*(k2) * x_grid[i]) +
-                    -k1 * th11[i] * th12[i] * (th21[i]*th21[i] * CEXP(4*k2*x_grid[i]) - th22[i]*th22[i]) *
-                    CEXP(2*(k1) * x_grid[i]) );
+        mpjZinv_0 = (k2 * th21[i] * th22[i] * (th11[i]*th11[i] * CEXP(4*k1*t_grid[i]) - th12[i]*th12[i]) *               
+                    CEXP(2*(k2) * t_grid[i]) +
+                    -k1 * th11[i] * th12[i] * (th21[i]*th21[i] * CEXP(4*k2*t_grid[i]) - th22[i]*th22[i]) *
+                    CEXP(2*(k1) * t_grid[i]) );
 
         for (UINT j=0; j<N_jZ; j++){
-            mpjZinv_1 = (k2 * th21[i] * th22[i] * (th11[i]*th11[i] * CEXP(4*k1*x_grid[i]) - 
-                        th12[i]*th12[i]) * CEXP(2*(k2+pm0_jZ[j]) * x_grid[i]) +
-                        -k1 * th11[i] * th12[i] * (th21[i]*th21[i] * CEXP(4*k2*x_grid[i]) - 
-                        th22[i]*th22[i]) * CEXP(2*(k1+pm0_jZ[j]) * x_grid[i])
+            mpjZinv_1 = (k2 * th21[i] * th22[i] * (th11[i]*th11[i] * CEXP(4*k1*t_grid[i]) - 
+                        th12[i]*th12[i]) * CEXP(2*(k2+pm0_jZ[j]) * t_grid[i]) +
+                        -k1 * th11[i] * th12[i] * (th21[i]*th21[i] * CEXP(4*k2*t_grid[i]) - 
+                        th22[i]*th22[i]) * CEXP(2*(k1+pm0_jZ[j]) * t_grid[i])
                     ) * 1/bound_states_left[j];
 
-            mpjZinv_2 = (k2 * th21[i] * th22[i] * (th11[i]*th11[i] * CEXP(4*k1*x_grid[i]) - 
-                        th12[i]*th12[i]) * CEXP(2*(k2+pm0_jZ[j+N_jZ]) * x_grid[i]) +
-                        -k1 * th11[i] * th12[i] * (th21[i]*th21[i] * CEXP(4*k2*x_grid[i]) - 
-                        th22[i]*th22[i]) * CEXP(2*(k1+pm0_jZ[j+N_jZ]) * x_grid[i])
+            mpjZinv_2 = (k2 * th21[i] * th22[i] * (th11[i]*th11[i] * CEXP(4*k1*t_grid[i]) - 
+                        th12[i]*th12[i]) * CEXP(2*(k2+pm0_jZ[j+N_jZ]) * t_grid[i]) +
+                        -k1 * th11[i] * th12[i] * (th21[i]*th21[i] * CEXP(4*k2*t_grid[i]) - 
+                        th22[i]*th22[i]) * CEXP(2*(k1+pm0_jZ[j+N_jZ]) * t_grid[i])
                     ) * 1/bound_states_left[j];
 
             M_min1_11_jZinv = prefactor2 * mpjZinv_0 * 1/bound_states_left[j];
@@ -392,7 +396,7 @@ static INT add_one_soliton(
     UINT const N_bound_states,
     COMPLEX * const theta_E1,
     COMPLEX * const theta_E2,
-    COMPLEX const * const x_grid,
+    COMPLEX const * const t_grid,
     const UINT D,
     COMPLEX * const q)
 {
@@ -411,7 +415,7 @@ static INT add_one_soliton(
 
     // Determine where x>0
     UINT i_pos;
-    ret_code = find_first_positive_value(x_grid, D, &i_pos);
+    ret_code = find_first_positive_value(t_grid, D, &i_pos);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // -- Crum Transform --
@@ -421,7 +425,7 @@ static INT add_one_soliton(
                                                     &theta_E2[0],           // thetas belonging to the bound state to add
                                                     D,
                                                     i_pos,
-                                                    x_grid,
+                                                    t_grid,
                                                     w_inv,
                                                     prefactor,
                                                     M_min1_11);
@@ -443,7 +447,7 @@ static INT add_one_soliton(
                                                 theta_E2,
                                                 D,
                                                 i_pos,
-                                                x_grid,
+                                                t_grid,
                                                 w_inv,
                                                 prefactor,
                                                 M_min1_11);
@@ -464,7 +468,7 @@ INT add_two_solitons(
     UINT const N_bound_states,
     COMPLEX * const theta_E1,
     COMPLEX * const theta_E2,
-    COMPLEX const * const x_grid,
+    COMPLEX const * const t_grid,
     const UINT D,
     COMPLEX * const q)
 {
@@ -509,13 +513,13 @@ INT add_two_solitons(
     CHECK_NOMEM(s, ret_code, leave_fun);
 
     // Intermediate variables
-    COMPLEX * t1 = NULL;
-    COMPLEX * t2 = NULL;
+    COMPLEX * temp_t1 = NULL;
+    COMPLEX * temp_t2 = NULL;
 
-    t1 = malloc(D * sizeof(COMPLEX));
-    CHECK_NOMEM(t1, ret_code, leave_fun);
-    t2 = malloc(D * sizeof(COMPLEX));
-    CHECK_NOMEM(t2, ret_code, leave_fun);
+    temp_t1 = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(temp_t1, ret_code, leave_fun);
+    temp_t2 = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(temp_t2, ret_code, leave_fun);
     
     // Change Sign of the bound states to add
     COMPLEX k1 = -bound_states[0];
@@ -523,7 +527,7 @@ INT add_two_solitons(
 
     // Determine where x>0
     UINT i_pos;
-    ret_code = find_first_positive_value(x_grid, D, &i_pos);
+    ret_code = find_first_positive_value(t_grid, D, &i_pos);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // -- Crum-Transformation --
@@ -533,11 +537,11 @@ INT add_two_solitons(
                                                     pm0_jZ,
                                                     theta_E1,
                                                     theta_E2,
-                                                    t1,
-                                                    t2,
+                                                    temp_t1,
+                                                    temp_t2,
                                                     D,
                                                     i_pos,
-                                                    x_grid,
+                                                    t_grid,
                                                     w_inv,
                                                     prefactor,
                                                     dq,
@@ -559,11 +563,11 @@ INT add_two_solitons(
                                                 pm0_jZ,
                                                 theta_E1,
                                                 theta_E2,
-                                                t1,
-                                                t2,
+                                                temp_t1,
+                                                temp_t2,
                                                 D,
                                                 i_pos,
-                                                x_grid,
+                                                t_grid,
                                                 w_inv,
                                                 prefactor,
                                                 s   );
@@ -576,8 +580,8 @@ leave_fun:
     free(dq);
     free(pm0_jZ);
     free(s);
-    free(t1);
-    free(t2);
+    free(temp_t1);
+    free(temp_t2);
     
     return ret_code;
 }
@@ -611,14 +615,14 @@ INT fnft_kdvv_inverse(
     }
 
     // Initialize spatial grid with D points between T[0] and T[1]
-    COMPLEX * x_grid = NULL;
-    x_grid = malloc(D * sizeof(COMPLEX));
-    CHECK_NOMEM(x_grid, ret_code, leave_fun);
+    COMPLEX * t_grid = NULL;
+    t_grid = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(t_grid, ret_code, leave_fun);
 
     const COMPLEX eps_t = (T[1] - T[0])/(D - 1);
 
     for (UINT n=0; n<D; n++) {
-        x_grid[n]= T[0] + n*eps_t;
+        t_grid[n]= T[0] + n*eps_t;
     }
 
     // Initialize new storage for bound states and normconsts for later sorting
@@ -702,7 +706,7 @@ INT fnft_kdvv_inverse(
                                         N_rest,
                                         &theta_E1[step_idx*D],
                                         &theta_E2[step_idx*D],
-                                        x_grid, 
+                                        t_grid, 
                                         D, 
                                         q);
             CHECK_RETCODE(ret_code, leave_fun);
@@ -711,7 +715,7 @@ INT fnft_kdvv_inverse(
                                         N_rest,
                                         &theta_E1[step_idx*D],
                                         &theta_E2[step_idx*D],
-                                        x_grid, 
+                                        t_grid, 
                                         D, 
                                         q);
             CHECK_RETCODE(ret_code, leave_fun);
@@ -727,7 +731,7 @@ INT fnft_kdvv_inverse(
     }
 
 leave_fun:
-    free(x_grid);
+    free(t_grid);
     free(bound_states_sorted);
     free(normconsts_sorted);
     free(theta_E1);
