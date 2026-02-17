@@ -32,15 +32,22 @@ static INT find_first_positive_value(
     UINT * const i_pos_ptr)
 {
     INT ret_code = SUCCESS;
+    UINT is_positive_value_found = 0;
     
     for (UINT i = 0; i < length; i++){
         if (CREAL(array[i]) > 0){
             *i_pos_ptr = i;
+            is_positive_value_found = 1;
             break;
         }
     }
 
-    // TODO wenn kein positive value?!
+    if (is_positive_value_found == 0){
+        ret_code = FNFT_EC_INVALID_ARGUMENT;
+    }
+    else {
+        ret_code = SUCCESS;
+    }
 
     return ret_code;
 }
