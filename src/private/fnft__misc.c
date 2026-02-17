@@ -17,6 +17,7 @@
 * Sander Wahls (TU Delft) 2017.
 * Peter J Prins (TU Delft) 2018-2020.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
+* Fabian Fischer (Hiwi KIT) 2026
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -28,27 +29,31 @@
 void misc_print_buf(const UINT len, COMPLEX const * const buf,
                     char const * const varname)
 {
+    fnft_printf_ptr_t printf_ptr = fnft_errwarn_getprintf();
+
     UINT i;
-    printf("%s = [", varname);
+    printf_ptr("%s = [", varname);
     for (i = 0; i < len; i++) {
-        printf("%1.12e+%1.12ej", CREAL(buf[i]), CIMAG(buf[i]));
+        printf_ptr("%1.12e+%1.12ej", CREAL(buf[i]), CIMAG(buf[i]));
         if (i != len-1)
-            printf(", ");
+            printf_ptr(", ");
     }
-    printf("];\n");
+    printf_ptr("];\n");
 }
 
 void misc_print_buf_real(const UINT len, REAL const * const buf,
                     char const * const varname)
 {
+    fnft_printf_ptr_t printf_ptr = fnft_errwarn_getprintf();
+    
     UINT i;
-    printf("%s = [", varname);
+    printf_ptr("%s = [", varname);
     for (i = 0; i < len; i++) {
-        printf("%1.12e", buf[i]);
+        printf_ptr("%1.12e", buf[i]);
         if (i != len-1)
-            printf(", ");
+            printf_ptr(", ");
     }
-    printf("];\n");
+    printf_ptr("];\n");
 }
 
 REAL misc_rel_err(const UINT len, COMPLEX const * const vec_numer,
