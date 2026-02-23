@@ -112,6 +112,38 @@ REAL misc_hausdorff_dist(const UINT lenA,
     return max_dist;
 }
 
+REAL misc_hausdorff_dist_normed(const UINT lenA,
+    COMPLEX const * const vecA, const UINT lenB,
+    COMPLEX const * const vecB)
+{
+    UINT i, j;
+    double tmp, dist, max_dist = -1.0;
+
+    for (i=0; i<lenA; i++) {
+        dist = INFINITY;
+        for (j=0; j<lenB; j++) {
+            tmp = CABS(vecA[i] - vecB[j])/CABS(vecA[i]);
+            if (tmp < dist)
+                dist = tmp;
+        }
+        if (dist > max_dist)
+            max_dist = dist;
+    }
+
+    for (j=0; j<lenB; j++) {
+        dist = INFINITY;
+        for (i=0; i<lenA; i++) {
+            tmp = CABS(vecA[i] - vecB[j])/CABS(vecB[i]);
+            if (tmp < dist)
+                dist = tmp;
+        }
+        if (dist > max_dist)
+            max_dist = dist;
+    }
+
+    return max_dist;
+}
+
 COMPLEX misc_sech(COMPLEX Z)
 {
     return 2.0 / (CEXP(Z) + CEXP(-Z));
