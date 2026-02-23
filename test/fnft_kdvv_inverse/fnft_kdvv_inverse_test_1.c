@@ -24,15 +24,20 @@
 #include "fnft__errwarn.h"
 #include "fnft__misc.h"
 
-INT main()
+
+static INT run_test(const UINT D,
+                    REAL err_bnd_bound_states,
+                    REAL err_bnd_spurious_bound_states,
+                    REAL err_bnd_normconst,
+                    REAL err_bnd_contspec)
+
 {
-    INT ret_code = SUCCESS;
+INT ret_code = SUCCESS;
     
     // General parameters
     UINT M = 0;
     REAL XI[2] = {-2.0, 2.0};
-    UINT D = 1001;
-    REAL T[2] = {-10.0, 10.0};
+    REAL T[2] = {-20.0, 20.0};
 
     COMPLEX * q = NULL;
     q = malloc(D * sizeof(COMPLEX));
@@ -57,7 +62,7 @@ INT main()
     contspec_r = malloc(M * sizeof(COMPLEX));
     CHECK_NOMEM(contspec_r, ret_code, leave_fun);
 
-    UINT K_r = K_i;
+    UINT K_r = D;
 
     COMPLEX * bound_states_r = NULL;
     bound_states_r = malloc(K_r * sizeof(COMPLEX));
@@ -72,8 +77,44 @@ INT main()
     ret_code = fnft_kdvv(D, q, T, M, contspec_r, XI, &K_r, bound_states_r, normconsts_r, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
 
+    // TODO: sorting Eigenvalues from bound_states_r?
+
     // Check result
     // bound_states_r is in ascending order -> start from the end
+//     for (UINT i=0; i<K_i; i++){
+//         COMPLEX bsi = bound_states_i[i];   
+//         COMPLEX nci = normconsts_i[i];
+//         COMPLEX bsr = bound_states_r[i];
+//         COMPLEX ncr = normconsts_r[i];
+
+//         UINT is_bsr_pure_imaginary = CABS(CREAL(bsr)) < 1e-9;
+//         UINT is_bsr_positive_imaginary = (CIMAG(bsr) > 0) && is_bsr_pure_imaginary;
+//         UINT is_bsr_in_tolerance = CABS(bsr - bsi)/CABS(bsr) < err_bnd_bound_states;
+
+//         UINT are_spurious_bound_states_small = err_bnd_spurious_bound_states;
+
+//         UINT is_ncr_real = CABS(CIMAG(ncr)) < 1e-9;
+//         UINT is_ncr_in_tolerance = CABS(ncr - nci)/CABS(ncr) < err_bnd_normconst;
+
+// // misc_hausdorff_dist
+
+//         UINT is_contspec_small = err_bnd_contspec;
+
+
+//         if (is_bsr_pure_imaginary &&
+//             is_bsr_positive_imaginary &&
+//             is_bsr_in_tolerance &&
+//             is_ncr_real &&
+//             is_ncr_in_tolerance) 
+//         {
+//             ret_code = SUCCESS;
+//         } 
+//         else {
+//             ret_code = FNFT_EC_TEST_FAILED;
+//             break;
+//         }
+//     }
+
     for (UINT i=0; i<K_i; i++){
         COMPLEX bsi = bound_states_i[i];   
         COMPLEX nci = normconsts_i[i];
@@ -102,7 +143,28 @@ INT main()
     }
     
 
-    // Print the results
+leave_fun:
+    free(q);
+    free(contspec_i);
+    free(contspec_r);
+    free(bound_states_r);
+    free(normconsts_r);
+
+    if (ret_code != SUCCESS)
+        return EXIT_FAILURE;
+    else
+	    return EXIT_SUCCESS;
+}
+
+
+static INT print_test_results(  COMPLEX * bound_states_r,
+                                COMPLEX * normconsts_r,
+                                COMPLEX * contspec_r,
+                                REAL * XI,
+                                const UINT M,
+                                const UINT D,
+                                const UINT K_r)
+{
     printf("Number of samples:\n  D = %u\n", (unsigned int)D);
 
     FNFT_REAL eps_xi = (XI[1] - XI[0]) / (M - 1);
@@ -125,18 +187,28 @@ INT main()
             (double)FNFT_CIMAG(normconsts_r[i])
         );
     }
+}
 
+
+INT main()
+{
+    INT ret_code = SUCCESS;
+
+    const UINT D = 1001;
+    
+    run_test(D, 1e-3, 1e-3, 1e-3, 1e-3);
+    CHECK_RETCODE(ret_code, leave_fun);
+    
 
 leave_fun:
-    free(q);
-    free(contspec_i);
-    free(contspec_r);
-    free(bound_states_r);
-    free(normconsts_r);
+    
 
     if (ret_code != SUCCESS)
         return EXIT_FAILURE;
     else
 	    return EXIT_SUCCESS;
 }
+
+
+
 
