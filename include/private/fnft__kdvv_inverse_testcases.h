@@ -20,8 +20,50 @@
 #ifndef FNFT__KDVV_INVERSE_TESTCASES_H
 #define FNFT__KDVV_INVERSE_TESTCASES_H
 
-#include "fnft_kdvv.h"
 #include "fnft_kdvv_inverse.h"
-#include "fnft_numtypes.h"
+#include "fnft_kdvv.h"
+
+/**
+ * @struct fnft_kdvv_params
+ */
+typedef struct {
+    UINT D;
+    REAL T[2];
+    UINT K;
+    COMPLEX * bound_states;
+    COMPLEX * normconsts;
+    UINT M;
+    REAL XI[2];
+    COMPLEX * contspec;
+} fnft_kdvv_params;
+
+
+/**
+ * @brief Routine to run tests for \link fnft_kdvv_inverse \endlink.
+ *
+ * This routine is used by the tests for \link fnft_kdvv_inverse \endlink.
+ *
+ * @param[in] params_i \link fnft_kdvv_params \endlink
+ * @param[in] err_bnd_bound_states 
+ * @param[in] err_bnd_spurious_bound_states 
+ * @param[in] err_bnd_normconst
+ * @param[in] err_bnd_contspec
+ * @return If all errors stay below bounds the routine
+ * \link FNFT_SUCCESS \endlink. Otherwise, it returns an error code
+ * (normally, \link FNFT_EC_TEST_FAILED \endlink).
+ *
+ * @ingroup kdv
+ */
+FNFT_INT fnft__kdvv_inverse_testcases_get_spectrum_of_inverse(
+    const fnft_kdvv_params params_i,
+    const FNFT_REAL err_bnd_bound_states,
+    const FNFT_REAL err_bnd_spurious_bound_states,
+    const FNFT_REAL err_bnd_normconst,
+    const FNFT_REAL err_bnd_contspec);
+
+
+#ifdef FNFT_ENABLE_SHORT_NAMES
+#define kdvv_testcases_get_spectrum_of_inverse(...) fnft__kdvv_inverse_testcases_get_spectrum_of_inverse(__VA_ARGS__)
+#endif
 
 #endif
