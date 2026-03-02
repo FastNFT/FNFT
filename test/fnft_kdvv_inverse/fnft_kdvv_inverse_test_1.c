@@ -34,8 +34,6 @@ INT main()
     COMPLEX bound_states_i[5] = {I*SQRT(1.0/2.0), I*SQRT(2.0/2.0), I*SQRT(3.0/2.0), I*SQRT(4.0/2.0), I*SQRT(5.0/2.0)};
     COMPLEX normconsts_i[5] = {1*10, -1*0.1, 1*1, -1*1e-5, 1*1e7};
 
-    COMPLEX * contspec_i = NULL;
-
     fnft_kdvv_params kdvv_parameters = {
         .D = 256,
         .T = {-20.0, 20.0},
@@ -44,7 +42,7 @@ INT main()
         .normconsts = normconsts_i,
         .M = 10,
         .XI = {-2.0, 2.0},
-        .contspec = contspec_i
+        .contspec = malloc(10*sizeof(COMPLEX))
     };
 
     
