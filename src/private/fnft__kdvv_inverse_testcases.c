@@ -19,6 +19,8 @@
 
 #define FNFT_ENABLE_SHORT_NAMES
 
+#define DEBUG
+
 #include <stdio.h>
 
 #include "fnft__kdvv_inverse_testcases.h"
@@ -67,6 +69,11 @@ INT kdvv_testcases_get_spectrum_of_inverse(const fnft_kdvv_params params_i,
 {
     INT ret_code = SUCCESS;
 
+    #ifdef DEBUG
+        // print initial parameters
+        print_test_results(params_i.bound_states, params_i.normconsts, params_i.contspec, params_i.XI, params_i.M, params_i.D, params_i.K);
+    #endif
+
     COMPLEX * q = NULL;
     q = malloc(params_i.D * sizeof(COMPLEX));
     CHECK_NOMEM(q, ret_code, leave_fun);
@@ -101,6 +108,10 @@ INT kdvv_testcases_get_spectrum_of_inverse(const fnft_kdvv_params params_i,
 
     ret_code = fnft_kdvv(params_i.D, q, params_i.T, params_i.M, contspec_r, params_i.XI, &K_r, bound_states_r, normconsts_r, &opts);
     CHECK_RETCODE(ret_code, leave_fun);
+
+    #ifdef DEBUG
+        print_test_results(bound_states_r, normconsts_r, contspec_r, params_i.XI, params_i.M, params_i.D, K_r);
+    #endif
 
     // -- Check results --
 
@@ -141,7 +152,13 @@ INT kdvv_testcases_get_spectrum_of_inverse(const fnft_kdvv_params params_i,
     COMPLEX * const candidate_normconsts_r_ptr = &normconsts_r[K_r-params_i.K];
     REAL hausdorff_dist_normconsts = misc_hausdorff_dist_normed(params_i.K, params_i.normconsts, params_i.K, 
                                                                 candidate_normconsts_r_ptr);
-    UINT is_ncr_in_tolerance = hausdorff_dist_normconsts < err_bnd_normconst;                                                         
+    UINT is_ncr_in_tolerance = hausdorff_dist_normconsts < err_bnd_normconst;                                                          
+
+    #ifdef DEBUG
+        printf("Number of bound_states:\n  K_r = %u\n", (unsigned int)K_r);
+        printf("Hausdorff dist bound states:\n  dist = %f\n", hausdorff_dist_bound_states);
+        printf("Hausdorff dist normconsts:\n  dist = %f\n", hausdorff_dist_normconsts);
+    #endif
 
     UINT is_contspec_small = 1;                                                                     
     for (UINT i=0; i<params_i.M; i++){
@@ -167,13 +184,6 @@ INT kdvv_testcases_get_spectrum_of_inverse(const fnft_kdvv_params params_i,
     else {
         ret_code = FNFT_EC_TEST_FAILED;
     }
-
-#ifdef DEBUG
-    printf("Number of bound_states:\n  K_r = %u\n", (unsigned int)K_r);
-    printf("Hausdorff dist bound states:\n  dist = %f\n", hausdorff_dist_bound_states);
-    printf("Hausdorff dist normconsts:\n  dist = %f\n", hausdorff_dist_normconsts);
-    print_test_results(bound_states_r, normconsts_r, contspec_r, XI, M, D, K_r);
-#endif    
     
 
 leave_fun:
