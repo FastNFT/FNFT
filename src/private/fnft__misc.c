@@ -133,7 +133,7 @@ REAL misc_hausdorff_dist_normed(const UINT lenA,
     for (j=0; j<lenB; j++) {
         dist = INFINITY;
         for (i=0; i<lenA; i++) {
-            tmp = CABS(vecA[i] - vecB[j])/CABS(vecB[i]);
+            tmp = CABS(vecA[i] - vecB[j])/CABS(vecB[j]);
             if (tmp < dist)
                 dist = tmp;
         }
