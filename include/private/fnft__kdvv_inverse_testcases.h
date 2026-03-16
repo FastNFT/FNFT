@@ -61,9 +61,18 @@ FNFT_INT fnft__kdvv_inverse_testcases_get_spectrum_of_inverse(
     const FNFT_REAL err_bnd_normconst,
     const FNFT_REAL err_bnd_contspec);
 
+FNFT_INT fnft__kdvv_print_spectrum( FNFT_COMPLEX * bound_states_r,
+                                    FNFT_COMPLEX * normconsts_r,
+                                    FNFT_COMPLEX * contspec_r,
+                                    FNFT_REAL * XI,
+                                    const UINT M,
+                                    const UINT D,
+                                    const UINT K_r);
+
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define kdvv_testcases_get_spectrum_of_inverse(...) fnft__kdvv_inverse_testcases_get_spectrum_of_inverse(__VA_ARGS__)
+#define kdvv_print_spectrum(...) fnft__kdvv_print_spectrum(__VA_ARGS__)
 #endif
 
 #endif

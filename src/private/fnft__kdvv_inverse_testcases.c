@@ -27,13 +27,13 @@
 #include "fnft__errwarn.h"
 #include "fnft__misc.h"
 
-static INT print_test_results(  COMPLEX * bound_states_r,
-                                COMPLEX * normconsts_r,
-                                COMPLEX * contspec_r,
-                                REAL * XI,
-                                const UINT M,
-                                const UINT D,
-                                const UINT K_r)
+INT kdvv_print_spectrum(COMPLEX * bound_states_r,
+                        COMPLEX * normconsts_r,
+                        COMPLEX * contspec_r,
+                        REAL * XI,
+                        const UINT M,
+                        const UINT D,
+                        const UINT K_r)
 {
     printf("Number of samples:\n  D = %u\n", (unsigned int)D);
 
@@ -68,11 +68,6 @@ INT kdvv_testcases_get_spectrum_of_inverse(const fnft_kdvv_params params_i,
                     const REAL err_bnd_contspec)
 {
     INT ret_code = SUCCESS;
-
-    #ifdef DEBUG
-        // print initial parameters
-        print_test_results(params_i.bound_states, params_i.normconsts, params_i.contspec, params_i.XI, params_i.M, params_i.D, params_i.K);
-    #endif
 
     COMPLEX * q = NULL;
     q = malloc(params_i.D * sizeof(COMPLEX));
@@ -110,7 +105,7 @@ INT kdvv_testcases_get_spectrum_of_inverse(const fnft_kdvv_params params_i,
     CHECK_RETCODE(ret_code, leave_fun);
 
     #ifdef DEBUG
-        print_test_results(bound_states_r, normconsts_r, contspec_r, params_i.XI, params_i.M, params_i.D, K_r);
+        kdvv_print_spectrum(bound_states_r, normconsts_r, contspec_r, params_i.XI, params_i.M, params_i.D, K_r);
     #endif
 
     // -- Check results --
