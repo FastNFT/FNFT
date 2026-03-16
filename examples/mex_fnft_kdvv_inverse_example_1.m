@@ -20,10 +20,10 @@ close all;
 
 contspec = [];
 XI = [0 1];
-bound_states = 1i*[1, 2, 3, 4] /2;
+bound_states = 1i*sqrt([1, 2, 3, 4] /2);
 normconsts = complex([-1, 1, -1, 1].*[10, 0.1, 1, 0.00001]);
 D = 1001;
-T = [-20 20];
+T = [-10 10];
 q = mex_fnft_kdvv_inverse(contspec, XI, bound_states, normconsts, D, T)
 
 t = linspace(T(1), T(2), D);
