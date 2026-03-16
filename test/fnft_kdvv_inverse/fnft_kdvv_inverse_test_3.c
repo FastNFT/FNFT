@@ -57,7 +57,7 @@ INT main()
     };
 
     #ifdef DEBUG
-        printf("Initial parameters: \n");
+        printf("\n Initial parameters: \n");
         kdvv_print_spectrum(kdvv_parameters.bound_states, kdvv_parameters.normconsts, 
                             kdvv_parameters.contspec, kdvv_parameters.XI, 
                             kdvv_parameters.M, kdvv_parameters.D, 
@@ -65,9 +65,9 @@ INT main()
     #endif
 
 
-    
+
     #ifdef DEBUG
-        printf("-- 1. Iteration: -- \n");
+        printf("\n -- 1. Iteration: -- \n");
     #endif
     
     REAL err_bnd_bound_states = 3.8e-3;
@@ -84,7 +84,7 @@ INT main()
     
 
     #ifdef DEBUG
-        printf("-- 2. Iteration: -- \n");
+        printf("\n -- 2. Iteration: -- \n");
     #endif
 
     // Check quadratic convergence
@@ -103,7 +103,7 @@ INT main()
 
 
     #ifdef DEBUG
-        printf("-- 3. Iteration: -- \n");
+        printf("\n -- 3. Iteration: -- \n");
     #endif
     
     kdvv_parameters.D *= 2;
