@@ -63,8 +63,8 @@ INT main()
     kdvv_parameters.D *= 2;
     err_bnd_bound_states /= 4;
     err_bnd_spurious_bound_states /= 4;
-    err_bnd_normconst = 1.1e-2;
-    err_bnd_contspec = 5e-3;
+    err_bnd_normconst /= 4;
+    err_bnd_contspec /= 4;
 
     ret_code = kdvv_testcases_get_spectrum_of_inverse(  kdvv_parameters, err_bnd_bound_states, 
                                                         err_bnd_spurious_bound_states, 
