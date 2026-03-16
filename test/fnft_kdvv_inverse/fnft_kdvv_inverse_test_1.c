@@ -25,7 +25,7 @@
 #include "fnft__errwarn.h"
 #include "fnft__misc.h"
 
-
+/* This is a simple test case */
 
 INT main()
 {

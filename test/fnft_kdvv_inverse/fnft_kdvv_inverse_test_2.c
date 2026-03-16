@@ -25,6 +25,8 @@
 #include "fnft__errwarn.h"
 #include "fnft__misc.h"
 
+/* This is a testcase with many eigenvalues */
+
 #define K_I 19
 
 INT main()
