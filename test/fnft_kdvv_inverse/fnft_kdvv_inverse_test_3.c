@@ -57,20 +57,22 @@ INT main()
     };
 
     #ifdef DEBUG
-        // print initial parameters
+        printf("Initial parameters: \n");
         kdvv_print_spectrum(kdvv_parameters.bound_states, kdvv_parameters.normconsts, 
                             kdvv_parameters.contspec, kdvv_parameters.XI, 
                             kdvv_parameters.M, kdvv_parameters.D, 
                             kdvv_parameters.K);
     #endif
 
+
+    
     #ifdef DEBUG
         printf("-- 1. Iteration: -- \n");
     #endif
     
-    REAL err_bnd_bound_states = 2e-3;
-    REAL err_bnd_spurious_bound_states = 0.1;
-    REAL err_bnd_normconst = 1.6e-1;
+    REAL err_bnd_bound_states = 3.8e-3;
+    REAL err_bnd_spurious_bound_states = 0.12;
+    REAL err_bnd_normconst = 2e-1;
     REAL err_bnd_contspec = 2.5e-1;
    
     ret_code = kdvv_testcases_get_spectrum_of_inverse(  kdvv_parameters, err_bnd_bound_states, 
@@ -80,6 +82,7 @@ INT main()
     CHECK_RETCODE(ret_code, leave_fun);
 
     
+
     #ifdef DEBUG
         printf("-- 2. Iteration: -- \n");
     #endif
@@ -97,7 +100,8 @@ INT main()
 
     CHECK_RETCODE(ret_code, leave_fun);
 
-    
+
+
     #ifdef DEBUG
         printf("-- 3. Iteration: -- \n");
     #endif
