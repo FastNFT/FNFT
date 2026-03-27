@@ -26,7 +26,7 @@
 #include "fnft__misc.h"
 
 
-#define K_I 19
+#define K 19
 
 
 INT main()
@@ -45,26 +45,26 @@ INT main()
     CHECK_NOMEM(q, ret_code, leave_fun);
 
     // Initialize variables for a specific test case without continuous spectrum
-    COMPLEX * contspec_i = NULL;
-    contspec_i = malloc(M * sizeof(COMPLEX));
+    COMPLEX * contspec = NULL;
+    contspec = malloc(M * sizeof(COMPLEX));
 
 
-    COMPLEX bound_states_i[K_I] = { 40.0, 39.0, 38.0, 37.0, 36.0,
+    COMPLEX bound_states[K] = {   40.0, 39.0, 38.0, 37.0, 36.0,
                                     30.0, 29.0, 28.0, 27.0, 26.0,
                                     20.0, 19.0, 18.0, 17.0, 16.0,
                                     10.0, 9.0, 8.0, 7.0};
 
-    COMPLEX normconsts_i[K_I] = {   1e20, -1e-7, 1e5, -1e3, 1e1,
-                                    -1e0, 1e2, -1e4, 1e-6, -1e8,
-                                    1e2, -1e4, 1e6, -1e8, 1e-10,
-                                    -1e7, 1e-6, -1e5, 1e-9};
+    COMPLEX normconsts[K] = { 1e20, -1e-7, 1e5, -1e3, 1e1,
+                                -1e0, 1e2, -1e4, 1e-6, -1e8,
+                                1e2, -1e4, 1e6, -1e8, 1e-10,
+                                -1e7, 1e-6, -1e5, 1e-9};
 
 
-    for (UINT i = 0; i<K_I; i++){
-        bound_states_i[i] = I*SQRT(bound_states_i[i]/2.0);
+    for (UINT i = 0; i<K; i++){
+        bound_states[i] = I*SQRT(bound_states[i]/2.0);
     }
 
-    ret_code = fnft_kdvv_inverse(M, contspec_i, XI, K_I, bound_states_i, normconsts_i, D, q, T, NULL);
+    ret_code = fnft_kdvv_inverse(M, contspec, XI, K, bound_states, normconsts, D, q, T, NULL);
     CHECK_RETCODE(ret_code, leave_fun);
 
     misc_print_buf(D, q, "output");
