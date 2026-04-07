@@ -27,10 +27,10 @@ contspec_initial = [];
 XI = [1e-6 10];
 
 bound_states_initial = 1i*sqrt([4, 3, 2, 1] ./2);
-norming_constants_initial = complex([1, -1, 1, -1].*[10, 0.1, 1, 0.00001]);
+norming_constants_initial = complex([1, -1, 1, -1].*[10000, 0.1, 1, 0.001]);
 
 D = 1001;
-T = [-10 10];
+T = [-15 10];
 
 % inverse kdvv transform
 q = mex_fnft_kdvv_inverse(contspec_initial, XI, bound_states_initial, norming_constants_initial, D, T);

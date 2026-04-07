@@ -53,7 +53,7 @@ norming_constants = complex(tmp_seq.*tmp_norming_constants);
 contspec = [];
 XI = [1e-6 1];
 D = 1001;
-T = [-20 20];
+T = [-12 8];
 q = mex_fnft_kdvv_inverse(contspec, XI, bound_states, norming_constants, D, T);
 
 
