@@ -30,8 +30,8 @@ bound_states = 1i*sqrt(desired_solitions ./2);
 
 % desired norming constants
 % defines how much the solitions are shifted towards each other
-% signs have to be alternating regards to the order of the bound state
-% sign of the normconst for the biggest eigenvalue has to be positive
+% - signs have to alternate regards to the order of the bound states
+% - sign of the normconst for the biggest eigenvalue has to be positive
 norming_constants = complex([1, -1, 1, -1].*[10, 0.1, 1, 0.00001]);
 
 % Number of samples of the output of the inverse kdvv
