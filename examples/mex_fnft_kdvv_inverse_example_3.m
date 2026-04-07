@@ -41,12 +41,11 @@ number_values = length(desired_solitions);
 tmp_bound_states = 1i*sqrt(desired_solitions ./2);
 
 % sorting
-[bound_states, indices] = sort(tmp_bound_states, "ascend");
+[bound_states, indices] = sort(tmp_bound_states, "descend");
 tmp_norming_constants = desired_shifting(indices);
 
-% alternating sequence 1 and -1 as elements and with 1 as last element
+% alternating sequence 1 and -1 as elements and with 1 as first element
 tmp_seq = (-1).^( 0:(number_values-1) );
-tmp_seq = flip(tmp_seq);
 
 norming_constants = complex(tmp_seq.*tmp_norming_constants);
 

@@ -23,7 +23,7 @@ close all;
 contspec = [];
 XI = [0 1];
 
-bound_states = 1i*sqrt( [1, 2, 3, 4, 5] /2); 
+bound_states = 1i*sqrt( [5, 4, 3, 2, 1] /2); 
 
 normconsts = complex([1, -1, 1, -1, 1].*[10, 0.1, 1, 0.00001, 10000000]);
 

@@ -26,8 +26,8 @@ close all;
 contspec_initial = [];
 XI = [1e-6 10];
 
-bound_states_initial = 1i*sqrt([1, 2, 3, 4] ./2);
-norming_constants_initial = complex([-1, 1, -1, 1].*[10, 0.1, 1, 0.00001]);
+bound_states_initial = 1i*sqrt([4, 3, 2, 1] ./2);
+norming_constants_initial = complex([1, -1, 1, -1].*[10, 0.1, 1, 0.00001]);
 
 D = 1001;
 T = [-10 10];

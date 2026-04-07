@@ -22,16 +22,17 @@ clear all;
 close all;
 
 % desired height of solitions:
-desired_solitions = [1, 2, 3, 4];
+desired_solitions = [4, 3, 2, 1];
 
 % resulting bound states out of desired heights of solitions:
+% - bound states have to be true and positive imaginary
 bound_states = 1i*sqrt(desired_solitions ./2);
 
 % desired norming constants
 % defines how much the solitions are shifted towards each other
 % signs have to be alternating regards to the order of the bound state
 % sign of the normconst for the biggest eigenvalue has to be positive
-norming_constants = complex([-1, 1, -1, 1].*[10, 0.1, 1, 0.00001]);
+norming_constants = complex([1, -1, 1, -1].*[10, 0.1, 1, 0.00001]);
 
 % Number of samples of the output of the inverse kdvv
 D = 1001;
@@ -47,6 +48,8 @@ XI = [1e-6 1];
 
 % calls function of c-library FNFT
 q = mex_fnft_kdvv_inverse(contspec, XI, bound_states, norming_constants, D, T);
+% the result consists of solitions with desired height (if the solitions are far
+% away enough to each other)
 
 % --- Plot the results ---
 t = linspace(T(1), T(2), D);
