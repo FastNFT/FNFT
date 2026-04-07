@@ -14,19 +14,56 @@
 %
 % Contributors:
 % Sander Wahls (KIT) 2026.
+% Fabian Fischer (Hiwi KIT) 2026.
+
+% This example should illustrate how to use the inverse kdvv transform
 
 clear all;
 close all;
 
+% defining the continuous spectrum:
+% out of function, just for seek of completeness (state 04/2026)
 contspec = [];
-XI = [0 1];
-bound_states = 1i*sqrt([1, 2, 3, 4] /2);
-normconsts = complex([-1, 1, -1, 1].*[10, 0.1, 1, 0.00001]);
-D = 1001;
-T = [-10 10];
-q = mex_fnft_kdvv_inverse(contspec, XI, bound_states, normconsts, D, T)
+XI = [1e-6 1];
 
+% desired height of solitions:
+desired_solitions = [1, 2, 3, 4];
+
+% resulting bound states out of desired heights of solitions:
+bound_states = 1i*sqrt(desired_solitions ./2);
+
+% desired norming constants
+% defines how much the solitions are shifted towards each other
+% signs have to be alternating regards to the order of the bound state
+% sign of the normconst for the biggest eigenvalue has to be positive
+norming_constants = complex([-1, 1, -1, 1].*[10, 0.1, 1, 0.00001]);
+
+% Number of samples of the output of the inverse kdvv
+D = 1001;
+
+% Area, for which the output has to be computed
+% Can be asymmetric
+T = [-10 10];
+
+% calls function of c-library FNFT
+q = mex_fnft_kdvv_inverse(contspec, XI, bound_states, norming_constants, D, T);
+
+% --- Plot the results ---
 t = linspace(T(1), T(2), D);
-plot(t, q)
-xlabel('t')
-ylabel('q(t)')
+
+% the output of the inverse kdvv is defined as a complex number (state 04/2026),
+% however only the imaginary part should be zero and can be neglected
+q = double(real(q(:)'));
+
+figure;
+plot(t, q);
+title('output of inverse kdvv: time-domain');
+xlabel('t');
+ylabel('q(t)');
+legend('q(t)');
+
+figure;
+stem(imag(bound_states),real(norming_constants), 'x');
+title('Bound states and norming constants');
+xlabel('bound states');
+ylabel('norming constants');
