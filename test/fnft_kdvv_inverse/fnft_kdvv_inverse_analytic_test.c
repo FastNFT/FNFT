@@ -40,6 +40,8 @@
 * 
 * Note: The usage of x and t is inverted in the example towards the usage in this library
 * - the resulting signal has to be multiplied by -1
+why COMPLEX normconsts[K] = { CEXP(64.0*x), -CEXP(8.0*x) } instead of
+COMPLEX normconsts[K] = { 2.0*SQRT(3.0)*CEXP(32.0*x), -SQRT(6.0)*CEXP(4.0*x) };????
 */
 
 
@@ -71,10 +73,9 @@ INT main()
     CHECK_NOMEM(q, ret_code, leave_fun);
 
     COMPLEX bound_states[K] = { I*2.0, I*1.0 };
-    // COMPLEX normconsts[K] = { 2.0*SQRT(3.0)*CEXP(32.0*x), -SQRT(6.0)*CEXP(4.0*x) };
-    COMPLEX normconsts[K] = { CEXP(64.0*x), -CEXP(8.0*x) };
-    // COMPLEX normconsts[K] = { 1, -1};
-
+    COMPLEX normconsts[K] = {   CEXP(8.0*I*CPOW(bound_states[0], 3)*x), 
+                                -CEXP(8.0*I*CPOW(bound_states[1], 3)*x) };
+    
     ret_code = fnft_kdvv_inverse(M, contspec, XI, K, bound_states, normconsts, D, q, T, NULL);
     CHECK_RETCODE(ret_code, leave_fun);
 
