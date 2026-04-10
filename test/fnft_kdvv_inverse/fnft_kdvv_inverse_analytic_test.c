@@ -57,18 +57,21 @@ INT main()
 {
     INT ret_code = SUCCESS;
 
-    REAL const x = 0.1;
+    COMPLEX * contspec = NULL;
+    COMPLEX * q = NULL;
+    COMPLEX * t_grid = NULL;
+    COMPLEX * analytic_q_a = NULL;
+
+    REAL const x = 0.5;
 
     UINT D = 256;
     UINT M = 10;
     REAL XI[2] = {-2.0, 2.0};
     REAL T[2] = {-10.0, 10.0};
 
-    COMPLEX * contspec = NULL;
     contspec = malloc(10*sizeof(COMPLEX));
     CHECK_NOMEM(contspec, ret_code, leave_fun);
 
-    COMPLEX * q = NULL;
     q = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(q, ret_code, leave_fun);
 
@@ -79,7 +82,6 @@ INT main()
     ret_code = fnft_kdvv_inverse(M, contspec, XI, K, bound_states, normconsts, D, q, T, NULL);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    COMPLEX * t_grid = NULL;
     t_grid = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(t_grid, ret_code, leave_fun);
 
@@ -89,7 +91,6 @@ INT main()
         t_grid[n]= T[0] + n*eps_t;
     }
 
-    COMPLEX * analytic_q_a = NULL;
     analytic_q_a = malloc(D*sizeof(COMPLEX));
 
     for (UINT i=0; i < D; i++) {
@@ -135,6 +136,7 @@ INT main()
 leave_fun:
     free(contspec);
     free(q);
+    free(t_grid);
     free(analytic_q_a);
 
     if (ret_code != SUCCESS)

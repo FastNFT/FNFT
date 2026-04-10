@@ -32,6 +32,9 @@
 INT main()
 {
     INT ret_code = SUCCESS;
+    
+    COMPLEX * q = NULL;
+    COMPLEX * contspec = NULL;
 
     // five desired bound states and norming constants
     // - bound states needs to be true imaginary positive
@@ -46,7 +49,6 @@ INT main()
     REAL T[2] = {-10.0, 10.0};      // area for which the output should be computed
     
     // allocation of memory for the computed output
-    COMPLEX * q = NULL;
     q = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(q, ret_code, leave_fun);
     
@@ -56,7 +58,6 @@ INT main()
     UINT M = 10;
     REAL XI[2] = {-2.0, 2.0};
 
-    COMPLEX * contspec = NULL;
     contspec = malloc(M * sizeof(COMPLEX));
     CHECK_NOMEM(contspec, ret_code, leave_fun);
 

@@ -34,6 +34,10 @@ INT main()
 {
     INT ret_code = SUCCESS;
 
+    COMPLEX * bound_states = NULL;
+    COMPLEX * q = NULL;
+    COMPLEX * contspec = NULL;
+
     COMPLEX desired_solitions_height[K] = { 40.0, 39.0, 38.0, 37.0, 36.0,
                                             30.0, 29.0, 28.0, 27.0, 26.0,
                                             20.0, 19.0, 18.0, 17.0, 16.0,
@@ -45,7 +49,6 @@ INT main()
                                 -1e7, 1e-6, -1e5, 1e-9};
 
     // resulting bound states out of desired solitions height                                
-    COMPLEX * bound_states = NULL;
     bound_states = malloc(K * sizeof(COMPLEX));
     CHECK_NOMEM(bound_states, ret_code, leave_fun);
                                 
@@ -58,7 +61,6 @@ INT main()
     REAL T[2] = {-18.0, 12.0};
     
     // allocating memory for the output of the inverse kdvv
-    COMPLEX * q = NULL;
     q = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(q, ret_code, leave_fun);
     
@@ -69,7 +71,6 @@ INT main()
     UINT M = 10;
     REAL XI[2] = {-2.0, 2.0};
 
-    COMPLEX * contspec = NULL;
     contspec = malloc(M * sizeof(COMPLEX));
     CHECK_NOMEM(contspec, ret_code, leave_fun);
 

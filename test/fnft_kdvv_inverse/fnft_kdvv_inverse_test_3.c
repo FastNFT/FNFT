@@ -53,8 +53,11 @@ INT main()
         .normconsts = normconsts_i,
         .M = 10,
         .XI = {-2.0, 2.0},
-        .contspec = malloc(10*sizeof(COMPLEX))
+        .contspec = NULL,
     };
+
+    kdvv_parameters.contspec = malloc(kdvv_parameters.M*sizeof(COMPLEX));
+    CHECK_NOMEM(kdvv_parameters.contspec, ret_code, leave_fun);
 
     #ifdef DEBUG
         printf("\n Initial parameters: \n");
@@ -120,6 +123,7 @@ INT main()
     
 
 leave_fun:
+    free(kdvv_parameters.contspec); 
     
 
     if (ret_code != SUCCESS)
