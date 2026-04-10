@@ -164,6 +164,9 @@ static INT one_solition_update_Jost(
     COMPLEX const * const M_min1_11)
 {
     INT ret_code = SUCCESS;
+    
+    COMPLEX * C_E = NULL;
+    COMPLEX * prefactor_C_E = NULL;
 
     // Check, if Jost has to be updated. Only when there are bound states left, that are not added yet
     UINT const is_Jost_to_update = N_jZ != 0;
@@ -178,7 +181,6 @@ static INT one_solition_update_Jost(
 
     // Create C_E Matrix (for Updating Jost Solution)
     UINT n_C_E = 2*2*D*N_jZ; 
-    COMPLEX * C_E = NULL;
     C_E = malloc(n_C_E*sizeof(COMPLEX));
     CHECK_NOMEM(C_E, ret_code, leave_fun);
 
@@ -199,7 +201,6 @@ static INT one_solition_update_Jost(
     }
 
     // Compute a new prefactor for C_E
-    COMPLEX * prefactor_C_E = NULL;
     prefactor_C_E = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(prefactor_C_E, ret_code, leave_fun);
 
@@ -266,6 +267,7 @@ static INT two_solitions_update_Jost(
     COMPLEX const * const s)
 {
     INT ret_code = SUCCESS;
+    COMPLEX * C_E = NULL;
 
     // Check, if Jost has to be updated. Only when there are bound states left, that are not added yet
     UINT const is_Jost_to_update = N_jZ != 0;
@@ -286,7 +288,6 @@ static INT two_solitions_update_Jost(
 
     // Create C_E Matrix (for Updating Jost Solution)
     UINT n_C_E = 2*2*D*N_jZ; 
-    COMPLEX * C_E = NULL;
     C_E = malloc(n_C_E*sizeof(COMPLEX));
     CHECK_NOMEM(C_E, ret_code, leave_fun);
 
@@ -416,6 +417,7 @@ static INT add_one_soliton(
     COMPLEX * M_min1_11 = NULL;
     COMPLEX * w_inv = NULL;
     COMPLEX * prefactor = NULL;
+    
     M_min1_11 = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(M_min1_11, ret_code, leave_fun);
     w_inv = malloc(D * sizeof(COMPLEX));
@@ -487,6 +489,11 @@ static INT add_two_solitons(
     COMPLEX * w_inv = NULL;
     COMPLEX * prefactor = NULL;
     COMPLEX * dq = NULL;
+    COMPLEX * pm0_jZ = NULL;
+    COMPLEX * s = NULL;
+    COMPLEX * temp_t1 = NULL;
+    COMPLEX * temp_t2 = NULL;
+
     w_inv = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(w_inv, ret_code, leave_fun);
     prefactor = malloc(D * sizeof(COMPLEX));
@@ -506,7 +513,6 @@ static INT add_two_solitons(
 
     // Initialize pm0_jZ
     UINT N_pm0_jZ = 2 * N_bound_states_left + 1;
-    COMPLEX * pm0_jZ = NULL;
     pm0_jZ = malloc((2*N_bound_states_left+1) * sizeof(COMPLEX));
     CHECK_NOMEM(pm0_jZ, ret_code, leave_fun);
     
@@ -518,14 +524,10 @@ static INT add_two_solitons(
     pm0_jZ[2*N_bound_states_left] = 0;
 
     // dimension of s is dependend on number of bound states left
-    COMPLEX * s = NULL;
     s = malloc(D * N_pm0_jZ * sizeof(COMPLEX));
     CHECK_NOMEM(s, ret_code, leave_fun);
 
     // Intermediate variables
-    COMPLEX * temp_t1 = NULL;
-    COMPLEX * temp_t2 = NULL;
-
     temp_t1 = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(temp_t1, ret_code, leave_fun);
     temp_t2 = malloc(D * sizeof(COMPLEX));
@@ -618,8 +620,13 @@ INT fnft_kdvv_inverse(
     */
 
     INT ret_code = SUCCESS;
-
-
+    
+    COMPLEX * t_grid = NULL;
+    COMPLEX * bound_states_sorted = NULL;
+    COMPLEX * normconsts_sorted = NULL;
+    COMPLEX * theta_E1 = NULL;
+    COMPLEX * theta_E2 = NULL;
+    
     // checks for valid input ---------------------------------------------------------------------------------
 
     for (UINT i=0; i<K; i++) {
@@ -649,7 +656,6 @@ INT fnft_kdvv_inverse(
     }
 
     // Initialize spatial grid with D points between T[0] and T[1]
-    COMPLEX * t_grid = NULL;
     t_grid = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(t_grid, ret_code, leave_fun);
 
@@ -662,11 +668,9 @@ INT fnft_kdvv_inverse(
     // initialize new storage for bound states and normconsts for later sorting
     COMPLEX tmp;
 
-    COMPLEX * bound_states_sorted = NULL;
     bound_states_sorted = malloc(K * sizeof(COMPLEX));
     CHECK_NOMEM(bound_states_sorted, ret_code, leave_fun);
 
-    COMPLEX * normconsts_sorted = NULL;
     normconsts_sorted = malloc(K * sizeof(COMPLEX));
     CHECK_NOMEM(normconsts_sorted, ret_code, leave_fun);
 
@@ -715,11 +719,9 @@ INT fnft_kdvv_inverse(
     } 
 
     // Declare theta_E
-    COMPLEX * theta_E1 = NULL;
     theta_E1 = malloc(D * K * sizeof(COMPLEX));
     CHECK_NOMEM(theta_E1, ret_code, leave_fun);
 
-    COMPLEX * theta_E2 = NULL;
     theta_E2 = malloc(D * K * sizeof(COMPLEX));
     CHECK_NOMEM(theta_E2, ret_code, leave_fun);
 
