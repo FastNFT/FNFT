@@ -417,7 +417,7 @@ static INT add_one_soliton(
     COMPLEX * M_min1_11 = NULL;
     COMPLEX * w_inv = NULL;
     COMPLEX * prefactor = NULL;
-    
+
     M_min1_11 = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(M_min1_11, ret_code, leave_fun);
     w_inv = malloc(D * sizeof(COMPLEX));
@@ -619,36 +619,51 @@ INT fnft_kdvv_inverse(
 
     */
 
+   
+   // checks for valid input ---------------------------------------------------------------------------------
+   
+   if (T[1] <= T[0]) {
+       return E_INVALID_ARGUMENT_MSG(T,Position of the first sample is bigger than of the last sample (i.e. T[1] <= T[0])!);
+    }
+    
+    for (UINT i=0; i<K; i++) {
+        if (CREAL(bound_states[i]) != 0){
+            return E_INVALID_ARGUMENT_MSG(bound_states,At least one bound state has a nonzero real part!);
+        }
+        
+        if (CIMAG(bound_states[i]) < 0){
+            return E_INVALID_ARGUMENT_MSG(bound_states,At least one bound state is negative imaginary!);
+        }
+        
+        if (normconsts_or_residues[i] == 0){
+            return E_INVALID_ARGUMENT_MSG(normconsts_or_residues,At least one norming constant is zero!);
+        }
+    }
+    
+    for (UINT i=0; i<K-1; i++) {
+        if (CABS(bound_states[i]) < CABS(bound_states[i+1])){
+            return E_INVALID_ARGUMENT_MSG(bound_states,The bound states have not a descend order!);
+        }
+        
+        if (CREAL(normconsts_or_residues[i]*normconsts_or_residues[i+1]) > 0){
+            return E_INVALID_ARGUMENT_MSG(normconsts_or_residues,The signs of the norming constants does not alternate!);
+        }
+    }
+    
+    // first checking if correct order of bound states exist, than checking if the first norming constant is positive!
+    if (CREAL(normconsts_or_residues[0]) < 0){
+        return E_INVALID_ARGUMENT_MSG(normconsts_or_residues,The norming constant of the biggest bound state is negative!);
+    }
+
+    // ----------------------------------------------------------------------------------------------------------
+    
     INT ret_code = SUCCESS;
     
     COMPLEX * t_grid = NULL;
-    COMPLEX * bound_states_sorted = NULL;
-    COMPLEX * normconsts_sorted = NULL;
+    COMPLEX * bound_states_i = NULL;
+    COMPLEX * normconsts_i = NULL;
     COMPLEX * theta_E1 = NULL;
     COMPLEX * theta_E2 = NULL;
-    
-    // checks for valid input ---------------------------------------------------------------------------------
-
-    for (UINT i=0; i<K; i++) {
-        // check if all bound states are true imaginary
-        if (CREAL(bound_states[i]) != 0){ret_code = E_INVALID_ARGUMENT(bound_states);}
-
-        // check if all bound states are positive imaginary
-        if (CIMAG(bound_states[i]) < 0){ret_code = E_INVALID_ARGUMENT(bound_states);}
-
-        // check if all normconst are nonzero
-        if (normconsts_or_residues[i] == 0){ret_code = E_INVALID_ARGUMENT(normconsts_or_residues);}
-
-        CHECK_RETCODE(ret_code, leave_fun);
-    }
-
-    // check if T[1] > T[0]
-    if (T[1] <= T[0]) {E_INVALID_ARGUMENT(T);}
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    // ----------------------------------------------------------------------------------------------------------
-
-
 
     // Initialize q
     for (UINT n=0; n<D; n++){
@@ -666,55 +681,21 @@ INT fnft_kdvv_inverse(
     }
 
     // initialize new storage for bound states and normconsts for later sorting
-    COMPLEX tmp;
+    bound_states_i = malloc(K * sizeof(COMPLEX));
+    CHECK_NOMEM(bound_states_i, ret_code, leave_fun);
 
-    bound_states_sorted = malloc(K * sizeof(COMPLEX));
-    CHECK_NOMEM(bound_states_sorted, ret_code, leave_fun);
-
-    normconsts_sorted = malloc(K * sizeof(COMPLEX));
-    CHECK_NOMEM(normconsts_sorted, ret_code, leave_fun);
+    normconsts_i = malloc(K * sizeof(COMPLEX));
+    CHECK_NOMEM(normconsts_i, ret_code, leave_fun);
 
     for (UINT i=0; i<K; i++){
-        bound_states_sorted[i] = bound_states[i]*I; // bound states should be real for further computing
-        normconsts_sorted[i] = normconsts_or_residues[i];
+        bound_states_i[i] = bound_states[i]*I; // bound states should be real for further computing
+        normconsts_i[i] = normconsts_or_residues[i];
     }
-
-    // sorting bound_states and according norm_const in descending order based on magnitude of imaginary part
-    for (UINT i = 0; i < K; i++){
-        for (UINT j = i + 1; j < K; j++){
-            if (CABS(bound_states_sorted[i]) < CABS(bound_states_sorted[j])){
-                tmp =  bound_states_sorted[i];
-                bound_states_sorted[i] = bound_states_sorted[j];
-                bound_states_sorted[j] = tmp;
-                tmp =  normconsts_sorted[i];
-                normconsts_sorted[i] = normconsts_sorted[j];
-                normconsts_sorted[j] = tmp;
-            }
-        }
-    }
-
-    // checks for valid input ---------------------------------------------------------------------------------
-    
-    // check if first normconst is positive
-    if (CREAL(normconsts_sorted[0]) < 0){
-            ret_code = E_INVALID_ARGUMENT(normconsts_or_residues)
-        }
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    // check if sign of normconst alternates
-    for (UINT i=0; i<K-1; i++) {
-        if (CREAL(normconsts_sorted[i]*normconsts_sorted[i+1]) > 0){
-            ret_code = E_INVALID_ARGUMENT(normconsts_or_residues)
-        }
-    }
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    // ----------------------------------------------------------------------------------------------------------
 
     // shift sign of norm_consts if K even
     if (K%2 == 0){
         for (UINT i=0; i<K; i++){
-            normconsts_sorted[i] = -1*normconsts_sorted[i];
+            normconsts_i[i] = -1*normconsts_i[i];
         }
     } 
 
@@ -728,7 +709,7 @@ INT fnft_kdvv_inverse(
     for (UINT i=0; i<D; i++){
         for (UINT j=0; j<K; j++){
             theta_E1[j*D+i] = 1;
-            theta_E2[j*D+i] = normconsts_sorted[j];
+            theta_E2[j*D+i] = normconsts_i[j];
         }
     }
 
@@ -756,7 +737,7 @@ INT fnft_kdvv_inverse(
 
         // Crum-Transformation step
         if (N_step==1){
-            ret_code = add_one_soliton( &bound_states_sorted[step_idx], 
+            ret_code = add_one_soliton( &bound_states_i[step_idx], 
                                         N_rest,
                                         &theta_E1[step_idx*D],
                                         &theta_E2[step_idx*D],
@@ -765,7 +746,7 @@ INT fnft_kdvv_inverse(
                                         q);
             CHECK_RETCODE(ret_code, leave_fun);
         } else {
-            ret_code = add_two_solitons(&bound_states_sorted[step_idx], 
+            ret_code = add_two_solitons(&bound_states_i[step_idx], 
                                         N_rest,
                                         &theta_E1[step_idx*D],
                                         &theta_E2[step_idx*D],
@@ -786,8 +767,8 @@ INT fnft_kdvv_inverse(
 
 leave_fun:
     free(t_grid);
-    free(bound_states_sorted);
-    free(normconsts_sorted);
+    free(bound_states_i);
+    free(normconsts_i);
     free(theta_E1);
     free(theta_E2);
     return ret_code;

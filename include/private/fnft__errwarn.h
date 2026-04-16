@@ -48,6 +48,12 @@
 #define FNFT__E_INVALID_ARGUMENT(name) FNFT__ERRMSG(FNFT_EC_INVALID_ARGUMENT, FNFT__E_INVALID_ARGUMENT_(name))
 
 /**
+ * Macro for raising an invalid argument error with detailed description.
+ * @ingroup private_errwarn
+ */
+#define FNFT__E_INVALID_ARGUMENT_MSG(name,msg) FNFT__ERRMSG(FNFT_EC_INVALID_ARGUMENT, FNFT__E_INVALID_ARGUMENT_MSG_(name, msg))
+
+/**
  * Macro for raising an subroutine error, where ec is the error code returned
  * by the subroutine. The error code returned by this macro is -abs(ec). Since
  * all other error codes are positive, a negative error code therefore
@@ -111,6 +117,7 @@
 #define WARN(msg)           FNFT__WARN(msg)
 #define E_NOMEM             FNFT__E_NOMEM
 #define E_INVALID_ARGUMENT(name) FNFT__E_INVALID_ARGUMENT(name)
+#define E_INVALID_ARGUMENT_MSG(name,msg) FNFT__E_INVALID_ARGUMENT_MSG(name, msg)
 #define E_SUBROUTINE(ec)    FNFT__E_SUBROUTINE(ec)
 #define E_DIV_BY_ZERO       FNFT__E_DIV_BY_ZERO
 #define E_TEST_FAILED       FNFT__E_TEST_FAILED
@@ -138,6 +145,13 @@
  * @ingroup private_errwarn
  */
 #define FNFT__E_INVALID_ARGUMENT_(name) "Invalid argument "#name"."
+
+/**
+ * Auxiliary macro that is used to stringify the input to
+ * \link FNFT__E_INVALID_ARGUMENT_MSG \endlink. Do not call directly.
+ * @ingroup private_errwarn
+ */
+#define FNFT__E_INVALID_ARGUMENT_MSG_(name,msg) "Invalid argument "#name". "#msg
 
 /**
  * Auxiliary macro used to stringify the input to
