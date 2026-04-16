@@ -25,23 +25,24 @@
 #include "fnft__errwarn.h"
 #include "fnft__misc.h"
 
-/* This is a testcase with analytic reference */
 
-
-/* This testcase is based on the example discussed on p. 74-78 in "Solitons - an introduction" by 
-* P. G. Drazin, R. S. Johnson, Cambridge University Press (1989)
-* 
-* - the eigenvalues are k_1 = 1 and k_2 = 2
-* - the eigenfunctions are: 
-*    > psi_1 ~ sqrt(6)*exp(-t) as t->+infinity and psi_1 ~ sqrt(6)*exp(t) as t->-infinity
-*       ==> normconst_1 = sqrt(6)
-
-* the values for the normconsts are 
-* 
-* Note: The usage of x and t is inverted in the example towards the usage in this library
-* - the resulting signal has to be multiplied by -1
-why COMPLEX normconsts[K] = { CEXP(64.0*x), -CEXP(8.0*x) } instead of
-COMPLEX normconsts[K] = { 2.0*SQRT(3.0)*CEXP(32.0*x), -SQRT(6.0)*CEXP(4.0*x) };????
+/* This is a testcase with analytic reference
+*
+* This test case is based on the example discussed on p. 74-78 in [1]. Similar to this example
+* is the example discussed in section 5.2 (p. 13) in [2]. Note that we use different notation and 
+* the definition of the norming constants in [2]. Thus we have to do the following adaptions of the
+* formulas given in [1]:
+*
+*   - substitute x with t and t with x
+*   - the analytic signal needs to be multiplied by -1
+*   - norming constants:
+*       b(2i, x) = exp(8i*(2i)^3*x) --> b(2i, 0) = 1
+*       b(1i, x) = -exp(8i*(1i)^3*x) --> b(1i, 0) = -1
+*    
+* [1] P. G. Drazin, R. S. Johnson (1989). Solitons - an introduction. Cambridge University Press
+* [2] Prins, P. J., & Wahls, S. (2021). An accurate O(N 2) floating point algorithm for the Crum 
+* transform of the KdV equation. Communications in Nonlinear Science and Numerical Simulation,
+* 102, Article 105782. https://doi.org/10.1016/j.cnsns.2021.105782
 */
 
 
