@@ -48,6 +48,8 @@
 
 #define K 2
 #define DEBUG
+#define QUADRATIC_ERROR_SUM_TOLERANCE 1e-27
+#define MAX_QUADRATIC_ERROR 1e-28
 
 REAL analytic_signal(REAL t, REAL x){
     return 12.0*(3.0 + 4.0 * COSH(2.0*t-8.0*x) + COSH(4.0*t-64.0*x))/POW((3.0*COSH(t-28.0*x) + COSH(3.0*t-36.0*x)), 2);
@@ -68,7 +70,7 @@ INT main()
     UINT D = 256;
     UINT M = 10;
     REAL XI[2] = {-2.0, 2.0};
-    REAL T[2] = {-10.0, 10.0};
+    REAL T[2] = {-8.0, 12.0};
 
     contspec = malloc(10*sizeof(COMPLEX));
     CHECK_NOMEM(contspec, ret_code, leave_fun);
@@ -121,8 +123,8 @@ INT main()
         printf("resulting quadratic error sum: %e \n", quadratic_error_sum);
     #endif
 
-    UINT is_quadratic_error_sum_in_tolerance = quadratic_error_sum < 1e-27;
-    UINT is_max_quadratic_error_in_tolerance = max_quadratic_error < 1e-28;
+    UINT is_quadratic_error_sum_in_tolerance = quadratic_error_sum < QUADRATIC_ERROR_SUM_TOLERANCE;
+    UINT is_max_quadratic_error_in_tolerance = max_quadratic_error < MAX_QUADRATIC_ERROR;
 
     
     if (is_max_quadratic_error_in_tolerance &&
