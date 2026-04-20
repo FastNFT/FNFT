@@ -37,7 +37,8 @@ INT main()
     COMPLEX * contspec = NULL;
 
     // five desired bound states and norming constants
-    // - bound states needs to be true imaginary positive
+    // - bound states have to be positive, purely imaginary numbers
+    // - bound states have to be in descending order
     // - every norming constants belong to the bound state at the same index
     // - the signs of the norming constants have to alternate regarding the order
     //   of bound states. The norming constant of the biggest bound state has to be positive.

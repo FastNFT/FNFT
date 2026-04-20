@@ -25,7 +25,8 @@ close all;
 desired_solitions = [4, 3, 2, 1];
 
 % resulting bound states out of desired heights of solitions:
-% - bound states have to be true and positive imaginary
+% - bound states have to be positive, purely imaginary numbers
+% - the bound states have to be in descendent order
 bound_states = 1i*sqrt(desired_solitions ./2);
 
 % desired norming constants
