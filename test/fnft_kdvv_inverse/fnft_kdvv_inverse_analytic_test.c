@@ -27,23 +27,23 @@
 
 
 /* This is a testcase with analytic reference
-*
-* This test case is based on the example discussed on p. 74-78 in [1]. Similar to this example
-* is the example discussed in section 5.2 (p. 13) in [2]. Note that we use different notation and 
-* the definition of the norming constants in [2]. Thus we have to do the following adaptions of the
-* formulas given in [1]:
-*
-*   - substitute x with t and t with x
-*   - the analytic signal needs to be multiplied by -1
-*   - norming constants:
-*       b(2i, x) = exp(8i*(2i)^3*x) --> b(2i, 0) = 1
-*       b(1i, x) = -exp(8i*(1i)^3*x) --> b(1i, 0) = -1
-*    
-* [1] P. G. Drazin, R. S. Johnson (1989). Solitons - an introduction. Cambridge University Press
-* [2] Prins, P. J., & Wahls, S. (2021). An accurate O(N 2) floating point algorithm for the Crum 
-* transform of the KdV equation. Communications in Nonlinear Science and Numerical Simulation,
-* 102, Article 105782. https://doi.org/10.1016/j.cnsns.2021.105782
-*/
+ *
+ * This test case is based on the example discussed on p. 74-78 in [1]. Similar to this example
+ * is the example discussed in section 5.2 (p. 13) in [2]. Note that we use different notation and 
+ * the definition of the norming constants in [2]. Thus we have to do the following adaptions of the
+ * formulas given in [1]:
+ *
+ *   - substitute x with t and t with x
+ *   - the analytic signal needs to be multiplied by -1
+ *   - norming constants:
+ *       b(2i, x) = exp(8i*(2i)^3*x) --> b(2i, 0) = 1
+ *       b(1i, x) = -exp(8i*(1i)^3*x) --> b(1i, 0) = -1
+ *    
+ * [1] P. G. Drazin, R. S. Johnson (1989). Solitons - an introduction. Cambridge University Press
+ * [2] Prins, P. J., & Wahls, S. (2021). An accurate O(N^2) floating point algorithm for the Crum 
+ * transform of the KdV equation. Communications in Nonlinear Science and Numerical Simulation,
+ * 102, Article 105782. https://doi.org/10.1016/j.cnsns.2021.105782
+ */
 
 
 #define K 2
