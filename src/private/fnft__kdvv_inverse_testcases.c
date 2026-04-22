@@ -19,18 +19,16 @@
 
 #define FNFT_ENABLE_SHORT_NAMES
 
-#define DEBUG
-
 #include <stdio.h>
 
 #include "fnft__kdvv_inverse_testcases.h"
 #include "fnft__errwarn.h"
 #include "fnft__misc.h"
 
-INT kdvv_print_spectrum(COMPLEX * bound_states_r,
-                        COMPLEX * normconsts_r,
-                        COMPLEX * contspec_r,
-                        REAL * XI,
+kdvv_print_spectrum(COMPLEX const * const bound_states_r,
+                        COMPLEX const * const normconsts_r,
+                        COMPLEX const * const contspec_r,
+                        REAL const * const XI,
                         const UINT M,
                         const UINT D,
                         const UINT K_r)
@@ -112,8 +110,6 @@ INT kdvv_testcases_get_spectrum_of_inverse(const fnft_kdvv_params params_i,
 
     // Simple general tests
     for (UINT i=0; i<params_i.K; i++){
-        COMPLEX bsi = params_i.bound_states[i];   
-        COMPLEX nci = params_i.normconsts[i];
         COMPLEX bsr = bound_states_r[i];
         COMPLEX ncr = normconsts_r[i];
 
