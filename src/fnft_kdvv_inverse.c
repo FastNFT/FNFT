@@ -611,15 +611,7 @@ INT fnft_kdvv_inverse(
     COMPLEX * const q,
     REAL const * const T,
     void *opts_ptr)
-{
-    
-    /*
-    D       number of spatial points
-    out     output of transformation
-
-    */
-
-   
+{  
    // checks for valid input ---------------------------------------------------------------------------------
    
    if (T[1] <= T[0]) {
@@ -667,7 +659,7 @@ INT fnft_kdvv_inverse(
 
     // Initialize q
     for (UINT n=0; n<D; n++){
-        q[n] = 0;
+        q[n] = 0.0;
     }
 
     // Initialize spatial grid with D points between T[0] and T[1]
