@@ -599,16 +599,16 @@ leave_fun:
 
 
 INT fnft_kdvv_inverse(
-    const UINT M,
+    UINT const M,
     COMPLEX * const contspec,
     REAL const * const XI,
     UINT const K,
     COMPLEX const * const bound_states,
     COMPLEX const * const norming_constants,
-    const UINT D,
+    UINT const D,
     COMPLEX * const q,
     REAL const * const T,
-    void *opts_ptr)
+    void * opts_ptr)
 {  
    // checks for valid input ---------------------------------------------------------------------------------
    
