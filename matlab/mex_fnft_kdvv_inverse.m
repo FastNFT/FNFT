@@ -18,7 +18,7 @@
 %                   the last sample in contspec
 %   bound_states    Complex row vector, contains the desired bound states.
 %                   Pass [] if the discrete spectrum is empty.
-%   normconsts_or_residues Complex row vector, same length as bound_states.
+%   norming_constants Complex row vector, same length as bound_states.
 %                   Contains the corresponding norming constants (default) or,
 %                   if the corresponding option is passed, residues. Pass []
 %                   if the discrete spectrum is empty.

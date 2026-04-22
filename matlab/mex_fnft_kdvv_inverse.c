@@ -33,7 +33,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     FNFT_UINT M, K;
     FNFT_COMPLEX * contspec = NULL;
     FNFT_COMPLEX * bound_states = NULL;
-    FNFT_COMPLEX * normconsts_or_residues = NULL;
+    FNFT_COMPLEX * norming_constants = NULL;
     FNFT_REAL * XI;
     FNFT_UINT i;
     double *re, *im;
@@ -45,7 +45,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         return;
 
     /* Check types and dimensions of the first seven inputs: contspec, XI,
-       bound_states, normconsts_or_residues, D, T */
+       bound_states, norming_constants, D, T */
 
     if ( nrhs < 6 )
         mexErrMsgTxt("At least seven inputs expected.");
@@ -56,7 +56,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if ( !mxIsEmpty(prhs[2]) && (!mxIsDouble(prhs[2]) || !mxIsComplex(prhs[2]) || mxGetM(prhs[2]) != 1) )
         mexErrMsgTxt("Third input bound_states should be a complex row vector (double precision) or []. Try passing complex(double(bound_states(:)')).");
     if ( !mxIsEmpty(prhs[3]) && (!mxIsDouble(prhs[3]) || !mxIsComplex(prhs[3]) || mxGetM(prhs[3]) != 1) )
-        mexErrMsgTxt("Fourth input normconsts_or_residues should be a complex row vector (double precision) or []. Try passing complex(double(normconsts_or_residues(:)')).");
+        mexErrMsgTxt("Fourth input norming_constants should be a complex row vector (double precision) or []. Try passing complex(double(norming_constants(:)')).");
     if ( mxIsComplex(prhs[4]) || !mxIsDouble(prhs[4]) || mxGetNumberOfElements(prhs[4]) != 1 )
         mexErrMsgTxt("Fifth input D should be a real scalar (double precision).");
     if ( mxIsComplex(prhs[5]) || !mxIsDouble(prhs[5]) || mxGetM(prhs[5]) != 1 || mxGetN(prhs[5]) != 2 )
@@ -71,7 +71,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* Check values of first four inputs */
 
     if ( K != mxGetNumberOfElements(prhs[3]) )
-        mexErrMsgTxt("bound_states and normconsts_or_residues should have the same lengths.");
+        mexErrMsgTxt("bound_states and norming_constants should have the same lengths.");
     if ( T[0] >= T[1] )
         mexErrMsgTxt("T(1) >= T(2).");
     if ( XI[0] >= XI[1] )
@@ -118,10 +118,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         contspec = mxMalloc(M * sizeof(FNFT_COMPLEX));
     if (K>0) {
         bound_states = mxMalloc(K * sizeof(FNFT_COMPLEX));
-        normconsts_or_residues = mxMalloc(K * sizeof(FNFT_COMPLEX));
+        norming_constants = mxMalloc(K * sizeof(FNFT_COMPLEX));
     }
     if ( q == NULL || (M>0 && contspec == NULL) || (K>0 && bound_states == NULL)
-        || (K>0 && normconsts_or_residues == NULL) ) {
+        || (K>0 && norming_constants == NULL) ) {
         snprintf(msg, sizeof msg, "Out of memory.");
         goto on_error;
     }
@@ -139,12 +139,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     re = mxGetPr(prhs[3]);
     im = mxGetPi(prhs[3]);
     for (i=0; i<K; i++)
-        normconsts_or_residues[i] = re[i] + I*im[i];
+        norming_constants[i] = re[i] + I*im[i];
 
     /* Call the C routine */
 
     ret_code = fnft_kdvv_inverse(M, contspec, XI, K, bound_states,
-                                 normconsts_or_residues, D, q, T, NULL);
+                                 norming_constants, D, q, T, NULL);
     if (ret_code != FNFT_SUCCESS) {
         snprintf(msg, sizeof msg, "fnft_kdvv_inverse failed (error code %i).",
                 ret_code);
@@ -169,7 +169,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxFree(q);
     mxFree(contspec);
     mxFree(bound_states);
-    mxFree(normconsts_or_residues);
+    mxFree(norming_constants);
     return;
 
 on_error:

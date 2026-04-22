@@ -64,7 +64,7 @@
  *  purely imaginary numbers (lie on the upper half of the imaginary axis). The bound 
  *  states have to be in descending order. To add a solition with height \f$ h_i \f$ 
  *  the bound state have to be \f$ \gamma_i = \sqrt{ h_i/2} \f$. 
- * @param[in] normconsts_or_residues Complex array of length K. Values of
+ * @param[in] norming_constants Complex array of length K. Values of
  *  either the norming constants \f$ b(\xi) \f$ or the residues
  *  \f$ \frac{b(\xi)}{\partial{a(\xi)}/\partial{\xi}}\f$ at the values bound_states.
  *  The signs of the norming constants have to alternate regards to the order of the 
@@ -98,7 +98,7 @@ FNFT_INT fnft_kdvv_inverse(
     FNFT_REAL const * const XI,
     FNFT_UINT const K,
     FNFT_COMPLEX const * const bound_states,
-    FNFT_COMPLEX const * const normconsts_or_residues,
+    FNFT_COMPLEX const * const norming_constants,
     const FNFT_UINT D,
     FNFT_COMPLEX * const q,
     FNFT_REAL const * const T,

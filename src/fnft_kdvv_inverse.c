@@ -143,8 +143,6 @@ static INT two_solitions_crum_transformation(
         dq[i] = prefactor[i] * s[(N_pm0_jZ-1)*D+i];
     }
 
-leave_fun:
-
     return ret_code;
 }
 
@@ -606,7 +604,7 @@ INT fnft_kdvv_inverse(
     REAL const * const XI,
     UINT const K,
     COMPLEX const * const bound_states,
-    COMPLEX const * const normconsts_or_residues,
+    COMPLEX const * const norming_constants,
     const UINT D,
     COMPLEX * const q,
     REAL const * const T,
@@ -627,8 +625,8 @@ INT fnft_kdvv_inverse(
             return E_INVALID_ARGUMENT_MSG(bound_states,At least one bound state is negative imaginary!);
         }
         
-        if (normconsts_or_residues[i] == 0){
-            return E_INVALID_ARGUMENT_MSG(normconsts_or_residues,At least one norming constant is zero!);
+        if (norming_constants[i] == 0){
+            return E_INVALID_ARGUMENT_MSG(norming_constants,At least one norming constant is zero!);
         }
     }
     
@@ -637,14 +635,14 @@ INT fnft_kdvv_inverse(
             return E_INVALID_ARGUMENT_MSG(bound_states,The bound states have not a descend order!);
         }
         
-        if (CREAL(normconsts_or_residues[i]*normconsts_or_residues[i+1]) > 0){
-            return E_INVALID_ARGUMENT_MSG(normconsts_or_residues,The signs of the norming constants does not alternate!);
+        if (CREAL(norming_constants[i]*norming_constants[i+1]) > 0){
+            return E_INVALID_ARGUMENT_MSG(norming_constants,The signs of the norming constants does not alternate!);
         }
     }
     
     // first checking if correct order of bound states exist, than checking if the first norming constant is positive!
-    if (CREAL(normconsts_or_residues[0]) < 0){
-        return E_INVALID_ARGUMENT_MSG(normconsts_or_residues,The norming constant of the biggest bound state is negative!);
+    if (CREAL(norming_constants[0]) < 0){
+        return E_INVALID_ARGUMENT_MSG(norming_constants,The norming constant of the biggest bound state is negative!);
     }
 
     // ----------------------------------------------------------------------------------------------------------
@@ -681,7 +679,7 @@ INT fnft_kdvv_inverse(
 
     for (UINT i=0; i<K; i++){
         bound_states_i[i] = bound_states[i]*I; // bound states should be real for further computing
-        normconsts_i[i] = normconsts_or_residues[i];
+        normconsts_i[i] = norming_constants[i];
     }
 
     // shift sign of norm_consts if K even
