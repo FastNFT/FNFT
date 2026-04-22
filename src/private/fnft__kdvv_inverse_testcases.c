@@ -25,13 +25,13 @@
 #include "fnft__errwarn.h"
 #include "fnft__misc.h"
 
-kdvv_print_spectrum(COMPLEX const * const bound_states_r,
-                        COMPLEX const * const normconsts_r,
-                        COMPLEX const * const contspec_r,
-                        REAL const * const XI,
-                        const UINT M,
-                        const UINT D,
-                        const UINT K_r)
+void kdvv_print_spectrum(   COMPLEX const * const bound_states_r,
+                            COMPLEX const * const normconsts_r,
+                            COMPLEX const * const contspec_r,
+                            REAL const * const XI,
+                            const UINT M,
+                            const UINT D,
+                            const UINT K_r)
 {
     printf("Number of samples:\n  D = %u\n", (unsigned int)D);
 
