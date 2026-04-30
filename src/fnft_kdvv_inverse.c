@@ -751,7 +751,7 @@ INT fnft_kdvv_inverse(
 
         // Filter out errors that result in negative values
         for (UINT i=0; i<D; i++){
-            if (CREAL(q[i]) < 0){ q[i] = 0; }
+            if (CREAL(q[i]) < 0.0){ q[i] = 0.0; }
         }
     }
 
