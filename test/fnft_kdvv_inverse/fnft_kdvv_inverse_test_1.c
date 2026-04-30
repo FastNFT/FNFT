@@ -31,8 +31,8 @@ INT main()
 {
     INT ret_code = SUCCESS;
 
-    COMPLEX bound_states_i[5] = {I*SQRT(1.0/2.0), I*SQRT(2.0/2.0), I*SQRT(3.0/2.0), I*SQRT(4.0/2.0), I*SQRT(5.0/2.0)};
-    COMPLEX normconsts_i[5] = {1*10, -1*0.1, 1*1, -1*1e-5, 1*1e7};
+    COMPLEX bound_states_i[5] = {I*SQRT(5.0/2.0), I*SQRT(4.0/2.0), I*SQRT(3.0/2.0), I*SQRT(2.0/2.0), I*SQRT(1.0/2.0)};
+    COMPLEX normconsts_i[5] = {1*1e7, -1*1e-5, 1*1, -1*0.1, 1*10};
 
     fnft_kdvv_params kdvv_parameters = {
         .D = 256,
