@@ -66,8 +66,13 @@ INT kdvv_testcases_get_spectrum_of_inverse(const fnft_kdvv_params params_i,
                     const REAL err_bnd_contspec)
 {
     INT ret_code = SUCCESS;
-
+    
     COMPLEX * q = NULL;
+    COMPLEX * contspec_r = NULL;
+    COMPLEX * bound_states_r = NULL;
+    COMPLEX * normconsts_r = NULL;
+    
+
     q = malloc(params_i.D * sizeof(COMPLEX));
     CHECK_NOMEM(q, ret_code, leave_fun);
 
@@ -83,17 +88,14 @@ INT kdvv_testcases_get_spectrum_of_inverse(const fnft_kdvv_params params_i,
     CHECK_RETCODE(ret_code, leave_fun);
     
     // Prepare forward fnft_kdvv
-    COMPLEX * contspec_r = NULL;
     contspec_r = malloc(params_i.M * sizeof(COMPLEX));
     CHECK_NOMEM(contspec_r, ret_code, leave_fun);
 
     UINT K_r = params_i.D;
 
-    COMPLEX * bound_states_r = NULL;
     bound_states_r = malloc(K_r * sizeof(COMPLEX));
     CHECK_NOMEM(bound_states_r, ret_code, leave_fun);
 
-    COMPLEX * normconsts_r = NULL;
     normconsts_r = malloc(K_r * sizeof(COMPLEX));
     CHECK_NOMEM(normconsts_r, ret_code, leave_fun);
 
