@@ -71,8 +71,7 @@
  *  bound states. The sign of the normconst for the biggest eigenvalue has to be positive
  *  Note: currently this array is always interpreted as norming constants (state 04/2026)! 
  *  Residues functionality is not implemented yet!
- * @param[in] D Number of samples of the to be generated signal q. Should be a
- *  positive power of two.
+ * @param[in] D Number of samples of the to be generated signal q.
  * @param[out] q Array of length D. Is filled with samples
  *  \f$ q(t_n) \f$, where \f$ t_n = T[0] + n(T[1]-T[0])/(D-1) \f$
  *  and \f$n=0,1,\dots,D-1\f$, of the to-be-generated signal in ascending order
