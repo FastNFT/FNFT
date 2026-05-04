@@ -77,6 +77,11 @@ INT main()
     for (UINT n=0; n<D; n++) {
         t_grid[n]= T[0] + n*eps_t;
     }
+
+    // Calculating norming constants for both x-values.
+    // Attention: both norming constants arrays need to be calculated here! If there are further
+    // commands between the calculation of both norming constants arrays, the processor calculates the
+    // 2. norming constants with rounded intermediate results. 
     
     COMPLEX const bound_states_1[K] = { I*2.0, I*1.0 };
     
