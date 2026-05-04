@@ -51,7 +51,7 @@
 #define QUADRATIC_ERROR_SUM_TOLERANCE 1e-27
 #define MAX_QUADRATIC_ERROR 1e-28
 
-REAL analytic_signal(REAL t, REAL x){
+static REAL analytic_signal(REAL t, REAL x){
     return 12.0*(3.0 + 4.0 * COSH(2.0*t-8.0*x) + COSH(4.0*t-64.0*x))/POW((3.0*COSH(t-28.0*x) + COSH(3.0*t-36.0*x)), 2);
 }
 
@@ -60,71 +60,101 @@ INT main()
 {
     INT ret_code = SUCCESS;
 
-    COMPLEX * contspec = NULL;
-    COMPLEX * q = NULL;
     COMPLEX * t_grid = NULL;
-    COMPLEX * analytic_q_a = NULL;
-
-    REAL const x = 0.5;
+    COMPLEX * q_1 = NULL;
+    COMPLEX * q_2 = NULL;
+    COMPLEX * analytic_q_1 = NULL;
+    COMPLEX * analytic_q_2 = NULL;
 
     UINT D = 256;
-    UINT M = 10;
-    REAL XI[2] = {-2.0, 2.0};
-    REAL T[2] = {-8.0, 12.0};
-
-    contspec = malloc(10*sizeof(COMPLEX));
-    CHECK_NOMEM(contspec, ret_code, leave_fun);
-
-    q = malloc(D * sizeof(COMPLEX));
-    CHECK_NOMEM(q, ret_code, leave_fun);
-
-    COMPLEX bound_states[K] = { I*2.0, I*1.0 };
-    COMPLEX normconsts[K] = {   CEXP(8.0*I*CPOW(bound_states[0], 3)*x), 
-                                -CEXP(8.0*I*CPOW(bound_states[1], 3)*x) };
-    
-    ret_code = fnft_kdvv_inverse(M, contspec, XI, K, bound_states, normconsts, D, q, T, NULL);
-    CHECK_RETCODE(ret_code, leave_fun);
+    REAL const T[2] = {-8.0, 12.0};
 
     t_grid = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(t_grid, ret_code, leave_fun);
-
-    const COMPLEX eps_t = (T[1] - T[0])/(D - 1);
-
+    
+    COMPLEX const eps_t = (T[1] - T[0])/(D - 1);
+    
     for (UINT n=0; n<D; n++) {
         t_grid[n]= T[0] + n*eps_t;
     }
-
-    analytic_q_a = malloc(D*sizeof(COMPLEX));
-
-    for (UINT i=0; i < D; i++) {
-        analytic_q_a[i] = analytic_signal(t_grid[i], x);
-    }
-
-    #ifdef DEBUG
-        misc_print_buf(D, t_grid, "t_grid");
-        misc_print_buf(D, q, "output_inverse");
-        misc_print_buf(D, analytic_q_a, "analytic_q");
-    #endif
-
-    REAL analytic_q = 0.0;
-    REAL error = 0.0;
-    REAL max_quadratic_error = 0.0;
-    REAL quadratic_error_sum = 0.0;
     
+    COMPLEX const bound_states_1[K] = { I*2.0, I*1.0 };
+    
+    REAL const x_1 = -0.1;
+    COMPLEX normconsts_1[K] = { CREAL(CEXP(8.0*I*CPOW(bound_states_1[0], 3)*x_1)), 
+                                -CREAL(CEXP(8.0*I*CPOW(bound_states_1[1], 3)*x_1)) };
 
+    REAL const x_2 = 0.5;                                
+    COMPLEX normconsts_2[K] = { CREAL(CEXP(8.0*I*CPOW(bound_states_1[0], 3)*x_2)), 
+                                -CREAL(CEXP(8.0*I*CPOW(bound_states_1[1], 3)*x_2)) };
+
+
+    // Value #1 for x                                
+    q_1 = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(q_1, ret_code, leave_fun);
+    
+    ret_code = fnft_kdvv_inverse(0, NULL, NULL, K, bound_states_1, normconsts_1, D, q_1, T, NULL);
+    CHECK_RETCODE(ret_code, leave_fun);
+    
+    analytic_q_1 = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(analytic_q_1, ret_code, leave_fun);
+    
     for (UINT i=0; i < D; i++) {
-        error = POW((analytic_q_a[i] - q[i]), 2);
-        quadratic_error_sum += error;
-        if (error > max_quadratic_error) {max_quadratic_error = error;}
+        analytic_q_1[i] = analytic_signal(t_grid[i], x_1);
+    }
+    
+    REAL error_1 = 0.0;
+    REAL max_quadratic_error_1 = 0.0;
+    REAL quadratic_error_sum_1 = 0.0;
+        
+    for (UINT i=0; i < D; i++) {
+        error_1 = CABS(CPOW((analytic_q_1[i] - q_1[i]), 2));
+        quadratic_error_sum_1 += error_1;
+        if (error_1 > max_quadratic_error_1) {max_quadratic_error_1 = error_1;}
     }
 
     #ifdef DEBUG
-        printf("resulting max quadratic error: %e \n", max_quadratic_error);
-        printf("resulting quadratic error sum: %e \n", quadratic_error_sum);
+        // misc_print_buf(K, bound_states_1, "bs1");
+        // misc_print_buf(D, q_1, "q_1");
+        printf("resulting max quadratic error: %e \n", max_quadratic_error_1);
+        printf("resulting quadratic error sum: %e \n", quadratic_error_sum_1);
     #endif
 
-    UINT is_quadratic_error_sum_in_tolerance = quadratic_error_sum < QUADRATIC_ERROR_SUM_TOLERANCE;
-    UINT is_max_quadratic_error_in_tolerance = max_quadratic_error < MAX_QUADRATIC_ERROR;
+
+    // Value #2 for x
+    q_2 = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(q_2, ret_code, leave_fun);
+
+    analytic_q_2 = malloc(D * sizeof(COMPLEX));
+    CHECK_NOMEM(analytic_q_2, ret_code, leave_fun);
+    
+    ret_code = fnft_kdvv_inverse(0, NULL, NULL, K, bound_states_1, normconsts_2, D, q_2, T, NULL);
+    CHECK_RETCODE(ret_code, leave_fun);
+    
+    for (UINT i=0; i < D; i++) {
+        analytic_q_2[i] = analytic_signal(t_grid[i], x_2);
+    }
+
+    REAL error_2 = 0.0;
+    REAL max_quadratic_error_2 = 0.0;
+    REAL quadratic_error_sum_2 = 0.0;
+        
+    for (UINT i=0; i < D; i++) {
+        error_2 = CABS(CPOW((analytic_q_2[i] - q_2[i]), 2));
+        quadratic_error_sum_2 += error_2;
+        if (error_2 > max_quadratic_error_2) {max_quadratic_error_2 = error_2;}
+    }
+
+    #ifdef DEBUG
+        // misc_print_buf(D, q_2, "q_2");
+        printf("resulting max quadratic error: %e \n", max_quadratic_error_2);
+        printf("resulting quadratic error sum: %e \n", quadratic_error_sum_2);
+    #endif
+
+    UINT is_quadratic_error_sum_in_tolerance =  (quadratic_error_sum_1 < QUADRATIC_ERROR_SUM_TOLERANCE) &&
+                                                (quadratic_error_sum_2 < QUADRATIC_ERROR_SUM_TOLERANCE);
+    UINT is_max_quadratic_error_in_tolerance =  (max_quadratic_error_1 < MAX_QUADRATIC_ERROR) &&
+                                                (max_quadratic_error_2 < MAX_QUADRATIC_ERROR);
 
     
     if (is_max_quadratic_error_in_tolerance &&
@@ -135,12 +165,14 @@ INT main()
     else {
         ret_code = FNFT_EC_TEST_FAILED;
     }
+       
 
 leave_fun:
-    free(contspec);
-    free(q);
     free(t_grid);
-    free(analytic_q_a);
+    free(q_1);
+    free(q_2);
+    free(analytic_q_1);
+    free(analytic_q_2);
 
     if (ret_code != SUCCESS)
         return EXIT_FAILURE;
