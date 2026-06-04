@@ -24,6 +24,8 @@
 
 #define FNFT_ENABLE_SHORT_NAMES
 
+#define THRESHOLD_EQUALITY_BOUND_STATES 1e-6
+
 #include "fnft_kdvv_inverse.h"
 
 static INT find_first_positive_value(
@@ -637,6 +639,12 @@ INT fnft_kdvv_inverse(
         
         if (CREAL(norming_constants[i]*norming_constants[i+1]) > 0){
             return E_INVALID_ARGUMENT_MSG(norming_constants,The signs of the norming constants does not alternate!);
+        }
+
+        for (UINT j=i+1; j<K-1; j++) {
+            if (CABS(CIMAG(bound_states[i]) - CIMAG(bound_states[j])) < THRESHOLD_EQUALITY_BOUND_STATES){
+                return E_INVALID_ARGUMENT_MSG(bound_states,At least two bound states are almost equal!);
+            }
         }
     }
     
