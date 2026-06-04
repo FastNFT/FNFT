@@ -24,7 +24,7 @@
 
 #define FNFT_ENABLE_SHORT_NAMES
 
-#define THRESHOLD_EQUALITY_BOUND_STATES 1e-6
+#define THRESHOLD_EQUALITY_BOUND_STATES 1e-15
 
 #include "fnft_kdvv_inverse.h"
 
