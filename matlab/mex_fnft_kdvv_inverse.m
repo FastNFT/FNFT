@@ -2,7 +2,7 @@
 % Korteweg-de  Vries equation with vanishing boundaries.
 %
 %   q = MEX_FNFT_KDVVV_INVERSE(contspec, XI, bound_states, ...
-%                             normconsts_or_residuals, D, T);
+%                             norming_constants, D, T);
 %
 % DESCRIPTION
 %   Provides an interface to the C routine fnft_kdvv_inverse.
@@ -14,19 +14,20 @@
 %                   b-scattering coefficient on an equidistant grid.
 %                   Pass [] if the continuous spectrum is zero 
 %                   (i.e., a multi-soliton is desired)
-%   XI              Real 1x2 vector, contains the location of the first and
-%                   the last sample in contspec
+%                   Note: contspec functionality currently out of function 
+%                   (state 04/2026)! 
+%                   It will be implicitly assumed to \f$ 0 \f$ for all \f$ \xi \f$.
+%   XI              Real 1x2 vector, contains the position of the first and the last
+%                   sample of the continuous spectrum.
+%                   Note: contspec functionality currently out of function 
+%                   (state 04/2026)! 
+%                   It does not matter which values are chosen at the moment.
 %   bound_states    Complex row vector, contains the desired bound states.
-%                   Pass [] if the discrete spectrum is empty.
 %   norming_constants Complex row vector, same length as bound_states.
-%                   Contains the corresponding norming constants (default) or,
-%                   if the corresponding option is passed, residues. Pass []
-%                   if the discrete spectrum is empty.
-%   D               Real scalar, number of time domain samples; must be a
-%                   positive power of two
+%                   Contains the corresponding norming constants.
+%   D               Real scalar, number of time domain samples.
 %   T               Real 1x2 vector, contains the location of the first and
 %                   the last sample in q
-%   kappa           +1.0 or -1.0
 %
 % OUTPUTS
 %   q               Complex row vector of length D
@@ -47,3 +48,4 @@
 %
 % Contributors:
 % Sander Wahls (KIT) 2026.
+% Fabian Fischer (Hiwi KIT) 2026.
