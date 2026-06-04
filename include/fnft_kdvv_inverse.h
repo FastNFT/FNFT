@@ -57,8 +57,8 @@
  *  It will be implicitly assumed to \f$ 0 \f$ for all \f$ \xi \f$.
  * @param[in] XI Array of length 2, contains the position of the first and the last
  *  sample of the continuous spectrum.
- *  Note: contspec functionality currently out of function (state 04/2026)! It is 
- *  equal which values are chosen at the moment.
+ *  Note: contspec functionality currently out of function (state 04/2026)! It does not
+ *  matter which values are chosen at the moment.
  * @param[in] K Number of discrete spectrum points.
  * @param[in] bound_states Complex array of length K. Bound states have to be positive, 
  *  purely imaginary numbers (lie on the upper half of the imaginary axis). The bound 
