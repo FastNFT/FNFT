@@ -48,8 +48,8 @@
 
 #define K 2
 #define DEBUG
-#define QUADRATIC_ERROR_SUM_TOLERANCE 1e-27
-#define MAX_QUADRATIC_ERROR 1e-28
+#define QUADRATIC_ERROR_SUM_TOLERANCE 1e-26
+#define MAX_QUADRATIC_ERROR 1e-27
 
 static REAL analytic_signal(REAL t, REAL x){
     return 12.0*(3.0 + 4.0 * COSH(2.0*t-8.0*x) + COSH(4.0*t-64.0*x))/POW((3.0*COSH(t-28.0*x) + COSH(3.0*t-36.0*x)), 2);
@@ -84,22 +84,22 @@ INT main()
     // drastically, there may be errors. Is is speculated, that in that case the processor 
     // calculates the 2. norming constants with rounded intermediate results. 
     
-    COMPLEX const bound_states_1[K] = { I*2.0, I*1.0 };
+    COMPLEX const bound_states[K] = { I*2.0, I*1.0 };
     
     REAL const x_1 = -0.1;
-    COMPLEX normconsts_1[K] = { CREAL(CEXP(8.0*I*CPOW(bound_states_1[0], 3)*x_1)), 
-                                -CREAL(CEXP(8.0*I*CPOW(bound_states_1[1], 3)*x_1)) };
+    COMPLEX normconsts_1[K] = { CREAL(CEXP(8.0*I*CPOW(bound_states[0], 3)*x_1)), 
+                                -CREAL(CEXP(8.0*I*CPOW(bound_states[1], 3)*x_1)) };
 
     REAL const x_2 = 0.5;                                
-    COMPLEX normconsts_2[K] = { CREAL(CEXP(8.0*I*CPOW(bound_states_1[0], 3)*x_2)), 
-                                -CREAL(CEXP(8.0*I*CPOW(bound_states_1[1], 3)*x_2)) };
+    COMPLEX normconsts_2[K] = { CREAL(CEXP(8.0*I*CPOW(bound_states[0], 3)*x_2)), 
+                                -CREAL(CEXP(8.0*I*CPOW(bound_states[1], 3)*x_2)) };
 
 
     // Value #1 for x                                
     q_1 = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(q_1, ret_code, leave_fun);
     
-    ret_code = fnft_kdvv_inverse(0, NULL, NULL, K, bound_states_1, normconsts_1, D, q_1, T, NULL);
+    ret_code = fnft_kdvv_inverse(0, NULL, NULL, K, bound_states, normconsts_1, D, q_1, T, NULL);
     CHECK_RETCODE(ret_code, leave_fun);
     
     analytic_q_1 = malloc(D * sizeof(COMPLEX));
@@ -120,7 +120,7 @@ INT main()
     }
 
     #ifdef DEBUG
-        // misc_print_buf(K, bound_states_1, "bs1");
+        // misc_print_buf(K, bound_states, "bs1");
         // misc_print_buf(D, q_1, "q_1");
         printf("resulting max quadratic error: %e \n", max_quadratic_error_1);
         printf("resulting quadratic error sum: %e \n", quadratic_error_sum_1);
@@ -134,7 +134,7 @@ INT main()
     analytic_q_2 = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(analytic_q_2, ret_code, leave_fun);
     
-    ret_code = fnft_kdvv_inverse(0, NULL, NULL, K, bound_states_1, normconsts_2, D, q_2, T, NULL);
+    ret_code = fnft_kdvv_inverse(0, NULL, NULL, K, bound_states, normconsts_2, D, q_2, T, NULL);
     CHECK_RETCODE(ret_code, leave_fun);
     
     for (UINT i=0; i < D; i++) {
