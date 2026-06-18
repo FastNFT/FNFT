@@ -60,7 +60,26 @@ FNFT_INT fnft__kdvv_inverse_testcases_get_spectrum_of_inverse(
     const FNFT_REAL err_bnd_spurious_bound_states,
     const FNFT_REAL err_bnd_normconst,
     const FNFT_REAL err_bnd_contspec);
-  
+ 
+    
+/**
+ * @brief Routine to print the continuous spectrum and discrete spectrum, consisting of 
+ * bound states and norming constants, as a result of \link fnft_kdvv \endlink.
+ *
+ * This routine is used by the tests for \link fnft_kdvv_inverse \endlink.
+ *
+ * @param[in] bound_states
+ * @param[in] normconsts 
+ * @param[in] contspec
+ * @param[in] XI Array of length 2, contains the position of the first and the last
+ *  sample of the continuous spectrum.
+ * @param[in] M Number of points at which the continuous spectrum is computed.
+ * @param[in] D Number of samples of the potential.
+ * @param[in] K Number of bound states (same than number of norming constants)
+ * @return void
+ *
+ * @ingroup kdv
+ */      
 void fnft__kdvv_print_spectrum(  FNFT_COMPLEX const * const bound_states,
                             FNFT_COMPLEX const * const normconsts,
                             FNFT_COMPLEX const * const contspec,
