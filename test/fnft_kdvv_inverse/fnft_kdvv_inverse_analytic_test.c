@@ -47,7 +47,6 @@
 
 
 #define K 2
-#define DEBUG
 #define QUADRATIC_ERROR_SUM_TOLERANCE 1e-27
 #define MAX_QUADRATIC_ERROR 1e-28
 

@@ -28,7 +28,6 @@
 /* This is a testcase with an assymetric window */
 
 #define K_I 8
-#define DEBUG
 
 INT main()
 {
