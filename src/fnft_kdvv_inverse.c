@@ -642,7 +642,7 @@ INT fnft_kdvv_inverse(
         }
 
         for (UINT j=i+1; j<K-1; j++) {
-            if (CABS(CIMAG(bound_states[i]) - CIMAG(bound_states[j])) < THRESHOLD_EQUALITY_BOUND_STATES){
+            if (CABS(bound_states[i] - bound_states[j]) < THRESHOLD_EQUALITY_BOUND_STATES){
                 return E_INVALID_ARGUMENT_MSG(bound_states,At least two bound states are almost equal!);
             }
         }

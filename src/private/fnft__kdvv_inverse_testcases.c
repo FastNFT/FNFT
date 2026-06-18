@@ -115,10 +115,10 @@ INT kdvv_testcases_get_spectrum_of_inverse(const fnft_kdvv_params params_i,
         COMPLEX bsr = bound_states_r[i];
         COMPLEX ncr = normconsts_r[i];
 
-        UINT is_bsr_pure_imaginary = CABS(CREAL(bsr)) < 1e-8;
+        UINT is_bsr_pure_imaginary = FABS(CREAL(bsr)) < 1e-8;
         UINT is_bsr_positive_imaginary = (CIMAG(bsr) > 0) && is_bsr_pure_imaginary;
 
-        UINT is_ncr_real = CABS(CIMAG(ncr)) < 1e-8;
+        UINT is_ncr_real = FABS(CIMAG(ncr)) < 1e-8;
 
         if (is_bsr_pure_imaginary &&
             is_bsr_positive_imaginary &&
