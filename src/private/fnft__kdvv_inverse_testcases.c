@@ -25,13 +25,13 @@
 #include "fnft__errwarn.h"
 #include "fnft__misc.h"
 
-void kdvv_print_spectrum(   COMPLEX const * const bound_states_r,
-                            COMPLEX const * const normconsts_r,
-                            COMPLEX const * const contspec_r,
+void kdvv_print_spectrum(   COMPLEX const * const bound_states,
+                            COMPLEX const * const normconsts,
+                            COMPLEX const * const contspec,
                             REAL const * const XI,
                             const UINT M,
                             const UINT D,
-                            const UINT K_r)
+                            const UINT K)
 {
     printf("Number of samples:\n  D = %u\n", (unsigned int)D);
 
@@ -41,18 +41,18 @@ void kdvv_print_spectrum(   COMPLEX const * const bound_states_r,
         FNFT_REAL xi = XI[0] + i*eps_xi;
         printf("  continuous_spectrum(xi=%f) \t= %g + %gI\n",
             (double)xi,
-            (double)FNFT_CREAL(contspec_r[i]),
-            (double)FNFT_CIMAG(contspec_r[i])
+            (double)FNFT_CREAL(contspec[i]),
+            (double)FNFT_CIMAG(contspec[i])
         );
     }
 
     printf("Discrete spectrum:\n");
-    for (FNFT_UINT i=0; i<K_r; i++) {
+    for (FNFT_UINT i=0; i<K; i++) {
         printf("  bound state at %g + %gI with norming constant %g + %gI\n",
-            (double)FNFT_CREAL(bound_states_r[i]),
-            (double)FNFT_CIMAG(bound_states_r[i]),
-            (double)FNFT_CREAL(normconsts_r[i]),
-            (double)FNFT_CIMAG(normconsts_r[i])
+            (double)FNFT_CREAL(bound_states[i]),
+            (double)FNFT_CIMAG(bound_states[i]),
+            (double)FNFT_CREAL(normconsts[i]),
+            (double)FNFT_CIMAG(normconsts[i])
         );
     }
 }
