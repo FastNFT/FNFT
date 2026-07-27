@@ -82,13 +82,9 @@
  *  Has to be preallocated by the user.
  * @param[in] T Array of length 2, contains the position in time of the first and
  *  of the last sample of q. It should be \f$ T[0]<T[1] \f$.
- * @param[in] opts_ptr Pointer to a \link fnft_kdvv_inverse_opts_t \endlink
- *  object. The object  can be used to modify the behavior of the routine. Use
- *  the routine \link fnft_kdvv_inverse_default_opts \endlink
- *  to generate such an object and modify as desired. It is also possible to
- *  pass NULL, in which case the routine will use the default options. The
- *  user is reponsible to freeing the object after the routine has returned.
- *  Note: opts_ptr is currently out of function (state 04/2026)!
+ * @param[in] opts_ptr
+ *  Note: handling the opts_ptr argument has not yet been implemented (state 04/2026)! 
+ *  If not NULL pointer is handed over, E_NOT_YET_IMPLEMENTED error occurs.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  *
