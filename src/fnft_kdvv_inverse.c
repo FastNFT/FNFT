@@ -625,6 +625,10 @@ INT fnft_kdvv_inverse(
     if (XI != NULL){
         return E_NOT_YET_IMPLEMENTED(XI,FNFT cannot handle continuous spectrum yet!);
     }
+
+    if (opts_ptr != NULL){
+        return E_NOT_YET_IMPLEMENTED(opts_ptr,opts_ptr cannot be handled yet!);
+    }
    
     if (T[1] <= T[0]) {
         return E_INVALID_ARGUMENT_MSG(T,Position of the first sample is bigger than of the last sample (i.e. T[1] <= T[0])!);
