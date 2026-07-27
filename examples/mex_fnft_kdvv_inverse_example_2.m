@@ -23,8 +23,10 @@
 clear all;
 close all;
 
+% Continuous spectrum functionality has not yet been implemented.
+% Hand over empty arrays
 contspec_initial = [];
-XI = [1e-6 10];
+XI = [];
 
 bound_states_initial = 1i*sqrt([4, 3, 2, 1] ./2);
 norming_constants_initial = complex([1, -1, 1, -1].*[10000, 0.1, 1, 0.001]);

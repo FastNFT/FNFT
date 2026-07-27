@@ -43,9 +43,9 @@ D = 1001;
 T = [-10 10];
 
 % defining the continuous spectrum:
-% out of function, just for seek of completeness (state 04/2026)
+% not yet implemented (state 04/2026)
 contspec = [];
-XI = [1e-6 1];
+XI = [];
 
 % calls function of c-library FNFT
 q = mex_fnft_kdvv_inverse(contspec, XI, bound_states, norming_constants, D, T);

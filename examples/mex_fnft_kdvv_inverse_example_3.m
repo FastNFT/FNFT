@@ -49,9 +49,12 @@ tmp_seq = (-1).^( 0:(number_values-1) );
 
 norming_constants = complex(tmp_seq.*tmp_norming_constants);
 
-% inverse kdvv
+% Continuous spectrum functionality has not yet been implemented.
+% Hand over empty arrays
 contspec = [];
-XI = [1e-6 1];
+XI = [];
+
+% inverse kdvv
 D = 1001;
 T = [-12 8];
 q = mex_fnft_kdvv_inverse(contspec, XI, bound_states, norming_constants, D, T);

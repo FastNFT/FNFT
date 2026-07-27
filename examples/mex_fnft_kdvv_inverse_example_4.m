@@ -20,8 +20,10 @@
 
 close all;
 
+% Continuous spectrum functionality has not yet been implemented.
+% Hand over empty arrays
 contspec = [];
-XI = [0 1];
+XI = [];
 
 bound_states = 1i*sqrt( [5, 4, 3, 2, 1] /2); 
 
