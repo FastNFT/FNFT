@@ -36,7 +36,6 @@ INT main()
 
     COMPLEX * bound_states = NULL;
     COMPLEX * q = NULL;
-    COMPLEX * contspec = NULL;
 
     COMPLEX desired_solitions_height[K] = { 40.0, 39.0, 38.0, 37.0, 36.0,
                                             30.0, 29.0, 28.0, 27.0, 26.0,
@@ -63,19 +62,9 @@ INT main()
     // allocating memory for the output of the inverse kdvv
     q = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(q, ret_code, leave_fun);
-    
-    // Define Parameters and allocate memory for continuous spectrum
-    // inverse kdvv cannot deal with a nonzero continuous spectrum (state 04/2026), 
-    // hence it is implicitly assumed to zero.
-    // Nevertheless the variables needs to be delivered
-    UINT M = 10;
-    REAL XI[2] = {-2.0, 2.0};
-
-    contspec = malloc(M * sizeof(COMPLEX));
-    CHECK_NOMEM(contspec, ret_code, leave_fun);
 
     // call inverse kdvv transform
-    ret_code = fnft_kdvv_inverse(M, contspec, XI, K, bound_states, normconsts, D, q, T, NULL);
+    ret_code = fnft_kdvv_inverse(0, NULL, NULL, K, bound_states, normconsts, D, q, T, NULL);
     CHECK_RETCODE(ret_code, leave_fun);
 
     // print output of inverse kdvv into console
@@ -84,5 +73,4 @@ INT main()
 leave_fun:
     free(bound_states);
     free(q);
-    free(contspec);
 }

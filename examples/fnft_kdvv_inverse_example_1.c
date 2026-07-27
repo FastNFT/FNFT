@@ -34,7 +34,14 @@ INT main()
     INT ret_code = SUCCESS;
     
     COMPLEX * q = NULL;
+
+    // Define continuous spectrum
+    // continuous spectrum has not yet been implemented (state 04/2026). Handover NULL pointers 
+    // and 0 as default arguments (see also the documentation).
+
+    UINT M = 0;
     COMPLEX * contspec = NULL;
+    REAL * XI = NULL;
 
     // five desired bound states and norming constants
     // - bound states have to be positive, purely imaginary numbers
@@ -52,15 +59,6 @@ INT main()
     // allocation of memory for the computed output
     q = malloc(D * sizeof(COMPLEX));
     CHECK_NOMEM(q, ret_code, leave_fun);
-    
-    // Define continuous spectrum
-    // continuous spectrum is out of function, but needs to be defined/allocated for using 
-    // the inverse kdvv (state 04/2026)
-    UINT M = 10;
-    REAL XI[2] = {-2.0, 2.0};
-
-    contspec = malloc(M * sizeof(COMPLEX));
-    CHECK_NOMEM(contspec, ret_code, leave_fun);
 
     // call of the inverse kdvv
     ret_code = fnft_kdvv_inverse(M, contspec, XI, K, bound_states, norming_constants, D, q, T, NULL);
@@ -71,5 +69,4 @@ INT main()
 
 leave_fun:
     free(q);
-    free(contspec);
 }
