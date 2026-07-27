@@ -56,12 +56,12 @@
  *  ascending order (i.e.,
  *  \f$ \hat{q}(\xi_0), \hat{q}(\xi_1), \dots, \hat{q}(\xi_{M-1}) \f$).
  *  Note: continuous spectrum related functionality has not yet been implemented (state 04/2026)! 
- *  If not NULL pointer is handed over, E_NOT_YET_IMPLEMENTED error occurs.
+ *  If not NULL pointer is handed over, FNFT__E_NOT_YET_IMPLEMENTED error is returned.
  *  It will be implicitly assumed that continuous spectrum is zero (\f$ 0 \f$ for all \f$ \xi \f$).
  * @param[in] XI Array of length 2, contains the position of the first and the last
  *  sample of the continuous spectrum.
  *  Note: continuous spectrum related functionality has not yet been implemented (state 04/2026)! 
- *  If not NULL pointer is handed over, E_NOT_YET_IMPLEMENTED error occurs.
+ *  If not NULL pointer is handed over, FNFT__E_NOT_YET_IMPLEMENTED error is returned.
  * @param[in] K Number of discrete spectrum points.
  * @param[in] bound_states Complex array of length K. Bound states have to be positive, 
  *  purely imaginary numbers (lie on the upper half of the imaginary axis). The bound 
@@ -84,7 +84,7 @@
  *  of the last sample of q. It should be \f$ T[0]<T[1] \f$.
  * @param[in] opts_ptr
  *  Note: handling the opts_ptr argument has not yet been implemented (state 04/2026)! 
- *  If not NULL pointer is handed over, E_NOT_YET_IMPLEMENTED error occurs.
+ *  If not NULL pointer is handed over, FNFT__E_NOT_YET_IMPLEMENTED error is returned.
  * @return \link FNFT_SUCCESS \endlink or one of the FNFT_EC_... error codes
  *  defined in \link fnft_errwarn.h \endlink.
  *
