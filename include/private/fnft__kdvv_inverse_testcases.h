@@ -33,7 +33,7 @@ typedef struct {
     COMPLEX * bound_states;
     COMPLEX * normconsts;
     UINT M;
-    REAL XI[2];
+    REAL * XI;
     COMPLEX * contspec;
 } fnft_kdvv_params;
 

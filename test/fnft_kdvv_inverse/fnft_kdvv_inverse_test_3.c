@@ -51,7 +51,7 @@ INT main()
         .bound_states = bound_states_i,
         .normconsts = normconsts_i,
         .M = 10,
-        .XI = {-2.0, 2.0},
+        .XI = NULL,
         .contspec = NULL,
     };
 

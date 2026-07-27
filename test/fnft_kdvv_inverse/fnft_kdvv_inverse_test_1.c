@@ -40,8 +40,8 @@ INT main()
         .K = 5,
         .bound_states = bound_states_i,
         .normconsts = normconsts_i,
-        .M = 10,
-        .XI = {-2.0, 2.0},
+        .M = 0,
+        .XI = NULL,
         .contspec = NULL,
     };
 
