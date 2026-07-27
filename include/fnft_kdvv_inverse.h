@@ -48,17 +48,20 @@
  *      - The matlab project of P. Prins to the Crum Transformation
  *
  * @param[in] M Number of samples of the continuous spectrum.
+ *  Note: continuous spectrum related functionality has not yet been implemented (state 04/2026)! 
+ *  If not 0 is handed over, E_NOT_YET_IMPLEMENTED error occurs.
  * @param[in,out] contspec Array of length M, contains samples
  *  \f$ \hat{q}(\xi_n) \f$, where \f$ \xi_n = XI[0] + n(XI[1]-XI[0])/(M-1) \f$
  *  and \f$n=0,1,\dots,M-1\f$, of the to-be-inverted continuous spectrum in
  *  ascending order (i.e.,
  *  \f$ \hat{q}(\xi_0), \hat{q}(\xi_1), \dots, \hat{q}(\xi_{M-1}) \f$).
- *  Note: contspec functionality currently out of function (state 04/2026)! 
- *  It will be implicitly assumed to \f$ 0 \f$ for all \f$ \xi \f$.
+ *  Note: continuous spectrum related functionality has not yet been implemented (state 04/2026)! 
+ *  If not NULL pointer is handed over, E_NOT_YET_IMPLEMENTED error occurs.
+ *  It will be implicitly assumed that continuous spectrum is zero (\f$ 0 \f$ for all \f$ \xi \f$).
  * @param[in] XI Array of length 2, contains the position of the first and the last
  *  sample of the continuous spectrum.
- *  Note: contspec functionality currently out of function (state 04/2026)! It does not
- *  matter which values are chosen at the moment.
+ *  Note: continuous spectrum related functionality has not yet been implemented (state 04/2026)! 
+ *  If not NULL pointer is handed over, E_NOT_YET_IMPLEMENTED error occurs.
  * @param[in] K Number of discrete spectrum points.
  * @param[in] bound_states Complex array of length K. Bound states have to be positive, 
  *  purely imaginary numbers (lie on the upper half of the imaginary axis). The bound 
