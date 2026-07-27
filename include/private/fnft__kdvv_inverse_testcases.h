@@ -23,8 +23,36 @@
 #include "fnft_kdvv_inverse.h"
 #include "fnft_kdvv.h"
 
+
 /**
  * @struct fnft_kdvv_params
+ * @brief Stores necessary parameter to use \link fnft_kdvv_inverse \endlink.
+ * @ingroup fnft
+ * @ingroup data_types
+ * 
+ * @var D
+ *  see \link fnft_kdvv_inverse \endlink
+ * 
+ * @var T
+ *  see \link fnft_kdvv_inverse \endlink
+ * 
+ * @var K
+ *  see \link fnft_kdvv_inverse \endlink
+ * 
+ * @var bound_states
+ *  see \link fnft_kdvv_inverse \endlink
+ * 
+ * @var normconsts
+ *  see \link fnft_kdvv_inverse \endlink
+ * 
+ * @var M
+ *  see \link fnft_kdvv_inverse \endlink
+ * 
+ * @var XI
+ *  see \link fnft_kdvv_inverse \endlink
+ * 
+ * @var contspec
+ *  see \link fnft_kdvv_inverse \endlink
  */
 typedef struct {
     UINT D;
