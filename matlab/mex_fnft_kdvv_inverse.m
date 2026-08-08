@@ -16,18 +16,13 @@
 %                   (i.e., a multi-soliton is desired)
 %                   Note: continuous spectrum related functionality has not 
 %                   yet been implemented (state 04/2026)! 
-%                   If not empty array is handed over, FNFT__E_NOT_YET_IMPLEMENTED 
-%                   error is returned.
+%                   If not empty array is handed over, error will occur!
 %                   It will be implicitly assumed to \f$ 0 \f$ for all \f$ \xi \f$.
 %   XI              Real 1x2 vector, contains the position of the first and the last
-%                   sample of the continuous spectrum.
-%                   Note: contspec functionality currently out of function 
-%                   (state 04/2026)! 
-%                   It does not matter which values are chosen at the moment.
+%                   sample of the continuous spectrum
 %                   Note: continuous spectrum related functionality has not 
 %                   yet been implemented (state 04/2026)! 
-%                   If not empty array is handed over, FNFT__E_NOT_YET_IMPLEMENTED 
-%                   error is returned.
+%                   If not empty array is handed over, error will occur!
 %   bound_states    Complex row vector, contains the desired bound states.
 %   norming_constants Complex row vector, same length as bound_states.
 %                   Contains the corresponding norming constants.

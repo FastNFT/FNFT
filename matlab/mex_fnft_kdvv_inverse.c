@@ -34,7 +34,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     FNFT_COMPLEX * contspec = NULL;
     FNFT_COMPLEX * bound_states = NULL;
     FNFT_COMPLEX * norming_constants = NULL;
-    FNFT_REAL * XI;
+    FNFT_REAL * XI = NULL;
     FNFT_UINT i;
     double *re, *im;
     char msg[128]; // buffer for error messages
@@ -49,10 +49,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     if ( nrhs < 6 )
         mexErrMsgTxt("At least seven inputs expected.");
-    if ( !mxIsEmpty(prhs[0]) && (!mxIsDouble(prhs[0]) || !mxIsComplex(prhs[0]) || mxGetM(prhs[0]) != 1) )
-        mexErrMsgTxt("First input contspec should be a complex row vector (double precision) or []. Try passing complex(double(contspec(:)')).");
-    if ( mxIsComplex(prhs[1]) || !mxIsDouble(prhs[1]) || mxGetM(prhs[1]) != 1 || mxGetN(prhs[1]) != 2 )
-        mexErrMsgTxt("Second input XI should be a real 1x2 vector (double precision).");
+    if ( !mxIsEmpty(prhs[0]) )
+        mexErrMsgTxt("First input contspec should be empty. Dealing with continuous spectrum is not implemented yet!");
+    if ( !mxIsEmpty(prhs[1]) )
+        mexErrMsgTxt("Second input XI should be empty. Dealing with continuous spectrum is not implemented yet!");
     if ( !mxIsEmpty(prhs[2]) && (!mxIsDouble(prhs[2]) || !mxIsComplex(prhs[2]) || mxGetM(prhs[2]) != 1) )
         mexErrMsgTxt("Third input bound_states should be a complex row vector (double precision) or []. Try passing complex(double(bound_states(:)')).");
     if ( !mxIsEmpty(prhs[3]) && (!mxIsDouble(prhs[3]) || !mxIsComplex(prhs[3]) || mxGetM(prhs[3]) != 1) )
@@ -66,7 +66,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     K = mxGetNumberOfElements(prhs[2]);
     T = mxGetPr(prhs[5]);
     D = (unsigned int)mxGetScalar(prhs[4]);
-    XI = mxGetPr(prhs[1]);
+    // Dealing with continuous spectrum is not implemented yet! XI should be empty
+    // XI = mxGetPr(prhs[1]);
 
     /* Check values of first four inputs */
 
@@ -74,8 +75,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mexErrMsgTxt("bound_states and norming_constants should have the same lengths.");
     if ( T[0] >= T[1] )
         mexErrMsgTxt("T(1) >= T(2).");
-    if ( XI[0] >= XI[1] )
-        mexErrMsgTxt("XI(1) >= XI(2).");
+    // Dealing with continuous spectrum is not implemented yet! XI should be empty
+    // if ( XI[0] >= XI[1] )
+    //     mexErrMsgTxt("XI(1) >= XI(2).");
     if ( D<2 )
         mexErrMsgTxt("D < 2.");
 
