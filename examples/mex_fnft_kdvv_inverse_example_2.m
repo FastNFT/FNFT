@@ -37,7 +37,10 @@ T = [-15 10];
 % inverse kdvv transform
 q = mex_fnft_kdvv_inverse(contspec_initial, XI, bound_states_initial, norming_constants_initial, D, T);
 
+% transforms q to the needed format
 q = double(real(q(:)'));
+
+% Choose an area where the forward fnft kdvv computes the continuous spectrum
 XI = [0.5 10];
 
 % compute the nonlinear Fourier transform of the output of the inverse kdvv
