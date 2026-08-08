@@ -38,6 +38,7 @@ T = [-15 10];
 q = mex_fnft_kdvv_inverse(contspec_initial, XI, bound_states_initial, norming_constants_initial, D, T);
 
 q = double(real(q(:)'));
+XI = [0.5 10];
 
 % compute the nonlinear Fourier transform of the output of the inverse kdvv
 [contspec_computed, bound_states_computed, norming_constants_computed] = mex_fnft_kdvv(q, T, XI);
