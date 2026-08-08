@@ -50,9 +50,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if ( nrhs < 6 )
         mexErrMsgTxt("At least seven inputs expected.");
     if ( !mxIsEmpty(prhs[0]) )
-        mexErrMsgTxt("First input contspec should be empty. Dealing with continuous spectrum is not implemented yet!");
+        mexErrMsgTxt("First input contspec should be empty. Dealing with continuous spectrum has not yet been implemented!");
     if ( !mxIsEmpty(prhs[1]) )
-        mexErrMsgTxt("Second input XI should be empty. Dealing with continuous spectrum is not implemented yet!");
+        mexErrMsgTxt("Second input XI should be empty. Dealing with continuous spectrum has not yet been implemented!");
     if ( !mxIsEmpty(prhs[2]) && (!mxIsDouble(prhs[2]) || !mxIsComplex(prhs[2]) || mxGetM(prhs[2]) != 1) )
         mexErrMsgTxt("Third input bound_states should be a complex row vector (double precision) or []. Try passing complex(double(bound_states(:)')).");
     if ( !mxIsEmpty(prhs[3]) && (!mxIsDouble(prhs[3]) || !mxIsComplex(prhs[3]) || mxGetM(prhs[3]) != 1) )
@@ -66,7 +66,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     K = mxGetNumberOfElements(prhs[2]);
     T = mxGetPr(prhs[5]);
     D = (unsigned int)mxGetScalar(prhs[4]);
-    // Dealing with continuous spectrum is not implemented yet! XI should be empty
+    // Dealing with continuous spectrum has not yet been implemented! XI should be empty
     // XI = mxGetPr(prhs[1]);
 
     /* Check values of first four inputs */
@@ -75,7 +75,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mexErrMsgTxt("bound_states and norming_constants should have the same lengths.");
     if ( T[0] >= T[1] )
         mexErrMsgTxt("T(1) >= T(2).");
-    // Dealing with continuous spectrum is not implemented yet! XI should be empty
+    // Dealing with continuous spectrum has not yet been implemented! XI should be empty
     // if ( XI[0] >= XI[1] )
     //     mexErrMsgTxt("XI(1) >= XI(2).");
     if ( D<2 )
