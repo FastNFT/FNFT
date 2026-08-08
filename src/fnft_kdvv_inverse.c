@@ -635,15 +635,15 @@ INT fnft_kdvv_inverse(
     }
     
     for (UINT i=0; i<K; i++) {
-        if (CREAL(bound_states[i]) != 0){
+        if (CREAL(bound_states[i]) > FNFT_EPSILON){
             return E_INVALID_ARGUMENT_MSG(bound_states,At least one bound state has a nonzero real part!);
         }
         
-        if (CIMAG(bound_states[i]) < 0){
+        if (CIMAG(bound_states[i]) < 0.0){
             return E_INVALID_ARGUMENT_MSG(bound_states,At least one bound state is negative imaginary!);
         }
         
-        if (norming_constants[i] == 0){
+        if (CABS(norming_constants[i]) < FNFT_EPSILON){
             return E_INVALID_ARGUMENT_MSG(norming_constants,At least one norming constant is zero!);
         }
     }
