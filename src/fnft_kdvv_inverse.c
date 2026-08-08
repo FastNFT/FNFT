@@ -14,8 +14,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Sander Wahls (KIT) 2026
- * Fabian Fischer (Hiwi KIT) 2026
+ * Sander Wahls (KIT) 2026.
+ * Fabian Fischer (Hiwi KIT) 2026.
  * 
  * Following Algorithms are based on Crum Transformation Matlab project 
  * of P.J. Prins 2020

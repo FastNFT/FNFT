@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (KIT) 2026.
+* Fabian Fischer (Hiwi KIT) 2026.
 */
 
 #include <string.h>

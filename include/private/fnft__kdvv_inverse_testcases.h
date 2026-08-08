@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Sander Wahls (TU Delft) 2018.
+* Fabian Fischer (Hiwi KIT) 2026.
 */
 
 #ifndef FNFT__KDVV_INVERSE_TESTCASES_H

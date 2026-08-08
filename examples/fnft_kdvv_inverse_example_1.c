@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Fabian Fischer (Hiwi KIT) 2026
+* Fabian Fischer (Hiwi KIT) 2026.
 */
 
 // This is a simple example for the usage of the inverse kdvv transform in C

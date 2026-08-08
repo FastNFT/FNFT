@@ -15,7 +15,7 @@
  *
  * Contributors:
  * Sander Wahls (TU Delft) 2018 and (KIT) 2025.
- * Peter J. Prins (TU Delft) 2021
+ * Peter J. Prins (TU Delft) 2021.
  */
 
 // This example demonstrates the use of the function fnft_kdvv, which 
