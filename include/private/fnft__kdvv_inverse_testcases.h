@@ -66,6 +66,17 @@ typedef struct {
 } fnft_kdvv_params;
 
 
+typedef enum {
+    fnft__inverse_kdvv_testcases_5_bound_states,
+    fnft__inverse_kdvv_testcases_19_bound_states,
+    fnft__inverse_kdvv_testcases_8_bound_states_asym,
+} fnft__inverse_kdvv_testcases_t;
+
+FNFT_INT fnft__inverse_kdvv_testcases_test_fnft( fnft__inverse_kdvv_testcases_t tc, 
+                                            UINT D,
+                                            const FNFT_REAL * error_bounds, 
+                                            void * const opts);
+
 /**
  * @brief Routine to run tests for \link fnft_kdvv_inverse \endlink.
  *
@@ -118,6 +129,12 @@ void fnft__kdvv_print_spectrum(  FNFT_COMPLEX const * const bound_states,
 
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
+#define inverse_kdvv_testcases_5_bound_states fnft__inverse_kdvv_testcases_5_bound_states
+#define inverse_kdvv_testcases_19_bound_states fnft__inverse_kdvv_testcases_19_bound_states
+#define inverse_kdvv_testcases_8_bound_states_asym fnft__inverse_kdvv_testcases_8_bound_states_asym
+#define inverse_kdvv_testcases_t fnft__inverse_kdvv_testcases_t
+#define inverse_kdvv_testcases(...) fnft__inverse_kdvv_testcases(__VA_ARGS__)
+#define inverse_kdvv_testcases_test_fnft(...) fnft__inverse_kdvv_testcases_test_fnft(__VA_ARGS__)
 #define kdvv_testcases_get_spectrum_of_inverse(...) fnft__kdvv_inverse_testcases_get_spectrum_of_inverse(__VA_ARGS__)
 #define kdvv_print_spectrum(...) fnft__kdvv_print_spectrum(__VA_ARGS__)
 #endif
