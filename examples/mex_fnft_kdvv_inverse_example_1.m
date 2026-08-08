@@ -22,12 +22,12 @@ clear all;
 close all;
 
 % desired height of solitions:
-desired_solitions = [4, 3, 2, 1];
+soliton_amplitudes = [4, 3, 2, 1];
 
 % resulting bound states out of desired heights of solitions:
 % - bound states have to be positive, purely imaginary numbers
 % - the bound states have to be in descendent order
-bound_states = 1i*sqrt(desired_solitions ./2);
+bound_states = 1i*sqrt(soliton_amplitudes ./2);
 
 % desired norming constants
 % defines how much the solitions are shifted towards each other

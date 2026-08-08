@@ -24,25 +24,25 @@ close all;
 
 % === modify here ====================================================================================
 % a solition in the output of inverse kdvv is defined by the elements of both arrays at the same index
-desired_solitions = [9, 2, 4, 3, 7];
-desired_shifting = [10000, 0.1, 1, 0.00001, 2];
+soliton_amplitudes = [9, 2, 4, 3, 7];
+solition_shifts = [10000, 0.1, 1, 0.00001, 2];
 % ====================================================================================================
 
 
 % Check if both arrays contains the same number of elements
-if length(desired_shifting) ~= length(desired_solitions)
+if length(solition_shifts) ~= length(soliton_amplitudes)
     error('Number of desired solitions is not equal to number of values given for shifting!');
 end
 
 % --- determining sorted bound states and norming constants out of desired values ---
 
-number_values = length(desired_solitions);
+number_values = length(soliton_amplitudes);
 
-tmp_bound_states = 1i*sqrt(desired_solitions ./2);
+tmp_bound_states = 1i*sqrt(soliton_amplitudes ./2);
 
 % sorting
 [bound_states, indices] = sort(tmp_bound_states, "descend");
-tmp_norming_constants = desired_shifting(indices);
+tmp_norming_constants = solition_shifts(indices);
 
 % alternating sequence 1 and -1 as elements and with 1 as first element
 tmp_seq = (-1).^( 0:(number_values-1) );
