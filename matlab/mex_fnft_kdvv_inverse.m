@@ -16,13 +16,13 @@
 %                   (i.e., a multi-soliton is desired)
 %                   Note: continuous spectrum related functionality has not 
 %                   yet been implemented (state 04/2026)! 
-%                   If not empty array is handed over, error will occur!
+%                   If not empty array is handed over, error is returned!
 %                   It will be implicitly assumed to \f$ 0 \f$ for all \f$ \xi \f$.
 %   XI              Real 1x2 vector, contains the position of the first and the last
 %                   sample of the continuous spectrum
 %                   Note: continuous spectrum related functionality has not 
 %                   yet been implemented (state 04/2026)! 
-%                   If not empty array is handed over, error will occur!
+%                   If not empty array is handed over, error is returned!
 %   bound_states    Complex row vector, contains the desired bound states.
 %   norming_constants Complex row vector, same length as bound_states.
 %                   Contains the corresponding norming constants.
