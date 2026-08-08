@@ -20,7 +20,7 @@
 
 /**
  * @file fnft_kdvv_inverse.h
- * @brief Fast inverse nonlinear Fourier transform for the vanishing
+ * @brief Fast Inverse Nonlinear Fourier Transform for the vanishing
  *  Korteweg-de Vries equation.
  * @ingroup fnft_inverse
  */
@@ -33,7 +33,7 @@
 #include "fnft_numtypes.h"
 
 /**
- * @brief Fast inverse nonlinear Fourier transform for the 
+ * @brief Fast Inverse Nonlinear Fourier Transform for the 
  *  Korteweg-de Vries equation with vanishing boundary conditions.
  * 
  * This routine computes the inverse nonlinear Fourier transform for the
@@ -42,7 +42,11 @@
  * of Gardner et al. (<a href="https://doi.org/10.1103/PhysRevLett.19.1095">
  * Phys. Rev. Lett., 1967</a>)
  * 
- * The Fast inverse nonlinear Fourier transform for the Korteweg-de Vries equation
+ * The Fast Inverse Nonlinear Fourier Transform is currently only able to transform 
+ * discrete spectrum to a time series! Dealing with continuous spectrum has not yet 
+ * been implemented (state 08/2026)!
+ * 
+ * The Fast Inverse Nonlinear Fourier Transform for the Korteweg-de Vries equation
  * uses the crum transformation. The main references are:
  *      - Prins and Wahls, <a href="https://doi.org/10.1016/j.cnsns.2021.105782">&quot;An accurate O(N^2) floating point algorithm for the Crum transform of the KdV equation,&quot;</a> Communications in Nonlinear Science and Numerical Simulation 102, Article 105782, 2021.
  *      - The matlab project of P. Prins to the Crum Transformation
