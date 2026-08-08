@@ -26,7 +26,10 @@
 #include "fnft__misc.h"
 
 
-/* This is a testcase with analytic reference
+/* This is a testcase with analytic reference. A time series is reconstructed from their spectrum 
+ * with the inverse kdvv and compared with the analytical solution. This is done twice: in both 
+ * cases the same bound states are considered, but the norming constants are different due to 
+ * different values for x.
  *
  * This test case is based on the example discussed on p. 74-78 in [1]. Similar to this example
  * is the example discussed in section 5.2 (p. 13) in [2]. Note that we use different notation and 
@@ -48,8 +51,8 @@
 
 #define K 2
 
-#define QUADRATIC_ERROR_SUM_TOLERANCE 1e-27
-#define MAX_QUADRATIC_ERROR 1e-28
+#define SQUARED_ERROR_SUM_TOLERANCE 1e-27
+#define MAX_SQUARED_ERROR 1e-28
 
 static REAL analytic_signal(REAL t, REAL x){
     return 12.0*(3.0 + 4.0 * COSH(2.0*t-8.0*x) + COSH(4.0*t-64.0*x))/POW((3.0*COSH(t-28.0*x) + COSH(3.0*t-36.0*x)), 2);
@@ -81,7 +84,7 @@ INT main()
     // Calculating norming constants for both x-values.
     // Attention: both norming constants arrays need to be calculated here! If there are further
     // commands between the calculation of both norming constants arrays and the compiler optimize 
-    // drastically, there may be errors. Is is speculated, that in that case the processor 
+    // drastically, there may be errors. It has been speculated, that in that case the processor 
     // calculates the 2. norming constants with rounded intermediate results. 
     
     COMPLEX const bound_states[K] = { I*2.0, I*1.0 };
@@ -110,20 +113,20 @@ INT main()
     }
     
     REAL error_1 = 0.0;
-    REAL max_quadratic_error_1 = 0.0;
-    REAL quadratic_error_sum_1 = 0.0;
+    REAL max_squared_error_1 = 0.0;
+    REAL squared_error_sum_1 = 0.0;
         
     for (UINT i=0; i < D; i++) {
         error_1 = CABS(CPOW((analytic_q_1[i] - q_1[i]), 2));
-        quadratic_error_sum_1 += error_1;
-        if (error_1 > max_quadratic_error_1) {max_quadratic_error_1 = error_1;}
+        squared_error_sum_1 += error_1;
+        if (error_1 > max_squared_error_1) {max_squared_error_1 = error_1;}
     }
 
     #ifdef DEBUG
         // misc_print_buf(K, bound_states, "bs1");
         // misc_print_buf(D, q_1, "q_1");
-        printf("resulting max quadratic error: %e \n", max_quadratic_error_1);
-        printf("resulting quadratic error sum: %e \n", quadratic_error_sum_1);
+        printf("resulting max squared error: %e \n", max_squared_error_1);
+        printf("resulting squared error sum: %e \n", squared_error_sum_1);
     #endif
 
 
@@ -142,29 +145,29 @@ INT main()
     }
 
     REAL error_2 = 0.0;
-    REAL max_quadratic_error_2 = 0.0;
-    REAL quadratic_error_sum_2 = 0.0;
+    REAL max_squared_error_2 = 0.0;
+    REAL squared_error_sum_2 = 0.0;
         
     for (UINT i=0; i < D; i++) {
         error_2 = CABS(CPOW((analytic_q_2[i] - q_2[i]), 2));
-        quadratic_error_sum_2 += error_2;
-        if (error_2 > max_quadratic_error_2) {max_quadratic_error_2 = error_2;}
+        squared_error_sum_2 += error_2;
+        if (error_2 > max_squared_error_2) {max_squared_error_2 = error_2;}
     }
 
     #ifdef DEBUG
         // misc_print_buf(D, q_2, "q_2");
-        printf("resulting max quadratic error: %e \n", max_quadratic_error_2);
-        printf("resulting quadratic error sum: %e \n", quadratic_error_sum_2);
+        printf("resulting max squared error: %e \n", max_squared_error_2);
+        printf("resulting squared error sum: %e \n", squared_error_sum_2);
     #endif
 
-    UINT is_quadratic_error_sum_in_tolerance =  (quadratic_error_sum_1 < QUADRATIC_ERROR_SUM_TOLERANCE) &&
-                                                (quadratic_error_sum_2 < QUADRATIC_ERROR_SUM_TOLERANCE);
-    UINT is_max_quadratic_error_in_tolerance =  (max_quadratic_error_1 < MAX_QUADRATIC_ERROR) &&
-                                                (max_quadratic_error_2 < MAX_QUADRATIC_ERROR);
+    UINT is_squared_error_sum_in_tolerance =  (squared_error_sum_1 < SQUARED_ERROR_SUM_TOLERANCE) &&
+                                                (squared_error_sum_2 < SQUARED_ERROR_SUM_TOLERANCE);
+    UINT is_max_squared_error_in_tolerance =  (max_squared_error_1 < MAX_SQUARED_ERROR) &&
+                                                (max_squared_error_2 < MAX_SQUARED_ERROR);
 
     
-    if (is_max_quadratic_error_in_tolerance &&
-        is_quadratic_error_sum_in_tolerance) 
+    if (is_max_squared_error_in_tolerance &&
+        is_squared_error_sum_in_tolerance) 
     {
         ret_code = SUCCESS;
     } 
