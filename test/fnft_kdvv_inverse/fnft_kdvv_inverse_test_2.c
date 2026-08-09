@@ -14,7 +14,7 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 * Contributors:
-* Fabian Fischer (Hiwi KIT) 2026
+* Fabian Fischer (Hiwi KIT) 2026.
 */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -26,8 +26,6 @@
 #include "fnft__misc.h"
 
 /* This is a testcase with many eigenvalues */
-
-#define K_I 19
 
 INT main()
 {
