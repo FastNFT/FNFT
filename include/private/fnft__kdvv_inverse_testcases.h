@@ -25,80 +25,21 @@
 
 
 /**
- * @struct fnft_kdvv_params
- * @brief Stores necessary parameter to use \link fnft_kdvv_inverse \endlink.
- * @ingroup fnft
- * @ingroup data_types
- * 
- * @var D
- *  see \link fnft_kdvv_inverse \endlink
- * 
- * @var T
- *  see \link fnft_kdvv_inverse \endlink
- * 
- * @var K
- *  see \link fnft_kdvv_inverse \endlink
- * 
- * @var bound_states
- *  see \link fnft_kdvv_inverse \endlink
- * 
- * @var normconsts
- *  see \link fnft_kdvv_inverse \endlink
- * 
- * @var M
- *  see \link fnft_kdvv_inverse \endlink
- * 
- * @var XI
- *  see \link fnft_kdvv_inverse \endlink
- * 
- * @var contspec
- *  see \link fnft_kdvv_inverse \endlink
+ * List of currently implemented test cases for the inverse KdV.
+ *
+ *  fnft__inverse_kdvv_testcases_5_bound_states: potential with 5 solitions
+ *  fnft__inverse_kdvv_testcases_19_bound_states: potential with 19 solitions
+ *  fnft__inverse_kdvv_testcases_8_bound_states_asym: potential with 8 solitions
+ *      and assymetric window
+ *
+ * @ingroup kdv
  */
-typedef struct {
-    UINT D;
-    REAL T[2];
-    UINT K;
-    COMPLEX * bound_states;
-    COMPLEX * normconsts;
-    UINT M;
-    REAL * XI;
-    COMPLEX * contspec;
-} fnft_kdvv_params;
-
-
 typedef enum {
     fnft__inverse_kdvv_testcases_5_bound_states,
     fnft__inverse_kdvv_testcases_19_bound_states,
     fnft__inverse_kdvv_testcases_8_bound_states_asym,
 } fnft__inverse_kdvv_testcases_t;
 
-FNFT_INT fnft__inverse_kdvv_testcases_test_fnft( fnft__inverse_kdvv_testcases_t tc, 
-                                            UINT D,
-                                            const FNFT_REAL * error_bounds, 
-                                            void * const opts);
-
-/**
- * @brief Routine to run tests for \link fnft_kdvv_inverse \endlink.
- *
- * This routine is used by the tests for \link fnft_kdvv_inverse \endlink.
- *
- * @param[in] params_i \link fnft_kdvv_params \endlink
- * @param[in] err_bnd_bound_states 
- * @param[in] err_bnd_spurious_bound_states 
- * @param[in] err_bnd_normconst
- * @param[in] err_bnd_contspec
- * @return If all errors stay below bounds the routine
- * \link FNFT_SUCCESS \endlink. Otherwise, it returns an error code
- * (normally, \link FNFT_EC_TEST_FAILED \endlink).
- *
- * @ingroup kdv
- */
-FNFT_INT fnft__kdvv_inverse_testcases_get_spectrum_of_inverse(
-    const fnft_kdvv_params params_i,
-    const FNFT_REAL err_bnd_bound_states,
-    const FNFT_REAL err_bnd_spurious_bound_states,
-    const FNFT_REAL err_bnd_normconst,
-    const FNFT_REAL err_bnd_contspec);
  
     
 /**
@@ -115,7 +56,6 @@ FNFT_INT fnft__kdvv_inverse_testcases_get_spectrum_of_inverse(
  * @param[in] M Number of points at which the continuous spectrum is computed.
  * @param[in] D Number of samples of the potential.
  * @param[in] K Number of bound states (same than number of norming constants)
- * @return void
  *
  * @ingroup kdv
  */      
@@ -126,6 +66,32 @@ void fnft__kdvv_print_spectrum(  FNFT_COMPLEX const * const bound_states,
                             const UINT M,
                             const UINT D,
                             const UINT K);
+
+/**
+ * @brief Routine to run tests for \link fnft_kdvv_inverse \endlink.
+ *
+ * This routine is used by the tests for \link fnft_kdvv_inverse \endlink. It runs 
+ * the specified test case tc with the specified number of samples D and the
+ * options opts, and tests if several errors stay below the provided error
+ * bounds in error_bounds.
+ *
+ * @param[in] tc Type of test case.
+ * @param[in] D Number of samples.
+ * @param[in] error_bounds Real valued array with 4 elements corresponding to various
+ * error bounds.
+ * @param[in] opts options for the tests.
+ *  Note: Has not yet been implemented! If not NULL pointer is handed over, error is
+ *      returned!
+ * @return If all errors stay below bounds the routine
+ * \link FNFT_SUCCESS \endlink. Otherwise, it returns an error code
+ * (normally, \link FNFT_EC_TEST_FAILED \endlink).
+ *
+ * @ingroup kdv
+ */
+FNFT_INT fnft__inverse_kdvv_testcases_test_fnft( fnft__inverse_kdvv_testcases_t tc, 
+                                            UINT D,
+                                            const FNFT_REAL error_bounds[4], 
+                                            void * const opts);
 
 
 #ifdef FNFT_ENABLE_SHORT_NAMES

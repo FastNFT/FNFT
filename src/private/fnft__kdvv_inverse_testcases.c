@@ -58,138 +58,6 @@ void kdvv_print_spectrum(   COMPLEX const * const bound_states,
     }
 }
 
-INT kdvv_testcases_get_spectrum_of_inverse(const fnft_kdvv_params params_i,
-                    const REAL err_bnd_bound_states,
-                    const REAL err_bnd_spurious_bound_states,
-                    const REAL err_bnd_normconst,
-                    const REAL err_bnd_contspec)
-{
-    INT ret_code = SUCCESS;
-    
-    COMPLEX * q = NULL;
-    COMPLEX * contspec_r = NULL;
-    COMPLEX * bound_states_r = NULL;
-    COMPLEX * normconsts_r = NULL;
-    
-
-    q = malloc(params_i.D * sizeof(COMPLEX));
-    CHECK_NOMEM(q, ret_code, leave_fun);
-
-    ret_code = fnft_kdvv_inverse(   params_i.M, 
-                                    params_i.contspec, 
-                                    params_i.XI, 
-                                    params_i.K, 
-                                    params_i.bound_states, 
-                                    params_i.normconsts, 
-                                    params_i.D, 
-                                    q, 
-                                    params_i.T, NULL);
-    CHECK_RETCODE(ret_code, leave_fun);
-    
-    // Prepare forward fnft_kdvv
-    contspec_r = malloc(params_i.M * sizeof(COMPLEX));
-    CHECK_NOMEM(contspec_r, ret_code, leave_fun);
-
-    UINT K_r = params_i.D;
-
-    bound_states_r = malloc(K_r * sizeof(COMPLEX));
-    CHECK_NOMEM(bound_states_r, ret_code, leave_fun);
-
-    normconsts_r = malloc(K_r * sizeof(COMPLEX));
-    CHECK_NOMEM(normconsts_r, ret_code, leave_fun);
-
-    fnft_kdvv_opts_t opts = fnft_kdvv_default_opts();
-
-    ret_code = fnft_kdvv(params_i.D, q, params_i.T, params_i.M, contspec_r, params_i.XI, &K_r, bound_states_r, normconsts_r, &opts);
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    #ifdef DEBUG
-        kdvv_print_spectrum(bound_states_r, normconsts_r, contspec_r, params_i.XI, params_i.M, params_i.D, K_r);
-    #endif
-
-    // -- Check results --
-
-    // Simple general tests
-    for (UINT i=0; i<params_i.K; i++){
-        COMPLEX bsr = bound_states_r[i];
-        COMPLEX ncr = normconsts_r[i];
-
-        UINT is_bsr_pure_imaginary = FABS(CREAL(bsr)) < 1e-8;
-        UINT is_bsr_positive_imaginary = (CIMAG(bsr) > 0) && is_bsr_pure_imaginary;
-
-        UINT is_ncr_real = FABS(CIMAG(ncr)) < 1e-8;
-
-        if (is_bsr_pure_imaginary &&
-            is_bsr_positive_imaginary &&
-            is_ncr_real) 
-        {
-            ret_code = SUCCESS;
-        } 
-        else {
-            ret_code = FNFT_EC_TEST_FAILED;
-            break;
-        }
-    }
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    // Check matching of the computed  bound states
-    // bound_states_r is sorted in ascending order, K_r is the number of found bound states by fnft_kdvv
-    // take only the last params_i.K bound states, because they are the bigger ones and more likely the ones
-    // which corresponds to the initial given bound states
-    COMPLEX * const candidate_bound_states_r_ptr = &bound_states_r[K_r-params_i.K];
-    REAL hausdorff_dist_bound_states = misc_hausdorff_dist_normed(  params_i.K, params_i.bound_states, params_i.K, 
-                                                                    candidate_bound_states_r_ptr);
-    UINT is_bsr_in_tolerance = hausdorff_dist_bound_states < err_bnd_bound_states;                                                                
-
-    COMPLEX * const candidate_normconsts_r_ptr = &normconsts_r[K_r-params_i.K];
-    REAL hausdorff_dist_normconsts = misc_hausdorff_dist_normed(params_i.K, params_i.normconsts, params_i.K, 
-                                                                candidate_normconsts_r_ptr);
-    UINT is_ncr_in_tolerance = hausdorff_dist_normconsts < err_bnd_normconst;                                                          
-
-    #ifdef DEBUG
-        printf("Number of bound_states:\n  K_r = %u\n", (unsigned int)K_r);
-        printf("Hausdorff dist bound states:\n  dist = %f\n", hausdorff_dist_bound_states);
-        printf("Hausdorff dist normconsts:\n  dist = %f\n", hausdorff_dist_normconsts);
-    #endif
-
-    UINT is_contspec_small = 1;                                                                     
-    for (UINT i=0; i<params_i.M; i++){
-        if (CABS(contspec_r[i]) > err_bnd_contspec){
-            is_contspec_small = 0;
-        }
-    }
-
-    UINT are_spurious_bound_states_small = 1;
-    for (UINT i=0; i<(K_r-params_i.K); i++){
-        if (CABS(bound_states_r[i]) > err_bnd_spurious_bound_states){
-            are_spurious_bound_states_small = 0;
-        }
-    }
-
-    if (is_bsr_in_tolerance &&
-        is_ncr_in_tolerance &&
-        is_contspec_small &&
-        are_spurious_bound_states_small) 
-    {
-        ret_code = SUCCESS;
-    } 
-    else {
-        ret_code = FNFT_EC_TEST_FAILED;
-    }                            
-
-leave_fun:
-    free(q);
-    free(contspec_r);
-    free(bound_states_r);
-    free(normconsts_r);
-
-    if (ret_code != SUCCESS)
-        return EXIT_FAILURE;
-    else
-	    return EXIT_SUCCESS;
-}
-
-
 INT inverse_kdvv_testcases(inverse_kdvv_testcases_t tc, 
                     const UINT D,
                     REAL * const T,
@@ -228,7 +96,6 @@ INT inverse_kdvv_testcases(inverse_kdvv_testcases_t tc,
             *M_ptr = 10;
             *K_ptr = 19;
             break;
-        
 
         case inverse_kdvv_testcases_8_bound_states_asym:
             *M_ptr = 10;
@@ -427,12 +294,14 @@ INT inverse_kdvv_testcases_test_fnft(inverse_kdvv_testcases_t tc, UINT D,
     REAL XI[2];
     COMPLEX * bound_states_exact = NULL;
     COMPLEX * norming_constants_exact = NULL;
-    UINT K, K_exact=0, M;
+    UINT K;
+    UINT K_exact = 0;
+    UINT M;
     REAL errors[4] = {
         FNFT_NAN, FNFT_NAN, FNFT_NAN, FNFT_NAN};
     INT ret_code;
 
-    // Check inputs
+    // Check inputs: opts has not yet been implemented (state 08/2026)!
     if (!(opts == NULL))
         return E_INVALID_ARGUMENT(opts);
 
@@ -503,7 +372,6 @@ INT inverse_kdvv_testcases_test_fnft(inverse_kdvv_testcases_t tc, UINT D,
     }
     CHECK_RETCODE(ret_code, release_mem);
 
-
     // Check if the errors are below the specified bounds. Organized such that
     // the line number tells us which error was too high. The conditions are
     // written in this way to ensure that they fail if an error is NAN.
@@ -551,9 +419,8 @@ release_mem:
     free(contspec_computed);
     free(bound_states_computed);
     free(bound_states_exact);
-    free(norming_constants_exact);
     free(norming_constants_computed);
+    free(norming_constants_exact);
 
     return ret_code;
-
 }   
