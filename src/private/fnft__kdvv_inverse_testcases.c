@@ -425,7 +425,6 @@ INT inverse_kdvv_testcases_test_fnft(inverse_kdvv_testcases_t tc, UINT D,
     COMPLEX * norming_constants_computed = NULL;
     REAL T[2];
     REAL XI[2];
-    COMPLEX * contspec_exact = NULL;
     COMPLEX * bound_states_exact = NULL;
     COMPLEX * norming_constants_exact = NULL;
     UINT K, K_exact=0, M;
@@ -479,12 +478,6 @@ INT inverse_kdvv_testcases_test_fnft(inverse_kdvv_testcases_t tc, UINT D,
                                 norming_constants_exact, errors);
     CHECK_RETCODE(ret_code, release_mem);
 
-#ifdef DEBUG
-    for (UINT i=0; i<4; i++)
-        printf("kdvv_testcases_test_fnft: error_bounds[%i] = %2.1e <= %2.1e\n",
-               (int)i, errors[i], error_bounds[i]);
-#endif
-
     // -- Check results --
 
     // Simple general tests
@@ -533,11 +526,18 @@ INT inverse_kdvv_testcases_test_fnft(inverse_kdvv_testcases_t tc, UINT D,
         goto release_mem;
     }
 
+    // spurious bound states:
     // bound states which arises by computation and which are not included in the exact bound states
     if (!(errors[3] <= error_bounds[3])) {
         ret_code = E_TEST_FAILED;
         goto release_mem;
     }
+
+#ifdef DEBUG
+    for (UINT i=0; i<4; i++)
+        printf("kdvv_testcases_test_fnft: error_bounds[%i] = %2.1e <= %2.1e\n",
+               (int)i, errors[i], error_bounds[i]);
+#endif
 
 #ifdef DEBUG
         misc_print_buf(K_exact, norming_constants_exact, "norming_constants_exact");
@@ -549,7 +549,6 @@ INT inverse_kdvv_testcases_test_fnft(inverse_kdvv_testcases_t tc, UINT D,
 release_mem:
     free(q);
     free(contspec_computed);
-    free(contspec_exact);
     free(bound_states_computed);
     free(bound_states_exact);
     free(norming_constants_exact);
