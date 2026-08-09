@@ -33,77 +33,29 @@ INT main()
 {
     INT ret_code = SUCCESS;
 
-    COMPLEX bound_states_i[K_I] = { 40.0, 39.0, 38.0, 37.0, 36.0,
-                                    30.0, 29.0, 28.0, 27.0, 26.0,
-                                    20.0, 19.0, 18.0, 17.0, 16.0,
-                                    10.0, 9.0, 8.0, 7.0};
-
-    COMPLEX normconsts_i[K_I] = {   1e20, -1e-7, 1e5, -1e3, 1e1,
-                                    -1e0, 1e2, -1e4, 1e-6, -1e8,
-                                    1e2, -1e4, 1e6, -1e8, 1e-10,
-                                    -1e7, 1e-6, -1e5, 1e-9};
-
-    for (UINT i = 0; i<K_I; i++){
-        bound_states_i[i] = I*SQRT(bound_states_i[i]/2.0);
-    }
-
-
-    fnft_kdvv_params kdvv_parameters = {
-        .D = 512,
-        .T = {-15.0, 15.0},
-        .K = K_I,
-        .bound_states = bound_states_i,
-        .normconsts = normconsts_i,
-        .M = 10,
-        .XI = NULL,
-        .contspec = NULL,
+    inverse_kdvv_testcases_t testcase = inverse_kdvv_testcases_19_bound_states;
+    REAL error_bounds[4] = {
+        2e-3,           // bound states
+        1.6e-1,         // norming constants
+        2.5e-1,         // continuous spectrum
+        1e-1,           // spurious bound states
     };
 
-    kdvv_parameters.contspec = malloc(kdvv_parameters.M*sizeof(COMPLEX));
-    CHECK_NOMEM(kdvv_parameters.contspec, ret_code, leave_fun);
-    
-    REAL err_bnd_bound_states = 2e-3;
-    REAL err_bnd_spurious_bound_states = 0.1;
-    REAL err_bnd_normconst = 1.6e-1;
-    REAL err_bnd_contspec = 2.5e-1;
+    UINT D = 512;
 
-    
-    ret_code = kdvv_testcases_get_spectrum_of_inverse(  kdvv_parameters, err_bnd_bound_states, 
-                                                        err_bnd_spurious_bound_states, 
-                                                        err_bnd_normconst, err_bnd_contspec);
-
+    ret_code = inverse_kdvv_testcases_test_fnft(testcase, D, error_bounds, NULL);
     CHECK_RETCODE(ret_code, leave_fun);
 
-    
-    // Check quadratic convergence
-    kdvv_parameters.D *= 2;
-    err_bnd_bound_states /= 4;
-    err_bnd_spurious_bound_states /= 4;
-    err_bnd_normconst /= 4;
-    err_bnd_contspec /= 4;
 
-    ret_code = kdvv_testcases_get_spectrum_of_inverse(  kdvv_parameters, err_bnd_bound_states, 
-                                                        err_bnd_spurious_bound_states, 
-                                                        err_bnd_normconst, err_bnd_contspec);
-
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    kdvv_parameters.D *= 2;
-    err_bnd_bound_states /= 4;
-    err_bnd_spurious_bound_states /= 4;
-    err_bnd_normconst /= 4;
-    err_bnd_contspec /= 4;
-
-    ret_code = kdvv_testcases_get_spectrum_of_inverse(  kdvv_parameters, err_bnd_bound_states, 
-                                                        err_bnd_spurious_bound_states, 
-                                                        err_bnd_normconst, err_bnd_contspec);
-
-    CHECK_RETCODE(ret_code, leave_fun);
-    
+    for (UINT n=0; n<2; n++){
+        D *= 2;
+        for (UINT i=0; i<4; i++)
+            error_bounds[i] /= 4.0;
+        ret_code = inverse_kdvv_testcases_test_fnft(testcase, D, error_bounds, NULL);
+        CHECK_RETCODE(ret_code, leave_fun);
+    }    
 
 leave_fun:
-    free(kdvv_parameters.contspec); 
-
     if (ret_code != SUCCESS)
         return EXIT_FAILURE;
     else
