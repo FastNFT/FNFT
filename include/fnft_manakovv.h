@@ -243,9 +243,9 @@ FNFT_UINT fnft_manakovv_max_K(const FNFT_UINT D, fnft_manakovv_opts_t const* con
  *       - fnft_manakov_discretization_2SPLIT6B
  *       - fnft_manakov_discretization_4SPLIT4A
  *       - fnft_manakov_discretization_4SPLIT4B
- * 	 - fnft_manakov_discretization_4SPLIT6B
- * 	 - fnft_manakov_discretization_FTES4_4A
- * 	 - fnft_manakov_discretization_FTES4_suzuki
+ *  	 - fnft_manakov_discretization_4SPLIT6B
+ * 		 - fnft_manakov_discretization_FTES4_4A
+ * 		 - fnft_manakov_discretization_FTES4_suzuki
  *
  * The following discretizations use classical algorithms which have a computational
  * complexity of \f$ \mathcal{O}(D^2)\f$ for \f$ D\f$ point continuous spectrum given \f$ D\f$ samples:
