@@ -31,8 +31,6 @@ INT main()
 {
     INT ret_code = SUCCESS;
 
-    printf("hallo34");
-
     inverse_kdvv_testcases_t testcase = inverse_kdvv_testcases_5_bound_states;
     REAL error_bounds[4] = {
         1.4e-3,         // bound states
