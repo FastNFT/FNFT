@@ -36,8 +36,8 @@ INT main()
     inverse_kdvv_testcases_t testcase = inverse_kdvv_testcases_5_bound_states;
     REAL error_bounds[4] = {
         1.4e-3,         // bound states
-        4.5e-2,           // norming constants
-        1e-1,         // continuous spectrum
+        4.5e-2,         // norming constants
+        1e-1,           // continuous spectrum
         1e-2,           // spurious bound states
     };
 
