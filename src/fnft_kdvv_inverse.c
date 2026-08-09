@@ -643,8 +643,8 @@ INT fnft_kdvv_inverse(
             return E_INVALID_ARGUMENT_MSG(bound_states,At least one bound state is negative imaginary!);
         }
         
-        if (CABS(norming_constants[i]) == 0){
-            return E_INVALID_ARGUMENT_MSG(norming_constants,At least one norming constant is zero!);
+        if (CABS(norming_constants[i]) < 1e-28){
+            return E_INVALID_ARGUMENT_MSG(norming_constants,At least one norming constant is almost zero!);
         }
     }
     
