@@ -615,19 +615,19 @@ INT fnft_kdvv_inverse(
    // checks for valid input ---------------------------------------------------------------------------------
 
     if (M != 0){
-        return E_NOT_YET_IMPLEMENTED(M,cannot handle continuous spectrum yet!);
+        return E_NOT_YET_IMPLEMENTED(M,Cannot handle continuous spectrum yet!);
     }
 
     if (contspec != NULL){
-        return E_NOT_YET_IMPLEMENTED(contspec,cannot handle continuous spectrum yet!);
+        return E_NOT_YET_IMPLEMENTED(contspec,Cannot handle continuous spectrum yet!);
     }
 
     if (XI != NULL){
-        return E_NOT_YET_IMPLEMENTED(XI,cannot handle continuous spectrum yet!);
+        return E_NOT_YET_IMPLEMENTED(XI,Cannot handle continuous spectrum yet!);
     }
 
     if (opts_ptr != NULL){
-        return E_NOT_YET_IMPLEMENTED(opts_ptr,opts_ptr cannot be handled yet!);
+        return E_NOT_YET_IMPLEMENTED(opts_ptr,Cannot be handled yet!);
     }
    
     if (T[1] <= T[0]) {
