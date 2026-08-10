@@ -615,15 +615,15 @@ INT fnft_kdvv_inverse(
    // checks for valid input ---------------------------------------------------------------------------------
 
     if (M != 0){
-        return E_NOT_YET_IMPLEMENTED(M,FNFT cannot handle continuous spectrum yet!);
+        return E_NOT_YET_IMPLEMENTED(M,cannot handle continuous spectrum yet!);
     }
 
     if (contspec != NULL){
-        return E_NOT_YET_IMPLEMENTED(contspec,FNFT cannot handle continuous spectrum yet!);
+        return E_NOT_YET_IMPLEMENTED(contspec,cannot handle continuous spectrum yet!);
     }
 
     if (XI != NULL){
-        return E_NOT_YET_IMPLEMENTED(XI,FNFT cannot handle continuous spectrum yet!);
+        return E_NOT_YET_IMPLEMENTED(XI,cannot handle continuous spectrum yet!);
     }
 
     if (opts_ptr != NULL){
@@ -635,32 +635,26 @@ INT fnft_kdvv_inverse(
     }
     
     for (UINT i=0; i<K; i++) {
-        if (CREAL(bound_states[i]) > FNFT_EPSILON){
+        if (CREAL(bound_states[i]) != 0.0){
             return E_INVALID_ARGUMENT_MSG(bound_states,At least one bound state has a nonzero real part!);
         }
         
-        if (CIMAG(bound_states[i]) < 0.0){
-            return E_INVALID_ARGUMENT_MSG(bound_states,At least one bound state is negative imaginary!);
+        if (CIMAG(bound_states[i]) <= 0.0){
+            return E_INVALID_ARGUMENT_MSG(bound_states,At least one bound state is negative imaginary or zero!);
         }
         
-        if (CABS(norming_constants[i]) < 1e-28){
-            return E_INVALID_ARGUMENT_MSG(norming_constants,At least one norming constant is almost zero!);
+        if (norming_constants[i] == 0){
+            return E_INVALID_ARGUMENT_MSG(norming_constants,At least one norming constant is zero!);
         }
     }
     
     for (UINT i=0; i<K-1; i++) {
         if (CABS(bound_states[i]) < CABS(bound_states[i+1])){
-            return E_INVALID_ARGUMENT_MSG(bound_states,The bound states have not a descend order!);
+            return E_INVALID_ARGUMENT_MSG(bound_states,The bound states are not strictly descending!);
         }
         
         if (CREAL(norming_constants[i]*norming_constants[i+1]) > 0){
-            return E_INVALID_ARGUMENT_MSG(norming_constants,The signs of the norming constants does not alternate!);
-        }
-
-        for (UINT j=i+1; j<K-1; j++) {
-            if (CABS(bound_states[i] - bound_states[j]) < THRESHOLD_EQUALITY_BOUND_STATES){
-                return E_INVALID_ARGUMENT_MSG(bound_states,At least two bound states are almost equal!);
-            }
+            return E_INVALID_ARGUMENT_MSG(norming_constants,The signs of the norming constants do not alternate!);
         }
     }
     
