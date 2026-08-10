@@ -12,21 +12,29 @@
 %                   of the reflection coefficient, the b-scattering 
 %                   coefficient or the inverse Fourier transform of the 
 %                   b-scattering coefficient on an equidistant grid.
-%                   Pass [] if the continuous spectrum is zero 
+%                   Pass [] if the continuous spectrum is zero.
 %                   (i.e., a multi-soliton is desired)
 %                   Note: continuous spectrum related functionality has not 
 %                   yet been implemented (state 04/2026)! 
 %                   If not empty array is handed over, error is returned!
 %                   It will be implicitly assumed to \f$ 0 \f$ for all \f$ \xi \f$.
 %   XI              Real 1x2 vector, contains the position of the first and the last
-%                   sample of the continuous spectrum
+%                   sample of the continuous spectrum.
 %                   Note: continuous spectrum related functionality has not 
 %                   yet been implemented (state 04/2026)! 
 %                   If not empty array is handed over, error is returned!
-%   bound_states    Complex row vector, contains the desired bound states.
+%   bound_states    Complex row vector. Bound states have to be positive, 
+%                   purely imaginary numbers (lie on the upper half of the imaginary axis). 
+%                   The bound states have to be in descending order. To add a solition 
+%                   with height \f$ h_i \f$ the bound state have to be 
+%                   \f$ \gamma_i = \sqrt{ h_i/2} \f$.
 %   norming_constants Complex row vector, same length as bound_states.
 %                   Contains the corresponding norming constants.
-%   D               Real scalar, number of time domain samples.
+%                   The signs of the norming constants have to alternate regards to 
+%                   the order of the bound states. The sign of the normconst for the 
+%                   biggest eigenvalue has to be positive
+%   D               Real scalar, number of time domain samples (i.e. number of samples 
+%                   of the resulting signal q).
 %   T               Real 1x2 vector, contains the location of the first and
 %                   the last sample in q
 %
