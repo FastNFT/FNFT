@@ -98,6 +98,25 @@ FNFT_REAL fnft__misc_hausdorff_dist(const FNFT_UINT lenA,
     FNFT_COMPLEX const * const vecA, const FNFT_UINT lenB,
     FNFT_COMPLEX const * const vecB);
 
+
+/**
+ * @brief Hausdorff distance between two vectors, normed by the considered element.
+ *
+ * @ingroup misc
+ * This function computes the Hausdorff distance between two vectors vecA and vecB. 
+ * By calculating the maximum distance, the distance is divided by the absolute of the 
+ * according element.
+ * @param[in] lenA Length of vector vecA.
+ * @param[in] vecA Complex vector of length lenA.
+ * @param[in] lenB length of vector vecB.
+ * @param[in] vecB Complex vector of length lenB.
+ * @return Returns the real valued Hausdorff distance between the vectors vecA and vecB.
+ */
+FNFT_REAL fnft__misc_hausdorff_dist_normed(const FNFT_UINT lenA,
+    FNFT_COMPLEX const * const vecA, const FNFT_UINT lenB,
+    FNFT_COMPLEX const * const vecB);
+
+
 /**
  * @brief Hyperbolic secant.
  *
@@ -453,6 +472,7 @@ static inline FNFT_INT fnft__misc_normalize_vector(const FNFT_UINT len, FNFT_COM
 #define misc_rel_err(...) fnft__misc_rel_err(__VA_ARGS__)
 #define misc_rel_err_real(...) fnft__misc_rel_err_real(__VA_ARGS__)
 #define misc_hausdorff_dist(...) fnft__misc_hausdorff_dist(__VA_ARGS__)
+#define misc_hausdorff_dist_normed(...) fnft__misc_hausdorff_dist_normed(__VA_ARGS__)
 #define misc_sech(...) fnft__misc_sech(__VA_ARGS__)
 #define misc_l2norm2(...) fnft__misc_l2norm2(__VA_ARGS__)
 #define misc_filter(...) fnft__misc_filter(__VA_ARGS__)
