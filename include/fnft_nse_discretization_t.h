@@ -16,6 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
+* Igor Chekhovskoy 2026.
 */
 
 /**
@@ -62,6 +63,10 @@
  * Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot;
  * </a>Proc. ICASSP 2018, pp. 4524-4528. `B` type of splitting are the same as `A` with the positions of the 
  * two terms in the splitting interchanged. `S` is for splittings not mentioned in above reference.\n
+ * `fnft_nse_discretization_FTES4_4A` and `fnft_nse_discretization_FTES4_4B` are fast
+ * versions of TES4. The TES4 correction is from the Optics Express reference above;
+ * the fourth-order 4A and 4B splittings are from the Prins and Wahls ICASSP 2018 reference.
+ * They support the bound-state localization methods available for fast discretizations.\n
  * `-2S` is from G. Strang,<a href="https://link.springer.com/content/pdf/10.1007/BF00281235.pdf">&quot;
  * Accurate partial difference methods I: Linear Cauchy problems,&quot;</a> 
  * in Archive for Rational Mechanics and Analysis, 12(1), 392-402, Jan 1963. It is also
@@ -94,7 +99,9 @@
  * `fnft_nse_discretization_2SPLIT8A`: Order of base method = 2, Degree = 24, Order of accuracy of splitting-scheme = 8\n
  * `fnft_nse_discretization_2SPLIT8B`: Order of base method = 2, Degree = 12, Order of accuracy of splitting-scheme = 8\n
  * `fnft_nse_discretization_4SPLIT4A`: Order of base method = 4, Degree = 4, Order of accuracy of splitting-scheme = 4\n
- * `fnft_nse_discretization_4SPLIT4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4
+ * `fnft_nse_discretization_4SPLIT4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4\n
+ * `fnft_nse_discretization_FTES4_4A`: Order of base method = 4, Degree = 4, Order of accuracy of splitting-scheme = 4\n
+ * `fnft_nse_discretization_FTES4_4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4
  *
  * Used in \link fnft_nsev_opts_t \endlink, \link fnft_nsep_opts_t \endlink
  *  and \link fnft_nsev_inverse_opts_t \endlink.
@@ -129,7 +136,9 @@ typedef enum {
     fnft_nse_discretization_CF5_3,
     fnft_nse_discretization_CF6_4,
     fnft_nse_discretization_ES4,
-    fnft_nse_discretization_TES4
+    fnft_nse_discretization_TES4,
+    fnft_nse_discretization_FTES4_4A,
+    fnft_nse_discretization_FTES4_4B
 } fnft_nse_discretization_t;
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
@@ -162,6 +171,8 @@ typedef enum {
 #define nse_discretization_CF6_4 fnft_nse_discretization_CF6_4
 #define nse_discretization_ES4 fnft_nse_discretization_ES4
 #define nse_discretization_TES4 fnft_nse_discretization_TES4
+#define nse_discretization_FTES4_4A fnft_nse_discretization_FTES4_4A
+#define nse_discretization_FTES4_4B fnft_nse_discretization_FTES4_4B
 
 
 #endif

@@ -17,6 +17,7 @@
  * Sander Wahls (TU Delft) 2017-2018.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Peter J. Prins (TU Delft) 2018, 2020.
+ * Igor Chekhovskoy 2026.
  */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -40,12 +41,14 @@ UINT fnft__akns_discretization_degree(akns_discretization_t
         case akns_discretization_2SPLIT3S:
         case akns_discretization_2SPLIT4B:
         case akns_discretization_4SPLIT4B:
+        case akns_discretization_FTES4_4B:
             return 2;
         case akns_discretization_2SPLIT3A:
         case akns_discretization_2SPLIT3B:
             return 3;
         case akns_discretization_2SPLIT4A:
         case akns_discretization_4SPLIT4A:
+        case akns_discretization_FTES4_4A:
             return 4;
         case akns_discretization_2SPLIT6B:
             return 6;
@@ -101,6 +104,8 @@ REAL fnft__akns_discretization_boundary_coeff(akns_discretization_t discretizati
         case akns_discretization_CF6_4:
         case akns_discretization_ES4:
         case akns_discretization_TES4:
+        case akns_discretization_FTES4_4A:
+        case akns_discretization_FTES4_4B:
             return 0.5;
             
         default: // Unknown discretization
@@ -135,6 +140,8 @@ UINT fnft__akns_discretization_upsampling_factor(akns_discretization_t discretiz
         case akns_discretization_2SPLIT8B:
         case akns_discretization_2SPLIT2_MODAL:
         case akns_discretization_BO:
+        case akns_discretization_FTES4_4A:
+        case akns_discretization_FTES4_4B:
             return 1;
         case akns_discretization_4SPLIT4A:
         case akns_discretization_4SPLIT4B:
@@ -186,6 +193,8 @@ UINT fnft__akns_discretization_method_order(akns_discretization_t discretization
         case akns_discretization_CF4_3:
         case akns_discretization_ES4:
         case akns_discretization_TES4:
+        case akns_discretization_FTES4_4A:
+        case akns_discretization_FTES4_4B:
             return 4;
         case akns_discretization_CF5_3:
             return 5;
@@ -273,6 +282,8 @@ INT fnft__akns_discretization_method_weights(COMPLEX ** qr_weights_ptr,
         case akns_discretization_2SPLIT8A:
         case akns_discretization_2SPLIT8B:
         case akns_discretization_2SPLIT2_MODAL:
+        case akns_discretization_FTES4_4A:
+        case akns_discretization_FTES4_4B:
             qr_weights = malloc(1 * sizeof(COMPLEX));
             eps_t_weights = malloc(1 * sizeof(COMPLEX));
             if (qr_weights == NULL || eps_t_weights == NULL) {
@@ -500,6 +511,8 @@ INT fnft__akns_discretization_preprocess_signal(UINT const D,
         case akns_discretization_2SPLIT8A:
         case akns_discretization_2SPLIT8B:
         case akns_discretization_2SPLIT2_MODAL:
+        case akns_discretization_FTES4_4A:
+        case akns_discretization_FTES4_4B:
             for (isub=0, i=0; isub<D_effective; isub++, i += nskip_per_step) {
                 q_preprocessed[isub] = q[i];
                 r_preprocessed[isub] = r_from_q[0](q[i]);
@@ -841,6 +854,8 @@ INT fnft__akns_discretization_change_of_basis_matrix_to_S(COMPLEX * const T,
                 case akns_discretization_CF6_4:
                 case akns_discretization_ES4:
                 case akns_discretization_TES4:
+                case akns_discretization_FTES4_4A:
+                case akns_discretization_FTES4_4B:
                     // The AKNS basis is already the S-basis for these discretizations, return an identity matrix
                     T[0] = 1.0;            //T_11;
                     T[1] = 0.0;            //T_12;
@@ -1051,6 +1066,8 @@ INT fnft__akns_discretization_change_of_basis_matrix_from_S(COMPLEX * const T,
                 case akns_discretization_CF6_4:
                 case akns_discretization_ES4:
                 case akns_discretization_TES4:
+                case akns_discretization_FTES4_4A:
+                case akns_discretization_FTES4_4B:
                     // The AKNS basis is already the S-basis for these discretizations, return an identity matrix
                     T[0] = 1.0;            //T_11;
                     T[1] = 0.0;            //T_12;

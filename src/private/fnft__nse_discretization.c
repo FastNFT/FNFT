@@ -17,6 +17,7 @@
 * Sander Wahls (TU Delft) 2017.
 * Shrinivas Chimmalgi (TU Delft) 2017-2020.
 * Peter J Prins (TU Delft) 2020.
+* Igor Chekhovskoy 2026.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -198,6 +199,12 @@ INT fnft__nse_discretization_to_akns_discretization(nse_discretization_t nse_dis
         case nse_discretization_TES4:
             *akns_discretization = akns_discretization_TES4;
             break;
+        case nse_discretization_FTES4_4A:
+            *akns_discretization = akns_discretization_FTES4_4A;
+            break;
+        case nse_discretization_FTES4_4B:
+            *akns_discretization = akns_discretization_FTES4_4B;
+            break;
         default: // Unknown discretization
             return E_INVALID_ARGUMENT(nse_discretization);
     }
@@ -293,6 +300,8 @@ INT fnft__nse_discretization_phase_factor_a(const REAL eps_t, const UINT D, REAL
         case nse_discretization_2SPLIT8B:
         case nse_discretization_4SPLIT4A:
         case nse_discretization_4SPLIT4B:
+        case nse_discretization_FTES4_4A:
+        case nse_discretization_FTES4_4B:
         case nse_discretization_2SPLIT2A:
         case nse_discretization_2SPLIT2_MODAL:
             *phase_factor_a = -eps_t*D + (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
@@ -351,6 +360,8 @@ INT fnft__nse_discretization_phase_factor_b(const REAL eps_t, const UINT D, REAL
         case nse_discretization_2SPLIT8B:
         case nse_discretization_4SPLIT4A:
         case nse_discretization_4SPLIT4B:
+        case nse_discretization_FTES4_4A:
+        case nse_discretization_FTES4_4B:
             *phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
             break;

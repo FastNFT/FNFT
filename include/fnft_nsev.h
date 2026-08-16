@@ -18,6 +18,7 @@
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
 * Peter J Prins (TU Delft) 2020-2021.
 * Sander Wahls (KIT) 2023.
+* Igor Chekhovskoy 2026.
 */
 
 /**
@@ -307,6 +308,8 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *       - fnft_nse_discretization_2SPLIT8B
  *       - fnft_nse_discretization_4SPLIT4A
  *       - fnft_nse_discretization_4SPLIT4B
+ *       - fnft_nse_discretization_FTES4_4A
+ *       - fnft_nse_discretization_FTES4_4B
  *
  * The following discretizations use classical algorithms which have a computational
  * complexity of \f$ \mathcal{O}(D^2)\f$ for \f$ D\f$ point continuous spectrum given \f$ D\f$ samples:

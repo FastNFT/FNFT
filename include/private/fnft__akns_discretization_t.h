@@ -16,6 +16,7 @@
 * Contributors:
 * Shrinivas Chimmalgi (TU Delft) 2018-2020.
 * Peter J. Prins (TU Delft) 2021.
+* Igor Chekhovskoy 2026.
 */
 
 /**
@@ -94,7 +95,9 @@
  * `fnft__akns_discretization_2SPLIT8A`: Order of base method = 2, Degree = 24, Order of accuracy of splitting-scheme = 8\n
  * `fnft__akns_discretization_2SPLIT8B`: Order of base method = 2, Degree = 12, Order of accuracy of splitting-scheme = 8\n
  * `fnft__akns_discretization_4SPLIT4A`: Order of base method = 4, Degree = 4, Order of accuracy of splitting-scheme = 4\n
- * `fnft__akns_discretization_4SPLIT4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4
+ * `fnft__akns_discretization_4SPLIT4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4\n
+ * `fnft__akns_discretization_FTES4_4A`: Order of base method = 4, Degree = 4, Order of accuracy of splitting-scheme = 4\n
+ * `fnft__akns_discretization_FTES4_4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4
  *
  * Used in \link fnft__akns_fscatter.h \endlink and
  * \link fnft__akns_scatter.h \endlink.
@@ -130,7 +133,7 @@ typedef enum {
     fnft__akns_discretization_CF6_4,
     fnft__akns_discretization_ES4,  
     fnft__akns_discretization_TES4,
-	fnft__akns_discretization_FTES4_4A,		// TODO: added all discretization after this one. Needed, or should this be put in manakov_discretization?
+	fnft__akns_discretization_FTES4_4A,
 	fnft__akns_discretization_FTES4_4B,
 	fnft__akns_discretization_4SPLIT6B
 } fnft__akns_discretization_t;

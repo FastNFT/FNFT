@@ -19,6 +19,7 @@
  * Marius Brehler (TU Dortmund) 2018.
  * Peter J Prins (TU Delft) 2020.
  * Sander Wahls (KIT) 2023.
+ * Igor Chekhovskoy 2026.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -115,6 +116,19 @@ static inline INT nsev_compute_normconsts_or_residues(
         COMPLEX * const normconsts_or_residues,
         fnft_nsev_opts_t const * const opts);
 
+static inline INT nsev_prepare_discrete_scattering(
+        const UINT D,
+        COMPLEX const * const q,
+        COMPLEX const * const r,
+        const REAL eps_t,
+        nse_discretization_t const requested_discretization,
+        UINT * const D_scatter,
+        COMPLEX const ** const q_scatter,
+        COMPLEX const ** const r_scatter,
+        nse_discretization_t * const scatter_discretization,
+        COMPLEX ** const q_buffer,
+        COMPLEX ** const r_buffer);
+
 static inline INT nsev_refine_bound_states_newton(const UINT D,
         COMPLEX const * const q,
         COMPLEX const * const r,
@@ -209,6 +223,8 @@ INT fnft_nsev(
         case nse_discretization_2SPLIT7B:
         case nse_discretization_4SPLIT4A:
         case nse_discretization_4SPLIT4B:
+        case nse_discretization_FTES4_4A:
+        case nse_discretization_FTES4_4B:
             break;
         case nse_discretization_BO:
         case nse_discretization_CF4_2:
@@ -605,6 +621,99 @@ static inline REAL im_bound(const UINT D, COMPLEX const * const q,
     return 1.5 * 0.25 * misc_l2norm2(D, q, T[0]-eps_t/2, T[1]+eps_t/2);
 }
 
+// Prepare the signal and select the slow scheme used to refine bound states
+// and compute discrete spectral amplitudes for polynomial discretizations.
+static inline INT nsev_prepare_discrete_scattering(
+        const UINT D,
+        COMPLEX const * const q,
+        COMPLEX const * const r,
+        const REAL eps_t,
+        nse_discretization_t const requested_discretization,
+        UINT * const D_scatter,
+        COMPLEX const ** const q_scatter,
+        COMPLEX const ** const r_scatter,
+        nse_discretization_t * const scatter_discretization,
+        COMPLEX ** const q_buffer,
+        COMPLEX ** const r_buffer)
+{
+    UINT i;
+    const UINT upsampling_factor =
+            nse_discretization_upsampling_factor(requested_discretization);
+    const REAL degree1step =
+            nse_discretization_degree(requested_discretization);
+
+    if (D < 2)
+        return E_INVALID_ARGUMENT(D);
+    if (q == NULL)
+        return E_INVALID_ARGUMENT(q);
+    if (r == NULL)
+        return E_INVALID_ARGUMENT(r);
+    if (!(eps_t > 0.0))
+        return E_INVALID_ARGUMENT(eps_t);
+    if (D_scatter == NULL || q_scatter == NULL || r_scatter == NULL ||
+            scatter_discretization == NULL || q_buffer == NULL ||
+            r_buffer == NULL)
+        return E_INVALID_ARGUMENT(D_scatter);
+    if (upsampling_factor == 0)
+        return E_INVALID_ARGUMENT(requested_discretization);
+
+    *D_scatter = D;
+    *q_scatter = q;
+    *r_scatter = r;
+    *q_buffer = NULL;
+    *r_buffer = NULL;
+
+    if (requested_discretization == nse_discretization_FTES4_4A ||
+            requested_discretization == nse_discretization_FTES4_4B) {
+        const REAL eps_t_2 = eps_t*eps_t;
+
+        *q_buffer = malloc(3*D*sizeof(COMPLEX));
+        *r_buffer = malloc(3*D*sizeof(COMPLEX));
+        if (*q_buffer == NULL || *r_buffer == NULL) {
+            free(*q_buffer);
+            free(*r_buffer);
+            *q_buffer = NULL;
+            *r_buffer = NULL;
+            return E_NOMEM;
+        }
+
+        for (i = 0; i < D; i++) {
+            (*q_buffer)[3*i] = q[i];
+            (*r_buffer)[3*i] = r[i];
+        }
+
+        (*q_buffer)[1] = q[1]/(2*eps_t);
+        (*q_buffer)[2] = (q[1] - 2*q[0])/eps_t_2;
+        (*r_buffer)[1] = r[1]/(2*eps_t);
+        (*r_buffer)[2] = (r[1] - 2*r[0])/eps_t_2;
+        for (i = 1; i < D - 1; i++) {
+            (*q_buffer)[3*i + 1] = (q[i + 1] - q[i - 1])/(2*eps_t);
+            (*q_buffer)[3*i + 2] =
+                    (q[i + 1] - 2*q[i] + q[i - 1])/eps_t_2;
+            (*r_buffer)[3*i + 1] = (r[i + 1] - r[i - 1])/(2*eps_t);
+            (*r_buffer)[3*i + 2] =
+                    (r[i + 1] - 2*r[i] + r[i - 1])/eps_t_2;
+        }
+        (*q_buffer)[3*D - 2] = -q[D - 2]/(2*eps_t);
+        (*q_buffer)[3*D - 1] = (q[D - 2] - 2*q[D - 1])/eps_t_2;
+        (*r_buffer)[3*D - 2] = -r[D - 2]/(2*eps_t);
+        (*r_buffer)[3*D - 1] = (r[D - 2] - 2*r[D - 1])/eps_t_2;
+
+        *D_scatter = 3*D;
+        *q_scatter = *q_buffer;
+        *r_scatter = *r_buffer;
+        *scatter_discretization = nse_discretization_TES4;
+    } else if (upsampling_factor == 1 && degree1step != 0) {
+        *scatter_discretization = nse_discretization_BO;
+    } else if (upsampling_factor == 2 && degree1step != 0) {
+        *scatter_discretization = nse_discretization_CF4_2;
+    } else {
+        *scatter_discretization = requested_discretization;
+    }
+
+    return SUCCESS;
+}
+
 // Auxiliary function: Computes the bound states.
 static inline INT nsev_compute_boundstates(
         const UINT D,
@@ -623,7 +732,12 @@ static inline INT nsev_compute_boundstates(
     REAL bounding_box[4] = { NAN };
     COMPLEX * buffer = NULL;
     INT ret_code = SUCCESS;
-    nse_discretization_t discretization;
+    nse_discretization_t discretization = opts->discretization;
+    UINT D_scatter = D;
+    COMPLEX const *q_scatter = q;
+    COMPLEX const *r_scatter = r;
+    COMPLEX *q_scatter_buffer = NULL;
+    COMPLEX *r_scatter_buffer = NULL;
 
     degree1step = nse_discretization_degree(opts->discretization);
     // degree1step == 0 here indicates a valid slow method. Incorrect
@@ -707,16 +821,13 @@ static inline INT nsev_compute_boundstates(
             // Perform Newton iterations. Initial guesses of bound-states
             // should be in the continuous-time domain.
 
-            // Setting 'discretization' as the base method for discretizations based on
-            // splitting schemes.
-            if (upsampling_factor == 1 && degree1step != 0){
-                discretization = nse_discretization_BO;
-            }else if(upsampling_factor == 2 && degree1step != 0){
-                discretization = nse_discretization_CF4_2;
-            }else
-                discretization = opts->discretization;
+            ret_code = nsev_prepare_discrete_scattering(D, q, r, eps_t,
+                    opts->discretization, &D_scatter, &q_scatter, &r_scatter,
+                    &discretization, &q_scatter_buffer, &r_scatter_buffer);
+            CHECK_RETCODE(ret_code, leave_fun);
 
-            ret_code = nsev_refine_bound_states_newton(D, q, r, T, K, buffer,
+            ret_code = nsev_refine_bound_states_newton(D_scatter, q_scatter,
+                    r_scatter, T, K, buffer,
                     discretization, opts->niter, opts->tol, bounding_box, opts->normalization_flag);
             CHECK_RETCODE(ret_code, leave_fun);
             break;
@@ -773,6 +884,8 @@ static inline INT nsev_compute_boundstates(
     *K_ptr = K;
 
 leave_fun:
+    free(q_scatter_buffer);
+    free(r_scatter_buffer);
     return ret_code;
 }
 
@@ -949,7 +1062,12 @@ static inline INT nsev_compute_normconsts_or_residues(
     INT * Ws = NULL;
     UINT i, offset = 0;
     INT ret_code = SUCCESS;
-    nse_discretization_t discretization;
+    nse_discretization_t discretization = opts->discretization;
+    UINT D_scatter = D;
+    COMPLEX const *q_scatter = q;
+    COMPLEX const *r_scatter = r;
+    COMPLEX *q_scatter_buffer = NULL;
+    COMPLEX *r_scatter_buffer = NULL;
     // Check inputs
     if (K == 0) // no bound states
         return SUCCESS;
@@ -975,19 +1093,14 @@ static inline INT nsev_compute_normconsts_or_residues(
         ret_code = E_INVALID_ARGUMENT(opts->discretization);
         goto leave_fun;
     }
-    // Setting discretization as the base method for discretizations based on
-    // splitting schemes.
-    REAL degree1step = nse_discretization_degree(opts->discretization);
-    // degree1step == 0 here implies method not based on polynomial
-    // transfer matrix.
-    if (upsampling_factor == 1 && degree1step != 0)
-        discretization  = nse_discretization_BO;
-    else if (upsampling_factor == 2 && degree1step != 0)
-        discretization  = nse_discretization_CF4_2;
-    else
-        discretization = opts->discretization;
+    const UINT D_given = D/upsampling_factor;
+    const REAL eps_t = (T[1] - T[0])/(D_given - 1);
+    ret_code = nsev_prepare_discrete_scattering(D, q, r, eps_t,
+            opts->discretization, &D_scatter, &q_scatter, &r_scatter,
+            &discretization, &q_scatter_buffer, &r_scatter_buffer);
+    CHECK_RETCODE(ret_code, leave_fun);
 
-    ret_code = nse_scatter_bound_states(D, q, r, T, K,
+    ret_code = nse_scatter_bound_states(D_scatter, q_scatter, r_scatter, T, K,
             bound_states, a_vals, aprime_vals, normconsts_or_residues, 
             Ws, discretization, 0/*skip_b_flag*/);
     CHECK_RETCODE(ret_code, leave_fun);
@@ -1002,13 +1115,17 @@ static inline INT nsev_compute_normconsts_or_residues(
             memcpy(normconsts_or_residues + offset,
                     normconsts_or_residues,
                     offset*sizeof(COMPLEX));
-        } else
-            return E_INVALID_ARGUMENT(opts->discspec_type);
+        } else {
+            ret_code = E_INVALID_ARGUMENT(opts->discspec_type);
+            goto leave_fun;
+        }
 
         // Divide norming constants by derivatives to get residues
         for (i = 0; i < K; i++) {
-            if (aprime_vals[i] == 0.0)
-                return E_DIV_BY_ZERO;
+            if (aprime_vals[i] == 0.0) {
+                ret_code = E_DIV_BY_ZERO;
+                goto leave_fun;
+            }
             normconsts_or_residues[offset + i] /= aprime_vals[i];
             if (Ws != NULL) // normalization is on
                 normconsts_or_residues[offset + i] /= POW(2, Ws[i]);
@@ -1019,6 +1136,8 @@ static inline INT nsev_compute_normconsts_or_residues(
         free(a_vals);
         free(aprime_vals);
         free(Ws);
+        free(q_scatter_buffer);
+        free(r_scatter_buffer);
         return ret_code;
 }
 
