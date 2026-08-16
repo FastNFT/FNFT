@@ -92,6 +92,61 @@ static inline void akns_fscatter_tes4_correction(const UINT D, const UINT i,
         p22[j] = t21*e_minus[1] + t22*e_minus[0];
     }
 }
+
+enum { akns_fscatter_suzuki_degree = 7 };
+
+/**
+ * Multiplies a 2x2 matrix polynomial from the right by a zero-frequency
+ * scattering matrix. Coefficients are stored in ascending order.
+ */
+static inline void akns_fscatter_suzuki_mult_B(
+        COMPLEX p[4][akns_fscatter_suzuki_degree + 1], const UINT degree,
+        COMPLEX const B[3])
+{
+    UINT j;
+
+    for (j = 0; j <= degree; j++) {
+        const COMPLEX p11 = p[0][j];
+        const COMPLEX p12 = p[1][j];
+        const COMPLEX p21 = p[2][j];
+        const COMPLEX p22 = p[3][j];
+
+        p[0][j] = p11*B[0] + p12*B[2];
+        p[1][j] = p11*B[1] + p12*B[0];
+        p[2][j] = p21*B[0] + p22*B[2];
+        p[3][j] = p21*B[1] + p22*B[0];
+    }
+}
+
+/**
+ * Multiplies a 2x2 matrix polynomial from the right by
+ * diag(z^shift_1,z^shift_2). Coefficients are stored in ascending order.
+ */
+static inline UINT akns_fscatter_suzuki_mult_A(
+        COMPLEX p[4][akns_fscatter_suzuki_degree + 1], const UINT degree,
+        const UINT shift_1, const UINT shift_2)
+{
+    UINT j;
+
+    for (j = degree + shift_1 + 1; j-- > shift_1;) {
+        p[0][j] = p[0][j - shift_1];
+        p[2][j] = p[2][j - shift_1];
+    }
+    for (j = 0; j < shift_1; j++) {
+        p[0][j] = 0.0;
+        p[2][j] = 0.0;
+    }
+    for (j = degree + shift_2 + 1; j-- > shift_2;) {
+        p[1][j] = p[1][j - shift_2];
+        p[3][j] = p[3][j - shift_2];
+    }
+    for (j = 0; j < shift_2; j++) {
+        p[1][j] = 0.0;
+        p[3][j] = 0.0;
+    }
+
+    return degree + (shift_1 > shift_2 ? shift_1 : shift_2);
+}
 /**
  * Fast computation of polynomial approximation of the combined scattering
  * matrix.
@@ -480,6 +535,58 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             }
 
             break;
+
+        case akns_discretization_FTES4_suzuki: {
+            COMPLEX *e_7_48B = &e_Bstorage[0];
+            COMPLEX *e_3_8B = &e_Bstorage[3];
+            COMPLEX *e_m1_48B = &e_Bstorage[6];
+            COMPLEX sp[4][akns_fscatter_suzuki_degree + 1];
+            UINT degree, j;
+
+            for (i=D; i-->0;) {
+                akns_fscatter_zero_freq_scatter_matrix(e_7_48B,
+                        7.0*eps_t/48.0, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_3_8B,
+                        3.0*eps_t/8.0, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_m1_48B,
+                        -eps_t/48.0, q[i], r[i]);
+
+                for (n = 0; n < 4; n++)
+                    for (j = 0; j <= deg; j++)
+                        sp[n][j] = 0.0;
+                sp[0][0] = 1.0;
+                sp[3][0] = 1.0;
+                degree = 0;
+
+                akns_fscatter_suzuki_mult_B(sp, degree, e_7_48B);
+                degree = akns_fscatter_suzuki_mult_A(sp, degree, 0, 1);
+                akns_fscatter_suzuki_mult_B(sp, degree, e_3_8B);
+                degree = akns_fscatter_suzuki_mult_A(sp, degree, 1, 0);
+                akns_fscatter_suzuki_mult_B(sp, degree, e_m1_48B);
+                degree = akns_fscatter_suzuki_mult_A(sp, degree, 0, 3);
+                akns_fscatter_suzuki_mult_B(sp, degree, e_m1_48B);
+                degree = akns_fscatter_suzuki_mult_A(sp, degree, 1, 0);
+                akns_fscatter_suzuki_mult_B(sp, degree, e_3_8B);
+                degree = akns_fscatter_suzuki_mult_A(sp, degree, 0, 1);
+                akns_fscatter_suzuki_mult_B(sp, degree, e_7_48B);
+
+                for (j = 0; j <= deg; j++) {
+                    p11[j] = sp[0][deg - j];
+                    p12[j] = sp[1][deg - j];
+                    p21[j] = sp[2][deg - j];
+                    p22[j] = sp[3][deg - j];
+                }
+                akns_fscatter_tes4_correction(D, i, q, r, eps_t, deg,
+                                               p11, p12, p21, p22);
+
+                p11 += deg + 1;
+                p21 += deg + 1;
+                p12 += deg + 1;
+                p22 += deg + 1;
+            }
+
+            break;
+        }
 
         case akns_discretization_2SPLIT5A:
 

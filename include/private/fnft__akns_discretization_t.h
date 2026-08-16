@@ -97,7 +97,8 @@
  * `fnft__akns_discretization_4SPLIT4A`: Order of base method = 4, Degree = 4, Order of accuracy of splitting-scheme = 4\n
  * `fnft__akns_discretization_4SPLIT4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4\n
  * `fnft__akns_discretization_FTES4_4A`: Order of base method = 4, Degree = 4, Order of accuracy of splitting-scheme = 4\n
- * `fnft__akns_discretization_FTES4_4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4
+ * `fnft__akns_discretization_FTES4_4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4\n
+ * `fnft__akns_discretization_FTES4_suzuki`: Order of base method = 4, Degree = 7, Order of accuracy of splitting-scheme = 4
  *
  * Used in \link fnft__akns_fscatter.h \endlink and
  * \link fnft__akns_scatter.h \endlink.
@@ -135,7 +136,8 @@ typedef enum {
     fnft__akns_discretization_TES4,
 	fnft__akns_discretization_FTES4_4A,
 	fnft__akns_discretization_FTES4_4B,
-	fnft__akns_discretization_4SPLIT6B
+	fnft__akns_discretization_4SPLIT6B,
+	fnft__akns_discretization_FTES4_suzuki
 } fnft__akns_discretization_t;
 
 /**
@@ -186,6 +188,7 @@ typedef enum {
 #define akns_discretization_FTES4_4A fnft__akns_discretization_FTES4_4A
 #define akns_discretization_FTES4_4B fnft__akns_discretization_FTES4_4B
 #define akns_discretization_4SPLIT6B fnft__akns_discretization_4SPLIT6B
+#define akns_discretization_FTES4_suzuki fnft__akns_discretization_FTES4_suzuki
 #define akns_discretization_t fnft__akns_discretization_t
 #define akns_pde_KdV fnft__akns_pde_KdV
 #define akns_pde_NSE fnft__akns_pde_NSE

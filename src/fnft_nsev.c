@@ -225,6 +225,7 @@ INT fnft_nsev(
         case nse_discretization_4SPLIT4B:
         case nse_discretization_FTES4_4A:
         case nse_discretization_FTES4_4B:
+        case nse_discretization_FTES4_suzuki:
             break;
         case nse_discretization_BO:
         case nse_discretization_CF4_2:
@@ -664,7 +665,8 @@ static inline INT nsev_prepare_discrete_scattering(
     *r_buffer = NULL;
 
     if (requested_discretization == nse_discretization_FTES4_4A ||
-            requested_discretization == nse_discretization_FTES4_4B) {
+            requested_discretization == nse_discretization_FTES4_4B ||
+            requested_discretization == nse_discretization_FTES4_suzuki) {
         const REAL eps_t_2 = eps_t*eps_t;
 
         *q_buffer = malloc(3*D*sizeof(COMPLEX));
@@ -747,7 +749,9 @@ static inline INT nsev_compute_boundstates(
         ret_code = E_INVALID_ARGUMENT(opts->discretization);
         goto leave_fun;
     }
-    if (degree1step != 0)
+    if (opts->discretization == fnft_nse_discretization_FTES4_suzuki)
+        map_coeff = 2.0/3.0;
+    else if (degree1step != 0)
         map_coeff = 2/(degree1step);
     D_given = D/upsampling_factor;
 

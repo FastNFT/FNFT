@@ -19,6 +19,7 @@
  * Shrinivas Chimmalgi (TU Delft) 2019-2020.
  * Peter J Prins (TU Delft) 2020.
  * Sander Wahls (KIT) 2023.
+ * Igor Chekhovskoy 2026.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -303,7 +304,10 @@ static inline INT gridsearch(const UINT D,
     degree1step = nse_discretization_degree(opts_ptr->discretization);
     if (degree1step == NAN)
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
-    map_coeff = 2/degree1step;
+    if (opts_ptr->discretization == nse_discretization_FTES4_suzuki)
+        map_coeff = 2.0/3.0;
+    else
+        map_coeff = 2/degree1step;
     update_bounding_box_if_auto(eps_t, map_coeff, opts_ptr);
     PHI[0] = map_coeff*eps_t*opts_ptr->bounding_box[0];
     PHI[1] = map_coeff*eps_t*opts_ptr->bounding_box[1];
@@ -563,7 +567,10 @@ static inline INT subsample_and_refine(const UINT D,
     degree1step = nse_discretization_degree(opts_ptr->discretization);
     if (degree1step == NAN)
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
-    map_coeff = 2/degree1step;
+    if (opts_ptr->discretization == nse_discretization_FTES4_suzuki)
+        map_coeff = 2.0/3.0;
+    else
+        map_coeff = 2/degree1step;
     update_bounding_box_if_auto(eps_t_sub, map_coeff, opts_ptr);
     tol_im = opts_ptr->bounding_box[3] - opts_ptr->bounding_box[2];
     tol_im /= oversampling_factor*(D - 1);
@@ -788,7 +795,10 @@ static inline INT newton(const UINT D,
     degree1step = nse_discretization_degree(opts_ptr->discretization);
     if (degree1step == NAN)
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
-    map_coeff = 2/degree1step;
+    if (opts_ptr->discretization == nse_discretization_FTES4_suzuki)
+        map_coeff = 2.0/3.0;
+    else
+        map_coeff = 2/degree1step;
     update_bounding_box_if_auto(eps_t, map_coeff, opts_ptr);
     tol_im = opts_ptr->bounding_box[1] - opts_ptr->bounding_box[0];
     tol_im /= oversampling_factor*(D - 1);

@@ -205,6 +205,9 @@ INT fnft__nse_discretization_to_akns_discretization(nse_discretization_t nse_dis
         case nse_discretization_FTES4_4B:
             *akns_discretization = akns_discretization_FTES4_4B;
             break;
+        case nse_discretization_FTES4_suzuki:
+            *akns_discretization = akns_discretization_FTES4_suzuki;
+            break;
         default: // Unknown discretization
             return E_INVALID_ARGUMENT(nse_discretization);
     }
@@ -308,6 +311,12 @@ INT fnft__nse_discretization_phase_factor_a(const REAL eps_t, const UINT D, REAL
             return SUCCESS;
             break;
 
+        case nse_discretization_FTES4_suzuki:
+            *phase_factor_a = (T[1]+eps_t*boundary_coeff) -
+                    (T[0]-eps_t*boundary_coeff) - 7.0*eps_t*D/3.0;
+            return SUCCESS;
+            break;
+
         case nse_discretization_BO: // Bofetta-Osborne scheme
         case nse_discretization_CF4_2:
         case nse_discretization_CF4_3:
@@ -363,6 +372,12 @@ INT fnft__nse_discretization_phase_factor_b(const REAL eps_t, const UINT D, REAL
         case nse_discretization_FTES4_4A:
         case nse_discretization_FTES4_4B:
             *phase_factor_b = -eps_t*D - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
+            return SUCCESS;
+            break;
+
+        case nse_discretization_FTES4_suzuki:
+            *phase_factor_b = -(T[1]+eps_t*boundary_coeff) -
+                    (T[0]-eps_t*boundary_coeff) - 7.0*eps_t*D/3.0;
             return SUCCESS;
             break;
 

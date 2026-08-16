@@ -16,6 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018, 2020-21.
 * Shrinivas Chimmalgi (TU Delft) 2020.
+* Igor Chekhovskoy 2026.
 */
 
 /**
@@ -215,6 +216,7 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  *       - fnft_nse_discretization_2SPLIT8A
  *       - fnft_nse_discretization_2SPLIT8B
  *       - fnft_nse_discretization_4SPLIT4A
+ *       - fnft_nse_discretization_FTES4_suzuki
  *
  * For the Newton refinement mode only, one of the following should be used instead:
  *      - fnft_nse_discretization_BO
