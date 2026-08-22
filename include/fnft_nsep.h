@@ -230,6 +230,10 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  *       - fnft_nse_discretization_FES4_PADE (GRIDSEARCH localization)
  *       - fnft_nse_discretization_FES6_PADE (GRIDSEARCH localization)
  *
+ * FES8_PADE is not supported by this periodic-spectrum routine. The direct
+ * Cayley representation is currently restricted to the continuous spectrum
+ * in \link fnft_nsev \endlink.
+ *
  * For the Newton refinement mode only, one of the following should be used instead:
  *      - fnft_nse_discretization_BO
  *      - fnft_nse_discretization_CF4_2

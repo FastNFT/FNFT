@@ -22,13 +22,14 @@
 #include "fnft__akns_fscatter_pade.h"
 #include "fnft__akns_discretization.h"
 #include "fnft__errwarn.h"
+#include "fnft__misc.h"
 
 #include <limits.h>
 #include <stdlib.h>
 
 enum {
     PADE_MAX_DEGREE = 7,
-    Z_MAX_DEGREE = 3,
+    Z_MAX_DEGREE = 5,
     LOCAL_MAX_DEGREE = 2*Z_MAX_DEGREE*PADE_MAX_DEGREE
 };
 
@@ -165,7 +166,7 @@ static void build_z_polynomial(const UINT D, const UINT index,
         *z_matrix = a0;
         small_matrix_add_scaled(z_matrix, &d2, 1.0/24.0);
         small_matrix_add_scaled(z_matrix, &comm, 1.0/12.0);
-    } else {
+    } else if (method_order == 6) {
         const COMPLEX q_samples[5] = {
             q[im2], q[im1], q[index], q[ip1], q[ip2]
         };
@@ -209,6 +210,44 @@ static void build_z_polynomial(const UINT D, const UINT index,
         small_matrix_multiply(&t1, &a0, &t2);
         small_matrix_commutator(&t2, &a0, &term);
         small_matrix_add_scaled(z_matrix, &term, 1.0/240.0);
+    } else {
+        const UINT im3 = (index + D - 3) % D;
+        const UINT ip3 = (index + 3) % D;
+        const COMPLEX q_samples[7] = {
+            q[im3], q[im2], q[im1], q[index], q[ip1], q[ip2], q[ip3]
+        };
+        const COMPLEX r_samples[7] = {
+            r[im3], r[im2], r[im1], r[index], r[ip1], r[ip2], r[ip3]
+        };
+        fnft__akns_es8_stencil_t qs, rs;
+        COMPLEX q_values[7], r_values[7], coefficients[24];
+        UINT i, j;
+
+        fnft__akns_es8_stencil(q_samples, eps_t, &qs);
+        fnft__akns_es8_stencil(r_samples, eps_t, &rs);
+        q_values[0] = qs.value;
+        q_values[1] = qs.first;
+        q_values[2] = qs.second;
+        q_values[3] = qs.third;
+        q_values[4] = qs.fourth;
+        q_values[5] = qs.fifth;
+        q_values[6] = qs.sixth;
+        r_values[0] = rs.value;
+        r_values[1] = rs.first;
+        r_values[2] = rs.second;
+        r_values[3] = rs.third;
+        r_values[4] = rs.fourth;
+        r_values[5] = rs.fifth;
+        r_values[6] = rs.sixth;
+        fnft__akns_es8_z_coefficients(q_values, r_values, coefficients);
+
+        small_matrix_zero(z_matrix);
+        for (i = 0; i < 4; i++) {
+            z_matrix->entry[i].degree = Z_MAX_DEGREE;
+            for (j = 0; j <= Z_MAX_DEGREE; j++)
+                z_matrix->entry[i].coefficient[j] = coefficients[4*j + i];
+            small_poly_trim(&z_matrix->entry[i]);
+        }
     }
 }
 
@@ -317,7 +356,8 @@ static void build_local_transition(const UINT D, const UINT index,
         COMPLEX numerator[4][LOCAL_MAX_DEGREE + 1],
         COMPLEX denominator_polynomial[LOCAL_MAX_DEGREE + 1])
 {
-    const UINT z_degree = method_order == 4 ? 1 : 3;
+    const UINT z_degree = method_order == 4 ? 1
+            : (method_order == 6 ? 3 : 5);
     const UINT common_degree = 2*z_degree*pade_degree;
     small_matrix_t z_matrix;
     COMPLEX x[4][Z_MAX_DEGREE + 1];
@@ -390,6 +430,8 @@ static UINT local_degree(const UINT method_order, const UINT pade_degree)
         return 2*pade_degree;
     if (method_order == 6 && pade_degree >= 3 && pade_degree <= 7)
         return 6*pade_degree;
+    if (method_order == 8 && pade_degree >= 3 && pade_degree <= 7)
+        return 10*pade_degree;
     return 0;
 }
 
@@ -404,6 +446,21 @@ static void reverse_polynomial(COMPLEX * const p, const UINT degree)
     }
 }
 
+static UINT checked_numel(const UINT D, const UINT degree,
+        const UINT matrix_size)
+{
+    UINT padded_D;
+    const UINT coefficient_count = matrix_size*(degree + 1);
+
+    if (D == 0 || D > INT_MAX)
+        return 0;
+    padded_D = misc_nextpowerof2(D);
+    if (padded_D == 0 || coefficient_count == 0
+            || padded_D > UINT_MAX/coefficient_count)
+        return 0;
+    return coefficient_count*padded_D;
+}
+
 UINT akns_fscatter_pade_numel(const UINT D, const UINT method_order,
         const UINT pade_degree)
 {
@@ -411,7 +468,7 @@ UINT akns_fscatter_pade_numel(const UINT D, const UINT method_order,
 
     if (D == 0 || degree == 0)
         return 0;
-    return poly_fmult2x2_numel(degree, D);
+    return checked_numel(D, degree, 4);
 }
 
 UINT akns_fscatter_pade_den_numel(const UINT D, const UINT method_order,
@@ -421,7 +478,7 @@ UINT akns_fscatter_pade_den_numel(const UINT D, const UINT method_order,
 
     if (D == 0 || degree == 0)
         return 0;
-    return poly_fmult_numel(degree, D);
+    return checked_numel(D, degree, 1);
 }
 
 INT akns_fscatter_pade(const UINT D, COMPLEX const * const q,
@@ -432,13 +489,13 @@ INT akns_fscatter_pade(const UINT D, COMPLEX const * const q,
         INT * const denominator_exponent)
 {
     const UINT degree = local_degree(method_order, pade_degree);
-    UINT matrix_numel, i, j, component;
+    UINT matrix_numel, denominator_numel, i, j, component;
     COMPLEX *local_matrices = NULL;
     COMPLEX local_numerator[4][LOCAL_MAX_DEGREE + 1];
     COMPLEX local_denominator[LOCAL_MAX_DEGREE + 1];
     INT ret_code;
 
-    if (D < 5 || D > INT_MAX)
+    if (D < (method_order == 8 ? 7U : 5U) || D > INT_MAX)
         return E_INVALID_ARGUMENT(D);
     if (q == NULL)
         return E_INVALID_ARGUMENT(q);
@@ -454,14 +511,18 @@ INT akns_fscatter_pade(const UINT D, COMPLEX const * const q,
             || denominator == NULL || denominator_degree == NULL)
         return E_INVALID_ARGUMENT(numerator);
 
-    matrix_numel = poly_fmult2x2_numel(degree, D);
+    matrix_numel = akns_fscatter_pade_numel(D, method_order, pade_degree);
+    denominator_numel = akns_fscatter_pade_den_numel(D, method_order,
+            pade_degree);
+    if (matrix_numel == 0 || denominator_numel == 0)
+        return E_INVALID_ARGUMENT(D);
     local_matrices = malloc(matrix_numel*sizeof(COMPLEX));
     if (local_matrices == NULL)
         return E_NOMEM;
 
     for (i = 0; i < matrix_numel; i++)
         local_matrices[i] = 0.0;
-    for (i = 0; i < poly_fmult_numel(degree, D); i++)
+    for (i = 0; i < denominator_numel; i++)
         denominator[i] = 0.0;
 
     for (i = 0; i < D; i++) {

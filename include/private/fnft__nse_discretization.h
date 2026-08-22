@@ -59,6 +59,10 @@ FNFT_INT fnft__nse_discretization_is_pade(
 FNFT_UINT fnft__nse_discretization_pade_degree(
         fnft_nse_discretization_t discretization, FNFT_UINT requested_degree);
 
+/** Returns the convergence order after resolving the Padé degree. */
+FNFT_UINT fnft__nse_discretization_effective_order(
+        fnft_nse_discretization_t discretization, FNFT_UINT requested_degree);
+
 /** Resolves and validates the scale of the Padé linear fractional map. */
 FNFT_REAL fnft__nse_discretization_pade_h(
         fnft_nse_discretization_t discretization, FNFT_UINT pade_degree,
@@ -108,8 +112,10 @@ FNFT_UINT fnft__nse_discretization_upsampling_factor(fnft_nse_discretization_t d
  * @brief This routine returns the order of the method based on the
  * discretization.
  *
- * Different numerical methods have different orders of accuray. This routine returns
- * the order of the order based on the discretization of type \link fnft_nse_discretization_t \endlink.
+ * Different numerical methods have different orders of accuray. For a Padé
+ * family, this routine returns the order of the underlying exponential method;
+ * use \link fnft__nse_discretization_effective_order \endlink when the Padé
+ * degree can reduce the convergence order.
  * When the step-size of the signal samples is reduced by a factor \f$s\f$, the error in the
  * computed values is expected to decrease by a factor \f$s^{order}\f$.
  * @param[in] discretization The type of discretization to be used. Should be
@@ -323,6 +329,7 @@ FNFT_INT fnft__nse_discretization_method_weights(FNFT_COMPLEX **qr_weights_ptr,
 #define nse_discretization_degree(...) fnft__nse_discretization_degree(__VA_ARGS__)
 #define nse_discretization_is_pade(...) fnft__nse_discretization_is_pade(__VA_ARGS__)
 #define nse_discretization_pade_degree(...) fnft__nse_discretization_pade_degree(__VA_ARGS__)
+#define nse_discretization_effective_order(...) fnft__nse_discretization_effective_order(__VA_ARGS__)
 #define nse_discretization_pade_h(...) fnft__nse_discretization_pade_h(__VA_ARGS__)
 #define nse_discretization_pade_lambda_to_z(...) fnft__nse_discretization_pade_lambda_to_z(__VA_ARGS__)
 #define nse_discretization_pade_z_to_lambda(...) fnft__nse_discretization_pade_z_to_lambda(__VA_ARGS__)

@@ -76,6 +76,13 @@ Please follow the instructions in the file [INSTALL.md](INSTALL.md).
 
 Please read the file [Getting-Started.md](Getting-Started.md).
 
+The direct-Cayley `FES8_PADE` discretization is included as a
+continuous-spectrum reference implementation. Its global power-basis
+polynomials can become ill-conditioned on fine grids, as discussed in the
+cited arXiv preprint. Discrete-spectrum requests are therefore rejected; the
+Chebyshev representation described in the preprint is intended to provide the
+practical high-grid formulation in a separate contribution.
+
 ## Community Guidelines
 
 Please use the [issue tracker](https://github.com/FastNFT/FNFT/issues) to report any problems with the software. If you want to contribute to the development of FNFT, please [email](mailto:s.wahls##at##tudelft.nl) Sander Wahls.

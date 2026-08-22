@@ -62,6 +62,13 @@ INT main(void)
         ret_code = run_case(nse_discretization_FES6_PADE, 4,
                 normalization_flag);
         CHECK_RETCODE(ret_code, leave_fun);
+        ret_code = run_case(nse_discretization_FES8_PADE, 3,
+                normalization_flag);
+        if (ret_code == SUCCESS) {
+            ret_code = E_TEST_FAILED;
+            goto leave_fun;
+        }
+        ret_code = SUCCESS;
     }
 
 leave_fun:

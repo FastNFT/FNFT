@@ -64,7 +64,15 @@
  * Padé Schemes Based on Chebyshev Polynomials for the Direct
  * Zakharov-Shabat Problem,&quot;</a> arXiv:2608.11892v1 [math.NA], preprint
  * (2026).\n
- * All above discretizations are supported by \link fnft__akns_scatter.h \endlink.\n 
+ * `fnft__akns_discretization_FES8_PADE` denotes its direct Cayley fast Padé
+ * family with degrees 3--7. The local numerator and denominator degrees are
+ * 10 times the Padé degree. The degree-3 method has order six; degrees 4--7
+ * have order eight. Its global power-basis representation is intended for
+ * continuous-spectrum reference calculations and can become ill-conditioned
+ * on fine grids.\n
+ * All above discretizations except `fnft__akns_discretization_FES8_PADE` are
+ * supported by \link fnft__akns_scatter.h \endlink. The direct Cayley family
+ * is handled by \link fnft__akns_fscatter_pade.h \endlink.\n
  * The exponential spliting schemes, defined in
  * Prins and Wahls, <a href="https://doi.org/10.1109/ICASSP.2018.8461708">&quot;
  * Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot;
@@ -120,9 +128,12 @@
  * `fnft__akns_discretization_CT4`: Non-polynomial slow method, order of accuracy = 4\n
  * `fnft__akns_discretization_ES6`: Non-polynomial slow method, order of accuracy = 6\n
  * `fnft__akns_discretization_ES8`: Non-polynomial slow method, order of accuracy = 8\n
+ * `fnft__akns_discretization_FES8_PADE`: Direct Cayley fast Padé family, degree = 30 by default, order of accuracy = 6 for Padé degree 3 and 8 for degrees 4--7\n
  *
- * Used in \link fnft__akns_fscatter.h \endlink and
- * \link fnft__akns_scatter.h \endlink.
+ * The generic discretizations are used in \link fnft__akns_fscatter.h
+ * \endlink and \link fnft__akns_scatter.h \endlink. The
+ * `fnft__akns_discretization_FES8_PADE` enumerator is used only in
+ * \link fnft__akns_fscatter_pade.h \endlink.
  *
  * @ingroup data_types
  */
@@ -161,7 +172,8 @@ typedef enum {
 	fnft__akns_discretization_FTES4_suzuki,
 	fnft__akns_discretization_CT4,
 	fnft__akns_discretization_ES6,
-	fnft__akns_discretization_ES8
+	fnft__akns_discretization_ES8,
+	fnft__akns_discretization_FES8_PADE
 } fnft__akns_discretization_t;
 
 /**
@@ -212,6 +224,7 @@ typedef enum {
 #define akns_discretization_CT4 fnft__akns_discretization_CT4
 #define akns_discretization_ES6 fnft__akns_discretization_ES6
 #define akns_discretization_ES8 fnft__akns_discretization_ES8
+#define akns_discretization_FES8_PADE fnft__akns_discretization_FES8_PADE
 #define akns_discretization_FTES4_4A fnft__akns_discretization_FTES4_4A
 #define akns_discretization_FTES4_4B fnft__akns_discretization_FTES4_4B
 #define akns_discretization_4SPLIT6B fnft__akns_discretization_4SPLIT6B

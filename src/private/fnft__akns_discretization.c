@@ -63,6 +63,8 @@ UINT fnft__akns_discretization_degree(akns_discretization_t
             return 15;
         case akns_discretization_2SPLIT8A:
             return 24;
+        case akns_discretization_FES8_PADE:
+            return 30;
         case akns_discretization_2SPLIT7A:
         case akns_discretization_2SPLIT7B:
             return 105;
@@ -110,6 +112,7 @@ REAL fnft__akns_discretization_boundary_coeff(akns_discretization_t discretizati
         case akns_discretization_CT4:
         case akns_discretization_ES6:
         case akns_discretization_ES8:
+        case akns_discretization_FES8_PADE:
         case akns_discretization_FTES4_4A:
         case akns_discretization_FTES4_4B:
         case akns_discretization_FTES4_suzuki:
@@ -150,6 +153,7 @@ UINT fnft__akns_discretization_upsampling_factor(akns_discretization_t discretiz
         case akns_discretization_FTES4_4A:
         case akns_discretization_FTES4_4B:
         case akns_discretization_FTES4_suzuki:
+        case akns_discretization_FES8_PADE:
             return 1;
         case akns_discretization_4SPLIT4A:
         case akns_discretization_4SPLIT4B:
@@ -217,6 +221,7 @@ UINT fnft__akns_discretization_method_order(akns_discretization_t discretization
         case akns_discretization_ES6:
             return 6;
         case akns_discretization_ES8:
+        case akns_discretization_FES8_PADE:
             return 8;
             
         default: // Unknown discretization

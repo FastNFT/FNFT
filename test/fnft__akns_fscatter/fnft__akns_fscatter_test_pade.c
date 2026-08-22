@@ -18,7 +18,9 @@
  */
 
 #include "fnft__akns_fscatter_pade.h"
+#include "fnft__akns_discretization.h"
 
+#include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -108,7 +110,7 @@ static matrix_t direct_z(const FNFT_UINT D, const FNFT_UINT index,
         matrix_add_scaled(&result, &d2, 1.0/24.0);
         term = matrix_commutator(&d1, &a0);
         matrix_add_scaled(&result, &term, 1.0/12.0);
-    } else {
+    } else if (method_order == 6) {
         matrix_t d1_low, d2_low, d3, d4, t1, t2, a0_squared, a0_cubed;
 
         d1 = derivative_matrix(eps_t*(-q[ip2] + 8.0*q[ip1]
@@ -155,6 +157,45 @@ static matrix_t direct_z(const FNFT_UINT D, const FNFT_UINT index,
         t2 = matrix_multiply(&t1, &a0);
         term = matrix_commutator(&t2, &a0);
         matrix_add_scaled(&result, &term, 1.0/240.0);
+    } else {
+        /* The slow ES8 tests independently verify these shared paper
+         * coefficients. Here the independent Padé matrix formula verifies
+         * their conversion to the global Cayley rational polynomial. */
+        const FNFT_UINT im3 = (index + D - 3) % D;
+        const FNFT_UINT ip3 = (index + 3) % D;
+        const FNFT_COMPLEX q_samples[7] = {
+            q[im3], q[im2], q[im1], q[index], q[ip1], q[ip2], q[ip3]
+        };
+        const FNFT_COMPLEX r_samples[7] = {
+            r[im3], r[im2], r[im1], r[index], r[ip1], r[ip2], r[ip3]
+        };
+        fnft__akns_es8_stencil_t qs, rs;
+        FNFT_COMPLEX q_values[7], r_values[7], coefficients[24];
+        const FNFT_COMPLEX x = eps_t*lambda;
+        FNFT_UINT i, j;
+
+        fnft__akns_es8_stencil(q_samples, eps_t, &qs);
+        fnft__akns_es8_stencil(r_samples, eps_t, &rs);
+        q_values[0] = qs.value;
+        q_values[1] = qs.first;
+        q_values[2] = qs.second;
+        q_values[3] = qs.third;
+        q_values[4] = qs.fourth;
+        q_values[5] = qs.fifth;
+        q_values[6] = qs.sixth;
+        r_values[0] = rs.value;
+        r_values[1] = rs.first;
+        r_values[2] = rs.second;
+        r_values[3] = rs.third;
+        r_values[4] = rs.fourth;
+        r_values[5] = rs.fifth;
+        r_values[6] = rs.sixth;
+        fnft__akns_es8_z_coefficients(q_values, r_values, coefficients);
+        result = matrix_zero();
+        for (i = 0; i < 4; i++) {
+            for (j = 6; j-- > 0; )
+                result.entry[i] = result.entry[i]*x + coefficients[4*j + i];
+        }
     }
     return result;
 }
@@ -203,15 +244,17 @@ static FNFT_COMPLEX evaluate_polynomial(FNFT_COMPLEX const * const p,
 static int run_case(const FNFT_UINT method_order, const FNFT_UINT pade_degree,
         const FNFT_INT kappa, const FNFT_INT normalization_flag)
 {
-    const FNFT_UINT D = 5;
+    const FNFT_UINT D = method_order == 8 ? 7 : 5;
     const FNFT_REAL eps_t = 0.07;
-    const FNFT_REAL h = method_order == 4 ? 5.0 : 11.0;
+    const FNFT_REAL h = method_order == 4 ? 5.0
+            : (method_order == 6 ? 11.0 : 14.9);
     const FNFT_COMPLEX lambda = 0.63 + 0.17*I;
-    const FNFT_COMPLEX q[5] = {
+    FNFT_COMPLEX q[7] = {
         0.31 + 0.08*I, -0.17 + 0.23*I, 0.42 - 0.19*I,
-        -0.28 - 0.11*I, 0.09 + 0.37*I
+        -0.28 - 0.11*I, 0.09 + 0.37*I, 0.16 - 0.29*I,
+        -0.23 + 0.04*I
     };
-    FNFT_COMPLEX r[5];
+    FNFT_COMPLEX r[7];
     FNFT_COMPLEX *numerator;
     FNFT_COMPLEX *denominator;
     FNFT_UINT numerator_degree, denominator_degree, i, component;
@@ -229,6 +272,10 @@ static int run_case(const FNFT_UINT method_order, const FNFT_UINT pade_degree,
     if (numerator == NULL || denominator == NULL)
         return EXIT_FAILURE;
 
+    if (method_order == 8) {
+        for (i = 0; i < D; i++)
+            q[i] = 0.18 + 0.07*FNFT_CEXP(6.2831853071795864769*I*i/D);
+    }
     for (i = 0; i < D; i++)
         r[i] = -(FNFT_REAL)kappa*FNFT_CONJ(q[i]);
 
@@ -267,6 +314,13 @@ static int run_case(const FNFT_UINT method_order, const FNFT_UINT pade_degree,
         fprintf(stderr, "Padé mismatch: order=%lu degree=%lu kappa=%d norm=%d error=%.3e\n",
                 (unsigned long)method_order, (unsigned long)pade_degree,
                 (int)kappa, (int)normalization_flag, error);
+        for (component = 0; component < 4; component++)
+            fprintf(stderr, "  %lu computed=(%.17g,%.17g) direct=(%.17g,%.17g)\n",
+                    (unsigned long)component,
+                    FNFT_CREAL(computed.entry[component]),
+                    FNFT_CIMAG(computed.entry[component]),
+                    FNFT_CREAL(direct.entry[component]),
+                    FNFT_CIMAG(direct.entry[component]));
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
@@ -312,15 +366,41 @@ static int run_zero_case(const FNFT_INT normalization_flag)
     return EXIT_SUCCESS;
 }
 
+static int test_invalid_es8_arguments(void)
+{
+    const FNFT_COMPLEX q[7] = {0.0}, r[7] = {0.0};
+    FNFT_COMPLEX numerator[4*71*8], denominator[71*8];
+    FNFT_UINT numerator_degree, denominator_degree;
+
+    if (fnft__akns_fscatter_pade(7, q, r, 0.1, 8, 2, 14.9,
+                numerator, &numerator_degree, NULL, denominator,
+                &denominator_degree, NULL) == FNFT_SUCCESS
+            || fnft__akns_fscatter_pade(7, q, r, 0.1, 8, 8, 14.9,
+                numerator, &numerator_degree, NULL, denominator,
+                &denominator_degree, NULL) == FNFT_SUCCESS
+            || fnft__akns_fscatter_pade(6, q, r, 0.1, 8, 3, 14.9,
+                numerator, &numerator_degree, NULL, denominator,
+                &denominator_degree, NULL) == FNFT_SUCCESS
+            || fnft__akns_fscatter_pade(7, q, r, 0.1, 8, 3, 0.0,
+                numerator, &numerator_degree, NULL, denominator,
+                &denominator_degree, NULL) == FNFT_SUCCESS
+            || fnft__akns_fscatter_pade_numel(UINT_MAX, 8, 3) != 0
+            || fnft__akns_fscatter_pade_den_numel(UINT_MAX, 8, 3) != 0)
+        return EXIT_FAILURE;
+    return EXIT_SUCCESS;
+}
+
 int main(void)
 {
     static const FNFT_UINT fourth_degrees[] = {2, 3, 4, 7};
     static const FNFT_UINT sixth_degrees[] = {3, 4, 7};
+    static const FNFT_UINT eighth_degrees[] = {3, 4, 5, 6, 7};
     FNFT_UINT i;
     FNFT_INT kappa, normalization_flag;
 
     if (run_zero_case(0) != EXIT_SUCCESS
-            || run_zero_case(1) != EXIT_SUCCESS)
+            || run_zero_case(1) != EXIT_SUCCESS
+            || test_invalid_es8_arguments() != EXIT_SUCCESS)
         return EXIT_FAILURE;
 
     for (normalization_flag = 0; normalization_flag <= 1; normalization_flag++) {
@@ -332,6 +412,11 @@ int main(void)
             }
             for (i = 0; i < sizeof(sixth_degrees)/sizeof(sixth_degrees[0]); i++) {
                 if (run_case(6, sixth_degrees[i], kappa,
+                            normalization_flag) != EXIT_SUCCESS)
+                    return EXIT_FAILURE;
+            }
+            for (i = 0; i < sizeof(eighth_degrees)/sizeof(eighth_degrees[0]); i++) {
+                if (run_case(8, eighth_degrees[i], kappa,
                             normalization_flag) != EXIT_SUCCESS)
                     return EXIT_FAILURE;
             }

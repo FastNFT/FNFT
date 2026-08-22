@@ -211,9 +211,11 @@ typedef enum {
  *  bounding_box[2] <= imag(lambda) <= bounding_box[3] \n
  *
  * @var fnft_nsev_opts_t::pade_degree
- *  Degree of the diagonal Padé approximant for FES4_PADE and FES6_PADE.
- *  Zero selects the family default (2 for FES4, 3 for FES6). FES4 accepts
- *  degrees 2 through 7; FES6 accepts degrees 3 through 7.
+ *  Degree of the diagonal Padé approximant for FES4_PADE, FES6_PADE and
+ *  FES8_PADE. Zero selects the family default (2 for FES4, 3 for FES6 and
+ *  FES8). FES4 accepts degrees 2 through 7; FES6 and FES8 accept degrees 3
+ *  through 7. For FES8, degree 3 has order six and degrees 4--7 have order
+ *  eight; the cited preprint reports numerical experiments for degrees 3--6.
  *
  * @var fnft_nsev_opts_t::pade_h
  *  Positive scale \f$h\f$ of the map
@@ -223,7 +225,11 @@ typedef enum {
  *  J. Comput. Phys. article. For compatibility with the original
  *  implementation, FES6 degrees 5--7 use 19.4, 23.2 and 26.9, while FES4
  *  degrees 2--7 use \f$\sqrt{12}\f$, 4.9, 5, 7.5, 9.34 and 9.34. A positive
- *  value overrides these defaults.
+ *  value overrides these defaults. FES8 degrees 3--7 use the direct-Cayley
+ *  implementation values 14.9, 19.4, 20.5, 21.1 and 21.8. The global
+ *  power-basis representation of direct-Cayley FES8 can be ill-conditioned
+ *  on fine grids; it is provided as a continuous-spectrum reference variant.
+ *  Discrete-spectrum output is not supported for FES8_PADE.
  */
 typedef struct {
     fnft_nsev_bsfilt_t bound_state_filtering;
@@ -332,6 +338,12 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *       - fnft_nse_discretization_FTES4_suzuki
  *       - fnft_nse_discretization_FES4_PADE
  *       - fnft_nse_discretization_FES6_PADE
+ *       - fnft_nse_discretization_FES8_PADE
+ *
+ *  FES8_PADE is a direct-Cayley reference implementation for the continuous
+ *  spectrum. Its global power-basis representation can lose accuracy as the
+ *  polynomial degree grows, and requests for bound states, norming constants
+ *  or residues are rejected.
  *
  * The following discretizations use classical algorithms which have a computational
  * complexity of \f$ \mathcal{O}(D^2)\f$ for \f$ D\f$ point continuous spectrum given \f$ D\f$ samples:

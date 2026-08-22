@@ -32,7 +32,7 @@
  * @brief Number of elements required for the numerator matrix buffer.
  *
  * @param[in] D Number of samples.
- * @param[in] method_order Order of the exponential scheme (4 or 6).
+ * @param[in] method_order Order of the exponential scheme (4, 6 or 8).
  * @param[in] pade_degree Degree of the diagonal Padé approximant.
  * @returns Required number of complex elements, or zero for invalid options.
  */
@@ -43,7 +43,7 @@ FNFT_UINT fnft__akns_fscatter_pade_numel(FNFT_UINT D,
  * @brief Number of elements required for the scalar denominator buffer.
  *
  * @param[in] D Number of samples.
- * @param[in] method_order Order of the exponential scheme (4 or 6).
+ * @param[in] method_order Order of the exponential scheme (4, 6 or 8).
  * @param[in] pade_degree Degree of the diagonal Padé approximant.
  * @returns Required number of complex elements, or zero for invalid options.
  */
@@ -52,7 +52,7 @@ FNFT_UINT fnft__akns_fscatter_pade_den_numel(FNFT_UINT D,
 
 /**
  * @brief Computes the rational polynomial scattering matrix for a diagonal
- * Padé approximation of a fourth- or sixth-order exponential scheme.
+ * Padé approximation of a fourth-, sixth- or eighth-order exponential scheme.
  *
  * The returned approximation is numerator(w)/denominator(w), where
  * w=(ih-eps_t*lambda)/(ih+eps_t*lambda). The diagonal Padé coefficients are
@@ -63,7 +63,7 @@ FNFT_UINT fnft__akns_fscatter_pade_den_numel(FNFT_UINT D,
  * @param[in] q Potential samples.
  * @param[in] r Auxiliary potential samples.
  * @param[in] eps_t Sampling step size.
- * @param[in] method_order Order of the exponential scheme (4 or 6).
+ * @param[in] method_order Order of the exponential scheme (4, 6 or 8).
  * @param[in] pade_degree Degree of the diagonal Padé approximant.
  * @param[in] h Positive scale of the linear fractional map.
  * @param[out] numerator Numerator matrix polynomial buffer.

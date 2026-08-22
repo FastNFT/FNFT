@@ -99,6 +99,19 @@
  * 448, 110764 (2022). Their Padé degree and
  * linear-fractional-map scale are selected through the corresponding options
  * structure.\n
+ * `fnft_nse_discretization_FES8_PADE` is the direct Cayley fast variant of
+ * the eighth-order exponential scheme from S. Medvedev, I. Chekhovskoy,
+ * I. Vaseva and M. Fedoruk,
+ * <a href="https://doi.org/10.48550/arXiv.2608.11892">&quot;Fast Eighth-Order
+ * Padé Schemes Based on Chebyshev Polynomials for the Direct Zakharov-Shabat
+ * Problem,&quot;</a> arXiv:2608.11892v1 [math.NA], preprint (2026). The article
+ * reports continuous-spectrum experiments for Padé degrees 3--6 and finds
+ * the direct Cayley variants less accurate than the slow and Chebyshev-based
+ * variants. In particular, evaluation of the high-degree global power-basis
+ * polynomials can become ill-conditioned as the grid is refined. This direct
+ * reference variant is therefore limited to the continuous spectrum; the
+ * Chebyshev representation is the practical high-grid variant. Degree 7 is
+ * provided by the same general Padé mechanism.\n
  * `-2S` is from G. Strang,<a href="https://link.springer.com/content/pdf/10.1007/BF00281235.pdf">&quot;
  * Accurate partial difference methods I: Linear Cauchy problems,&quot;</a> 
  * in Archive for Rational Mechanics and Analysis, 12(1), 392-402, Jan 1963. It is also
@@ -140,6 +153,7 @@
  * `fnft_nse_discretization_CT4`: Non-polynomial slow method, order of accuracy = 4\n
  * `fnft_nse_discretization_ES6`: Non-polynomial slow method, order of accuracy = 6\n
  * `fnft_nse_discretization_ES8`: Non-polynomial slow method, order of accuracy = 8\n
+ * `fnft_nse_discretization_FES8_PADE`: Eighth-order base method, Padé degree = 3--7, polynomial degree = 10 times the Padé degree, order of accuracy = 6 for degree 3 and 8 for degrees 4--7\n
  *
  * Used in \link fnft_nsev_opts_t \endlink, \link fnft_nsep_opts_t \endlink
  *  and \link fnft_nsev_inverse_opts_t \endlink.
@@ -182,7 +196,8 @@ typedef enum {
     fnft_nse_discretization_FES6_PADE,
     fnft_nse_discretization_CT4,
     fnft_nse_discretization_ES6,
-    fnft_nse_discretization_ES8
+    fnft_nse_discretization_ES8,
+    fnft_nse_discretization_FES8_PADE
 } fnft_nse_discretization_t;
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
@@ -223,6 +238,7 @@ typedef enum {
 #define nse_discretization_FTES4_suzuki fnft_nse_discretization_FTES4_suzuki
 #define nse_discretization_FES4_PADE fnft_nse_discretization_FES4_PADE
 #define nse_discretization_FES6_PADE fnft_nse_discretization_FES6_PADE
+#define nse_discretization_FES8_PADE fnft_nse_discretization_FES8_PADE
 
 
 #endif

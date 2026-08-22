@@ -27,6 +27,8 @@
 #include "fnft_nsev.h"
 #include "fnft__akns_fscatter_pade.h"
 
+#include <limits.h>
+
 static fnft_nsev_opts_t default_opts = {
     .bound_state_filtering = nsev_bsfilt_FULL,
     .bound_state_localization = nsev_bsloc_SUBSAMPLE_AND_REFINE,
@@ -74,9 +76,16 @@ UINT fnft_nsev_max_K(const UINT D, fnft_nsev_opts_t const * const opts)
                 opts->discretization, opts->pade_degree);
         const UINT method_order = nse_discretization_method_order(
                 opts->discretization);
+        UINT local_degree;
+
+        if (opts->discretization == nse_discretization_FES8_PADE)
+            return 0;
         if (pade_degree == 0)
             return 0;
-        return (method_order == 4 ? 2*pade_degree : 6*pade_degree)*D;
+        local_degree = method_order == 4 ? 2*pade_degree
+                : (method_order == 6 ? 6*pade_degree
+                : 10*pade_degree);
+        return D <= UINT_MAX/local_degree ? local_degree*D : 0;
     } else if (opts != NULL)
         return nse_discretization_degree(opts->discretization) * D;
     else
@@ -225,6 +234,10 @@ INT fnft_nsev(
     if (opts == NULL)
         opts = &default_opts;
 
+    if (opts->discretization == nse_discretization_FES8_PADE
+            && (bound_states != NULL || normconsts_or_residues != NULL))
+        return E_INVALID_ARGUMENT(opts->discretization);
+
     // This switch checks for incompatible bound_state_localization options
     switch (opts->discretization) {
         case nse_discretization_2SPLIT2_MODAL:
@@ -253,6 +266,7 @@ INT fnft_nsev(
         case nse_discretization_FTES4_suzuki:
         case nse_discretization_FES4_PADE:
         case nse_discretization_FES6_PADE:
+        case nse_discretization_FES8_PADE:
             break;
         case nse_discretization_BO:
         case nse_discretization_CF4_2:
@@ -418,7 +432,8 @@ INT fnft_nsev(
                 bound_states_sub[i] = bound_states[i];
         }
         UINT method_order;
-        method_order = nse_discretization_method_order(opts->discretization);
+        method_order = nse_discretization_effective_order(
+                opts->discretization, opts->pade_degree);
         if (method_order == 0){
             ret_code =  E_INVALID_ARGUMENT(discretization);
             goto leave_fun;

@@ -135,6 +135,9 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
         return E_NOT_YET_IMPLEMENTED(sheet_indices, Pass sheet_indices="NULL".);
     if (opts_ptr == NULL)
         opts_ptr = &default_opts;
+    if (opts_ptr->discretization == nse_discretization_FES8_PADE)
+        return E_NOT_YET_IMPLEMENTED(opts_ptr->discretization,
+                Use fnft_nsev for the continuous spectrum.);
     if (nse_discretization_is_pade(opts_ptr->discretization)
             && opts_ptr->localization != fnft_nsep_loc_GRIDSEARCH)
         return E_INVALID_ARGUMENT(opts_ptr->localization);
