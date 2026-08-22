@@ -17,6 +17,7 @@
  * Sander Wahls (TU Delft) 2017.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Peter J. Prins (TU Delft) 2021.
+ * Igor Chekhovskoy 2026.
  */
 
 /**
@@ -49,6 +50,27 @@
  */
 FNFT_UINT fnft__nse_discretization_degree(fnft_nse_discretization_t
         nse_discretization);
+
+/** Returns whether a discretization is one of the rational Padé families. */
+FNFT_INT fnft__nse_discretization_is_pade(
+        fnft_nse_discretization_t discretization);
+
+/** Resolves and validates a requested Padé degree. */
+FNFT_UINT fnft__nse_discretization_pade_degree(
+        fnft_nse_discretization_t discretization, FNFT_UINT requested_degree);
+
+/** Resolves and validates the scale of the Padé linear fractional map. */
+FNFT_REAL fnft__nse_discretization_pade_h(
+        fnft_nse_discretization_t discretization, FNFT_UINT pade_degree,
+        FNFT_REAL requested_h);
+
+/** Maps spectral parameters to the Padé polynomial variable. */
+FNFT_INT fnft__nse_discretization_pade_lambda_to_z(FNFT_UINT n,
+        FNFT_REAL eps_t, FNFT_COMPLEX *vals, FNFT_REAL h);
+
+/** Maps the Padé polynomial variable back to spectral parameters. */
+FNFT_INT fnft__nse_discretization_pade_z_to_lambda(FNFT_UINT n,
+        FNFT_REAL eps_t, FNFT_COMPLEX *vals, FNFT_REAL h);
 
 /**
  * @brief This routine returns the boundary coefficient based on the
@@ -299,6 +321,11 @@ FNFT_INT fnft__nse_discretization_method_weights(FNFT_COMPLEX **qr_weights_ptr,
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define nse_discretization_degree(...) fnft__nse_discretization_degree(__VA_ARGS__)
+#define nse_discretization_is_pade(...) fnft__nse_discretization_is_pade(__VA_ARGS__)
+#define nse_discretization_pade_degree(...) fnft__nse_discretization_pade_degree(__VA_ARGS__)
+#define nse_discretization_pade_h(...) fnft__nse_discretization_pade_h(__VA_ARGS__)
+#define nse_discretization_pade_lambda_to_z(...) fnft__nse_discretization_pade_lambda_to_z(__VA_ARGS__)
+#define nse_discretization_pade_z_to_lambda(...) fnft__nse_discretization_pade_z_to_lambda(__VA_ARGS__)
 #define nse_discretization_boundary_coeff(...) fnft__nse_discretization_boundary_coeff(__VA_ARGS__)
 #define nse_discretization_to_akns_discretization(...) fnft__nse_discretization_to_akns_discretization(__VA_ARGS__)
 #define nse_discretization_upsampling_factor(...) fnft__nse_discretization_upsampling_factor(__VA_ARGS__)

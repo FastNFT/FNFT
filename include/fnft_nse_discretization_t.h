@@ -72,6 +72,15 @@
  * <a href="https://doi.org/10.1364/OL.387436">&quot;Conservative multi-exponential scheme
  * for solving the direct Zakharov-Shabat scattering problem,&quot;</a> Optics Letters 45(7),
  * 2082-2085 (2020).\n
+ * `fnft_nse_discretization_FES4_PADE` and `fnft_nse_discretization_FES6_PADE`
+ * are fast fourth- and sixth-order exponential schemes based on diagonal Padé
+ * approximants from S. Medvedev, I. Chekhovskoy, I. Vaseva and M. Fedoruk,
+ * <a href="https://doi.org/10.1016/j.jcp.2021.110764">&quot;Fast sixth-order
+ * algorithm based on the generalized Cayley transform for the Zakharov-Shabat
+ * system associated with nonlinear Schrodinger equation,&quot;</a> J. Comput. Phys.
+ * 448, 110764 (2022). Their Padé degree and
+ * linear-fractional-map scale are selected through the corresponding options
+ * structure.\n
  * `-2S` is from G. Strang,<a href="https://link.springer.com/content/pdf/10.1007/BF00281235.pdf">&quot;
  * Accurate partial difference methods I: Linear Cauchy problems,&quot;</a> 
  * in Archive for Rational Mechanics and Analysis, 12(1), 392-402, Jan 1963. It is also
@@ -108,6 +117,8 @@
  * `fnft_nse_discretization_FTES4_4A`: Order of base method = 4, Degree = 4, Order of accuracy of splitting-scheme = 4\n
  * `fnft_nse_discretization_FTES4_4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4\n
  * `fnft_nse_discretization_FTES4_suzuki`: Order of base method = 4, Degree = 7, Order of accuracy of splitting-scheme = 4
+ * `fnft_nse_discretization_FES4_PADE`: Order of base method = 4, Padé degree = 2--7, Order of accuracy = 4\n
+ * `fnft_nse_discretization_FES6_PADE`: Order of base method = 6, Padé degree = 3--7, Order of accuracy = 6
  *
  * Used in \link fnft_nsev_opts_t \endlink, \link fnft_nsep_opts_t \endlink
  *  and \link fnft_nsev_inverse_opts_t \endlink.
@@ -145,7 +156,9 @@ typedef enum {
     fnft_nse_discretization_TES4,
     fnft_nse_discretization_FTES4_4A,
     fnft_nse_discretization_FTES4_4B,
-    fnft_nse_discretization_FTES4_suzuki
+    fnft_nse_discretization_FTES4_suzuki,
+    fnft_nse_discretization_FES4_PADE,
+    fnft_nse_discretization_FES6_PADE
 } fnft_nse_discretization_t;
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
@@ -181,6 +194,8 @@ typedef enum {
 #define nse_discretization_FTES4_4A fnft_nse_discretization_FTES4_4A
 #define nse_discretization_FTES4_4B fnft_nse_discretization_FTES4_4B
 #define nse_discretization_FTES4_suzuki fnft_nse_discretization_FTES4_suzuki
+#define nse_discretization_FES4_PADE fnft_nse_discretization_FES4_PADE
+#define nse_discretization_FES6_PADE fnft_nse_discretization_FES6_PADE
 
 
 #endif

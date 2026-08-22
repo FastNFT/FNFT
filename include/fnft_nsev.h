@@ -209,6 +209,21 @@ typedef enum {
  *  manual filtering: \n
  *  bounding_box[0] <= real(lambda) <= bounding_box[1] \n
  *  bounding_box[2] <= imag(lambda) <= bounding_box[3] \n
+ *
+ * @var fnft_nsev_opts_t::pade_degree
+ *  Degree of the diagonal Padé approximant for FES4_PADE and FES6_PADE.
+ *  Zero selects the family default (2 for FES4, 3 for FES6). FES4 accepts
+ *  degrees 2 through 7; FES6 accepts degrees 3 through 7.
+ *
+ * @var fnft_nsev_opts_t::pade_h
+ *  Positive scale \f$h\f$ of the map
+ *  \f$w=(ih-\epsilon_t\lambda)/(ih+\epsilon_t\lambda)\f$ used by the Padé
+ *  schemes. Zero selects a degree-specific default. For FES6, degrees 3 and
+ *  4 use the empirically optimized values 11 and 15 reported in the cited
+ *  J. Comput. Phys. article. For compatibility with the original
+ *  implementation, FES6 degrees 5--7 use 19.4, 23.2 and 26.9, while FES4
+ *  degrees 2--7 use \f$\sqrt{12}\f$, 4.9, 5, 7.5, 9.34 and 9.34. A positive
+ *  value overrides these defaults.
  */
 typedef struct {
     fnft_nsev_bsfilt_t bound_state_filtering;
@@ -222,6 +237,8 @@ typedef struct {
     fnft_nse_discretization_t discretization;
     FNFT_UINT richardson_extrapolation_flag;
     FNFT_REAL bounding_box[4];
+    FNFT_UINT pade_degree;
+    FNFT_REAL pade_h;
 } fnft_nsev_opts_t;
 
 /**
@@ -239,6 +256,8 @@ typedef struct {
  *  discretization = fnft_nse_discretization_2SPLIT4B\n
  *  richardson_extrapolation_flag = 0\n
  *  bounding_box = {NAN, NAN, NAN, NAN}\n
+ *  pade_degree = 0\n
+ *  pade_h = 0.0\n
  *
  * @ingroup fnft
  */
@@ -311,6 +330,8 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *       - fnft_nse_discretization_FTES4_4A
  *       - fnft_nse_discretization_FTES4_4B
  *       - fnft_nse_discretization_FTES4_suzuki
+ *       - fnft_nse_discretization_FES4_PADE
+ *       - fnft_nse_discretization_FES6_PADE
  *
  * The following discretizations use classical algorithms which have a computational
  * complexity of \f$ \mathcal{O}(D^2)\f$ for \f$ D\f$ point continuous spectrum given \f$ D\f$ samples:

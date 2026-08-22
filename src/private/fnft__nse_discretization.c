@@ -34,11 +34,105 @@ UINT fnft__nse_discretization_degree(nse_discretization_t
     akns_discretization_t akns_discretization = 0;
     INT ret_code;
     UINT degree1step = 0;
+    if (nse_discretization == nse_discretization_FES4_PADE)
+        return 4;
+    if (nse_discretization == nse_discretization_FES6_PADE)
+        return 18;
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
     degree1step = akns_discretization_degree(akns_discretization);
     leave_fun:
         return degree1step;
+}
+
+INT fnft__nse_discretization_is_pade(
+        const nse_discretization_t discretization)
+{
+    return discretization == nse_discretization_FES4_PADE
+            || discretization == nse_discretization_FES6_PADE;
+}
+
+UINT fnft__nse_discretization_pade_degree(
+        const nse_discretization_t discretization,
+        const UINT requested_degree)
+{
+    UINT degree = requested_degree;
+
+    if (discretization == nse_discretization_FES4_PADE) {
+        if (degree == 0)
+            degree = 2;
+        return degree >= 2 && degree <= 7 ? degree : 0;
+    }
+    if (discretization == nse_discretization_FES6_PADE) {
+        if (degree == 0)
+            degree = 3;
+        return degree >= 3 && degree <= 7 ? degree : 0;
+    }
+    return 0;
+}
+
+REAL fnft__nse_discretization_pade_h(
+        const nse_discretization_t discretization, const UINT pade_degree,
+        const REAL requested_h)
+{
+    static const REAL fes4_defaults[] = {
+        0.0, 0.0, 3.4641016151377546, 4.9, 5.0, 7.5, 9.34, 9.34
+    };
+    static const REAL fes6_defaults[] = {
+        0.0, 0.0, 0.0, 11.0, 15.0, 19.4, 23.2, 26.9
+    };
+
+    if (!(requested_h >= 0.0) || requested_h == INFINITY
+            || pade_degree > 7)
+        return 0.0;
+    if (requested_h > 0.0)
+        return requested_h;
+    if (discretization == nse_discretization_FES4_PADE
+            && pade_degree >= 2)
+        return fes4_defaults[pade_degree];
+    if (discretization == nse_discretization_FES6_PADE
+            && pade_degree >= 3)
+        return fes6_defaults[pade_degree];
+    return 0.0;
+}
+
+INT fnft__nse_discretization_pade_lambda_to_z(const UINT n,
+        const REAL eps_t, COMPLEX * const vals, const REAL h)
+{
+    UINT i;
+
+    if (!(eps_t > 0.0))
+        return E_INVALID_ARGUMENT(eps_t);
+    if (vals == NULL)
+        return E_INVALID_ARGUMENT(vals);
+    if (!(h > 0.0) || h == INFINITY)
+        return E_INVALID_ARGUMENT(h);
+    for (i = 0; i < n; i++) {
+        if (I*h + eps_t*vals[i] == 0.0)
+            return E_DIV_BY_ZERO;
+        vals[i] = (I*h - eps_t*vals[i])/(I*h + eps_t*vals[i]);
+    }
+    return SUCCESS;
+}
+
+INT fnft__nse_discretization_pade_z_to_lambda(const UINT n,
+        const REAL eps_t, COMPLEX * const vals, const REAL h)
+{
+    UINT i;
+
+    if (!(eps_t > 0.0))
+        return E_INVALID_ARGUMENT(eps_t);
+    if (vals == NULL)
+        return E_INVALID_ARGUMENT(vals);
+    if (!(h > 0.0) || h == INFINITY)
+        return E_INVALID_ARGUMENT(h);
+    for (i = 0; i < n; i++) {
+        if (vals[i] == -1.0)
+            return E_DIV_BY_ZERO;
+    }
+    for (i = 0; i < n; i++)
+        vals[i] = I*h*(1.0 - vals[i])/(eps_t*(1.0 + vals[i]));
+    return SUCCESS;
 }
 
 
@@ -50,6 +144,8 @@ REAL fnft__nse_discretization_boundary_coeff(nse_discretization_t nse_discretiza
     akns_discretization_t akns_discretization = 0;
     REAL bnd_coeff = NAN;
     INT ret_code;
+    if (nse_discretization_is_pade(nse_discretization))
+        return 0.5;
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
     bnd_coeff = akns_discretization_boundary_coeff(akns_discretization);
@@ -65,6 +161,8 @@ UINT fnft__nse_discretization_upsampling_factor(nse_discretization_t nse_discret
     akns_discretization_t akns_discretization = 0;
     UINT upsampling_factor = 0;
     INT ret_code;
+    if (nse_discretization_is_pade(nse_discretization))
+        return 1;
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
     upsampling_factor = akns_discretization_upsampling_factor(akns_discretization);
@@ -80,6 +178,10 @@ UINT fnft__nse_discretization_method_order(nse_discretization_t nse_discretizati
     akns_discretization_t akns_discretization = 0;
     UINT order = 0;
     INT ret_code;
+    if (nse_discretization == nse_discretization_FES4_PADE)
+        return 4;
+    if (nse_discretization == nse_discretization_FES6_PADE)
+        return 6;
     ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
     order = akns_discretization_method_order(akns_discretization);
@@ -324,6 +426,8 @@ INT fnft__nse_discretization_phase_factor_a(const REAL eps_t, const UINT D, REAL
         case nse_discretization_CF6_4:
         case nse_discretization_ES4:
         case nse_discretization_TES4:
+        case nse_discretization_FES4_PADE:
+        case nse_discretization_FES6_PADE:
             *phase_factor_a = (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
             break;
@@ -397,6 +501,8 @@ INT fnft__nse_discretization_phase_factor_b(const REAL eps_t, const UINT D, REAL
         case nse_discretization_CF6_4:
         case nse_discretization_ES4:
         case nse_discretization_TES4:
+        case nse_discretization_FES4_PADE:
+        case nse_discretization_FES6_PADE:
             *phase_factor_b =  - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
             return SUCCESS;
             break;
@@ -415,6 +521,56 @@ INT fnft__nse_discretization_phase_factor_b(const REAL eps_t, const UINT D, REAL
  */
 COMPLEX fnft__nse_discretization_focusing_r_from_q(COMPLEX const q){return -CONJ(q);}
 COMPLEX fnft__nse_discretization_defocusing_r_from_q(COMPLEX const q){return CONJ(q);}
+
+static INT preprocess_pade_signal(const UINT D,
+        COMPLEX const * const q, const REAL eps_t, const INT kappa,
+        UINT * const Dsub_ptr, COMPLEX ** const q_preprocessed_ptr,
+        COMPLEX ** const r_preprocessed_ptr, UINT * const first_last_index)
+{
+    UINT Dsub, i, isub, nskip_per_step;
+    COMPLEX *q_preprocessed = NULL, *r_preprocessed = NULL;
+
+    if (D < 5)
+        return E_INVALID_ARGUMENT(D);
+    if (q == NULL)
+        return E_INVALID_ARGUMENT(q);
+    if (eps_t <= 0.0)
+        return E_INVALID_ARGUMENT(eps_t);
+    if (Dsub_ptr == NULL || q_preprocessed_ptr == NULL
+            || r_preprocessed_ptr == NULL || first_last_index == NULL)
+        return E_INVALID_ARGUMENT(Dsub_ptr);
+
+    Dsub = *Dsub_ptr;
+    if (Dsub < 5)
+        Dsub = 5;
+    if (Dsub > D)
+        Dsub = D;
+    nskip_per_step = (UINT)ROUND((REAL)D/Dsub);
+    Dsub = (UINT)ROUND((REAL)D/nskip_per_step);
+    if (Dsub < 5)
+        return E_INVALID_ARGUMENT(Dsub);
+
+    q_preprocessed = malloc(Dsub*sizeof(COMPLEX));
+    r_preprocessed = malloc(Dsub*sizeof(COMPLEX));
+    if (q_preprocessed == NULL || r_preprocessed == NULL) {
+        free(q_preprocessed);
+        free(r_preprocessed);
+        return E_NOMEM;
+    }
+    for (isub = 0, i = 0; isub < Dsub; isub++, i += nskip_per_step) {
+        q_preprocessed[isub] = q[i];
+        r_preprocessed[isub] = kappa == 1
+                ? fnft__nse_discretization_focusing_r_from_q(q[i])
+                : fnft__nse_discretization_defocusing_r_from_q(q[i]);
+    }
+    first_last_index[0] = 0;
+    first_last_index[1] = (Dsub - 1)*nskip_per_step;
+    *Dsub_ptr = Dsub;
+    *q_preprocessed_ptr = q_preprocessed;
+    *r_preprocessed_ptr = r_preprocessed;
+    return SUCCESS;
+}
+
 INT fnft__nse_discretization_preprocess_signal(const UINT D, COMPLEX const * const q,
         REAL const eps_t, const INT kappa,
         UINT * const Dsub_ptr, COMPLEX **q_preprocessed_ptr, COMPLEX **r_preprocessed_ptr,
@@ -422,6 +578,9 @@ INT fnft__nse_discretization_preprocess_signal(const UINT D, COMPLEX const * con
 {
     akns_discretization_t akns_discretization = 0;
     INT ret_code = SUCCESS;
+    if (nse_discretization_is_pade(discretization))
+        return preprocess_pade_signal(D, q, eps_t, kappa, Dsub_ptr,
+                q_preprocessed_ptr, r_preprocessed_ptr, first_last_index);
     ret_code = nse_discretization_to_akns_discretization(discretization, &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
 

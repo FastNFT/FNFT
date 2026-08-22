@@ -25,6 +25,7 @@
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft_nsev.h"
+#include "fnft__akns_fscatter_pade.h"
 
 static fnft_nsev_opts_t default_opts = {
     .bound_state_filtering = nsev_bsfilt_FULL,
@@ -37,8 +38,21 @@ static fnft_nsev_opts_t default_opts = {
     .normalization_flag = 1,
     .discretization = nse_discretization_2SPLIT4B,
     .richardson_extrapolation_flag = 0,
-    .bounding_box = {NAN, NAN, NAN, NAN}
+    .bounding_box = {NAN, NAN, NAN, NAN},
+    .pade_degree = 0,
+    .pade_h = 0.0
 };
+
+static COMPLEX nsev_evaluate_polynomial(COMPLEX const * const p,
+        const UINT degree, const COMPLEX z)
+{
+    COMPLEX value = p[0];
+    UINT i;
+
+    for (i = 1; i <= degree; i++)
+        value = value*z + p[i];
+    return value;
+}
 
 /**
  * Creates a new options variable for fnft_nsev with default settings.
@@ -55,7 +69,15 @@ fnft_nsev_opts_t fnft_nsev_default_opts()
  */
 UINT fnft_nsev_max_K(const UINT D, fnft_nsev_opts_t const * const opts)
 {
-    if (opts != NULL)
+    if (opts != NULL && nse_discretization_is_pade(opts->discretization)) {
+        const UINT pade_degree = nse_discretization_pade_degree(
+                opts->discretization, opts->pade_degree);
+        const UINT method_order = nse_discretization_method_order(
+                opts->discretization);
+        if (pade_degree == 0)
+            return 0;
+        return (method_order == 4 ? 2*pade_degree : 6*pade_degree)*D;
+    } else if (opts != NULL)
         return nse_discretization_degree(opts->discretization) * D;
     else
         return nse_discretization_degree(default_opts.discretization) * D;
@@ -96,6 +118,9 @@ static inline INT nsev_compute_contspec(
         const UINT deg,
         const INT W,
         COMPLEX * const transfer_matrix,
+        const UINT denominator_degree,
+        const INT denominator_exponent,
+        COMPLEX * const denominator,
         COMPLEX const * const q,
         COMPLEX const * const r,
         REAL const * const T,
@@ -226,6 +251,8 @@ INT fnft_nsev(
         case nse_discretization_FTES4_4A:
         case nse_discretization_FTES4_4B:
         case nse_discretization_FTES4_suzuki:
+        case nse_discretization_FES4_PADE:
+        case nse_discretization_FES6_PADE:
             break;
         case nse_discretization_BO:
         case nse_discretization_CF4_2:
@@ -501,8 +528,9 @@ static inline INT fnft_nsev_base(
         fnft_nsev_opts_t *opts)
 {
     COMPLEX *transfer_matrix = NULL;
-    UINT deg;
-    INT W = 0, *W_ptr = NULL;
+    COMPLEX *denominator = NULL;
+    UINT deg, denominator_degree = 0;
+    INT W = 0, denominator_exponent = 0, *W_ptr = NULL;
     INT ret_code = SUCCESS;
     UINT i, upsampling_factor, D_given;
 
@@ -538,12 +566,45 @@ static inline INT fnft_nsev_base(
     const REAL eps_t = (T[1] - T[0])/(D_given - 1);
 
     // D should be the effective number of samples in q
-    i = nse_fscatter_numel(D, opts->discretization);
+    if (nse_discretization_is_pade(opts->discretization)) {
+        const UINT pade_degree = nse_discretization_pade_degree(
+                opts->discretization, opts->pade_degree);
+        const UINT method_order = nse_discretization_method_order(
+                opts->discretization);
+        const REAL h = nse_discretization_pade_h(opts->discretization,
+                pade_degree, opts->pade_h);
+        const UINT numerator_numel = akns_fscatter_pade_numel(D,
+                method_order, pade_degree);
+        const UINT denominator_numel = akns_fscatter_pade_den_numel(D,
+                method_order, pade_degree);
+
+        if (pade_degree == 0 || h <= 0.0 || numerator_numel == 0
+                || denominator_numel == 0) {
+            ret_code = E_INVALID_ARGUMENT(opts->pade_degree);
+            goto leave_fun;
+        }
+        transfer_matrix = malloc(numerator_numel*sizeof(COMPLEX));
+        denominator = malloc(denominator_numel*sizeof(COMPLEX));
+        if (transfer_matrix == NULL || denominator == NULL) {
+            ret_code = E_NOMEM;
+            goto leave_fun;
+        }
+        if (opts->normalization_flag)
+            W_ptr = &W;
+        ret_code = akns_fscatter_pade(D, q, r, eps_t, method_order,
+                pade_degree, h, transfer_matrix, &deg, W_ptr, denominator,
+                &denominator_degree, opts->normalization_flag
+                ? &denominator_exponent : NULL);
+        CHECK_RETCODE(ret_code, leave_fun);
+        i = numerator_numel;
+    } else {
+        i = nse_fscatter_numel(D, opts->discretization);
+    }
     // NOTE: At this stage if i == 0 it means the discretization corresponds
     // to a slow method. Incorrect discretizations will have been checked for
     // in fnft_nsev main
 
-    if (i != 0){
+    if (i != 0 && !nse_discretization_is_pade(opts->discretization)){
     //This corresponds to methods based on polynomial transfer matrix
        // Allocate memory for the transfer matrix.
         transfer_matrix = malloc(i*sizeof(COMPLEX));
@@ -558,7 +619,7 @@ static inline INT fnft_nsev_base(
         ret_code = nse_fscatter(D, q, r, eps_t, transfer_matrix, &deg, W_ptr,
                 opts->discretization);
         CHECK_RETCODE(ret_code, leave_fun);
-    }else{
+    }else if (i == 0){
         // These indicate to the functions to follow that the discretization
         // is a method not based on polynomial transfer matrix
         deg = 0;
@@ -567,7 +628,9 @@ static inline INT fnft_nsev_base(
 
     // Compute the continuous spectrum
     if (contspec != NULL && M > 0) {
-        ret_code = nsev_compute_contspec(deg, W, transfer_matrix, q, r, T, D, XI, M,
+        ret_code = nsev_compute_contspec(deg, W, transfer_matrix,
+                denominator_degree, denominator_exponent, denominator,
+                q, r, T, D, XI, M,
                 contspec, kappa, opts);
         CHECK_RETCODE(ret_code, leave_fun);
     }
@@ -592,6 +655,7 @@ static inline INT fnft_nsev_base(
 
     leave_fun:
         free(transfer_matrix);
+        free(denominator);
         return ret_code;
 }
 
@@ -740,6 +804,7 @@ static inline INT nsev_compute_boundstates(
     COMPLEX const *r_scatter = r;
     COMPLEX *q_scatter_buffer = NULL;
     COMPLEX *r_scatter_buffer = NULL;
+    const INT is_pade = nse_discretization_is_pade(opts->discretization);
 
     degree1step = nse_discretization_degree(opts->discretization);
     // degree1step == 0 here indicates a valid slow method. Incorrect
@@ -765,8 +830,13 @@ static inline INT nsev_compute_boundstates(
         break;
 
     case nsev_bsfilt_FULL:
-        bounding_box[1] = re_bound(eps_t, map_coeff);
-        bounding_box[0] = -bounding_box[1];
+        if (is_pade) {
+            bounding_box[0] = -INFINITY;
+            bounding_box[1] = INFINITY;
+        } else {
+            bounding_box[1] = re_bound(eps_t, map_coeff);
+            bounding_box[0] = -bounding_box[1];
+        }
         bounding_box[2] = 0;
         // This step is required as q contains scaled values on a
         // non-equispaced grid
@@ -855,7 +925,17 @@ static inline INT nsev_compute_boundstates(
             CHECK_RETCODE(ret_code, leave_fun);
             // Roots are returned in discrete-time domain -> coordinate
             // transform (from discrete-time to continuous-time domain).
-            ret_code = nse_discretization_z_to_lambda(K, eps_t, buffer, opts->discretization);
+            if (is_pade) {
+                const UINT pade_degree = nse_discretization_pade_degree(
+                        opts->discretization, opts->pade_degree);
+                const REAL h = nse_discretization_pade_h(
+                        opts->discretization, pade_degree, opts->pade_h);
+                ret_code = nse_discretization_pade_z_to_lambda(K, eps_t,
+                        buffer, h);
+            } else {
+                ret_code = nse_discretization_z_to_lambda(K, eps_t, buffer,
+                        opts->discretization);
+            }
             CHECK_RETCODE(ret_code, leave_fun);
 
             break;
@@ -898,6 +978,9 @@ static inline INT nsev_compute_contspec(
         const UINT deg,
         const INT W,
         COMPLEX * const transfer_matrix,
+        const UINT denominator_degree,
+        const INT denominator_exponent,
+        COMPLEX * const denominator,
         COMPLEX const * const q,
         COMPLEX const * const r,
         REAL const * const T,
@@ -908,7 +991,7 @@ static inline INT nsev_compute_contspec(
         const INT kappa,
         fnft_nsev_opts_t const * const opts)
 {
-    COMPLEX *H11_vals = NULL, *H21_vals = NULL;
+    COMPLEX *H11_vals = NULL, *H21_vals = NULL, *denominator_vals = NULL;
     COMPLEX A, V;
     REAL scale;
     REAL phase_factor_rho, phase_factor_a, phase_factor_b;
@@ -972,6 +1055,38 @@ static inline INT nsev_compute_contspec(
             }
         }
 
+    }else if (nse_discretization_is_pade(opts->discretization)) {
+        const UINT pade_degree = nse_discretization_pade_degree(
+                opts->discretization, opts->pade_degree);
+        const REAL h = nse_discretization_pade_h(opts->discretization,
+                pade_degree, opts->pade_h);
+
+        denominator_vals = malloc(M*sizeof(COMPLEX));
+        if (denominator_vals == NULL) {
+            ret_code = E_NOMEM;
+            goto leave_fun;
+        }
+        for (i = 0; i < M; i++) {
+            ret_code = nse_discretization_pade_lambda_to_z(1, eps_t,
+                    &xi[i], h);
+            CHECK_RETCODE(ret_code, leave_fun);
+        }
+        for (i = 0; i < M; i++) {
+            H11_vals[i] = nsev_evaluate_polynomial(transfer_matrix, deg,
+                    xi[i]);
+            H21_vals[i] = nsev_evaluate_polynomial(
+                    transfer_matrix + 2*(deg + 1), deg, xi[i]);
+            denominator_vals[i] = nsev_evaluate_polynomial(denominator,
+                    denominator_degree, xi[i]);
+            if (denominator_vals[i] == 0.0) {
+                ret_code = E_DIV_BY_ZERO;
+                goto leave_fun;
+            }
+            H11_vals[i] /= denominator_vals[i];
+            H21_vals[i] /= denominator_vals[i];
+        }
+        for (i = 0; i < M; i++)
+            xi[i] = XI[0] + eps_xi*i;
     }else{
         // Prepare the use of the chirp transform. The entries of the transfer
         // matrix that correspond to a and b will be evaluated on the frequency
@@ -1019,7 +1134,7 @@ static inline INT nsev_compute_contspec(
 
         case nsev_cstype_AB:
 
-            scale = POW(2.0, W); // needed since the transfer matrix might
+            scale = ldexp(1.0, W - denominator_exponent); // needed since the transfer matrix might
             // have been scaled by nse_fscatter. W == 0 for slow methods.
 
             // Calculating the discretization specific phase factors.
@@ -1044,6 +1159,7 @@ static inline INT nsev_compute_contspec(
 
     leave_fun:
         free(H11_vals);
+        free(denominator_vals);
         free(scatter_coeffs);
         free(Ws);
         free(xi);

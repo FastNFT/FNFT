@@ -15,6 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
+* Igor Chekhovskoy 2026.
 */
 
 /**
@@ -48,6 +49,15 @@ typedef enum {
     fnft__nsev_testcases_SECH_FOCUSING2,
     fnft__nsev_testcases_SECH_FOCUSING_CONTSPEC
 } fnft__nsev_testcases_t;
+
+FNFT_INT fnft__nsev_testcases(fnft__nsev_testcases_t tc,
+        const FNFT_UINT D, FNFT_COMPLEX ** const q_ptr,
+        FNFT_REAL * const T, FNFT_UINT * const M_ptr,
+        FNFT_COMPLEX ** const contspec_ptr, FNFT_COMPLEX ** const ab_ptr,
+        FNFT_REAL * const XI, FNFT_UINT * const K_ptr,
+        FNFT_COMPLEX ** const bound_states_ptr,
+        FNFT_COMPLEX ** const normconsts_ptr,
+        FNFT_COMPLEX ** const residues_ptr, FNFT_INT * const kappa_ptr);
 
 /**
  * @brief Routine to run tests for \link fnft_nsev \endlink.\n
