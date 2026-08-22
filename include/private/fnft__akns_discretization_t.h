@@ -46,6 +46,11 @@
  * methods from Medvedev, Vaseva, Chekhovskoy and  Fedoruk
  * <a href="https://doi.org/10.1364/OE.377140">&quot;
  * Exponential fourth order schemes for direct Zakharov-Shabat problem,&quot;</a> Optics Express, vol. 28, pp. 20--39, 2020.\n
+ * `fnft__akns_discretization_CT4` is the conservative fourth-order method from
+ * S. Medvedev, I. Vaseva, I. Chekhovskoy and M. Fedoruk,
+ * <a href="https://doi.org/10.1364/OL.44.002264">&quot;Numerical algorithm with
+ * fourth-order accuracy for the direct Zakharov-Shabat problem,&quot;</a> Optics
+ * Letters 44(9), 2264--2267 (2019).\n
  * All above discretizations are supported by \link fnft__akns_scatter.h \endlink.\n 
  * The exponential spliting schemes, defined in
  * Prins and Wahls, <a href="https://doi.org/10.1109/ICASSP.2018.8461708">&quot;
@@ -99,6 +104,7 @@
  * `fnft__akns_discretization_FTES4_4A`: Order of base method = 4, Degree = 4, Order of accuracy of splitting-scheme = 4\n
  * `fnft__akns_discretization_FTES4_4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4\n
  * `fnft__akns_discretization_FTES4_suzuki`: Order of base method = 4, Degree = 7, Order of accuracy of splitting-scheme = 4
+ * `fnft__akns_discretization_CT4`: Non-polynomial slow method, order of accuracy = 4\n
  *
  * Used in \link fnft__akns_fscatter.h \endlink and
  * \link fnft__akns_scatter.h \endlink.
@@ -137,7 +143,8 @@ typedef enum {
 	fnft__akns_discretization_FTES4_4A,
 	fnft__akns_discretization_FTES4_4B,
 	fnft__akns_discretization_4SPLIT6B,
-	fnft__akns_discretization_FTES4_suzuki
+	fnft__akns_discretization_FTES4_suzuki,
+	fnft__akns_discretization_CT4
 } fnft__akns_discretization_t;
 
 /**
@@ -185,6 +192,7 @@ typedef enum {
 #define akns_discretization_CF6_4 fnft__akns_discretization_CF6_4
 #define akns_discretization_ES4 fnft__akns_discretization_ES4
 #define akns_discretization_TES4 fnft__akns_discretization_TES4
+#define akns_discretization_CT4 fnft__akns_discretization_CT4
 #define akns_discretization_FTES4_4A fnft__akns_discretization_FTES4_4A
 #define akns_discretization_FTES4_4B fnft__akns_discretization_FTES4_4B
 #define akns_discretization_4SPLIT6B fnft__akns_discretization_4SPLIT6B

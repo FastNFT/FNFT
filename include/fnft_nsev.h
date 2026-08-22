@@ -342,6 +342,7 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *       - fnft_nse_discretization_CF6_4
  *       - fnft_nse_discretization_ES4
  *       - fnft_nse_discretization_TES4
+ *       - fnft_nse_discretization_CT4
  *
  * The accuray of the computed quantities for a given signal depends primarily on the number of samples \f$ D\f$ and the numerical method. When the exact spectrum is
  * is know, the accuracy can be quantified by defining a suitable error. The error usually decreases with increasing \f$ D\f$ assuming everthing else remains the same.

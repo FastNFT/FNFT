@@ -261,6 +261,7 @@ INT fnft_nsev(
         case nse_discretization_CF6_4:
         case nse_discretization_ES4:
         case nse_discretization_TES4:
+        case nse_discretization_CT4:
             if (opts->bound_state_localization != nsev_bsloc_NEWTON &&
                     kappa == +1 && bound_states != NULL){
                 ret_code = E_INVALID_ARGUMENT(opts->bound_state_localization);
@@ -843,6 +844,7 @@ static inline INT nsev_compute_boundstates(
         switch(opts->discretization) {
             case fnft_nse_discretization_ES4:
             case fnft_nse_discretization_TES4:
+            case fnft_nse_discretization_CT4:
             {
                 // For these discretizations we need to skip the time-derivative samples for determining the L2-norm of q
                 COMPLEX * const q_tmp = malloc(D_given * sizeof(COMPLEX));

@@ -106,6 +106,7 @@ REAL fnft__akns_discretization_boundary_coeff(akns_discretization_t discretizati
         case akns_discretization_CF6_4:
         case akns_discretization_ES4:
         case akns_discretization_TES4:
+        case akns_discretization_CT4:
         case akns_discretization_FTES4_4A:
         case akns_discretization_FTES4_4B:
         case akns_discretization_FTES4_suzuki:
@@ -155,6 +156,7 @@ UINT fnft__akns_discretization_upsampling_factor(akns_discretization_t discretiz
         case akns_discretization_CF5_3:
         case akns_discretization_ES4:
         case akns_discretization_TES4:
+        case akns_discretization_CT4:
             return 3;
         case akns_discretization_CF6_4:
             return 4;
@@ -197,6 +199,7 @@ UINT fnft__akns_discretization_method_order(akns_discretization_t discretization
         case akns_discretization_CF4_3:
         case akns_discretization_ES4:
         case akns_discretization_TES4:
+        case akns_discretization_CT4:
         case akns_discretization_FTES4_4A:
         case akns_discretization_FTES4_4B:
         case akns_discretization_FTES4_suzuki:
@@ -682,6 +685,20 @@ INT fnft__akns_discretization_preprocess_signal(UINT const D,
                 }
             }
             break;
+        case akns_discretization_CT4:
+            for (isub=0, i=0; isub<D_effective; isub+=3, i+=nskip_per_step) {
+                const COMPLEX q_minus = i >= nskip_per_step
+                        ? q[i-nskip_per_step] : 0.0;
+                const COMPLEX q_plus = i+nskip_per_step < D
+                        ? q[i+nskip_per_step] : 0.0;
+                q_preprocessed[isub] = q[i];
+                q_preprocessed[isub+1] = q_plus;
+                q_preprocessed[isub+2] = q_minus;
+                r_preprocessed[isub] = r_from_q[0](q[i]);
+                r_preprocessed[isub+1] = r_from_q[0](q_plus);
+                r_preprocessed[isub+2] = r_from_q[0](q_minus);
+            }
+            break;
         default: // Unknown discretization
 
             ret_code = E_INVALID_ARGUMENT(discretization);
@@ -751,6 +768,7 @@ INT fnft__akns_discretization_change_of_basis_matrix_to_S(COMPLEX * const T,
                 case akns_discretization_CF6_4:
                 case akns_discretization_ES4:
                 case akns_discretization_TES4:
+                case akns_discretization_CT4:
                     if (vanilla_flag) {
                         // T from AKNS basis to S basis for KdV:
 
@@ -871,6 +889,7 @@ INT fnft__akns_discretization_change_of_basis_matrix_to_S(COMPLEX * const T,
                 case akns_discretization_CF6_4:
                 case akns_discretization_ES4:
                 case akns_discretization_TES4:
+                case akns_discretization_CT4:
                 case akns_discretization_FTES4_4A:
                 case akns_discretization_FTES4_4B:
                 case akns_discretization_FTES4_suzuki:
@@ -965,6 +984,7 @@ INT fnft__akns_discretization_change_of_basis_matrix_from_S(COMPLEX * const T,
                 case akns_discretization_CF6_4:
                 case akns_discretization_ES4:
                 case akns_discretization_TES4:
+                case akns_discretization_CT4:
                     if (vanilla_flag) {
                         // T from S basis for KdV to AKNS basis:
 
@@ -1084,6 +1104,7 @@ INT fnft__akns_discretization_change_of_basis_matrix_from_S(COMPLEX * const T,
                 case akns_discretization_CF6_4:
                 case akns_discretization_ES4:
                 case akns_discretization_TES4:
+                case akns_discretization_CT4:
                 case akns_discretization_FTES4_4A:
                 case akns_discretization_FTES4_4B:
                 case akns_discretization_FTES4_suzuki:

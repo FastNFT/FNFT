@@ -18,6 +18,7 @@
 * Shrinivas Chimmalgi (TU Delft) 2017.
 * Peter J Prins (TU Delft) 2020.
 * Sander Wahls (KIT) 2023.
+* Igor Chekhovskoy 2026.
 */
 
 /**
@@ -45,6 +46,7 @@
  *      - Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot; Computation of the direct scattering transform for the nonlinear Schroedinger  equation,&quot;</a> J. Comput. Phys. 102(2), 1992.
  *      - Chimmalgi, Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2945480">&quot; Fast Nonlinear Fourier Transform Algorithms Using Higher Order Exponential Integrators,&quot;</a> IEEE Access 7, 2019.
  *      - Medvedev, Vaseva, Chekhovskoy and  Fedoruk, <a href="https://doi.org/10.1364/OE.377140">&quot; Exponential fourth order schemes for direct Zakharov-Shabat problem,&quot;</a> Optics Express, vol. 28, pp. 20--39, 2020.
+ *      - Medvedev, Vaseva, Chekhovskoy and Fedoruk, <a href="https://doi.org/10.1364/OL.44.002264">&quot;Numerical algorithm with fourth-order accuracy for the direct Zakharov-Shabat problem,&quot;</a> Optics Letters 44(9), 2264--2267, 2019.
  *      - Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2932256">&quot; Soliton Phase Shift Calculation for the Korteweg–De Vries Equation,&quot;</a> IEEE Access, vol. 7, pp. 122914--122930, July 2019.
  *
  *
