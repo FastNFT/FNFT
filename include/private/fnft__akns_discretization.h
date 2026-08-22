@@ -18,6 +18,7 @@
  * Shrinivas Chimmalgi (TU Delft) 2017.
  * Peter J. Prins (TU Delft) 2018, 2020-2021.
  * Igor Chekhovskoy 2026.
+ * Irina Vaseva 2026.
  */
 
 /**
@@ -197,6 +198,122 @@ static inline void fnft__akns_discretization_es6_stencil(
     stencil->second_low = eps_t*(qp1-2.0*q+qm1);
     stencil->third = eps_t*(qp2-2.0*qp1+2.0*qm1-qm2)/2.0;
     stencil->fourth = eps_t*(qp2-4.0*qp1+6.0*q-4.0*qm1+qm2);
+}
+
+typedef struct {
+    FNFT_COMPLEX value;
+    FNFT_COMPLEX first;
+    FNFT_COMPLEX second;
+    FNFT_COMPLEX third;
+    FNFT_COMPLEX fourth;
+    FNFT_COMPLEX fifth;
+    FNFT_COMPLEX sixth;
+} fnft__akns_es8_stencil_t;
+
+/* Seven-point central differences from Table 1 of arXiv:2608.11892v1.
+ * Missing samples at the signal boundary are supplied as zero by the caller.
+ * As in the paper, every result includes one factor eps_t and derivatives are
+ * with respect to the dimensionless grid index. */
+static inline void fnft__akns_es8_stencil(
+        FNFT_COMPLEX const samples[7], FNFT_REAL const eps_t,
+        fnft__akns_es8_stencil_t * const stencil)
+{
+    const FNFT_COMPLEX qm3 = samples[0], qm2 = samples[1];
+    const FNFT_COMPLEX qm1 = samples[2], q = samples[3];
+    const FNFT_COMPLEX qp1 = samples[4], qp2 = samples[5];
+    const FNFT_COMPLEX qp3 = samples[6];
+
+    stencil->value = eps_t*q;
+    stencil->first = eps_t*(-qm3/60.0+3.0*qm2/20.0-3.0*qm1/4.0
+            +3.0*qp1/4.0-3.0*qp2/20.0+qp3/60.0);
+    stencil->second = eps_t*(qm3/90.0-3.0*qm2/20.0+3.0*qm1/2.0
+            -49.0*q/18.0+3.0*qp1/2.0-3.0*qp2/20.0+qp3/90.0);
+    stencil->third = eps_t*(qm3/8.0-qm2+13.0*qm1/8.0
+            -13.0*qp1/8.0+qp2-qp3/8.0);
+    stencil->fourth = eps_t*(-qm3/6.0+2.0*qm2-13.0*qm1/2.0
+            +28.0*q/3.0-13.0*qp1/2.0+2.0*qp2-qp3/6.0);
+    stencil->fifth = eps_t*(-qm3/2.0+2.0*qm2-5.0*qm1/2.0
+            +5.0*qp1/2.0-2.0*qp2+qp3/2.0);
+    stencil->sixth = eps_t*(qm3-6.0*qm2+15.0*qm1-20.0*q
+            +15.0*qp1-6.0*qp2+qp3);
+}
+
+static inline void fnft__akns_es8_set_pauli_coefficient(
+        FNFT_COMPLEX coeff[24], FNFT_UINT const k,
+        FNFT_COMPLEX const a1, FNFT_COMPLEX const a2,
+        FNFT_COMPLEX const a3)
+{
+    coeff[4*k] = a3;
+    coeff[4*k+1] = a1-I*a2;
+    coeff[4*k+2] = a1+I*a2;
+    coeff[4*k+3] = -a3;
+}
+
+/* Coefficients of the degree-five matrix polynomial Z(eps_t*lambda),
+ * Eqs. 51--60 of arXiv:2608.11892v1. q[0] and r[0] are eps_t times the
+ * potentials; the remaining entries are the scaled differences above. */
+static inline void fnft__akns_es8_z_coefficients(
+        FNFT_COMPLEX const qv[7], FNFT_COMPLEX const rv[7],
+        FNFT_COMPLEX coeff[24])
+{
+    const FNFT_COMPLEX q=qv[0], q1=qv[1], q2=qv[2], q3=qv[3];
+    const FNFT_COMPLEX q4=qv[4], q5=qv[5], q6=qv[6];
+    const FNFT_COMPLEX r=rv[0], r1=rv[1], r2=rv[2], r3=rv[3];
+    const FNFT_COMPLEX r4=rv[4], r5=rv[5], r6=rv[6];
+    const FNFT_COMPLEX qr=q*r, qp2=q*q, qp3=qp2*q, rp2=r*r;
+    const FNFT_COMPLEX rp3=rp2*r, q1p2=q1*q1, q2p2=q2*q2;
+    const FNFT_COMPLEX r1p2=r1*r1, r2p2=r2*r2;
+
+    const FNFT_COMPLEX a1c0=(504.0*q4+3.0*q6+967680.0*r-8064.0*q1p2*r+80.0*q2p2*r-384.0*q1*q3*r-48.0*q4*rp2
+        +128.0*q1p2*rp3+8064.0*q1*r*r1+144.0*q3*r*r1+40320.0*r2-144.0*q1p2*r2+144.0*q1*r1*r2
+        +128.0*qp3*(r1p2+2.0*r*r2)-16.0*q2*(-2520.0+168.0*rp2-9.0*q1*r1+9.0*r1p2+5.0*r*r2)
+        +240.0*q1*r*r3+504.0*r4-16.0*qp2*(16.0*q2*rp2+64.0*q1*r*r1-56.0*r*r1p2+168.0*r2+16.0*rp2*r2+3.0*r4)
+        +16.0*q*(60480.0+3.0*q4*r+56.0*q1p2*rp2+504.0*q1*r1+15.0*q3*r1-64.0*q1*rp2*r1-504.0*r1p2
+        +q2*(168.0*r+16.0*rp3-5.0*r2)+168.0*r*r2+5.0*r2p2+9.0*q1*r3-24.0*r1*r3+3.0*r*r4)+3.0*r6)/1935360.0;
+    const FNFT_COMPLEX a1c1=I*(9.0*q5-48.0*q3*(-21.0+qr)-40320.0*r1+288.0*q1p2*r1+64.0*q*q2*r1
+        +2688.0*qr*r1+272.0*q2*r*r1-256.0*qp2*rp2*r1+208.0*q*r1*r2
+        +16.0*q1*(2520.0-168.0*qr-13.0*q2*r+16.0*qp2*rp2-18.0*r1p2-17.0*q*r2-4.0*r*r2)
+        -1008.0*r3+48.0*qr*r3-9.0*r5)/483840.0;
+    const FNFT_COMPLEX a1c2=(-8.0*qp2*r2+40.0*q*q1*r1+8.0*q2*(3.0*qr-rp2-21.0)+24.0*qr*r2
+        -24.0*q*r1p2-24.0*q1p2*r+40.0*q1*r*r1-3.0*q4-168.0*r2-3.0*r4)/60480.0;
+    const FNFT_COMPLEX a1c3=I*(3.0*q3+8.0*q1*(21.0-4.0*qr)+8.0*(-21.0+4.0*qr)*r1-3.0*r3)/30240.0;
+    const FNFT_COMPLEX a1c4=-(q2+r2)/3780.0;
+    const FNFT_COMPLEX a1c5=I*(q1-r1)/1890.0;
+
+    const FNFT_COMPLEX a2c0=I*(128.0*qp3*(2.0*r*r2+r1p2)-16.0*qp2*(64.0*q1*r*r1+16.0*q2*rp2-16.0*rp2*r2+56.0*r*r1p2+168.0*r2+3.0*r4)
+        +16.0*q*(56.0*q1p2*rp2+64.0*q1*rp2*r1+504.0*q1*r1+9.0*q1*r3+q2*(-16.0*rp3+168.0*r-5.0*r2)
+        +15.0*q3*r1+3.0*q4*r-168.0*r*r2-3.0*r*r4+504.0*r1p2+24.0*r1*r3-5.0*r2p2+60480.0)
+        -128.0*q1p2*rp3-8064.0*q1p2*r-144.0*q1p2*r2+16.0*q2*(9.0*(q1*r1+r1p2+280.0)+168.0*rp2+5.0*r*r2)
+        -384.0*q1*q3*r-8064.0*q1*r*r1-240.0*q1*r*r3-144.0*q1*r1*r2+80.0*q2p2*r-144.0*q3*r*r1
+        +48.0*q4*rp2+504.0*q4+3.0*q6-967680.0*r-40320.0*r2-504.0*r4-3.0*r6)/1935360.0;
+    const FNFT_COMPLEX a2c1=(-9.0*q5+48.0*q3*(-21.0+qr)-40320.0*r1-288.0*q1p2*r1-64.0*q*q2*r1
+        +2688.0*qr*r1+272.0*q2*r*r1-256.0*qp2*rp2*r1+208.0*q*r1*r2
+        -16.0*q1*(2520.0-168.0*qr-13.0*q2*r+16.0*qp2*rp2+18.0*r1p2-17.0*q*r2+4.0*r*r2)
+        -1008.0*r3+48.0*qr*r3-9.0*r5)/483840.0;
+    const FNFT_COMPLEX a2c2=-I*(3.0*q4+24.0*q1p2*r-8.0*q2*(-21.0+3.0*qr+rp2)-40.0*q*q1*r1
+        +40.0*q1*r*r1-24.0*q*r1p2-168.0*r2+8.0*qp2*r2+24.0*qr*r2-3.0*r4)/60480.0;
+    const FNFT_COMPLEX a2c3=(-3.0*q3+8.0*q1*(-21.0+4.0*qr)-168.0*r1+32.0*qr*r1-3.0*r3)/30240.0;
+    const FNFT_COMPLEX a2c4=I*(r2-q2)/3780.0;
+    const FNFT_COMPLEX a2c5=-(q1+r1)/1890.0;
+
+    const FNFT_COMPLEX a3c0=(-256.0*qp3*rp2*r1+q1*(256.0*qp2*rp3-16.0*rp2*(168.0*q+13.0*q2)
+        -160.0*r*(q*r2-252.0)+9.0*(-32.0*q*r1p2+112.0*r2+r4))+2688.0*qp2*r*r1+48.0*qp2*r*r3
+        +208.0*qp2*r1*r2+160.0*q*q2*r*r1-6.0*q3*(8.0*q*rp2-168.0*r-5.0*r2)-40320.0*q*r1
+        -1008.0*q*r3-9.0*q*r5+288.0*q1p2*r*r1-1008.0*q2*r1-30.0*q2*r3-9.0*q4*r1+9.0*q5*r)/483840.0;
+    const FNFT_COMPLEX a3c1=-I*(60480.0-3.0*q4*r+8.0*q1p2*rp2+1008.0*q1*r1+24.0*q3*r1
+        -112.0*q*q1*r*r1+8.0*qp2*r1p2+2.0*q2*(-84.0*r+8.0*q*rp2-5.0*r2)-168.0*q*r2
+        +16.0*qp2*r*r2+24.0*q1*r3-3.0*q*r4)/60480.0;
+    const FNFT_COMPLEX a3c2=(3.0*q3*r-168.0*q*r1+11.0*q2*r1+32.0*qp2*r*r1
+        +q1*(168.0*r-32.0*q*rp2-11.0*r2)-3.0*q*r3)/30240.0;
+    const FNFT_COMPLEX a3c3=I*(q2*r-8.0*q1*r1+q*r2)/3780.0;
+    const FNFT_COMPLEX a3c4=(q1*r-q*r1)/1890.0;
+
+    fnft__akns_es8_set_pauli_coefficient(coeff,0,a1c0,a2c0,a3c0);
+    fnft__akns_es8_set_pauli_coefficient(coeff,1,a1c1,a2c1,a3c1);
+    fnft__akns_es8_set_pauli_coefficient(coeff,2,a1c2,a2c2,a3c2);
+    fnft__akns_es8_set_pauli_coefficient(coeff,3,a1c3,a2c3,a3c3);
+    fnft__akns_es8_set_pauli_coefficient(coeff,4,a1c4,a2c4,a3c4);
+    fnft__akns_es8_set_pauli_coefficient(coeff,5,a1c5,a2c5,0.0);
 }
 
 /**

@@ -19,6 +19,7 @@
  * Peter J Prins (TU Delft) 2020.
  * Sander Wahls (KIT) 2023.
  * Igor Chekhovskoy 2026.
+ * Irina Vaseva 2026.
  */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -355,6 +356,74 @@ static inline void akns_scatter_U_ES6(COMPLEX const q[5],
 }
 
 /**
+ * Eighth-order exponential transition matrix exp(Z), with the degree-five
+ * matrix polynomial Z from Eqs. 51--60 of arXiv:2608.11892v1. The coefficients
+ * are precomputed once per time node before iterating over lambda.
+ */
+static inline void akns_scatter_U_ES8(COMPLEX const coeff[24],
+                                     COMPLEX const lambda,
+                                     REAL const eps_t,
+                                     UINT const derivative_flag,
+                                     UINT const inverse_flag,
+                                     COMPLEX * const U)
+{
+    const COMPLEX z = eps_t*lambda;
+    COMPLEX Z[4], Zd[4] = {0};
+    COMPLEX delta, delta_d = 0.0, c, s, s_delta;
+    COMPLEX c_d = 0.0, s_d = 0.0;
+    const REAL sign = inverse_flag ? -1.0 : 1.0;
+
+    for (UINT j=0; j<4; j++) {
+        Z[j] = coeff[20+j];
+        for (UINT k=5; k-->0; )
+            Z[j] = Z[j]*z+coeff[4*k+j];
+        if (derivative_flag) {
+            Zd[j] = 5.0*coeff[20+j];
+            for (UINT k=5; k-->1; )
+                Zd[j] = Zd[j]*z+k*coeff[4*k+j];
+            Zd[j] *= eps_t;
+        }
+    }
+
+    delta = Z[0]*Z[0]+Z[1]*Z[2];
+    if (CABS(delta) < 1e-8) {
+        const COMPLEX delta2 = delta*delta;
+        const COMPLEX delta3 = delta2*delta;
+        const COMPLEX delta4 = delta3*delta;
+        c = 1.0+delta/2.0+delta2/24.0+delta3/720.0
+                +delta4/40320.0;
+        s = 1.0+delta/6.0+delta2/120.0+delta3/5040.0
+                +delta4/362880.0;
+        s_delta = 1.0/6.0+delta/60.0+delta2/1680.0
+                +delta3/90720.0;
+    } else {
+        const COMPLEX root = CSQRT(delta);
+        c = CCOSH(root);
+        s = misc_CSINC(I*root);
+        s_delta = (c-s)/(2.0*delta);
+    }
+    if (derivative_flag) {
+        delta_d = 2.0*Z[0]*Zd[0]+Zd[1]*Z[2]+Z[1]*Zd[2];
+        c_d = 0.5*s*delta_d;
+        s_d = s_delta*delta_d;
+        memset(U,0,16*sizeof(COMPLEX));
+        U[0] = U[10] = c+sign*s*Z[0];
+        U[1] = U[11] = sign*s*Z[1];
+        U[4] = U[14] = sign*s*Z[2];
+        U[5] = U[15] = c+sign*s*Z[3];
+        U[8] = c_d+sign*(s_d*Z[0]+s*Zd[0]);
+        U[9] = sign*(s_d*Z[1]+s*Zd[1]);
+        U[12] = sign*(s_d*Z[2]+s*Zd[2]);
+        U[13] = c_d+sign*(s_d*Z[3]+s*Zd[3]);
+    } else {
+        U[0] = c+sign*s*Z[0];
+        U[1] = sign*s*Z[1];
+        U[2] = sign*s*Z[2];
+        U[3] = c+sign*s*Z[3];
+    }
+}
+
+/**
  * If derivative_flag=0 returns [S11 S12 S21 S22] in result where
  * S = [S11, S12; S21, S22] is the scattering matrix computed using the
  * chosen scheme.
@@ -417,6 +486,12 @@ INT akns_scatter_matrix(UINT const D,
     switch (discretization) {
         case akns_discretization_CT4:
         case akns_discretization_ES6:
+            break;
+        case akns_discretization_ES8:
+            tmp1 = malloc(24*(D/7)*sizeof(COMPLEX));
+            CHECK_NOMEM(tmp1,ret_code,leave_fun);
+            for (UINT n=0, node=0; n<D; n+=7, node++)
+                fnft__akns_es8_z_coefficients(&q[n],&r[n],&tmp1[24*node]);
             break;
         case akns_discretization_ES4:
             tmp1 = derivative_flag ? malloc(2*D*sizeof(COMPLEX)) : malloc(D*sizeof(COMPLEX));
@@ -570,6 +645,17 @@ INT akns_scatter_matrix(UINT const D,
                     if (W != NULL)
                         W[i] = Wi;
                     break;
+                case akns_discretization_ES8:
+                    for (UINT n = 0, node=0; n < D; n+=7, node++) {
+                        akns_scatter_U_ES8(&tmp1[24*node],l_curr,eps_t,1,0,*U);
+                        misc_matrix_mult(4,4,4,&U[0][0],&H[current][0][0],&H[!current][0][0]);
+                        current = !current;
+                        if (W != NULL)
+                            Wi += misc_normalize_vector(16,&H[current][0][0]);
+                    }
+                    if (W != NULL)
+                        W[i] = Wi;
+                    break;
 
                 default: // Unknown discretization
                     ret_code = E_INVALID_ARGUMENT(discretization);
@@ -695,6 +781,18 @@ INT akns_scatter_matrix(UINT const D,
                         current = !current;
                         if (W != NULL)
                             Wi += misc_normalize_vector(4, &H[current][0][0]);
+                    }
+                    if (W != NULL)
+                        W[i] = Wi;
+                    break;
+                case akns_discretization_ES8:
+                    for (UINT n = 0, node=0; n < D; n+=7, node++) {
+                        COMPLEX U[2][2] = {{0}};
+                        akns_scatter_U_ES8(&tmp1[24*node],l_curr,eps_t,0,0,*U);
+                        misc_matrix_mult(2,2,2,&U[0][0],&H[current][0][0],&H[!current][0][0]);
+                        current = !current;
+                        if (W != NULL)
+                            Wi += misc_normalize_vector(4,&H[current][0][0]);
                     }
                     if (W != NULL)
                         W[i] = Wi;
@@ -830,6 +928,12 @@ INT akns_scatter_bound_states(UINT const D,
     switch (discretization) {
         case akns_discretization_CT4:
         case akns_discretization_ES6:
+            break;
+        case akns_discretization_ES8:
+            tmp1 = malloc(24*(D/7)*sizeof(COMPLEX));
+            CHECK_NOMEM(tmp1,ret_code,leave_fun);
+            for (UINT n=0, node=0; n<D; n+=7, node++)
+                fnft__akns_es8_z_coefficients(&q[n],&r[n],&tmp1[24*node]);
             break;
         // Fourth-order exponential method which requires
         // one matrix exponential. The matrix exponential is
@@ -1028,6 +1132,17 @@ INT akns_scatter_bound_states(UINT const D,
                     }
                 }
                 break;
+            case akns_discretization_ES8:
+                for (UINT n=0, n_given=0; n<D; n+=7, n_given++) {
+                    akns_scatter_U_ES8(&tmp1[24*n_given],l_curr,eps_t,1,0,*U);
+                    misc_matrix_mult(4,4,1,*U,&PHI[4*n_given],&PHI[4*(n_given+1)]);
+                    if (normalization_flag) {
+                        WPHI_acc += misc_normalize_vector(4,&PHI[4*(n_given+1)]);
+                        if (WPHI != NULL)
+                            WPHI[n_given+1] = WPHI_acc;
+                    }
+                }
+                break;
 
             default: // Unknown discretization
                 ret_code = E_INVALID_ARGUMENT(discretization);
@@ -1146,6 +1261,17 @@ INT akns_scatter_bound_states(UINT const D,
                         misc_matrix_mult(2,2,1,*U,&PSI[4*(n_given+1)],&PSI[4*n_given]);
                         if (normalization_flag) {
                             WPSI_acc += misc_normalize_vector(2, &PSI[4*n_given]);
+                            WPSI[n_given] = WPSI_acc;
+                        }
+                    }
+                    break;
+                case akns_discretization_ES8:
+                    for (UINT n_given=D_given, n=D-7; n_given-->0; n-=7) {
+                        COMPLEX U[2][2] = {{0}};
+                        akns_scatter_U_ES8(&tmp1[24*n_given],l_curr,eps_t,0,1,*U);
+                        misc_matrix_mult(2,2,1,*U,&PSI[4*(n_given+1)],&PSI[4*n_given]);
+                        if (normalization_flag) {
+                            WPSI_acc += misc_normalize_vector(2,&PSI[4*n_given]);
                             WPSI[n_given] = WPSI_acc;
                         }
                     }

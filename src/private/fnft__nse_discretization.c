@@ -307,6 +307,9 @@ INT fnft__nse_discretization_to_akns_discretization(nse_discretization_t nse_dis
         case nse_discretization_ES6:
             *akns_discretization = akns_discretization_ES6;
             break;
+        case nse_discretization_ES8:
+            *akns_discretization = akns_discretization_ES8;
+            break;
         case nse_discretization_FTES4_4A:
             *akns_discretization = akns_discretization_FTES4_4A;
             break;
@@ -434,6 +437,7 @@ INT fnft__nse_discretization_phase_factor_a(const REAL eps_t, const UINT D, REAL
         case nse_discretization_TES4:
         case nse_discretization_CT4:
         case nse_discretization_ES6:
+        case nse_discretization_ES8:
         case nse_discretization_FES4_PADE:
         case nse_discretization_FES6_PADE:
             *phase_factor_a = (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
@@ -511,6 +515,7 @@ INT fnft__nse_discretization_phase_factor_b(const REAL eps_t, const UINT D, REAL
         case nse_discretization_TES4:
         case nse_discretization_CT4:
         case nse_discretization_ES6:
+        case nse_discretization_ES8:
         case nse_discretization_FES4_PADE:
         case nse_discretization_FES6_PADE:
             *phase_factor_b =  - (T[1]+eps_t*boundary_coeff) - (T[0]-eps_t*boundary_coeff);
