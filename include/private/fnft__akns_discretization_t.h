@@ -64,15 +64,14 @@
  * Padé Schemes Based on Chebyshev Polynomials for the Direct
  * Zakharov-Shabat Problem,&quot;</a> arXiv:2608.11892v1 [math.NA], preprint
  * (2026).\n
- * `fnft__akns_discretization_FES8_PADE` denotes its direct Cayley fast Padé
- * family with degrees 3--7. The local numerator and denominator degrees are
+ * `fnft__akns_discretization_FES8_PADE` denotes its Padé family with degrees
+ * 3--7. The local numerator and denominator degrees are
  * 10 times the Padé degree. The degree-3 method has order six; degrees 4--7
- * have order eight. Its global power-basis representation is intended for
- * continuous-spectrum reference calculations and can become ill-conditioned
- * on fine grids.\n
+ * have order eight. Direct Cayley and Chebyshev--Joukowski representations
+ * are provided for continuous-spectrum calculations.\n
  * All above discretizations except `fnft__akns_discretization_FES8_PADE` are
- * supported by \link fnft__akns_scatter.h \endlink. The direct Cayley family
- * is handled by \link fnft__akns_fscatter_pade.h \endlink.\n
+ * supported by \link fnft__akns_scatter.h \endlink. The Padé family is
+ * handled by \link fnft__akns_fscatter_pade.h \endlink.\n
  * The exponential spliting schemes, defined in
  * Prins and Wahls, <a href="https://doi.org/10.1109/ICASSP.2018.8461708">&quot;
  * Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot;
@@ -128,7 +127,7 @@
  * `fnft__akns_discretization_CT4`: Non-polynomial slow method, order of accuracy = 4\n
  * `fnft__akns_discretization_ES6`: Non-polynomial slow method, order of accuracy = 6\n
  * `fnft__akns_discretization_ES8`: Non-polynomial slow method, order of accuracy = 8\n
- * `fnft__akns_discretization_FES8_PADE`: Direct Cayley fast Padé family, degree = 30 by default, order of accuracy = 6 for Padé degree 3 and 8 for degrees 4--7\n
+ * `fnft__akns_discretization_FES8_PADE`: Padé family, local degree = 30 by default, order of accuracy = 6 for Padé degree 3 and 8 for degrees 4--7\n
  *
  * The generic discretizations are used in \link fnft__akns_fscatter.h
  * \endlink and \link fnft__akns_scatter.h \endlink. The

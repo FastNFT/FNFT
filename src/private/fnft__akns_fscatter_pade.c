@@ -319,6 +319,22 @@ static void polynomial_add_padded_power(
     }
 }
 
+static void polynomial_add_power(COMPLEX result[LOCAL_MAX_DEGREE + 1],
+        COMPLEX const power[LOCAL_MAX_DEGREE + 1], const UINT power_degree,
+        const UINT padding_power, const COMPLEX scale,
+        const INT pad_with_one_plus_variable)
+{
+    UINT i;
+
+    if (pad_with_one_plus_variable) {
+        polynomial_add_padded_power(result, power, power_degree,
+                padding_power, scale);
+    } else {
+        for (i = 0; i <= power_degree; i++)
+            result[i] += scale*power[i];
+    }
+}
+
 static void pade_coefficients(const UINT degree,
         REAL f0[PADE_MAX_DEGREE + 1],
         REAL temp[PADE_MAX_DEGREE],
@@ -349,19 +365,13 @@ static void pade_coefficients(const UINT degree,
     }
 }
 
-static void build_local_transition(const UINT D, const UINT index,
-        COMPLEX const * const q, COMPLEX const * const r,
-        const REAL eps_t, const UINT method_order,
-        const UINT pade_degree, const REAL h,
+static void build_pade_transition(
+        COMPLEX x[4][LOCAL_MAX_DEGREE + 1], const UINT z_degree,
+        const UINT pade_degree, const INT pad_with_one_plus_variable,
         COMPLEX numerator[4][LOCAL_MAX_DEGREE + 1],
         COMPLEX denominator_polynomial[LOCAL_MAX_DEGREE + 1])
 {
-    const UINT z_degree = method_order == 4 ? 1
-            : (method_order == 6 ? 3 : 5);
     const UINT common_degree = 2*z_degree*pade_degree;
-    small_matrix_t z_matrix;
-    COMPLEX x[4][Z_MAX_DEGREE + 1];
-    COMPLEX x_full[4][LOCAL_MAX_DEGREE + 1];
     COMPLEX lambda2_a[LOCAL_MAX_DEGREE + 1];
     COMPLEX lambda2_b[LOCAL_MAX_DEGREE + 1];
     COMPLEX lambda2[LOCAL_MAX_DEGREE + 1];
@@ -374,17 +384,9 @@ static void build_local_transition(const UINT D, const UINT index,
     REAL denominator[PADE_MAX_DEGREE + 1];
     UINT i, j;
 
-    build_z_polynomial(D, index, q, r, eps_t, method_order, &z_matrix);
-    for (i = 0; i < 4; i++) {
-        transform_z_to_w(&z_matrix.entry[i], z_degree, h, x[i]);
-        polynomial_zero(x_full[i]);
-        for (j = 0; j <= z_degree; j++)
-            x_full[i][j] = x[i][j];
-    }
-
-    polynomial_multiply(x_full[0], z_degree, x_full[0], z_degree,
+    polynomial_multiply(x[0], z_degree, x[0], z_degree,
             lambda2_a);
-    polynomial_multiply(x_full[1], z_degree, x_full[2], z_degree,
+    polynomial_multiply(x[1], z_degree, x[2], z_degree,
             lambda2_b);
     for (i = 0; i <= LOCAL_MAX_DEGREE; i++)
         lambda2[i] = lambda2_a[i] + lambda2_b[i];
@@ -400,21 +402,23 @@ static void build_local_transition(const UINT D, const UINT index,
     polynomial_zero(temp_polynomial);
     polynomial_zero(denominator_polynomial);
     for (i = 0; i <= pade_degree; i++) {
-        polynomial_add_padded_power(f0_polynomial, lambda_power[i],
-                2*z_degree*i, common_degree - 2*z_degree*i, f0[i]);
-        polynomial_add_padded_power(denominator_polynomial, lambda_power[i],
-                2*z_degree*i, common_degree - 2*z_degree*i, denominator[i]);
+        polynomial_add_power(f0_polynomial, lambda_power[i], 2*z_degree*i,
+                common_degree - 2*z_degree*i, f0[i],
+                pad_with_one_plus_variable);
+        polynomial_add_power(denominator_polynomial, lambda_power[i],
+                2*z_degree*i, common_degree - 2*z_degree*i, denominator[i],
+                pad_with_one_plus_variable);
         if (i < pade_degree) {
-            polynomial_add_padded_power(temp_polynomial, lambda_power[i],
-                    2*z_degree*i,
-                    common_degree - z_degree - 2*z_degree*i, temp[i]);
+            polynomial_add_power(temp_polynomial, lambda_power[i],
+                    2*z_degree*i, common_degree - z_degree - 2*z_degree*i,
+                    temp[i], pad_with_one_plus_variable);
         }
     }
 
     for (i = 0; i < 4; i++) {
         polynomial_zero(numerator[i]);
         polynomial_multiply(temp_polynomial, common_degree - z_degree,
-                x_full[i], z_degree, product);
+                x[i], z_degree, product);
         for (j = 0; j <= common_degree; j++)
             numerator[i][j] = product[j];
     }
@@ -422,6 +426,76 @@ static void build_local_transition(const UINT D, const UINT index,
         numerator[0][j] += f0_polynomial[j];
         numerator[3][j] += f0_polynomial[j];
     }
+}
+
+static void build_local_transition(const UINT D, const UINT index,
+        COMPLEX const * const q, COMPLEX const * const r,
+        const REAL eps_t, const UINT method_order,
+        const UINT pade_degree, const REAL h,
+        COMPLEX numerator[4][LOCAL_MAX_DEGREE + 1],
+        COMPLEX denominator_polynomial[LOCAL_MAX_DEGREE + 1])
+{
+    const UINT z_degree = method_order == 4 ? 1
+            : (method_order == 6 ? 3 : 5);
+    small_matrix_t z_matrix;
+    COMPLEX x[4][LOCAL_MAX_DEGREE + 1];
+    COMPLEX transformed[Z_MAX_DEGREE + 1];
+    UINT i, j;
+
+    build_z_polynomial(D, index, q, r, eps_t, method_order, &z_matrix);
+    for (i = 0; i < 4; i++) {
+        transform_z_to_w(&z_matrix.entry[i], z_degree, h, transformed);
+        polynomial_zero(x[i]);
+        for (j = 0; j <= z_degree; j++)
+            x[i][j] = transformed[j];
+    }
+    build_pade_transition(x, z_degree, pade_degree, 1, numerator,
+            denominator_polynomial);
+}
+
+static void transform_z_to_affine_x(
+        small_poly_t const * const z_polynomial, const REAL c, const REAL H,
+        COMPLEX x_polynomial[LOCAL_MAX_DEGREE + 1])
+{
+    UINT degree, power;
+
+    polynomial_zero(x_polynomial);
+    for (degree = 0; degree <= z_polynomial->degree; degree++) {
+        for (power = 0; power <= degree; power++) {
+            x_polynomial[power] += z_polynomial->coefficient[degree]
+                    * binomial_coefficient(degree, power)
+                    * POW(c, degree - power)*POW(H, power);
+        }
+    }
+}
+
+static INT build_local_transition_chebyshev(const UINT D, const UINT index,
+        COMPLEX const * const q, COMPLEX const * const r,
+        const REAL eps_t, const UINT pade_degree, const REAL c, const REAL H,
+        COMPLEX numerator[4][LOCAL_MAX_DEGREE + 1],
+        COMPLEX denominator[LOCAL_MAX_DEGREE + 1])
+{
+    small_matrix_t z_matrix;
+    COMPLEX x[4][LOCAL_MAX_DEGREE + 1];
+    COMPLEX numerator_power[4][LOCAL_MAX_DEGREE + 1];
+    COMPLEX denominator_power[LOCAL_MAX_DEGREE + 1];
+    UINT component;
+    INT ret_code;
+
+    build_z_polynomial(D, index, q, r, eps_t, 8, &z_matrix);
+    for (component = 0; component < 4; component++)
+        transform_z_to_affine_x(&z_matrix.entry[component], c, H,
+                x[component]);
+    build_pade_transition(x, Z_MAX_DEGREE, pade_degree, 0,
+            numerator_power, denominator_power);
+    for (component = 0; component < 4; component++) {
+        ret_code = poly_power_to_chebyshev(10*pade_degree,
+                numerator_power[component], numerator[component]);
+        if (ret_code != SUCCESS)
+            return ret_code;
+    }
+    return poly_power_to_chebyshev(10*pade_degree, denominator_power,
+            denominator);
 }
 
 static UINT local_degree(const UINT method_order, const UINT pade_degree)
@@ -553,6 +627,76 @@ INT akns_fscatter_pade(const UINT D, COMPLEX const * const q,
             denominator_exponent);
     if (ret_code == SUCCESS)
         reverse_polynomial(denominator, *denominator_degree);
+
+release_mem:
+    free(local_matrices);
+    return ret_code;
+}
+
+INT akns_fscatter_pade_chebyshev(const UINT D,
+        COMPLEX const * const q, COMPLEX const * const r, const REAL eps_t,
+        const UINT pade_degree, const REAL c, const REAL H,
+        COMPLEX * const numerator, UINT * const numerator_degree,
+        INT * const numerator_exponent, COMPLEX * const denominator,
+        UINT * const denominator_degree, INT * const denominator_exponent)
+{
+    const UINT degree = local_degree(8, pade_degree);
+    UINT matrix_numel, denominator_numel, i, j, component;
+    COMPLEX *local_matrices = NULL;
+    COMPLEX local_numerator[4][LOCAL_MAX_DEGREE + 1];
+    COMPLEX local_denominator[LOCAL_MAX_DEGREE + 1];
+    INT ret_code;
+
+    if (D < 7 || D > INT_MAX)
+        return E_INVALID_ARGUMENT(D);
+    if (q == NULL)
+        return E_INVALID_ARGUMENT(q);
+    if (r == NULL)
+        return E_INVALID_ARGUMENT(r);
+    if (!(eps_t > 0.0))
+        return E_INVALID_ARGUMENT(eps_t);
+    if (degree == 0)
+        return E_INVALID_ARGUMENT(pade_degree);
+    if (!(H > 0.0) || H == INFINITY || c != c || FABS(c) == INFINITY)
+        return E_INVALID_ARGUMENT(H);
+    if (numerator == NULL || numerator_degree == NULL
+            || denominator == NULL || denominator_degree == NULL)
+        return E_INVALID_ARGUMENT(numerator);
+
+    matrix_numel = akns_fscatter_pade_numel(D, 8, pade_degree);
+    denominator_numel = akns_fscatter_pade_den_numel(D, 8, pade_degree);
+    if (matrix_numel == 0 || denominator_numel == 0)
+        return E_INVALID_ARGUMENT(D);
+    local_matrices = malloc(matrix_numel*sizeof(COMPLEX));
+    if (local_matrices == NULL)
+        return E_NOMEM;
+    memset(local_matrices, 0, matrix_numel*sizeof(COMPLEX));
+    memset(denominator, 0, denominator_numel*sizeof(COMPLEX));
+
+    for (i = 0; i < D; i++) {
+        ret_code = build_local_transition_chebyshev(D, i, q, r, eps_t,
+                pade_degree, c, H, local_numerator, local_denominator);
+        if (ret_code != SUCCESS)
+            goto release_mem;
+        for (component = 0; component < 4; component++) {
+            COMPLEX * const destination = local_matrices
+                    + component*D*(degree + 1)
+                    + (D - 1 - i)*(degree + 1);
+            for (j = 0; j <= degree; j++)
+                destination[j] = local_numerator[component][j];
+        }
+        for (j = 0; j <= degree; j++)
+            denominator[i*(degree + 1) + j] = local_denominator[j];
+    }
+
+    *numerator_degree = degree;
+    ret_code = poly_fmult2x2_chebyshev(numerator_degree, D, local_matrices,
+            numerator, numerator_exponent);
+    if (ret_code != SUCCESS)
+        goto release_mem;
+    *denominator_degree = degree;
+    ret_code = poly_fmult_chebyshev(denominator_degree, D, denominator,
+            denominator_exponent);
 
 release_mem:
     free(local_matrices);

@@ -17,11 +17,13 @@
  * Sander Wahls (TU Delft) 2017-2018, 2021, 2023.
  * Peter J Prins (TU Delft) 2020.
  * Lianne de Vries (TU Delft student) 2021.
+ * Igor Chekhovskoy 2026.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include <stdbool.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -136,6 +138,58 @@ leave_fun:
 static inline INT poly_rescale(const UINT d, COMPLEX * const p)
 {
     return misc_normalize_vector(d+1, p);
+}
+
+INT fnft__poly_power_to_chebyshev(const UINT degree,
+    COMPLEX const * const power, COMPLEX * const chebyshev)
+{
+    COMPLEX *copy = NULL;
+    COMPLEX const *source = power;
+    REAL scale;
+    UINT i, j;
+
+    if (power == NULL || chebyshev == NULL)
+        return E_INVALID_ARGUMENT(power);
+    if (degree == UINT_MAX)
+        return E_INVALID_ARGUMENT(degree);
+    if (power == chebyshev) {
+        copy = malloc((degree + 1)*sizeof(COMPLEX));
+        if (copy == NULL)
+            return E_NOMEM;
+        memcpy(copy, power, (degree + 1)*sizeof(COMPLEX));
+        source = copy;
+    }
+    memset(chebyshev, 0, (degree + 1)*sizeof(COMPLEX));
+    chebyshev[0] = source[0];
+    for (i = 1; i <= degree; i++) {
+        REAL coefficient = 1.0;
+
+        scale = ldexp(1.0, 1 - (INT)i);
+        for (j = 0; j < (i + 1)/2; j++) {
+            chebyshev[i - 2*j] += source[i]*scale*coefficient;
+            coefficient *= (REAL)(i - j)/(REAL)(j + 1);
+        }
+        if ((i & 1U) == 0)
+            chebyshev[0] += source[i]*0.5*scale*coefficient;
+    }
+    free(copy);
+    return SUCCESS;
+}
+
+COMPLEX fnft__poly_eval_chebyshev(const UINT degree,
+    COMPLEX const * const chebyshev, const COMPLEX x)
+{
+    COMPLEX b1 = 0.0, b2 = 0.0;
+    UINT i;
+
+    if (chebyshev == NULL)
+        return NAN + I*NAN;
+    for (i = degree; i > 0; i--) {
+        const COMPLEX b0 = 2.0*x*b1 - b2 + chebyshev[i];
+        b2 = b1;
+        b1 = b0;
+    }
+    return x*b1 - b2 + chebyshev[0];
 }
 
 INT fnft__poly_fmult(UINT * const d, UINT n, COMPLEX * const p,
@@ -521,6 +575,330 @@ static inline INT poly_rescale2x2(const UINT d,
     }
 
     return (INT) a;
+}
+
+static void chebyshev_to_laurent(const UINT degree,
+    COMPLEX const * const chebyshev, COMPLEX * const laurent)
+{
+    UINT i;
+
+    memset(laurent, 0, (2*degree + 1)*sizeof(COMPLEX));
+    laurent[degree] = chebyshev[0];
+    for (i = 1; i <= degree; i++) {
+        laurent[degree - i] = 0.5*chebyshev[i];
+        laurent[degree + i] = 0.5*chebyshev[i];
+    }
+}
+
+static void laurent_to_chebyshev(const UINT degree,
+    COMPLEX const * const laurent, COMPLEX * const chebyshev)
+{
+    UINT i;
+
+    chebyshev[0] = laurent[degree];
+    for (i = 1; i <= degree; i++)
+        chebyshev[i] = laurent[degree - i] + laurent[degree + i];
+}
+
+static INT multiply_two_chebyshev(const UINT degree,
+    COMPLEX const * const first, COMPLEX const * const second,
+    COMPLEX * const product, fft_wrapper_plan_t plan_fwd,
+    fft_wrapper_plan_t plan_inv, COMPLEX * const buffer0,
+    COMPLEX * const buffer1, COMPLEX * const buffer2,
+    COMPLEX * const laurent_first, COMPLEX * const laurent_second,
+    COMPLEX * const laurent_product)
+{
+    INT ret_code;
+
+    chebyshev_to_laurent(degree, first, laurent_first);
+    chebyshev_to_laurent(degree, second, laurent_second);
+    ret_code = poly_fmult_two_polys(2*degree, laurent_first,
+            laurent_second, laurent_product, plan_fwd, plan_inv, buffer0,
+            buffer1, buffer2, 0);
+    if (ret_code == SUCCESS)
+        laurent_to_chebyshev(2*degree, laurent_product, product);
+    return ret_code;
+}
+
+INT fnft__poly_fmult_chebyshev(UINT * const d, UINT n,
+    COMPLEX * const p, INT * const W_ptr)
+{
+    const UINT original_degree = d == NULL ? 0 : *d;
+    UINT degree, excess, i, j, length, max_degree;
+    COMPLEX *first, *second, *product;
+    COMPLEX *buffer0 = NULL, *buffer1 = NULL, *buffer2 = NULL;
+    COMPLEX *laurent_first = NULL, *laurent_second = NULL;
+    COMPLEX *laurent_product = NULL;
+    fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
+    fft_wrapper_plan_t plan_inv = fft_wrapper_safe_plan_init();
+    INT W = 0, ret_code = SUCCESS;
+
+    if (d == NULL || p == NULL || n == 0)
+        return E_INVALID_ARGUMENT(p);
+    if (original_degree == UINT_MAX)
+        return E_INVALID_ARGUMENT(*d);
+    if (n == 1) {
+        if (W_ptr != NULL)
+            *W_ptr = 0;
+        return SUCCESS;
+    }
+    if (n > UINT_MAX/2 + 1U)
+        return E_INVALID_ARGUMENT(n);
+    if (n > UINT_MAX/(original_degree + 1))
+        return E_INVALID_ARGUMENT(n);
+    excess = misc_nextpowerof2(n) - n;
+    degree = original_degree;
+    first = p + n*(degree + 1);
+    for (i = 0; i < excess; i++) {
+        first[0] = 1.0;
+        for (j = 1; j <= degree; j++)
+            first[j] = 0.0;
+        first += degree + 1;
+    }
+    n += excess;
+    if (degree != 0 && n > UINT_MAX/(2*degree))
+        return E_INVALID_ARGUMENT(n);
+    max_degree = degree*n/2;
+    if (max_degree > (UINT_MAX - 1)/4)
+        return E_INVALID_ARGUMENT(n);
+    length = poly_fmult_two_polys_len(2*max_degree);
+    buffer0 = fft_wrapper_malloc(length*sizeof(COMPLEX));
+    buffer1 = fft_wrapper_malloc(length*sizeof(COMPLEX));
+    buffer2 = fft_wrapper_malloc(length*sizeof(COMPLEX));
+    laurent_first = malloc((2*max_degree + 1)*sizeof(COMPLEX));
+    laurent_second = malloc((2*max_degree + 1)*sizeof(COMPLEX));
+    laurent_product = malloc((4*max_degree + 1)*sizeof(COMPLEX));
+    if (buffer0 == NULL || buffer1 == NULL || buffer2 == NULL
+            || laurent_first == NULL || laurent_second == NULL
+            || laurent_product == NULL) {
+        ret_code = E_NOMEM;
+        goto leave_fun;
+    }
+
+    while (n >= 2) {
+        length = poly_fmult_two_polys_len(2*degree);
+        ret_code = fft_wrapper_create_plan(&plan_fwd, length, buffer0,
+                buffer1, -1);
+        CHECK_RETCODE(ret_code, leave_fun);
+        ret_code = fft_wrapper_create_plan(&plan_inv, length, buffer0,
+                buffer1, 1);
+        CHECK_RETCODE(ret_code, leave_fun);
+        first = p;
+        second = p + degree + 1;
+        product = p;
+        for (i = 0; i < n; i += 2) {
+            ret_code = multiply_two_chebyshev(degree, first, second, product,
+                    plan_fwd, plan_inv, buffer0, buffer1, buffer2,
+                    laurent_first, laurent_second, laurent_product);
+            CHECK_RETCODE(ret_code, leave_fun);
+            if (W_ptr != NULL)
+                W += poly_rescale(2*degree, product);
+            first += 2*degree + 2;
+            second += 2*degree + 2;
+            product += 2*degree + 1;
+        }
+        fft_wrapper_destroy_plan(&plan_fwd);
+        fft_wrapper_destroy_plan(&plan_inv);
+        degree *= 2;
+        n /= 2;
+    }
+    *d = degree - excess*original_degree;
+    if (W_ptr != NULL)
+        *W_ptr = W;
+
+leave_fun:
+    fft_wrapper_destroy_plan(&plan_fwd);
+    fft_wrapper_destroy_plan(&plan_inv);
+    fft_wrapper_free(buffer0);
+    fft_wrapper_free(buffer1);
+    fft_wrapper_free(buffer2);
+    free(laurent_first);
+    free(laurent_second);
+    free(laurent_product);
+    return ret_code;
+}
+
+static INT multiply_two_chebyshev2x2(const UINT degree,
+    COMPLEX const * const first, const UINT first_stride,
+    COMPLEX const * const second, const UINT second_stride,
+    COMPLEX * const product, const UINT product_stride,
+    fft_wrapper_plan_t plan_fwd, fft_wrapper_plan_t plan_inv,
+    COMPLEX * const buffer0, COMPLEX * const buffer1,
+    COMPLEX * const buffer2, COMPLEX * const laurent_first,
+    COMPLEX * const laurent_second, COMPLEX * const laurent_product)
+{
+    const UINT input_stride = 2*degree + 1;
+    const UINT output_stride = 4*degree + 1;
+    UINT component;
+    INT ret_code;
+
+    for (component = 0; component < 4; component++) {
+        chebyshev_to_laurent(degree, first + component*first_stride,
+                laurent_first + component*input_stride);
+        chebyshev_to_laurent(degree, second + component*second_stride,
+                laurent_second + component*input_stride);
+    }
+    ret_code = poly_fmult_two_polys2x2(2*degree, laurent_first,
+            input_stride, laurent_second, input_stride, laurent_product,
+            output_stride, plan_fwd, plan_inv, buffer0, buffer1, buffer2, 0);
+    if (ret_code != SUCCESS)
+        return ret_code;
+    for (component = 0; component < 4; component++)
+        laurent_to_chebyshev(2*degree,
+                laurent_product + component*output_stride,
+                product + component*product_stride);
+    return SUCCESS;
+}
+
+INT fnft__poly_fmult2x2_chebyshev(UINT * const d, UINT n,
+    COMPLEX * const p, COMPLEX * const result, INT * const W_ptr)
+{
+    const UINT original_degree = d == NULL ? 0 : *d;
+    UINT degree, excess, padded_n, max_degree, length, i, j;
+    UINT first_offset, second_offset, product_offset;
+    UINT input_stride, output_stride;
+    COMPLEX *p11, *p12, *p21, *p22;
+    COMPLEX *buffer0 = NULL, *buffer1 = NULL, *buffer2 = NULL;
+    COMPLEX *laurent_first = NULL, *laurent_second = NULL;
+    COMPLEX *laurent_product = NULL;
+    fft_wrapper_plan_t plan_fwd = fft_wrapper_safe_plan_init();
+    fft_wrapper_plan_t plan_inv = fft_wrapper_safe_plan_init();
+    INT W = 0, ret_code = SUCCESS;
+
+    if (d == NULL || p == NULL || result == NULL || n == 0)
+        return E_INVALID_ARGUMENT(p);
+    if (original_degree == UINT_MAX)
+        return E_INVALID_ARGUMENT(*d);
+    if (n == 1) {
+        memcpy(result, p, 4*(original_degree + 1)*sizeof(COMPLEX));
+        if (W_ptr != NULL)
+            *W_ptr = 0;
+        return SUCCESS;
+    }
+    if (n > UINT_MAX/2 + 1U)
+        return E_INVALID_ARGUMENT(n);
+    padded_n = misc_nextpowerof2(n);
+    if (padded_n == 0 || (original_degree != 0
+            && padded_n > UINT_MAX/original_degree))
+        return E_INVALID_ARGUMENT(n);
+    excess = padded_n - n;
+    degree = original_degree;
+    p11 = p;
+    p12 = p11 + n*(degree + 1);
+    p21 = p12 + n*(degree + 1);
+    p22 = p21 + n*(degree + 1);
+    if (excess > 0) {
+        COMPLEX * const p12_padded = p + padded_n*(degree + 1);
+        COMPLEX * const p21_padded = p12_padded + padded_n*(degree + 1);
+        COMPLEX * const p22_padded = p21_padded + padded_n*(degree + 1);
+
+        memmove(p22_padded, p22, n*(degree + 1)*sizeof(COMPLEX));
+        memmove(p21_padded, p21, n*(degree + 1)*sizeof(COMPLEX));
+        memmove(p12_padded, p12, n*(degree + 1)*sizeof(COMPLEX));
+        p12 = p12_padded;
+        p21 = p21_padded;
+        p22 = p22_padded;
+        for (i = n; i < padded_n; i++) {
+            p11[i*(degree + 1)] = 1.0;
+            p12[i*(degree + 1)] = 0.0;
+            p21[i*(degree + 1)] = 0.0;
+            p22[i*(degree + 1)] = 1.0;
+            for (j = 1; j <= degree; j++) {
+                p11[i*(degree + 1) + j] = 0.0;
+                p12[i*(degree + 1) + j] = 0.0;
+                p21[i*(degree + 1) + j] = 0.0;
+                p22[i*(degree + 1) + j] = 0.0;
+            }
+        }
+    }
+    n = padded_n;
+    max_degree = degree*n/2;
+    if (max_degree > (UINT_MAX - 4)/16) {
+        ret_code = E_INVALID_ARGUMENT(n);
+        goto leave_fun;
+    }
+    length = poly_fmult_two_polys_len(2*max_degree);
+    buffer0 = fft_wrapper_malloc(length*sizeof(COMPLEX));
+    buffer1 = fft_wrapper_malloc(length*sizeof(COMPLEX));
+    buffer2 = fft_wrapper_malloc(length*sizeof(COMPLEX));
+    laurent_first = malloc(4*(2*max_degree + 1)*sizeof(COMPLEX));
+    laurent_second = malloc(4*(2*max_degree + 1)*sizeof(COMPLEX));
+    laurent_product = malloc(4*(4*max_degree + 1)*sizeof(COMPLEX));
+    if (buffer0 == NULL || buffer1 == NULL || buffer2 == NULL
+            || laurent_first == NULL || laurent_second == NULL
+            || laurent_product == NULL) {
+        ret_code = E_NOMEM;
+        goto leave_fun;
+    }
+
+    while (n >= 2) {
+        length = poly_fmult_two_polys_len(2*degree);
+        ret_code = fft_wrapper_create_plan(&plan_fwd, length, buffer0,
+                buffer1, -1);
+        CHECK_RETCODE(ret_code, leave_fun);
+        ret_code = fft_wrapper_create_plan(&plan_inv, length, buffer0,
+                buffer1, 1);
+        CHECK_RETCODE(ret_code, leave_fun);
+        input_stride = n*(degree + 1);
+        output_stride = (n/2)*(2*degree + 1);
+        first_offset = 0;
+        second_offset = degree + 1;
+        product_offset = 0;
+        for (i = 0; i < n; i += 2) {
+            ret_code = multiply_two_chebyshev2x2(degree,
+                    p + first_offset, input_stride, p + second_offset,
+                    input_stride, result + product_offset, output_stride,
+                    plan_fwd, plan_inv, buffer0, buffer1, buffer2,
+                    laurent_first, laurent_second, laurent_product);
+            CHECK_RETCODE(ret_code, leave_fun);
+            if (W_ptr != NULL)
+                W += poly_rescale2x2(2*degree, result + product_offset,
+                        result + output_stride + product_offset,
+                        result + 2*output_stride + product_offset,
+                        result + 3*output_stride + product_offset);
+            first_offset += 2*degree + 2;
+            second_offset += 2*degree + 2;
+            product_offset += 2*degree + 1;
+        }
+        fft_wrapper_destroy_plan(&plan_fwd);
+        fft_wrapper_destroy_plan(&plan_inv);
+        degree *= 2;
+        n /= 2;
+        if (n > 1) {
+            const UINT count = n*(degree + 1);
+            memcpy(p, result, count*sizeof(COMPLEX));
+            memcpy(p + count, result + count, count*sizeof(COMPLEX));
+            memcpy(p + 2*count, result + 2*count, count*sizeof(COMPLEX));
+            memcpy(p + 3*count, result + 3*count, count*sizeof(COMPLEX));
+        }
+    }
+    if (excess > 0) {
+        const UINT true_degree = degree - excess*original_degree;
+        const UINT padded_stride = degree + 1;
+        const UINT true_stride = true_degree + 1;
+
+        memmove(result + true_stride, result + padded_stride,
+                true_stride*sizeof(COMPLEX));
+        memmove(result + 2*true_stride, result + 2*padded_stride,
+                true_stride*sizeof(COMPLEX));
+        memmove(result + 3*true_stride, result + 3*padded_stride,
+                true_stride*sizeof(COMPLEX));
+        degree = true_degree;
+    }
+    *d = degree;
+    if (W_ptr != NULL)
+        *W_ptr = W;
+
+leave_fun:
+    fft_wrapper_destroy_plan(&plan_fwd);
+    fft_wrapper_destroy_plan(&plan_inv);
+    fft_wrapper_free(buffer0);
+    fft_wrapper_free(buffer1);
+    fft_wrapper_free(buffer2);
+    free(laurent_first);
+    free(laurent_second);
+    free(laurent_product);
+    return ret_code;
 }
 
 // rescale function for 3x3.
@@ -1005,5 +1383,3 @@ release_mem:
     fft_wrapper_free(buf2);
     return ret_code;
 }
-
-

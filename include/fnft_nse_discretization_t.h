@@ -99,7 +99,7 @@
  * 448, 110764 (2022). Their Padé degree and
  * linear-fractional-map scale are selected through the corresponding options
  * structure.\n
- * `fnft_nse_discretization_FES8_PADE` is the direct Cayley fast variant of
+ * `fnft_nse_discretization_FES8_PADE` is the Padé family based on
  * the eighth-order exponential scheme from S. Medvedev, I. Chekhovskoy,
  * I. Vaseva and M. Fedoruk,
  * <a href="https://doi.org/10.48550/arXiv.2608.11892">&quot;Fast Eighth-Order
@@ -107,11 +107,10 @@
  * Problem,&quot;</a> arXiv:2608.11892v1 [math.NA], preprint (2026). The article
  * reports continuous-spectrum experiments for Padé degrees 3--6 and finds
  * the direct Cayley variants less accurate than the slow and Chebyshev-based
- * variants. In particular, evaluation of the high-degree global power-basis
- * polynomials can become ill-conditioned as the grid is refined. This direct
- * reference variant is therefore limited to the continuous spectrum; the
- * Chebyshev representation is the practical high-grid variant. Degree 7 is
- * provided by the same general Padé mechanism.\n
+ * variants. The representation is selected in \link fnft_nsev_opts_t
+ * \endlink. Both representations are limited to the continuous spectrum.
+ * Degree 7 is provided by the same general Padé mechanism, although the
+ * article reports numerical experiments only for degrees 3--6.\n
  * `-2S` is from G. Strang,<a href="https://link.springer.com/content/pdf/10.1007/BF00281235.pdf">&quot;
  * Accurate partial difference methods I: Linear Cauchy problems,&quot;</a> 
  * in Archive for Rational Mechanics and Analysis, 12(1), 392-402, Jan 1963. It is also

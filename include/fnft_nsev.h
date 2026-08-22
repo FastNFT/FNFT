@@ -139,6 +139,26 @@ typedef enum {
 } fnft_nsev_cstype_t;
 
 /**
+ * Enum that specifies the representation used to build Padé transfer
+ * matrices. Used in \link fnft_nsev_opts_t \endlink.\n \n
+ * @ingroup data_types
+ * fnft_nsev_pade_representation_DIRECT_CAYLEY: Use the Cayley map and a
+ * power-basis transfer matrix. This is the default and is supported by all
+ * Padé discretizations.\n \n
+ * fnft_nsev_pade_representation_CHEBYSHEV_JOUKOWSKI: For FES8_PADE, use
+ * \f$\zeta=c+Hx\f$, \f$x=(w+w^{-1})/2\f$ and represent the transfer matrix
+ * in Chebyshev polynomials. The coefficient product tree has complexity
+ * \f$O(KD\log^2 D)\f$, where \f$K\f$ is the local polynomial degree. On the
+ * uniform spectral grid required by \link fnft_nsev \endlink, dependency-free
+ * Clenshaw evaluation has complexity \f$O(MKD)\f$; therefore this option does
+ * not provide end-to-end \f$O(D\log^2 D)\f$ complexity when \f$M\sim D\f$.
+ */
+typedef enum {
+    fnft_nsev_pade_representation_DIRECT_CAYLEY,
+    fnft_nsev_pade_representation_CHEBYSHEV_JOUKOWSKI
+} fnft_nsev_pade_representation_t;
+
+/**
  * @struct fnft_nsev_opts_t
  * @brief Stores additional options for the routine \link fnft_nsev \endlink.
  * @ingroup fnft
@@ -230,6 +250,14 @@ typedef enum {
  *  power-basis representation of direct-Cayley FES8 can be ill-conditioned
  *  on fine grids; it is provided as a continuous-spectrum reference variant.
  *  Discrete-spectrum output is not supported for FES8_PADE.
+ *
+ * @var fnft_nsev_opts_t::pade_representation
+ *  Representation used to construct the Padé transfer matrix. The default is
+ *  fnft_nsev_pade_representation_DIRECT_CAYLEY. The Chebyshev--Joukowski
+ *  representation is currently supported only for the continuous spectrum
+ *  with FES8_PADE. In that representation the map is derived exactly from the
+ *  requested spectral interval: \f$c=\epsilon_t(\Xi_0+\Xi_1)/2\f$ and
+ *  \f$H=\epsilon_t(\Xi_1-\Xi_0)/2\f$. Consequently, pade_h must be zero.
  */
 typedef struct {
     fnft_nsev_bsfilt_t bound_state_filtering;
@@ -245,6 +273,7 @@ typedef struct {
     FNFT_REAL bounding_box[4];
     FNFT_UINT pade_degree;
     FNFT_REAL pade_h;
+    fnft_nsev_pade_representation_t pade_representation;
 } fnft_nsev_opts_t;
 
 /**
@@ -264,6 +293,7 @@ typedef struct {
  *  bounding_box = {NAN, NAN, NAN, NAN}\n
  *  pade_degree = 0\n
  *  pade_h = 0.0\n
+ *  pade_representation = fnft_nsev_pade_representation_DIRECT_CAYLEY\n
  *
  * @ingroup fnft
  */
@@ -338,12 +368,14 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *       - fnft_nse_discretization_FTES4_suzuki
  *       - fnft_nse_discretization_FES4_PADE
  *       - fnft_nse_discretization_FES6_PADE
- *       - fnft_nse_discretization_FES8_PADE
  *
- *  FES8_PADE is a direct-Cayley reference implementation for the continuous
- *  spectrum. Its global power-basis representation can lose accuracy as the
- *  polynomial degree grows, and requests for bound states, norming constants
- *  or residues are rejected.
+ *  FES8_PADE is a continuous-spectrum Padé family. Its default direct-Cayley
+ *  global power-basis representation can lose accuracy as the polynomial
+ *  degree grows, and requests for bound states, norming constants or residues
+ *  are rejected. It can alternatively use the dependency-free
+ *  Chebyshev--Joukowski representation. The latter builds coefficients in
+ *  \f$O(KD\log^2D)\f$, but evaluating them on this routine's uniform
+ *  \f$\Xi\f$ grid by Clenshaw's recurrence costs \f$O(MKD)\f$.
  *
  * The following discretizations use classical algorithms which have a computational
  * complexity of \f$ \mathcal{O}(D^2)\f$ for \f$ D\f$ point continuous spectrum given \f$ D\f$ samples:
@@ -444,6 +476,8 @@ FNFT_INT fnft_nsev(const FNFT_UINT D, FNFT_COMPLEX const * const q,
 #define nsev_cstype_REFLECTION_COEFFICIENT fnft_nsev_cstype_REFLECTION_COEFFICIENT
 #define nsev_cstype_AB fnft_nsev_cstype_AB
 #define nsev_cstype_BOTH fnft_nsev_cstype_BOTH
+#define nsev_pade_representation_DIRECT_CAYLEY fnft_nsev_pade_representation_DIRECT_CAYLEY
+#define nsev_pade_representation_CHEBYSHEV_JOUKOWSKI fnft_nsev_pade_representation_CHEBYSHEV_JOUKOWSKI
 #endif
 
 #endif

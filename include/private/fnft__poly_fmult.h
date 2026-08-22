@@ -17,6 +17,7 @@
  * Sander Wahls (TU Delft) 2017-2018, 2021.
  * Peter J Prins (TU Delft) 2020.
  * Lianne de Vries (TU Delft student) 2021.
+ * Igor Chekhovskoy 2026.
  */
 
 /**
@@ -246,6 +247,51 @@ FNFT_INT fnft__poly_fmult(FNFT_UINT * const d, FNFT_UINT n, FNFT_COMPLEX * const
     FNFT_INT * const W_ptr);
 
 /**
+ * @brief Converts a polynomial from the power basis to the Chebyshev basis.
+ *
+ * The input and output coefficients are stored in ascending order. The arrays
+ * power and chebyshev may point to the same memory.
+ *
+ * @param[in] degree Degree of the polynomial.
+ * @param[in] power Coefficients in the power basis.
+ * @param[out] chebyshev Coefficients in the Chebyshev basis.
+ */
+FNFT_INT fnft__poly_power_to_chebyshev(FNFT_UINT degree,
+    FNFT_COMPLEX const * const power, FNFT_COMPLEX * const chebyshev);
+
+/**
+ * @brief Evaluates a polynomial represented in the Chebyshev basis.
+ *
+ * @param[in] degree Degree of the polynomial.
+ * @param[in] chebyshev Coefficients in ascending order.
+ * @param[in] x Evaluation point.
+ * @return Value of the polynomial at x.
+ */
+FNFT_COMPLEX fnft__poly_eval_chebyshev(FNFT_UINT degree,
+    FNFT_COMPLEX const * const chebyshev, FNFT_COMPLEX x);
+
+/**
+ * @brief Fast multiplication of Chebyshev polynomials.
+ *
+ * This routine has the same storage and normalization contract as
+ * \link fnft__poly_fmult \endlink, but coefficients are represented in the
+ * Chebyshev basis.
+ */
+FNFT_INT fnft__poly_fmult_chebyshev(FNFT_UINT * const d, FNFT_UINT n,
+    FNFT_COMPLEX * const p, FNFT_INT * const W_ptr);
+
+/**
+ * @brief Fast multiplication of 2x2 Chebyshev-polynomial matrices.
+ *
+ * This routine has the same storage and normalization contract as
+ * \link fnft__poly_fmult2x2 \endlink, but coefficients are represented in
+ * the Chebyshev basis.
+ */
+FNFT_INT fnft__poly_fmult2x2_chebyshev(FNFT_UINT * const d, FNFT_UINT n,
+    FNFT_COMPLEX * const p, FNFT_COMPLEX * const result,
+    FNFT_INT * const W_ptr);
+
+/**
  * @brief Number of elements that the inputs p and result to
  * \link fnft__poly_fmult2x2 \endlink should have.
  *
@@ -335,6 +381,10 @@ FNFT_INT fnft__poly_fmult3x3(FNFT_UINT* d, FNFT_UINT n, FNFT_COMPLEX* const p,
 #define poly_fmult2x2_numel(...) fnft__poly_fmult2x2_numel(__VA_ARGS__)
 #define poly_fmult3x3_numel(...) fnft__poly_fmult3x3_numel(__VA_ARGS__)
 #define poly_fmult(...) fnft__poly_fmult(__VA_ARGS__)
+#define poly_power_to_chebyshev(...) fnft__poly_power_to_chebyshev(__VA_ARGS__)
+#define poly_eval_chebyshev(...) fnft__poly_eval_chebyshev(__VA_ARGS__)
+#define poly_fmult_chebyshev(...) fnft__poly_fmult_chebyshev(__VA_ARGS__)
+#define poly_fmult2x2_chebyshev(...) fnft__poly_fmult2x2_chebyshev(__VA_ARGS__)
 #define poly_fmult2x2(...) fnft__poly_fmult2x2(__VA_ARGS__)
 #define poly_fmult3x3(...) fnft__poly_fmult3x3(__VA_ARGS__)
 #endif

@@ -76,12 +76,16 @@ Please follow the instructions in the file [INSTALL.md](INSTALL.md).
 
 Please read the file [Getting-Started.md](Getting-Started.md).
 
-The direct-Cayley `FES8_PADE` discretization is included as a
-continuous-spectrum reference implementation. Its global power-basis
-polynomials can become ill-conditioned on fine grids, as discussed in the
-cited arXiv preprint. Discrete-spectrum requests are therefore rejected; the
-Chebyshev representation described in the preprint is intended to provide the
-practical high-grid formulation in a separate contribution.
+The `FES8_PADE` discretization includes direct-Cayley and dependency-free
+Chebyshev--Joukowski representations for the continuous spectrum. The global
+power-basis polynomials of the direct-Cayley representation can become
+ill-conditioned on fine grids, as discussed in the cited arXiv preprint. The
+Chebyshev representation builds its coefficients in
+O(K D log<sup>2</sup>D), but evaluating them by Clenshaw's recurrence on the
+uniform spectral grid of `fnft_nsev` requires O(M K D) operations. Thus,
+without an optional nonuniform fast transform, this dependency-free path is
+not an end-to-end O(D log<sup>2</sup>D) algorithm when M is proportional to D.
+Discrete-spectrum requests remain unsupported.
 
 ## Community Guidelines
 

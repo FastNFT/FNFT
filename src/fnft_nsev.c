@@ -42,7 +42,8 @@ static fnft_nsev_opts_t default_opts = {
     .richardson_extrapolation_flag = 0,
     .bounding_box = {NAN, NAN, NAN, NAN},
     .pade_degree = 0,
-    .pade_h = 0.0
+    .pade_h = 0.0,
+    .pade_representation = nsev_pade_representation_DIRECT_CAYLEY
 };
 
 static COMPLEX nsev_evaluate_polynomial(COMPLEX const * const p,
@@ -233,6 +234,17 @@ INT fnft_nsev(
     }
     if (opts == NULL)
         opts = &default_opts;
+
+    if (opts->pade_representation
+            != nsev_pade_representation_DIRECT_CAYLEY
+            && opts->pade_representation
+            != nsev_pade_representation_CHEBYSHEV_JOUKOWSKI)
+        return E_INVALID_ARGUMENT(opts->pade_representation);
+    if (opts->pade_representation
+            == nsev_pade_representation_CHEBYSHEV_JOUKOWSKI
+            && (opts->discretization != nse_discretization_FES8_PADE
+            || opts->pade_h != 0.0 || contspec == NULL || XI == NULL))
+        return E_INVALID_ARGUMENT(opts->pade_representation);
 
     if (opts->discretization == nse_discretization_FES8_PADE
             && (bound_states != NULL || normconsts_or_residues != NULL))
@@ -589,14 +601,18 @@ static inline INT fnft_nsev_base(
                 opts->discretization, opts->pade_degree);
         const UINT method_order = nse_discretization_method_order(
                 opts->discretization);
-        const REAL h = nse_discretization_pade_h(opts->discretization,
+        const INT use_chebyshev = opts->pade_representation
+                == nsev_pade_representation_CHEBYSHEV_JOUKOWSKI;
+        const REAL h = use_chebyshev ? 0.0
+                : nse_discretization_pade_h(opts->discretization,
                 pade_degree, opts->pade_h);
         const UINT numerator_numel = akns_fscatter_pade_numel(D,
                 method_order, pade_degree);
         const UINT denominator_numel = akns_fscatter_pade_den_numel(D,
                 method_order, pade_degree);
 
-        if (pade_degree == 0 || h <= 0.0 || numerator_numel == 0
+        if (pade_degree == 0 || (!use_chebyshev && h <= 0.0)
+                || numerator_numel == 0
                 || denominator_numel == 0) {
             ret_code = E_INVALID_ARGUMENT(opts->pade_degree);
             goto leave_fun;
@@ -609,10 +625,20 @@ static inline INT fnft_nsev_base(
         }
         if (opts->normalization_flag)
             W_ptr = &W;
-        ret_code = akns_fscatter_pade(D, q, r, eps_t, method_order,
-                pade_degree, h, transfer_matrix, &deg, W_ptr, denominator,
-                &denominator_degree, opts->normalization_flag
-                ? &denominator_exponent : NULL);
+        if (use_chebyshev) {
+            const REAL c = eps_t*(XI[0] + XI[1])/2.0;
+            const REAL H = eps_t*(XI[1] - XI[0])/2.0;
+
+            ret_code = akns_fscatter_pade_chebyshev(D, q, r, eps_t,
+                    pade_degree, c, H, transfer_matrix, &deg, W_ptr,
+                    denominator, &denominator_degree,
+                    opts->normalization_flag ? &denominator_exponent : NULL);
+        } else {
+            ret_code = akns_fscatter_pade(D, q, r, eps_t, method_order,
+                    pade_degree, h, transfer_matrix, &deg, W_ptr,
+                    denominator, &denominator_degree,
+                    opts->normalization_flag ? &denominator_exponent : NULL);
+        }
         CHECK_RETCODE(ret_code, leave_fun);
         i = numerator_numel;
     } else {
@@ -1082,26 +1108,46 @@ static inline INT nsev_compute_contspec(
     }else if (nse_discretization_is_pade(opts->discretization)) {
         const UINT pade_degree = nse_discretization_pade_degree(
                 opts->discretization, opts->pade_degree);
-        const REAL h = nse_discretization_pade_h(opts->discretization,
+        const INT use_chebyshev = opts->pade_representation
+                == nsev_pade_representation_CHEBYSHEV_JOUKOWSKI;
+        const REAL h = use_chebyshev ? 0.0
+                : nse_discretization_pade_h(opts->discretization,
                 pade_degree, opts->pade_h);
+        const REAL c = eps_t*(XI[0] + XI[1])/2.0;
+        const REAL H = eps_t*(XI[1] - XI[0])/2.0;
 
         denominator_vals = malloc(M*sizeof(COMPLEX));
         if (denominator_vals == NULL) {
             ret_code = E_NOMEM;
             goto leave_fun;
         }
-        for (i = 0; i < M; i++) {
-            ret_code = nse_discretization_pade_lambda_to_z(1, eps_t,
-                    &xi[i], h);
-            CHECK_RETCODE(ret_code, leave_fun);
+        if (!use_chebyshev) {
+            for (i = 0; i < M; i++) {
+                ret_code = nse_discretization_pade_lambda_to_z(1, eps_t,
+                        &xi[i], h);
+                CHECK_RETCODE(ret_code, leave_fun);
+            }
+        } else if (!(H > 0.0)) {
+            ret_code = E_INVALID_ARGUMENT(XI);
+            goto leave_fun;
         }
         for (i = 0; i < M; i++) {
-            H11_vals[i] = nsev_evaluate_polynomial(transfer_matrix, deg,
-                    xi[i]);
-            H21_vals[i] = nsev_evaluate_polynomial(
-                    transfer_matrix + 2*(deg + 1), deg, xi[i]);
-            denominator_vals[i] = nsev_evaluate_polynomial(denominator,
-                    denominator_degree, xi[i]);
+            if (use_chebyshev) {
+                const REAL x = (eps_t*CREAL(xi[i]) - c)/H;
+
+                H11_vals[i] = poly_eval_chebyshev(deg, transfer_matrix, x);
+                H21_vals[i] = poly_eval_chebyshev(deg,
+                        transfer_matrix + 2*(deg + 1), x);
+                denominator_vals[i] = poly_eval_chebyshev(
+                        denominator_degree, denominator, x);
+            } else {
+                H11_vals[i] = nsev_evaluate_polynomial(transfer_matrix, deg,
+                        xi[i]);
+                H21_vals[i] = nsev_evaluate_polynomial(
+                        transfer_matrix + 2*(deg + 1), deg, xi[i]);
+                denominator_vals[i] = nsev_evaluate_polynomial(denominator,
+                        denominator_degree, xi[i]);
+            }
             if (denominator_vals[i] == 0.0) {
                 ret_code = E_DIV_BY_ZERO;
                 goto leave_fun;

@@ -156,7 +156,8 @@ static COMPLEX pointwise_reflection(const UINT D,
 }
 
 static INT test_zero_signal(const nse_discretization_t discretization,
-        const UINT pade_degree, const INT kappa, const INT normalization_flag)
+        const UINT pade_degree, const INT kappa, const INT normalization_flag,
+        const fnft_nsev_pade_representation_t pade_representation)
 {
     const UINT D = 16, M = 5;
     const REAL T[2] = {-1.0, 1.0};
@@ -169,6 +170,7 @@ static INT test_zero_signal(const nse_discretization_t discretization,
 
     opts.discretization = discretization;
     opts.pade_degree = pade_degree;
+    opts.pade_representation = pade_representation;
     opts.contspec_type = nsev_cstype_BOTH;
     opts.normalization_flag = normalization_flag;
     ret_code = fnft_nsev(D, q, T, M, spectrum, XI, NULL, NULL, NULL,
@@ -193,7 +195,9 @@ static INT test_zero_signal(const nse_discretization_t discretization,
 
 static REAL continuous_spectrum_error(const nsev_testcases_t testcase,
         const UINT D, const nse_discretization_t discretization,
-        const UINT pade_degree, INT * const ret_code)
+        const UINT pade_degree,
+        const fnft_nsev_pade_representation_t pade_representation,
+        INT * const ret_code)
 {
     COMPLEX *q = NULL, *exact = NULL, *ab = NULL, *bound_states = NULL;
     COMPLEX *normconsts = NULL, *residues = NULL, *computed = NULL;
@@ -213,6 +217,7 @@ static REAL continuous_spectrum_error(const nsev_testcases_t testcase,
     }
     opts.discretization = discretization;
     opts.pade_degree = pade_degree;
+    opts.pade_representation = pade_representation;
     opts.contspec_type = nsev_cstype_REFLECTION_COEFFICIENT;
     *ret_code = fnft_nsev(D, q, T, M, computed, XI, NULL, NULL, NULL,
             kappa, &opts);
@@ -323,6 +328,56 @@ static INT test_public_es8_small_grid(void)
     return SUCCESS;
 }
 
+static INT test_public_es8_chebyshev(void)
+{
+    const UINT D = 7, M = 5;
+    const REAL T[2] = {-0.21, 0.21};
+    const REAL XI[2] = {-0.83, 1.27};
+    const UINT degrees[] = {3, 4, 5, 6, 7};
+    COMPLEX q[7], computed[5];
+    fnft_nsev_opts_t opts = fnft_nsev_default_opts();
+    UINT degree_index, i;
+    INT kappa, normalization_flag, ret_code;
+
+    for (i = 0; i < D; i++)
+        q[i] = 0.18 + 0.07*CEXP(6.2831853071795864769*I*i/D);
+    opts.discretization = nse_discretization_FES8_PADE;
+    opts.contspec_type = nsev_cstype_REFLECTION_COEFFICIENT;
+    opts.pade_representation =
+            nsev_pade_representation_CHEBYSHEV_JOUKOWSKI;
+    for (normalization_flag = 0; normalization_flag <= 1;
+            normalization_flag++) {
+        opts.normalization_flag = normalization_flag;
+        for (kappa = -1; kappa <= 1; kappa += 2) {
+            for (degree_index = 0;
+                    degree_index < sizeof(degrees)/sizeof(degrees[0]);
+                    degree_index++) {
+                opts.pade_degree = degrees[degree_index];
+                ret_code = fnft_nsev(D, q, T, M, computed, XI, NULL, NULL,
+                        NULL, kappa, &opts);
+                if (ret_code != SUCCESS)
+                    return ret_code;
+                for (i = 0; i < M; i++) {
+                    const COMPLEX lambda = XI[0]
+                            + (XI[1] - XI[0])*i/(M - 1);
+                    const COMPLEX expected = pointwise_reflection(D, q, T,
+                            lambda, kappa, opts.pade_degree);
+                    const REAL tolerance = 4e-8*(1.0 + CABS(expected));
+
+                    if (CABS(computed[i] - expected) > tolerance) {
+                        fprintf(stderr, "FES8 public Chebyshev mismatch: degree=%lu kappa=%d norm=%d i=%lu error=%.3e\n",
+                                (unsigned long)opts.pade_degree, (int)kappa,
+                                (int)normalization_flag, (unsigned long)i,
+                                CABS(computed[i] - expected));
+                        return E_TEST_FAILED;
+                    }
+                }
+            }
+        }
+    }
+    return SUCCESS;
+}
+
 static INT test_public_es8_rejections(void)
 {
     const UINT D = 8, M = 2;
@@ -363,6 +418,21 @@ static INT test_public_es8_rejections(void)
     if (fnft_nsev(D, q, T, 0, NULL, NULL, &K, bound_state, NULL, +1,
                 &opts) == SUCCESS)
         return E_TEST_FAILED;
+    opts.pade_representation =
+            nsev_pade_representation_CHEBYSHEV_JOUKOWSKI;
+    opts.pade_h = 1.0;
+    if (fnft_nsev(D, q, T, M, spectrum, XI, NULL, NULL, NULL, +1,
+                &opts) == SUCCESS)
+        return E_TEST_FAILED;
+    opts.pade_h = 0.0;
+    opts.discretization = nse_discretization_FES6_PADE;
+    if (fnft_nsev(D, q, T, M, spectrum, XI, NULL, NULL, NULL, +1,
+                &opts) == SUCCESS)
+        return E_TEST_FAILED;
+    opts.pade_representation = (fnft_nsev_pade_representation_t)42;
+    if (fnft_nsev(D, q, T, M, spectrum, XI, NULL, NULL, NULL, +1,
+                &opts) == SUCCESS)
+        return E_TEST_FAILED;
     return SUCCESS;
 }
 
@@ -386,6 +456,9 @@ static INT test_es8_metadata(void)
         return E_TEST_FAILED;
     {
         fnft_nsev_opts_t opts = fnft_nsev_default_opts();
+        if (opts.pade_representation
+                != nsev_pade_representation_DIRECT_CAYLEY)
+            return E_TEST_FAILED;
         opts.discretization = nse_discretization_FES8_PADE;
         if (fnft_nsev_max_K(128, &opts) != 0)
             return E_TEST_FAILED;
@@ -455,7 +528,8 @@ static INT test_es8_pointwise_convergence(const nsev_testcases_t testcase)
         return E_TEST_FAILED;
     }
     slow_error = continuous_spectrum_error(testcase, grids[2],
-            nse_discretization_ES8, 0, &ret_code);
+            nse_discretization_ES8, 0,
+            nsev_pade_representation_DIRECT_CAYLEY, &ret_code);
     if (ret_code != SUCCESS)
         return ret_code;
     if (FABS(errors[1][2] - slow_error)
@@ -473,19 +547,52 @@ static INT test_convergence(const nsev_testcases_t testcase,
 {
     INT ret_code;
     const REAL coarse = continuous_spectrum_error(testcase, coarse_D,
-            discretization, pade_degree, &ret_code);
+            discretization, pade_degree,
+            nsev_pade_representation_DIRECT_CAYLEY, &ret_code);
     REAL fine;
 
     if (ret_code != SUCCESS)
         return ret_code;
     fine = continuous_spectrum_error(testcase, 2*coarse_D, discretization,
-            pade_degree, &ret_code);
+            pade_degree, nsev_pade_representation_DIRECT_CAYLEY, &ret_code);
     if (ret_code != SUCCESS)
         return ret_code;
     if (!(fine > 0.0 && coarse/fine >= minimum_ratio)) {
         fprintf(stderr, "Padé convergence failure: degree=%lu coarse=%.3e fine=%.3e ratio=%.2f\n",
                 (unsigned long)pade_degree, coarse, fine, coarse/fine);
         return E_TEST_FAILED;
+    }
+    return SUCCESS;
+}
+
+static INT test_chebyshev_convergence(const nsev_testcases_t testcase)
+{
+    const UINT degrees[] = {3, 4};
+    const REAL minimum_ratios[] = {45.0, 90.0};
+    UINT degree_index;
+    INT ret_code;
+
+    for (degree_index = 0;
+            degree_index < sizeof(degrees)/sizeof(degrees[0]);
+            degree_index++) {
+        const REAL coarse = continuous_spectrum_error(testcase, 128,
+                nse_discretization_FES8_PADE, degrees[degree_index],
+                nsev_pade_representation_CHEBYSHEV_JOUKOWSKI, &ret_code);
+        REAL fine;
+
+        if (ret_code != SUCCESS)
+            return ret_code;
+        fine = continuous_spectrum_error(testcase, 256,
+                nse_discretization_FES8_PADE, degrees[degree_index],
+                nsev_pade_representation_CHEBYSHEV_JOUKOWSKI, &ret_code);
+        if (ret_code != SUCCESS)
+            return ret_code;
+        if (!(fine > 0.0 && coarse/fine >= minimum_ratios[degree_index])) {
+            fprintf(stderr, "FES8 Chebyshev convergence failure: degree=%lu coarse=%.3e fine=%.3e ratio=%.2f\n",
+                    (unsigned long)degrees[degree_index], coarse, fine,
+                    coarse/fine);
+            return E_TEST_FAILED;
+        }
     }
     return SUCCESS;
 }
@@ -574,6 +681,9 @@ INT main(void)
     ret_code = test_public_es8_small_grid();
     if (ret_code != SUCCESS)
         return EXIT_FAILURE;
+    ret_code = test_public_es8_chebyshev();
+    if (ret_code != SUCCESS)
+        return EXIT_FAILURE;
     ret_code = test_public_es8_rejections();
     if (ret_code != SUCCESS)
         return EXIT_FAILURE;
@@ -585,25 +695,41 @@ INT main(void)
             nsev_testcases_SECH_DEFOCUSING);
     if (ret_code != SUCCESS)
         return EXIT_FAILURE;
+    ret_code = test_chebyshev_convergence(
+            nsev_testcases_SECH_FOCUSING_CONTSPEC);
+    if (ret_code != SUCCESS)
+        return EXIT_FAILURE;
+    ret_code = test_chebyshev_convergence(nsev_testcases_SECH_DEFOCUSING);
+    if (ret_code != SUCCESS)
+        return EXIT_FAILURE;
 
     for (normalization_flag = 0; normalization_flag <= 1;
             normalization_flag++) {
         for (kappa = -1; kappa <= 1; kappa += 2) {
             ret_code = test_zero_signal(nse_discretization_FES4_PADE, 2,
-                    kappa, normalization_flag);
+                    kappa, normalization_flag,
+                    nsev_pade_representation_DIRECT_CAYLEY);
             if (ret_code != SUCCESS)
                 return EXIT_FAILURE;
             ret_code = test_zero_signal(nse_discretization_FES6_PADE, 4,
-                    kappa, normalization_flag);
+                    kappa, normalization_flag,
+                    nsev_pade_representation_DIRECT_CAYLEY);
             if (ret_code != SUCCESS)
                 return EXIT_FAILURE;
             ret_code = test_zero_signal(nse_discretization_FES8_PADE, 3,
-                    kappa, normalization_flag);
+                    kappa, normalization_flag,
+                    nsev_pade_representation_DIRECT_CAYLEY);
+            if (ret_code != SUCCESS)
+                return EXIT_FAILURE;
+            ret_code = test_zero_signal(nse_discretization_FES8_PADE, 7,
+                    kappa, normalization_flag,
+                    nsev_pade_representation_CHEBYSHEV_JOUKOWSKI);
             if (ret_code != SUCCESS)
                 return EXIT_FAILURE;
             if (normalization_flag == 0 && kappa == 1) {
                 ret_code = test_zero_signal(nse_discretization_FES6_PADE, 7,
-                        kappa, normalization_flag);
+                        kappa, normalization_flag,
+                        nsev_pade_representation_DIRECT_CAYLEY);
                 if (ret_code != SUCCESS)
                     return EXIT_FAILURE;
             }

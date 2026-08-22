@@ -241,6 +241,142 @@ static FNFT_COMPLEX evaluate_polynomial(FNFT_COMPLEX const * const p,
     return result;
 }
 
+static FNFT_COMPLEX evaluate_power_ascending(
+        FNFT_COMPLEX const * const p, const FNFT_UINT degree,
+        const FNFT_COMPLEX x)
+{
+    FNFT_COMPLEX result = p[degree];
+    FNFT_UINT i;
+
+    for (i = degree; i-- > 0; )
+        result = result*x + p[i];
+    return result;
+}
+
+static int test_power_to_chebyshev(void)
+{
+    FNFT_COMPLEX power[71], chebyshev[71], inplace[71];
+    FNFT_UINT degree, i;
+
+    for (degree = 0; degree <= 70; degree++) {
+        for (i = 0; i <= degree; i++)
+            power[i] = (0.25 + 0.003*i)/(1.0 + i)
+                    + I*(-0.11 + 0.002*i)/(1.0 + i);
+        if (fnft__poly_power_to_chebyshev(degree, power, chebyshev)
+                    != FNFT_SUCCESS)
+            return EXIT_FAILURE;
+        for (i = 0; i <= degree; i++)
+            inplace[i] = power[i];
+        if (fnft__poly_power_to_chebyshev(degree, inplace, inplace)
+                    != FNFT_SUCCESS)
+            return EXIT_FAILURE;
+        for (i = 0; i <= 16; i++) {
+            const FNFT_REAL x = -1.0 + i/8.0;
+            const FNFT_COMPLEX expected = evaluate_power_ascending(power,
+                    degree, x);
+            const FNFT_COMPLEX computed = fnft__poly_eval_chebyshev(degree,
+                    chebyshev, x);
+            const FNFT_COMPLEX computed_inplace =
+                    fnft__poly_eval_chebyshev(degree, inplace, x);
+            const FNFT_REAL tolerance = 2e-12*(degree + 1)
+                    *(1.0 + FNFT_CABS(expected));
+
+            if (FNFT_CABS(computed - expected) > tolerance
+                    || FNFT_CABS(computed_inplace - expected) > tolerance) {
+                fprintf(stderr, "Power-to-Chebyshev mismatch: degree=%lu x=%.3g error=%.3e\n",
+                        (unsigned long)degree, x,
+                        FNFT_CABS(computed - expected));
+                return EXIT_FAILURE;
+            }
+        }
+    }
+    return EXIT_SUCCESS;
+}
+
+static int test_chebyshev_size_validation(void)
+{
+    FNFT_COMPLEX dummy[4] = {1.0, 0.0, 0.0, 1.0};
+    FNFT_UINT degree = 0;
+
+    if (fnft__poly_fmult_chebyshev(&degree, UINT_MAX, dummy, NULL)
+                != FNFT_EC_INVALID_ARGUMENT)
+        return EXIT_FAILURE;
+    degree = 0;
+    if (fnft__poly_fmult2x2_chebyshev(&degree, UINT_MAX, dummy, dummy,
+                NULL) != FNFT_EC_INVALID_ARGUMENT)
+        return EXIT_FAILURE;
+    return EXIT_SUCCESS;
+}
+
+static int run_chebyshev_case(const FNFT_UINT pade_degree,
+        const FNFT_INT kappa, const FNFT_INT normalization_flag)
+{
+    const FNFT_UINT D = 7;
+    const FNFT_REAL eps_t = 0.07, c = 0.23, H = 1.37;
+    const FNFT_REAL x_values[] = {-1.0, -0.73, -0.11, 0.38, 1.0};
+    FNFT_COMPLEX q[7], r[7], *numerator, *denominator;
+    FNFT_UINT numerator_degree, denominator_degree, i, component, point;
+    FNFT_INT numerator_exponent = 0, denominator_exponent = 0, ret_code;
+    FNFT_REAL scale;
+
+    numerator = malloc(fnft__akns_fscatter_pade_numel(D, 8,
+                pade_degree)*sizeof(FNFT_COMPLEX));
+    denominator = malloc(fnft__akns_fscatter_pade_den_numel(D, 8,
+                pade_degree)*sizeof(FNFT_COMPLEX));
+    if (numerator == NULL || denominator == NULL)
+        return EXIT_FAILURE;
+    for (i = 0; i < D; i++) {
+        q[i] = 0.18 + 0.07*FNFT_CEXP(6.2831853071795864769*I*i/D);
+        r[i] = -(FNFT_REAL)kappa*FNFT_CONJ(q[i]);
+    }
+    ret_code = fnft__akns_fscatter_pade_chebyshev(D, q, r, eps_t,
+            pade_degree, c, H, numerator, &numerator_degree,
+            normalization_flag ? &numerator_exponent : NULL, denominator,
+            &denominator_degree,
+            normalization_flag ? &denominator_exponent : NULL);
+    if (ret_code != FNFT_SUCCESS) {
+        free(numerator);
+        free(denominator);
+        return EXIT_FAILURE;
+    }
+    scale = ldexp(1.0, numerator_exponent - denominator_exponent);
+    for (point = 0; point < sizeof(x_values)/sizeof(x_values[0]); point++) {
+        const FNFT_REAL x = x_values[point];
+        const FNFT_COMPLEX lambda = (c + H*x)/eps_t;
+        const FNFT_COMPLEX denominator_value =
+                fnft__poly_eval_chebyshev(denominator_degree, denominator, x);
+        matrix_t direct = matrix_identity();
+
+        for (i = 0; i < D; i++) {
+            const matrix_t z = direct_z(D, i, q, r, eps_t, lambda, 8);
+            const matrix_t step = direct_pade(&z, pade_degree);
+            direct = matrix_multiply(&step, &direct);
+        }
+        for (component = 0; component < 4; component++) {
+            const FNFT_COMPLEX computed = scale
+                    * fnft__poly_eval_chebyshev(numerator_degree,
+                    numerator + component*(numerator_degree + 1), x)
+                    / denominator_value;
+            const FNFT_REAL tolerance = 3e-9
+                    *(1.0 + FNFT_CABS(direct.entry[component]));
+
+            if (FNFT_CABS(computed - direct.entry[component]) > tolerance) {
+                fprintf(stderr, "Chebyshev Padé mismatch: degree=%lu kappa=%d norm=%d x=%.3g component=%lu error=%.3e\n",
+                        (unsigned long)pade_degree, (int)kappa,
+                        (int)normalization_flag, x,
+                        (unsigned long)component,
+                        FNFT_CABS(computed - direct.entry[component]));
+                free(numerator);
+                free(denominator);
+                return EXIT_FAILURE;
+            }
+        }
+    }
+    free(numerator);
+    free(denominator);
+    return EXIT_SUCCESS;
+}
+
 static int run_case(const FNFT_UINT method_order, const FNFT_UINT pade_degree,
         const FNFT_INT kappa, const FNFT_INT normalization_flag)
 {
@@ -387,6 +523,22 @@ static int test_invalid_es8_arguments(void)
             || fnft__akns_fscatter_pade_numel(UINT_MAX, 8, 3) != 0
             || fnft__akns_fscatter_pade_den_numel(UINT_MAX, 8, 3) != 0)
         return EXIT_FAILURE;
+    if (fnft__akns_fscatter_pade_chebyshev(7, q, r, 0.1, 2, 0.0, 1.0,
+                numerator, &numerator_degree, NULL, denominator,
+                &denominator_degree, NULL) == FNFT_SUCCESS
+            || fnft__akns_fscatter_pade_chebyshev(7, q, r, 0.1, 8, 0.0,
+                1.0, numerator, &numerator_degree, NULL, denominator,
+                &denominator_degree, NULL) == FNFT_SUCCESS
+            || fnft__akns_fscatter_pade_chebyshev(6, q, r, 0.1, 3, 0.0,
+                1.0, numerator, &numerator_degree, NULL, denominator,
+                &denominator_degree, NULL) == FNFT_SUCCESS
+            || fnft__akns_fscatter_pade_chebyshev(7, q, r, 0.1, 3, 0.0,
+                0.0, numerator, &numerator_degree, NULL, denominator,
+                &denominator_degree, NULL) == FNFT_SUCCESS
+            || fnft__akns_fscatter_pade_chebyshev(7, q, r, 0.1, 3, NAN,
+                1.0, numerator, &numerator_degree, NULL, denominator,
+                &denominator_degree, NULL) == FNFT_SUCCESS)
+        return EXIT_FAILURE;
     return EXIT_SUCCESS;
 }
 
@@ -400,7 +552,9 @@ int main(void)
 
     if (run_zero_case(0) != EXIT_SUCCESS
             || run_zero_case(1) != EXIT_SUCCESS
-            || test_invalid_es8_arguments() != EXIT_SUCCESS)
+            || test_invalid_es8_arguments() != EXIT_SUCCESS
+            || test_power_to_chebyshev() != EXIT_SUCCESS
+            || test_chebyshev_size_validation() != EXIT_SUCCESS)
         return EXIT_FAILURE;
 
     for (normalization_flag = 0; normalization_flag <= 1; normalization_flag++) {
@@ -417,6 +571,9 @@ int main(void)
             }
             for (i = 0; i < sizeof(eighth_degrees)/sizeof(eighth_degrees[0]); i++) {
                 if (run_case(8, eighth_degrees[i], kappa,
+                            normalization_flag) != EXIT_SUCCESS)
+                    return EXIT_FAILURE;
+                if (run_chebyshev_case(eighth_degrees[i], kappa,
                             normalization_flag) != EXIT_SUCCESS)
                     return EXIT_FAILURE;
             }

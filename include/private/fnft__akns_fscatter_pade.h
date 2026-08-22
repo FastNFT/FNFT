@@ -85,10 +85,30 @@ FNFT_INT fnft__akns_fscatter_pade(const FNFT_UINT D,
         FNFT_UINT * const denominator_degree,
         FNFT_INT * const denominator_exponent);
 
+/**
+ * @brief Builds an FES8 Padé transfer matrix in the Chebyshev basis.
+ *
+ * The dimensionless spectral variable is mapped according to
+ * \f$\zeta=c+Hx\f$. The returned numerator and denominator coefficients are
+ * in ascending Chebyshev order. Their product trees require
+ * \f$O(KD\log^2D)\f$ operations, where \f$K=10s\f$ and \f$s\f$ is the Padé
+ * degree.
+ */
+FNFT_INT fnft__akns_fscatter_pade_chebyshev(const FNFT_UINT D,
+        FNFT_COMPLEX const * const q, FNFT_COMPLEX const * const r,
+        const FNFT_REAL eps_t, const FNFT_UINT pade_degree,
+        const FNFT_REAL c, const FNFT_REAL H, FNFT_COMPLEX * const numerator,
+        FNFT_UINT * const numerator_degree,
+        FNFT_INT * const numerator_exponent,
+        FNFT_COMPLEX * const denominator,
+        FNFT_UINT * const denominator_degree,
+        FNFT_INT * const denominator_exponent);
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define akns_fscatter_pade_numel(...) fnft__akns_fscatter_pade_numel(__VA_ARGS__)
 #define akns_fscatter_pade_den_numel(...) fnft__akns_fscatter_pade_den_numel(__VA_ARGS__)
 #define akns_fscatter_pade(...) fnft__akns_fscatter_pade(__VA_ARGS__)
+#define akns_fscatter_pade_chebyshev(...) fnft__akns_fscatter_pade_chebyshev(__VA_ARGS__)
 #endif
 
 #endif
