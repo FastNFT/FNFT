@@ -17,7 +17,7 @@
 * Sander Wahls (TU Delft) 2017.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
 * Igor Chekhovskoy 2026.
- * Irina Vaseva 2026.
+* Irina Vaseva 2026.
 */
 
 /**

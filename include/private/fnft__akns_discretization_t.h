@@ -17,7 +17,7 @@
 * Shrinivas Chimmalgi (TU Delft) 2018-2020.
 * Peter J. Prins (TU Delft) 2021.
 * Igor Chekhovskoy 2026.
- * Irina Vaseva 2026.
+* Irina Vaseva 2026.
 */
 
 /**
