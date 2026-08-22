@@ -262,6 +262,99 @@ leave_fun:
 }
 
 /**
+ * Sixth-order exponential transition matrix exp(Z), with Z given by
+ * Eqs. 65--67 of https://doi.org/10.1016/j.jcp.2021.110764. The five
+ * entries of q and r are the scaled value and first through fourth
+ * differences produced during preprocessing.
+ */
+static inline void akns_scatter_U_ES6(COMPLEX const q[5],
+                                     COMPLEX const r[5],
+                                     COMPLEX const lambda,
+                                     REAL const eps_t,
+                                     UINT const derivative_flag,
+                                     UINT const inverse_flag,
+                                     COMPLEX * const U)
+{
+    const COMPLEX z = eps_t*lambda;
+    const COMPLEX z2 = z*z;
+    const COMPLEX z3 = z2*z;
+    COMPLEX Z[4], Zd[4] = {0};
+    COMPLEX delta, delta_d = 0.0, c, s, s_delta;
+    COMPLEX c_d = 0.0, s_d = 0.0;
+    const REAL sign = inverse_flag ? -1.0 : 1.0;
+
+    Z[0] = (r[0]*q[1]-q[0]*r[1])*z2/180.0
+            - I*(1.0-(r[0]*q[2]+q[0]*r[2])/360.0
+            +q[1]*r[1]/60.0)*z
+            +(15.0-q[0]*r[0])*(r[0]*q[1]-q[0]*r[1])/180.0
+            +(r[0]*q[3]-q[0]*r[3]+q[1]*r[2]-r[1]*q[2])/480.0;
+    Z[1] = I*q[1]*z3/90.0-q[2]*z2/180.0
+            +I*(q[1]/6.0+q[3]/240.0-q[0]*r[0]*q[1]/90.0)*z
+            +q[0]+q[0]*(r[0]*q[2]-q[0]*r[2])/360.0
+            +(q[0]*r[1]-r[0]*q[1])*q[1]/120.0
+            +q[2]/24.0+q[4]/1920.0;
+    Z[2] = -I*r[1]*z3/90.0-r[2]*z2/180.0
+            -I*(r[1]/6.0+r[3]/240.0-q[0]*r[0]*r[1]/90.0)*z
+            +r[0]+r[0]*(q[0]*r[2]-r[0]*q[2])/360.0
+            +(r[0]*q[1]-q[0]*r[1])*r[1]/120.0
+            +r[2]/24.0+r[4]/1920.0;
+    Z[3] = -Z[0];
+
+    if (derivative_flag) {
+        Zd[0] = eps_t*(2.0*(r[0]*q[1]-q[0]*r[1])*z/180.0
+                -I*(1.0-(r[0]*q[2]+q[0]*r[2])/360.0
+                +q[1]*r[1]/60.0));
+        Zd[1] = eps_t*(I*q[1]*z2/30.0-q[2]*z/90.0
+                +I*(q[1]/6.0+q[3]/240.0
+                -q[0]*r[0]*q[1]/90.0));
+        Zd[2] = eps_t*(-I*r[1]*z2/30.0-r[2]*z/90.0
+                -I*(r[1]/6.0+r[3]/240.0
+                -q[0]*r[0]*r[1]/90.0));
+        Zd[3] = -Zd[0];
+    }
+
+    delta = Z[0]*Z[0]+Z[1]*Z[2];
+    if (CABS(delta) < 1e-8) {
+        const COMPLEX delta2 = delta*delta;
+        const COMPLEX delta3 = delta2*delta;
+        const COMPLEX delta4 = delta3*delta;
+        c = 1.0+delta/2.0+delta2/24.0+delta3/720.0
+                +delta4/40320.0;
+        s = 1.0+delta/6.0+delta2/120.0+delta3/5040.0
+                +delta4/362880.0;
+        s_delta = 1.0/6.0+delta/60.0+delta2/1680.0
+                +delta3/90720.0;
+    } else {
+        const COMPLEX root = CSQRT(delta);
+        c = CCOSH(root);
+        s = misc_CSINC(I*root);
+        s_delta = (c-s)/(2.0*delta);
+    }
+    if (derivative_flag) {
+        delta_d = 2.0*Z[0]*Zd[0]+Zd[1]*Z[2]+Z[1]*Zd[2];
+        c_d = 0.5*s*delta_d;
+        s_d = s_delta*delta_d;
+    }
+
+    if (derivative_flag) {
+        memset(U,0,16*sizeof(COMPLEX));
+        U[0] = U[10] = c+sign*s*Z[0];
+        U[1] = U[11] = sign*s*Z[1];
+        U[4] = U[14] = sign*s*Z[2];
+        U[5] = U[15] = c+sign*s*Z[3];
+        U[8] = c_d+sign*(s_d*Z[0]+s*Zd[0]);
+        U[9] = sign*(s_d*Z[1]+s*Zd[1]);
+        U[12] = sign*(s_d*Z[2]+s*Zd[2]);
+        U[13] = c_d+sign*(s_d*Z[3]+s*Zd[3]);
+    } else {
+        U[0] = c+sign*s*Z[0];
+        U[1] = sign*s*Z[1];
+        U[2] = sign*s*Z[2];
+        U[3] = c+sign*s*Z[3];
+    }
+}
+
+/**
  * If derivative_flag=0 returns [S11 S12 S21 S22] in result where
  * S = [S11, S12; S21, S22] is the scattering matrix computed using the
  * chosen scheme.
@@ -323,6 +416,7 @@ INT akns_scatter_matrix(UINT const D,
     UINT N = 0;
     switch (discretization) {
         case akns_discretization_CT4:
+        case akns_discretization_ES6:
             break;
         case akns_discretization_ES4:
             tmp1 = derivative_flag ? malloc(2*D*sizeof(COMPLEX)) : malloc(D*sizeof(COMPLEX));
@@ -465,6 +559,17 @@ INT akns_scatter_matrix(UINT const D,
                     if (W != NULL)
                         W[i] = Wi;
                     break;
+                case akns_discretization_ES6:
+                    for (UINT n = 0; n < D; n+=5) {
+                        akns_scatter_U_ES6(&q[n],&r[n],l_curr,eps_t,1,0,*U);
+                        misc_matrix_mult(4,4,4,&U[0][0],&H[current][0][0],&H[!current][0][0]);
+                        current = !current;
+                        if (W != NULL)
+                            Wi += misc_normalize_vector(16, &H[current][0][0]);
+                    }
+                    if (W != NULL)
+                        W[i] = Wi;
+                    break;
 
                 default: // Unknown discretization
                     ret_code = E_INVALID_ARGUMENT(discretization);
@@ -574,6 +679,18 @@ INT akns_scatter_matrix(UINT const D,
                         ret_code = akns_scatter_U_CT4(q[n],r[n],q[n+1],r[n+1],
                                 q[n+2],r[n+2],l_curr,eps_t,0,0,*U);
                         CHECK_RETCODE(ret_code, leave_fun);
+                        misc_matrix_mult(2,2,2,&U[0][0],&H[current][0][0],&H[!current][0][0]);
+                        current = !current;
+                        if (W != NULL)
+                            Wi += misc_normalize_vector(4, &H[current][0][0]);
+                    }
+                    if (W != NULL)
+                        W[i] = Wi;
+                    break;
+                case akns_discretization_ES6:
+                    for (UINT n = 0; n < D; n+=5) {
+                        COMPLEX U[2][2] = {{0}};
+                        akns_scatter_U_ES6(&q[n],&r[n],l_curr,eps_t,0,0,*U);
                         misc_matrix_mult(2,2,2,&U[0][0],&H[current][0][0],&H[!current][0][0]);
                         current = !current;
                         if (W != NULL)
@@ -712,6 +829,7 @@ INT akns_scatter_bound_states(UINT const D,
     UINT N = 0;
     switch (discretization) {
         case akns_discretization_CT4:
+        case akns_discretization_ES6:
             break;
         // Fourth-order exponential method which requires
         // one matrix exponential. The matrix exponential is
@@ -899,6 +1017,17 @@ INT akns_scatter_bound_states(UINT const D,
                     }
                 }
                 break;
+            case akns_discretization_ES6:
+                for (UINT n=0, n_given=0; n<D; n+=5, n_given++) {
+                    akns_scatter_U_ES6(&q[n],&r[n],l_curr,eps_t,1,0,*U);
+                    misc_matrix_mult(4,4,1,*U,&PHI[4*n_given],&PHI[4*(n_given+1)]);
+                    if (normalization_flag) {
+                        WPHI_acc += misc_normalize_vector(4, &PHI[4*(n_given+1)]);
+                        if (WPHI != NULL)
+                            WPHI[n_given+1] = WPHI_acc;
+                    }
+                }
+                break;
 
             default: // Unknown discretization
                 ret_code = E_INVALID_ARGUMENT(discretization);
@@ -1003,6 +1132,17 @@ INT akns_scatter_bound_states(UINT const D,
                         ret_code = akns_scatter_U_CT4(q[n],r[n],q[n+1],r[n+1],
                                 q[n+2],r[n+2],l_curr,eps_t,0,1,*U);
                         CHECK_RETCODE(ret_code, leave_fun);
+                        misc_matrix_mult(2,2,1,*U,&PSI[4*(n_given+1)],&PSI[4*n_given]);
+                        if (normalization_flag) {
+                            WPSI_acc += misc_normalize_vector(2, &PSI[4*n_given]);
+                            WPSI[n_given] = WPSI_acc;
+                        }
+                    }
+                    break;
+                case akns_discretization_ES6:
+                    for (UINT n_given=D_given, n=D-5; n_given-->0; n-=5) {
+                        COMPLEX U[2][2] = {{0}};
+                        akns_scatter_U_ES6(&q[n],&r[n],l_curr,eps_t,0,1,*U);
                         misc_matrix_mult(2,2,1,*U,&PSI[4*(n_given+1)],&PSI[4*n_given]);
                         if (normalization_flag) {
                             WPSI_acc += misc_normalize_vector(2, &PSI[4*n_given]);

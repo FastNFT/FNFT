@@ -50,6 +50,12 @@
  * <a href="https://doi.org/10.1364/OL.44.002264">&quot;Numerical algorithm with
  * fourth-order accuracy for the direct Zakharov-Shabat problem,&quot;</a> Optics
  * Letters 44(9), 2264--2267 (2019).\n
+ * `fnft_nse_discretization_ES6` is the slow sixth-order exponential scheme
+ * from S. Medvedev, I. Chekhovskoy, I. Vaseva and M. Fedoruk,
+ * <a href="https://doi.org/10.1016/j.jcp.2021.110764">&quot;Fast sixth-order
+ * algorithm based on the generalized Cayley transform for the Zakharov-Shabat
+ * system associated with nonlinear Schrodinger equation,&quot;</a> J. Comput. Phys.
+ * 448, 110764 (2022).\n
  * All above discretizations only support Newton method based bound states
  * localization (see fnft_nsev_bsloc_NEWTON of type \link fnft_nsev_bsloc_t \endlink) in \link fnft_nsev \endlink. \n 
  * The exponential spliting schemes, defined in
@@ -125,6 +131,7 @@
  * `fnft_nse_discretization_FES4_PADE`: Order of base method = 4, Padé degree = 2--7, Order of accuracy = 4\n
  * `fnft_nse_discretization_FES6_PADE`: Order of base method = 6, Padé degree = 3--7, Order of accuracy = 6
  * `fnft_nse_discretization_CT4`: Non-polynomial slow method, order of accuracy = 4\n
+ * `fnft_nse_discretization_ES6`: Non-polynomial slow method, order of accuracy = 6\n
  *
  * Used in \link fnft_nsev_opts_t \endlink, \link fnft_nsep_opts_t \endlink
  *  and \link fnft_nsev_inverse_opts_t \endlink.
@@ -165,7 +172,8 @@ typedef enum {
     fnft_nse_discretization_FTES4_suzuki,
     fnft_nse_discretization_FES4_PADE,
     fnft_nse_discretization_FES6_PADE,
-    fnft_nse_discretization_CT4
+    fnft_nse_discretization_CT4,
+    fnft_nse_discretization_ES6
 } fnft_nse_discretization_t;
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
@@ -199,6 +207,7 @@ typedef enum {
 #define nse_discretization_ES4 fnft_nse_discretization_ES4
 #define nse_discretization_TES4 fnft_nse_discretization_TES4
 #define nse_discretization_CT4 fnft_nse_discretization_CT4
+#define nse_discretization_ES6 fnft_nse_discretization_ES6
 #define nse_discretization_FTES4_4A fnft_nse_discretization_FTES4_4A
 #define nse_discretization_FTES4_4B fnft_nse_discretization_FTES4_4B
 #define nse_discretization_FTES4_suzuki fnft_nse_discretization_FTES4_suzuki

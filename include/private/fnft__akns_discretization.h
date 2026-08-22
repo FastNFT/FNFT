@@ -17,6 +17,7 @@
  * Sander Wahls (TU Delft) 2017-2018.
  * Shrinivas Chimmalgi (TU Delft) 2017.
  * Peter J. Prins (TU Delft) 2018, 2020-2021.
+ * Igor Chekhovskoy 2026.
  */
 
 /**
@@ -163,6 +164,42 @@ FNFT_INT fnft__akns_discretization_method_weights(FNFT_COMPLEX **qr_weights_ptr,
                                                   fnft__akns_discretization_t const akns_discretization);
 
 /**
+ * Scaled five-point finite differences used by the sixth-order exponential
+ * methods. The entries are eps_t times the potential and its dimensionless
+ * first through fourth differences from Eqs. 13--18 of
+ * https://doi.org/10.1016/j.jcp.2021.110764.
+ */
+typedef struct {
+    FNFT_COMPLEX value;
+    FNFT_COMPLEX first;
+    FNFT_COMPLEX second;
+    FNFT_COMPLEX first_low;
+    FNFT_COMPLEX second_low;
+    FNFT_COMPLEX third;
+    FNFT_COMPLEX fourth;
+} fnft__akns_es6_stencil_t;
+
+static inline void fnft__akns_discretization_es6_stencil(
+        FNFT_COMPLEX const samples[5], FNFT_REAL const eps_t,
+        fnft__akns_es6_stencil_t * const stencil)
+{
+    const FNFT_COMPLEX qm2 = samples[0];
+    const FNFT_COMPLEX qm1 = samples[1];
+    const FNFT_COMPLEX q = samples[2];
+    const FNFT_COMPLEX qp1 = samples[3];
+    const FNFT_COMPLEX qp2 = samples[4];
+
+    stencil->value = eps_t*q;
+    stencil->first = eps_t*(-qp2+8.0*qp1-8.0*qm1+qm2)/12.0;
+    stencil->second = eps_t*(-qp2+16.0*qp1-30.0*q
+            +16.0*qm1-qm2)/12.0;
+    stencil->first_low = eps_t*(qp1-qm1)/2.0;
+    stencil->second_low = eps_t*(qp1-2.0*q+qm1);
+    stencil->third = eps_t*(qp2-2.0*qp1+2.0*qm1-qm2)/2.0;
+    stencil->fourth = eps_t*(qp2-4.0*qp1+6.0*q-4.0*qm1+qm2);
+}
+
+/**
  * @brief  This routine preprocesses the signal by resampling and subsampling based on the discretization.
  * The preprocessing is necessary for higher-order methods.
  *
@@ -253,6 +290,7 @@ FNFT_INT fnft__akns_discretization_change_of_basis_matrix_from_S(FNFT_COMPLEX * 
 #define akns_discretization_lambda_to_z(...) fnft__akns_discretization_lambda_to_z(__VA_ARGS__)
 #define akns_discretization_z_to_lambda(...) fnft__akns_discretization_z_to_lambda(__VA_ARGS__)
 #define akns_discretization_method_weights(...) fnft__akns_discretization_method_weights(__VA_ARGS__)
+#define akns_discretization_es6_stencil(...) fnft__akns_discretization_es6_stencil(__VA_ARGS__)
 #define akns_discretization_preprocess_signal(...) fnft__akns_discretization_preprocess_signal(__VA_ARGS__)
 #define akns_discretization_change_of_basis_matrix_to_S(...) fnft__akns_discretization_change_of_basis_matrix_to_S(__VA_ARGS__)
 #define akns_discretization_change_of_basis_matrix_from_S(...) fnft__akns_discretization_change_of_basis_matrix_from_S(__VA_ARGS__)

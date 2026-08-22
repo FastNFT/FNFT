@@ -20,6 +20,7 @@
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft__akns_fscatter_pade.h"
+#include "fnft__akns_discretization.h"
 #include "fnft__errwarn.h"
 
 #include <limits.h>
@@ -165,34 +166,29 @@ static void build_z_polynomial(const UINT D, const UINT index,
         small_matrix_add_scaled(z_matrix, &d2, 1.0/24.0);
         small_matrix_add_scaled(z_matrix, &comm, 1.0/12.0);
     } else {
+        const COMPLEX q_samples[5] = {
+            q[im2], q[im1], q[index], q[ip1], q[ip2]
+        };
+        const COMPLEX r_samples[5] = {
+            r[im2], r[im1], r[index], r[ip1], r[ip2]
+        };
+        fnft__akns_es6_stencil_t qs, rs;
         small_matrix_t d1_low, d2_low, d3, d4;
         small_matrix_t term, t1, t2, a0_squared, a0_cubed;
 
-        constant_derivative_matrix(eps_t*(-q[ip2] + 8.0*q[ip1]
-                    - 8.0*q[im1] + q[im2])/12.0,
-                eps_t*(-r[ip2] + 8.0*r[ip1]
-                    - 8.0*r[im1] + r[im2])/12.0, &d1);
-        constant_derivative_matrix(eps_t*(-q[ip2] + 16.0*q[ip1]
-                    - 30.0*q[index] + 16.0*q[im1] - q[im2])/12.0,
-                eps_t*(-r[ip2] + 16.0*r[ip1]
-                    - 30.0*r[index] + 16.0*r[im1] - r[im2])/12.0, &d2);
+        akns_discretization_es6_stencil(q_samples, eps_t, &qs);
+        akns_discretization_es6_stencil(r_samples, eps_t, &rs);
+        constant_derivative_matrix(qs.first, rs.first, &d1);
+        constant_derivative_matrix(qs.second, rs.second, &d2);
         small_matrix_commutator(&d1, &a0, &comm);
         *z_matrix = a0;
         small_matrix_add_scaled(z_matrix, &d2, 1.0/24.0);
         small_matrix_add_scaled(z_matrix, &comm, 1.0/12.0);
 
-        constant_derivative_matrix(eps_t*(q[ip1] - q[im1])/2.0,
-                eps_t*(r[ip1] - r[im1])/2.0, &d1_low);
-        constant_derivative_matrix(eps_t*(q[ip1] - 2.0*q[index] + q[im1]),
-                eps_t*(r[ip1] - 2.0*r[index] + r[im1]), &d2_low);
-        constant_derivative_matrix(eps_t*(q[ip2] - 2.0*q[ip1]
-                    + 2.0*q[im1] - q[im2])/2.0,
-                eps_t*(r[ip2] - 2.0*r[ip1]
-                    + 2.0*r[im1] - r[im2])/2.0, &d3);
-        constant_derivative_matrix(eps_t*(q[ip2] - 4.0*q[ip1]
-                    + 6.0*q[index] - 4.0*q[im1] + q[im2]),
-                eps_t*(r[ip2] - 4.0*r[ip1]
-                    + 6.0*r[index] - 4.0*r[im1] + r[im2]), &d4);
+        constant_derivative_matrix(qs.first_low, rs.first_low, &d1_low);
+        constant_derivative_matrix(qs.second_low, rs.second_low, &d2_low);
+        constant_derivative_matrix(qs.third, rs.third, &d3);
+        constant_derivative_matrix(qs.fourth, rs.fourth, &d4);
 
         small_matrix_add_scaled(z_matrix, &d4, 1.0/1920.0);
         small_matrix_commutator(&d3, &a0, &term);
