@@ -17,7 +17,7 @@
  * Sander Wahls (TU Delft) 2017-2018, 2021.
  * Peter J Prins (TU Delft) 2020.
  * Lianne de Vries (TU Delft student) 2021.
- * Igor Chekhovskoy 2026.
+ * Igor Chekhovskoy (NSU, FRC ICT) 2026.
  */
 
 /**

@@ -16,7 +16,7 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018, 2020-21.
 * Shrinivas Chimmalgi (TU Delft) 2020.
-* Igor Chekhovskoy 2026.
+* Igor Chekhovskoy (NSU, FRC ICT) 2026.
 */
 
 /**
@@ -226,13 +226,17 @@ fnft_nsep_opts_t fnft_nsep_default_opts();
  *       - fnft_nse_discretization_2SPLIT8A
  *       - fnft_nse_discretization_2SPLIT8B
  *       - fnft_nse_discretization_4SPLIT4A
+ *       - fnft_nse_discretization_FTES4_4A
+ *       - fnft_nse_discretization_FTES4_4B
  *       - fnft_nse_discretization_FTES4_suzuki
  *       - fnft_nse_discretization_FES4_PADE (GRIDSEARCH localization)
  *       - fnft_nse_discretization_FES6_PADE (GRIDSEARCH localization)
  *
- * FES8_PADE is not supported by this periodic-spectrum routine. The direct
- * Cayley representation is currently restricted to the continuous spectrum
- * in \link fnft_nsev \endlink.
+ * FES8_PADE is not supported by this periodic-spectrum routine. Use
+ * \link fnft_nsev \endlink for vanishing-boundary continuous and discrete
+ * spectral data. There the direct-Cayley and Chebyshev--Joukowski
+ * representations construct the continuous spectrum, while discrete data
+ * are refined with ES8.
  *
  * For the Newton refinement mode only, one of the following should be used instead:
  *      - fnft_nse_discretization_BO

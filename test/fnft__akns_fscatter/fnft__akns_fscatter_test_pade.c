@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Igor Chekhovskoy 2026.
+ * Igor Chekhovskoy (NSU, FRC ICT) 2026.
  */
 
 #include "fnft__akns_fscatter_pade.h"
@@ -85,15 +85,44 @@ static matrix_t derivative_matrix(const FNFT_COMPLEX q,
     return result;
 }
 
+static FNFT_COMPLEX stencil_sample(const FNFT_UINT D, const FNFT_UINT index,
+        FNFT_COMPLEX const * const values, const FNFT_INT offset,
+        const FNFT_INT periodic_flag)
+{
+    FNFT_INT sample_index = (FNFT_INT)index + offset;
+
+    if (periodic_flag) {
+        sample_index %= (FNFT_INT)D;
+        if (sample_index < 0)
+            sample_index += (FNFT_INT)D;
+        return values[sample_index];
+    }
+    if (sample_index < 0 || sample_index >= (FNFT_INT)D)
+        return 0.0;
+    return values[sample_index];
+}
+
 static matrix_t direct_z(const FNFT_UINT D, const FNFT_UINT index,
         FNFT_COMPLEX const * const q, FNFT_COMPLEX const * const r,
         const FNFT_REAL eps_t, const FNFT_COMPLEX lambda,
-        const FNFT_UINT method_order)
+        const FNFT_UINT method_order, const FNFT_INT periodic_flag)
 {
-    const FNFT_UINT im1 = (index + D - 1) % D;
-    const FNFT_UINT ip1 = (index + 1) % D;
-    const FNFT_UINT im2 = (index + D - 2) % D;
-    const FNFT_UINT ip2 = (index + 2) % D;
+    const FNFT_COMPLEX qm1 = stencil_sample(D, index, q, -1,
+            periodic_flag);
+    const FNFT_COMPLEX qp1 = stencil_sample(D, index, q, 1,
+            periodic_flag);
+    const FNFT_COMPLEX rm1 = stencil_sample(D, index, r, -1,
+            periodic_flag);
+    const FNFT_COMPLEX rp1 = stencil_sample(D, index, r, 1,
+            periodic_flag);
+    const FNFT_COMPLEX qm2 = stencil_sample(D, index, q, -2,
+            periodic_flag);
+    const FNFT_COMPLEX qp2 = stencil_sample(D, index, q, 2,
+            periodic_flag);
+    const FNFT_COMPLEX rm2 = stencil_sample(D, index, r, -2,
+            periodic_flag);
+    const FNFT_COMPLEX rp2 = stencil_sample(D, index, r, 2,
+            periodic_flag);
     matrix_t a0 = derivative_matrix(eps_t*q[index], eps_t*r[index]);
     matrix_t d1, d2, term;
     matrix_t result;
@@ -102,10 +131,10 @@ static matrix_t direct_z(const FNFT_UINT D, const FNFT_UINT index,
     a0.entry[3] = I*eps_t*lambda;
 
     if (method_order == 4) {
-        d1 = derivative_matrix(eps_t*(q[ip1] - q[im1])/2.0,
-                eps_t*(r[ip1] - r[im1])/2.0);
-        d2 = derivative_matrix(eps_t*(q[ip1] - 2.0*q[index] + q[im1]),
-                eps_t*(r[ip1] - 2.0*r[index] + r[im1]));
+        d1 = derivative_matrix(eps_t*(qp1 - qm1)/2.0,
+                eps_t*(rp1 - rm1)/2.0);
+        d2 = derivative_matrix(eps_t*(qp1 - 2.0*q[index] + qm1),
+                eps_t*(rp1 - 2.0*r[index] + rm1));
         result = a0;
         matrix_add_scaled(&result, &d2, 1.0/24.0);
         term = matrix_commutator(&d1, &a0);
@@ -113,31 +142,31 @@ static matrix_t direct_z(const FNFT_UINT D, const FNFT_UINT index,
     } else if (method_order == 6) {
         matrix_t d1_low, d2_low, d3, d4, t1, t2, a0_squared, a0_cubed;
 
-        d1 = derivative_matrix(eps_t*(-q[ip2] + 8.0*q[ip1]
-                    - 8.0*q[im1] + q[im2])/12.0,
-                eps_t*(-r[ip2] + 8.0*r[ip1]
-                    - 8.0*r[im1] + r[im2])/12.0);
-        d2 = derivative_matrix(eps_t*(-q[ip2] + 16.0*q[ip1]
-                    - 30.0*q[index] + 16.0*q[im1] - q[im2])/12.0,
-                eps_t*(-r[ip2] + 16.0*r[ip1]
-                    - 30.0*r[index] + 16.0*r[im1] - r[im2])/12.0);
+        d1 = derivative_matrix(eps_t*(-qp2 + 8.0*qp1
+                    - 8.0*qm1 + qm2)/12.0,
+                eps_t*(-rp2 + 8.0*rp1
+                    - 8.0*rm1 + rm2)/12.0);
+        d2 = derivative_matrix(eps_t*(-qp2 + 16.0*qp1
+                    - 30.0*q[index] + 16.0*qm1 - qm2)/12.0,
+                eps_t*(-rp2 + 16.0*rp1
+                    - 30.0*r[index] + 16.0*rm1 - rm2)/12.0);
         result = a0;
         matrix_add_scaled(&result, &d2, 1.0/24.0);
         term = matrix_commutator(&d1, &a0);
         matrix_add_scaled(&result, &term, 1.0/12.0);
 
-        d1_low = derivative_matrix(eps_t*(q[ip1] - q[im1])/2.0,
-                eps_t*(r[ip1] - r[im1])/2.0);
-        d2_low = derivative_matrix(eps_t*(q[ip1] - 2.0*q[index] + q[im1]),
-                eps_t*(r[ip1] - 2.0*r[index] + r[im1]));
-        d3 = derivative_matrix(eps_t*(q[ip2] - 2.0*q[ip1]
-                    + 2.0*q[im1] - q[im2])/2.0,
-                eps_t*(r[ip2] - 2.0*r[ip1]
-                    + 2.0*r[im1] - r[im2])/2.0);
-        d4 = derivative_matrix(eps_t*(q[ip2] - 4.0*q[ip1]
-                    + 6.0*q[index] - 4.0*q[im1] + q[im2]),
-                eps_t*(r[ip2] - 4.0*r[ip1]
-                    + 6.0*r[index] - 4.0*r[im1] + r[im2]));
+        d1_low = derivative_matrix(eps_t*(qp1 - qm1)/2.0,
+                eps_t*(rp1 - rm1)/2.0);
+        d2_low = derivative_matrix(eps_t*(qp1 - 2.0*q[index] + qm1),
+                eps_t*(rp1 - 2.0*r[index] + rm1));
+        d3 = derivative_matrix(eps_t*(qp2 - 2.0*qp1
+                    + 2.0*qm1 - qm2)/2.0,
+                eps_t*(rp2 - 2.0*rp1
+                    + 2.0*rm1 - rm2)/2.0);
+        d4 = derivative_matrix(eps_t*(qp2 - 4.0*qp1
+                    + 6.0*q[index] - 4.0*qm1 + qm2),
+                eps_t*(rp2 - 4.0*rp1
+                    + 6.0*r[index] - 4.0*rm1 + rm2));
         matrix_add_scaled(&result, &d4, 1.0/1920.0);
         term = matrix_commutator(&d3, &a0);
         matrix_add_scaled(&result, &term, 1.0/480.0);
@@ -161,13 +190,19 @@ static matrix_t direct_z(const FNFT_UINT D, const FNFT_UINT index,
         /* The slow ES8 tests independently verify these shared paper
          * coefficients. Here the independent Padé matrix formula verifies
          * their conversion to the global Cayley rational polynomial. */
-        const FNFT_UINT im3 = (index + D - 3) % D;
-        const FNFT_UINT ip3 = (index + 3) % D;
+        const FNFT_COMPLEX qm3 = stencil_sample(D, index, q, -3,
+                periodic_flag);
+        const FNFT_COMPLEX qp3 = stencil_sample(D, index, q, 3,
+                periodic_flag);
+        const FNFT_COMPLEX rm3 = stencil_sample(D, index, r, -3,
+                periodic_flag);
+        const FNFT_COMPLEX rp3 = stencil_sample(D, index, r, 3,
+                periodic_flag);
         const FNFT_COMPLEX q_samples[7] = {
-            q[im3], q[im2], q[im1], q[index], q[ip1], q[ip2], q[ip3]
+            qm3, qm2, qm1, q[index], qp1, qp2, qp3
         };
         const FNFT_COMPLEX r_samples[7] = {
-            r[im3], r[im2], r[im1], r[index], r[ip1], r[ip2], r[ip3]
+            rm3, rm2, rm1, r[index], rp1, rp2, rp3
         };
         fnft__akns_es8_stencil_t qs, rs;
         FNFT_COMPLEX q_values[7], r_values[7], coefficients[24];
@@ -298,11 +333,23 @@ static int test_chebyshev_size_validation(void)
     FNFT_COMPLEX dummy[4] = {1.0, 0.0, 0.0, 1.0};
     FNFT_UINT degree = 0;
 
-    if (fnft__poly_fmult_chebyshev(&degree, UINT_MAX, dummy, NULL)
+    if (fnft__poly_power_to_chebyshev((FNFT_UINT)-1, dummy, dummy)
+                != FNFT_EC_INVALID_ARGUMENT)
+        return EXIT_FAILURE;
+    degree = (FNFT_UINT)-1;
+    if (fnft__poly_fmult_chebyshev(&degree, 2, dummy, NULL)
                 != FNFT_EC_INVALID_ARGUMENT)
         return EXIT_FAILURE;
     degree = 0;
-    if (fnft__poly_fmult2x2_chebyshev(&degree, UINT_MAX, dummy, dummy,
+    if (fnft__poly_fmult_chebyshev(&degree, (FNFT_UINT)-1, dummy, NULL)
+                != FNFT_EC_INVALID_ARGUMENT)
+        return EXIT_FAILURE;
+    degree = (FNFT_UINT)-1;
+    if (fnft__poly_fmult2x2_chebyshev(&degree, 2, dummy, dummy, NULL)
+                != FNFT_EC_INVALID_ARGUMENT)
+        return EXIT_FAILURE;
+    degree = 0;
+    if (fnft__poly_fmult2x2_chebyshev(&degree, (FNFT_UINT)-1, dummy, dummy,
                 NULL) != FNFT_EC_INVALID_ARGUMENT)
         return EXIT_FAILURE;
     return EXIT_SUCCESS;
@@ -330,7 +377,7 @@ static int run_chebyshev_case(const FNFT_UINT pade_degree,
         r[i] = -(FNFT_REAL)kappa*FNFT_CONJ(q[i]);
     }
     ret_code = fnft__akns_fscatter_pade_chebyshev(D, q, r, eps_t,
-            pade_degree, c, H, numerator, &numerator_degree,
+            pade_degree, c, H, 1, numerator, &numerator_degree,
             normalization_flag ? &numerator_exponent : NULL, denominator,
             &denominator_degree,
             normalization_flag ? &denominator_exponent : NULL);
@@ -348,7 +395,7 @@ static int run_chebyshev_case(const FNFT_UINT pade_degree,
         matrix_t direct = matrix_identity();
 
         for (i = 0; i < D; i++) {
-            const matrix_t z = direct_z(D, i, q, r, eps_t, lambda, 8);
+            const matrix_t z = direct_z(D, i, q, r, eps_t, lambda, 8, 1);
             const matrix_t step = direct_pade(&z, pade_degree);
             direct = matrix_multiply(&step, &direct);
         }
@@ -416,7 +463,7 @@ static int run_case(const FNFT_UINT method_order, const FNFT_UINT pade_degree,
         r[i] = -(FNFT_REAL)kappa*FNFT_CONJ(q[i]);
 
     ret_code = fnft__akns_fscatter_pade(D, q, r, eps_t, method_order,
-            pade_degree, h, numerator, &numerator_degree,
+            pade_degree, h, 1, numerator, &numerator_degree,
             normalization_flag ? &numerator_exponent : NULL,
             denominator, &denominator_degree,
             normalization_flag ? &denominator_exponent : NULL);
@@ -427,7 +474,8 @@ static int run_case(const FNFT_UINT method_order, const FNFT_UINT pade_degree,
     }
 
     for (i = 0; i < D; i++) {
-        const matrix_t z = direct_z(D, i, q, r, eps_t, lambda, method_order);
+        const matrix_t z = direct_z(D, i, q, r, eps_t, lambda, method_order,
+                1);
         const matrix_t step = direct_pade(&z, pade_degree);
         direct = matrix_multiply(&step, &direct);
     }
@@ -480,7 +528,7 @@ static int run_zero_case(const FNFT_INT normalization_flag)
     if (numerator == NULL || denominator == NULL)
         return EXIT_FAILURE;
     ret_code = fnft__akns_fscatter_pade(D, q, r, eps_t, method_order,
-            pade_degree, h, numerator, &numerator_degree,
+            pade_degree, h, 0, numerator, &numerator_degree,
             normalization_flag ? &numerator_exponent : NULL, denominator,
             &denominator_degree,
             normalization_flag ? &denominator_exponent : NULL);
@@ -508,35 +556,41 @@ static int test_invalid_es8_arguments(void)
     FNFT_COMPLEX numerator[4*71*8], denominator[71*8];
     FNFT_UINT numerator_degree, denominator_degree;
 
-    if (fnft__akns_fscatter_pade(7, q, r, 0.1, 8, 2, 14.9,
+    if (fnft__akns_fscatter_pade(7, q, r, 0.1, 8, 2, 14.9, 1,
                 numerator, &numerator_degree, NULL, denominator,
                 &denominator_degree, NULL) == FNFT_SUCCESS
-            || fnft__akns_fscatter_pade(7, q, r, 0.1, 8, 8, 14.9,
+            || fnft__akns_fscatter_pade(7, q, r, 0.1, 8, 8, 14.9, 1,
                 numerator, &numerator_degree, NULL, denominator,
                 &denominator_degree, NULL) == FNFT_SUCCESS
-            || fnft__akns_fscatter_pade(6, q, r, 0.1, 8, 3, 14.9,
+            || fnft__akns_fscatter_pade(6, q, r, 0.1, 8, 3, 14.9, 1,
                 numerator, &numerator_degree, NULL, denominator,
                 &denominator_degree, NULL) == FNFT_SUCCESS
-            || fnft__akns_fscatter_pade(7, q, r, 0.1, 8, 3, 0.0,
+            || fnft__akns_fscatter_pade(7, q, r, 0.1, 8, 3, 0.0, 1,
                 numerator, &numerator_degree, NULL, denominator,
                 &denominator_degree, NULL) == FNFT_SUCCESS
-            || fnft__akns_fscatter_pade_numel(UINT_MAX, 8, 3) != 0
-            || fnft__akns_fscatter_pade_den_numel(UINT_MAX, 8, 3) != 0)
+            || fnft__akns_fscatter_pade(7, q, r, 0.1, 8, 3, 14.9, 2,
+                numerator, &numerator_degree, NULL, denominator,
+                &denominator_degree, NULL) == FNFT_SUCCESS
+            || fnft__akns_fscatter_pade_numel((FNFT_UINT)-1, 8, 3) != 0
+            || fnft__akns_fscatter_pade_den_numel((FNFT_UINT)-1, 8, 3) != 0)
         return EXIT_FAILURE;
-    if (fnft__akns_fscatter_pade_chebyshev(7, q, r, 0.1, 2, 0.0, 1.0,
+    if (fnft__akns_fscatter_pade_chebyshev(7, q, r, 0.1, 2, 0.0, 1.0, 1,
                 numerator, &numerator_degree, NULL, denominator,
                 &denominator_degree, NULL) == FNFT_SUCCESS
             || fnft__akns_fscatter_pade_chebyshev(7, q, r, 0.1, 8, 0.0,
-                1.0, numerator, &numerator_degree, NULL, denominator,
+                1.0, 1, numerator, &numerator_degree, NULL, denominator,
                 &denominator_degree, NULL) == FNFT_SUCCESS
             || fnft__akns_fscatter_pade_chebyshev(6, q, r, 0.1, 3, 0.0,
-                1.0, numerator, &numerator_degree, NULL, denominator,
+                1.0, 1, numerator, &numerator_degree, NULL, denominator,
                 &denominator_degree, NULL) == FNFT_SUCCESS
             || fnft__akns_fscatter_pade_chebyshev(7, q, r, 0.1, 3, 0.0,
-                0.0, numerator, &numerator_degree, NULL, denominator,
+                0.0, 1, numerator, &numerator_degree, NULL, denominator,
                 &denominator_degree, NULL) == FNFT_SUCCESS
             || fnft__akns_fscatter_pade_chebyshev(7, q, r, 0.1, 3, NAN,
-                1.0, numerator, &numerator_degree, NULL, denominator,
+                1.0, 1, numerator, &numerator_degree, NULL, denominator,
+                &denominator_degree, NULL) == FNFT_SUCCESS
+            || fnft__akns_fscatter_pade_chebyshev(7, q, r, 0.1, 3, 0.0,
+                1.0, 2, numerator, &numerator_degree, NULL, denominator,
                 &denominator_degree, NULL) == FNFT_SUCCESS)
         return EXIT_FAILURE;
     return EXIT_SUCCESS;

@@ -17,8 +17,8 @@
  * Sander Wahls (TU Delft) 2017-2018.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Peter J. Prins (TU Delft) 2018, 2020.
- * Igor Chekhovskoy 2026.
- * Irina Vaseva 2026.
+ * Igor Chekhovskoy (NSU, FRC ICT) 2026.
+ * Irina Vaseva (FRC ICT, NSU) 2026.
  */
 #define FNFT_ENABLE_SHORT_NAMES
 

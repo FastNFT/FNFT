@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Igor Chekhovskoy 2026.
+ * Igor Chekhovskoy (NSU, FRC ICT) 2026.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -52,21 +52,35 @@ static matrix_t matrix_multiply(matrix_t const * const left,
     return result;
 }
 
+static COMPLEX zero_extended_sample(const UINT D, const UINT index,
+        COMPLEX const * const values, const INT offset)
+{
+    const INT sample_index = (INT)index + offset;
+
+    if (sample_index < 0 || sample_index >= (INT)D)
+        return 0.0;
+    return values[sample_index];
+}
+
 static matrix_t pointwise_es8_z(const UINT D, const UINT index,
         COMPLEX const * const q, COMPLEX const * const r,
         const REAL eps_t, const COMPLEX lambda)
 {
-    const UINT im1 = (index + D - 1) % D;
-    const UINT ip1 = (index + 1) % D;
-    const UINT im2 = (index + D - 2) % D;
-    const UINT ip2 = (index + 2) % D;
-    const UINT im3 = (index + D - 3) % D;
-    const UINT ip3 = (index + 3) % D;
     const COMPLEX q_samples[7] = {
-        q[im3], q[im2], q[im1], q[index], q[ip1], q[ip2], q[ip3]
+        zero_extended_sample(D, index, q, -3),
+        zero_extended_sample(D, index, q, -2),
+        zero_extended_sample(D, index, q, -1), q[index],
+        zero_extended_sample(D, index, q, 1),
+        zero_extended_sample(D, index, q, 2),
+        zero_extended_sample(D, index, q, 3)
     };
     const COMPLEX r_samples[7] = {
-        r[im3], r[im2], r[im1], r[index], r[ip1], r[ip2], r[ip3]
+        zero_extended_sample(D, index, r, -3),
+        zero_extended_sample(D, index, r, -2),
+        zero_extended_sample(D, index, r, -1), r[index],
+        zero_extended_sample(D, index, r, 1),
+        zero_extended_sample(D, index, r, 2),
+        zero_extended_sample(D, index, r, 3)
     };
     fnft__akns_es8_stencil_t qs, rs;
     COMPLEX q_values[7], r_values[7], coefficients[24];
@@ -414,10 +428,6 @@ static INT test_public_es8_rejections(void)
     if (fnft_nsev(D, q, T, 0, NULL, NULL, &K, NULL, NULL, +1,
                 &opts) != SUCCESS || K != 0)
         return E_TEST_FAILED;
-    K = 1;
-    if (fnft_nsev(D, q, T, 0, NULL, NULL, &K, bound_state, NULL, +1,
-                &opts) == SUCCESS)
-        return E_TEST_FAILED;
     opts.pade_representation =
             nsev_pade_representation_CHEBYSHEV_JOUKOWSKI;
     opts.pade_h = 1.0;
@@ -429,6 +439,15 @@ static INT test_public_es8_rejections(void)
     if (fnft_nsev(D, q, T, M, spectrum, XI, NULL, NULL, NULL, +1,
                 &opts) == SUCCESS)
         return E_TEST_FAILED;
+    opts.discretization = nse_discretization_FES8_PADE;
+    opts.pade_degree = 4;
+    opts.pade_representation = nsev_pade_representation_DIRECT_CAYLEY;
+    opts.bound_state_localization = nsev_bsloc_FAST_EIGENVALUE;
+    bound_state[0] = 0.5*I;
+    K = 1;
+    if (fnft_nsev(D, q, T, 0, NULL, NULL, &K, bound_state, NULL, +1,
+                &opts) == SUCCESS)
+        return E_TEST_FAILED;
     opts.pade_representation = (fnft_nsev_pade_representation_t)42;
     if (fnft_nsev(D, q, T, M, spectrum, XI, NULL, NULL, NULL, +1,
                 &opts) == SUCCESS)
@@ -438,7 +457,20 @@ static INT test_public_es8_rejections(void)
 
 static INT test_es8_metadata(void)
 {
-    if (nse_discretization_method_order(nse_discretization_FES8_PADE) != 8
+    if (nse_discretization_FTES4SB
+                != nse_discretization_FTES4_suzuki
+            || nse_discretization_degree(nse_discretization_FES4_PADE) != 4
+            || nse_discretization_degree_with_pade(
+                nse_discretization_FES4_PADE, 7) != 14
+            || nse_discretization_degree(nse_discretization_FES6_PADE) != 18
+            || nse_discretization_degree_with_pade(
+                nse_discretization_FES6_PADE, 7) != 42
+            || nse_discretization_degree(nse_discretization_FES8_PADE) != 30
+            || nse_discretization_degree_with_pade(
+                nse_discretization_FES8_PADE, 7) != 70
+            || nse_discretization_degree_with_pade(
+                nse_discretization_FES8_PADE, 2) != 0
+            || nse_discretization_method_order(nse_discretization_FES8_PADE) != 8
             || nse_discretization_effective_order(
                 nse_discretization_FES8_PADE, 3) != 6
             || nse_discretization_effective_order(
@@ -460,7 +492,9 @@ static INT test_es8_metadata(void)
                 != nsev_pade_representation_DIRECT_CAYLEY)
             return E_TEST_FAILED;
         opts.discretization = nse_discretization_FES8_PADE;
-        if (fnft_nsev_max_K(128, &opts) != 0)
+        if (fnft_nsev_max_K(128, &opts) != 30*128
+                || fnft_nsev_max_K((UINT)-1, NULL) != 0
+                || fnft_nsev_max_K((UINT)-1, &opts) != 0)
             return E_TEST_FAILED;
     }
     {
@@ -597,7 +631,9 @@ static INT test_chebyshev_convergence(const nsev_testcases_t testcase)
     return SUCCESS;
 }
 
-static REAL bound_state_error(const UINT D, INT * const ret_code)
+static REAL bound_state_error(const UINT D,
+        const nse_discretization_t discretization, const UINT pade_degree,
+        const INT newton_flag, INT * const ret_code)
 {
     COMPLEX *q = NULL, *exact = NULL, *ab = NULL, *bound_states = NULL;
     COMPLEX *normconsts = NULL, *residues = NULL, *computed = NULL;
@@ -611,15 +647,18 @@ static REAL bound_state_error(const UINT D, INT * const ret_code)
             &residues, &kappa);
     if (*ret_code != SUCCESS)
         goto release_mem;
-    opts.discretization = nse_discretization_FES4_PADE;
-    opts.pade_degree = 2;
-    opts.bound_state_localization = nsev_bsloc_SUBSAMPLE_AND_REFINE;
-    K = fnft_nsev_max_K(D, &opts);
+    opts.discretization = discretization;
+    opts.pade_degree = pade_degree;
+    opts.bound_state_localization = newton_flag ? nsev_bsloc_NEWTON
+            : nsev_bsloc_SUBSAMPLE_AND_REFINE;
+    K = newton_flag ? K_exact : fnft_nsev_max_K(D, &opts);
     computed = malloc(K*sizeof(COMPLEX));
     if (computed == NULL) {
         *ret_code = E_NOMEM;
         goto release_mem;
     }
+    if (newton_flag)
+        memcpy(computed, bound_states, K*sizeof(COMPLEX));
     *ret_code = fnft_nsev(D, q, T, 0, NULL, XI, &K, computed, NULL,
             kappa, &opts);
     if (*ret_code != SUCCESS)
@@ -652,21 +691,216 @@ release_mem:
     return error;
 }
 
-static INT test_bound_state_localization(void)
+static INT test_bound_state_localization(
+        const nse_discretization_t discretization, const UINT pade_degree,
+        const UINT coarse_D, const REAL minimum_ratio,
+        const INT newton_flag)
 {
     INT ret_code;
-    const REAL coarse = bound_state_error(256, &ret_code);
+    const REAL coarse = bound_state_error(coarse_D, discretization,
+            pade_degree, newton_flag, &ret_code);
     REAL fine;
 
     if (ret_code != SUCCESS)
         return ret_code;
-    fine = bound_state_error(512, &ret_code);
+    fine = bound_state_error(2*coarse_D, discretization, pade_degree,
+            newton_flag, &ret_code);
     if (ret_code != SUCCESS)
         return ret_code;
-    if (!(fine > 0.0 && fine < 1e-3 && coarse/fine >= 3.0)) {
-        fprintf(stderr, "Padé bound-state localization failure: coarse=%.3e fine=%.3e ratio=%.2f\n",
-                coarse, fine, coarse/fine);
+    if (!(fine > 0.0 && fine < 1e-3 && coarse/fine >= minimum_ratio)) {
+        fprintf(stderr, "Padé bound-state localization failure: discretization=%d degree=%lu coarse=%.3e fine=%.3e ratio=%.2f\n",
+                (int)discretization, (unsigned long)pade_degree, coarse, fine,
+                coarse/fine);
         return E_TEST_FAILED;
+    }
+    return SUCCESS;
+}
+
+static INT test_es8_degree7_discrete_data(void)
+{
+    const UINT D = 1024;
+    COMPLEX *q = NULL, *exact = NULL, *ab = NULL;
+    COMPLEX *bound_states_exact = NULL, *normconsts_exact = NULL;
+    COMPLEX *residues_exact = NULL, *bound_states = NULL, *data = NULL;
+    REAL T[2], XI[2], normconst_error = 0.0, normconst_norm = 0.0;
+    REAL residue_error = 0.0, residue_norm = 0.0;
+    UINT M, K, K_exact, i;
+    INT kappa, ret_code;
+    fnft_nsev_opts_t opts = fnft_nsev_default_opts();
+
+    ret_code = nsev_testcases(nsev_testcases_SECH_FOCUSING2, D, &q, T,
+            &M, &exact, &ab, XI, &K_exact, &bound_states_exact,
+            &normconsts_exact, &residues_exact, &kappa);
+    if (ret_code != SUCCESS)
+        goto release_mem;
+    bound_states = malloc(K_exact*sizeof(COMPLEX));
+    data = malloc(2*K_exact*sizeof(COMPLEX));
+    if (bound_states == NULL || data == NULL) {
+        ret_code = E_NOMEM;
+        goto release_mem;
+    }
+    memcpy(bound_states, bound_states_exact, K_exact*sizeof(COMPLEX));
+    K = K_exact;
+    opts.discretization = nse_discretization_FES8_PADE;
+    opts.pade_degree = 7;
+    opts.bound_state_localization = nsev_bsloc_NEWTON;
+    opts.discspec_type = nsev_dstype_BOTH;
+    ret_code = fnft_nsev(D, q, T, 0, NULL, NULL, &K, bound_states, data,
+            kappa, &opts);
+    if (ret_code != SUCCESS)
+        goto release_mem;
+    if (K != K_exact) {
+        ret_code = E_TEST_FAILED;
+        goto release_mem;
+    }
+    for (i = 0; i < K; i++) {
+        if (CABS(bound_states[i] - bound_states_exact[i])
+                > 2e-5*(1.0 + CABS(bound_states_exact[i]))) {
+            fprintf(stderr, "FES8 degree-7 bound-state mismatch: i=%lu error=%.3e computed=(%.16e,%.16e) exact=(%.16e,%.16e)\n",
+                    (unsigned long)i,
+                    CABS(bound_states[i] - bound_states_exact[i]),
+                    CREAL(bound_states[i]), CIMAG(bound_states[i]),
+                    CREAL(bound_states_exact[i]),
+                    CIMAG(bound_states_exact[i]));
+            ret_code = E_TEST_FAILED;
+            goto release_mem;
+        }
+        normconst_error += CABS(data[i] - normconsts_exact[i]);
+        normconst_norm += CABS(normconsts_exact[i]);
+        residue_error += CABS(data[K + i] - residues_exact[i]);
+        residue_norm += CABS(residues_exact[i]);
+    }
+    if (normconst_error/(1.0 + normconst_norm) > 2e-4
+            || residue_error/(1.0 + residue_norm) > 2e-4) {
+        fprintf(stderr, "FES8 degree-7 discrete-data mismatch: normconst=%.3e residue=%.3e\n",
+                normconst_error/(1.0 + normconst_norm),
+                residue_error/(1.0 + residue_norm));
+        ret_code = E_TEST_FAILED;
+    }
+
+release_mem:
+    free(q);
+    free(exact);
+    free(ab);
+    free(bound_states_exact);
+    free(normconsts_exact);
+    free(residues_exact);
+    free(bound_states);
+    free(data);
+    return ret_code;
+}
+
+static INT test_richardson_residue_buffer_and_options(void)
+{
+    const UINT D = 256;
+    const COMPLEX canary = 7.25 - 3.5*I;
+    COMPLEX *q = NULL, *exact = NULL, *ab = NULL;
+    COMPLEX *bound_states_exact = NULL, *normconsts_exact = NULL;
+    COMPLEX *residues_exact = NULL;
+    COMPLEX bound_state, residues[2] = {0.0, canary};
+    REAL T[2], XI[2];
+    UINT M, K, K_exact;
+    INT kappa, ret_code;
+    fnft_nsev_opts_t opts = fnft_nsev_default_opts();
+
+    ret_code = nsev_testcases(nsev_testcases_SECH_FOCUSING, D, &q, T,
+            &M, &exact, &ab, XI, &K_exact, &bound_states_exact,
+            &normconsts_exact, &residues_exact, &kappa);
+    if (ret_code != SUCCESS)
+        goto release_mem;
+    if (K_exact == 0) {
+        ret_code = E_TEST_FAILED;
+        goto release_mem;
+    }
+
+    bound_state = bound_states_exact[0];
+    K = 1;
+    opts.discretization = nse_discretization_FES4_PADE;
+    opts.pade_degree = 2;
+    opts.bound_state_localization = nsev_bsloc_NEWTON;
+    opts.discspec_type = nsev_dstype_RESIDUES;
+    opts.richardson_extrapolation_flag = 1;
+    ret_code = fnft_nsev(D, q, T, 0, NULL, NULL, &K, &bound_state,
+            residues, kappa, &opts);
+    if (ret_code != SUCCESS)
+        goto release_mem;
+    if (K != 1 || residues[1] != canary
+            || opts.discspec_type != nsev_dstype_RESIDUES
+            || opts.bound_state_localization != nsev_bsloc_NEWTON) {
+        ret_code = E_TEST_FAILED;
+        goto release_mem;
+    }
+
+    {
+        const COMPLEX short_q[2] = {0.0, 0.0};
+        const REAL short_T[2] = {-1.0, 1.0};
+
+        opts.discretization = nse_discretization_FES8_PADE;
+        opts.pade_degree = 4;
+        bound_state = 0.5*I;
+        K = 1;
+        if (fnft_nsev(2, short_q, short_T, 0, NULL, NULL, &K,
+                    &bound_state, residues, +1, &opts) == SUCCESS
+                || opts.discspec_type != nsev_dstype_RESIDUES
+                || opts.bound_state_localization != nsev_bsloc_NEWTON) {
+            ret_code = E_TEST_FAILED;
+            goto release_mem;
+        }
+    }
+
+release_mem:
+    free(q);
+    free(exact);
+    free(ab);
+    free(bound_states_exact);
+    free(normconsts_exact);
+    free(residues_exact);
+    return ret_code;
+}
+
+static INT test_richardson_minimal_pade_grid(void)
+{
+    const COMPLEX q_fes8[7] = {0.0};
+    const COMPLEX q_fes4[5] = {0.0};
+    const REAL T[2] = {-1.0, 1.0};
+    const REAL XI[2] = {-0.25, 0.25};
+    COMPLEX contspec[3];
+    fnft_nsev_opts_t opts, opts_before;
+    UINT i;
+    INT ret_code;
+
+    opts = fnft_nsev_default_opts();
+    opts.discretization = nse_discretization_FES8_PADE;
+    opts.pade_degree = 4;
+    opts.richardson_extrapolation_flag = 1;
+    opts_before = opts;
+    for (i = 0; i < 3; i++)
+        contspec[i] = 11.0 + 2.0*I;
+    ret_code = fnft_nsev(7, q_fes8, T, 3, contspec, XI, NULL, NULL,
+            NULL, -1, &opts);
+    if (ret_code != FNFT_EC_INVALID_ARGUMENT
+            || memcmp(&opts, &opts_before, sizeof(opts)) != 0)
+        return E_TEST_FAILED;
+    for (i = 0; i < 3; i++) {
+        if (!isfinite(CREAL(contspec[i])) || !isfinite(CIMAG(contspec[i])))
+            return E_TEST_FAILED;
+    }
+
+    opts = fnft_nsev_default_opts();
+    opts.discretization = nse_discretization_FES4_PADE;
+    opts.pade_degree = 2;
+    opts.richardson_extrapolation_flag = 1;
+    opts_before = opts;
+    for (i = 0; i < 3; i++)
+        contspec[i] = 11.0 + 2.0*I;
+    ret_code = fnft_nsev(5, q_fes4, T, 3, contspec, XI, NULL, NULL,
+            NULL, -1, &opts);
+    if (ret_code != FNFT_EC_INVALID_ARGUMENT
+            || memcmp(&opts, &opts_before, sizeof(opts)) != 0)
+        return E_TEST_FAILED;
+    for (i = 0; i < 3; i++) {
+        if (!isfinite(CREAL(contspec[i])) || !isfinite(CIMAG(contspec[i])))
+            return E_TEST_FAILED;
     }
     return SUCCESS;
 }
@@ -748,6 +982,32 @@ INT main(void)
             nse_discretization_FES6_PADE, 4, 512, 24.0);
     if (ret_code != SUCCESS)
         return EXIT_FAILURE;
-    ret_code = test_bound_state_localization();
+    ret_code = test_bound_state_localization(nse_discretization_FES4_PADE,
+            2, 256, 10.0, 0);
+    if (ret_code != SUCCESS)
+        return EXIT_FAILURE;
+    ret_code = test_bound_state_localization(nse_discretization_FES6_PADE,
+            3, 128, 20.0, 1);
+    if (ret_code != SUCCESS)
+        return EXIT_FAILURE;
+    ret_code = test_bound_state_localization(nse_discretization_FES8_PADE,
+            4, 64, 80.0, 1);
+    if (ret_code != SUCCESS)
+        return EXIT_FAILURE;
+    ret_code = test_bound_state_localization(nse_discretization_FES8_PADE,
+            4, 64, 80.0, 0);
+    if (ret_code != SUCCESS)
+        return EXIT_FAILURE;
+    ret_code = test_bound_state_localization(nse_discretization_FES8_PADE,
+            7, 64, 80.0, 1);
+    if (ret_code != SUCCESS)
+        return EXIT_FAILURE;
+    ret_code = test_es8_degree7_discrete_data();
+    if (ret_code != SUCCESS)
+        return EXIT_FAILURE;
+    ret_code = test_richardson_residue_buffer_and_options();
+    if (ret_code != SUCCESS)
+        return EXIT_FAILURE;
+    ret_code = test_richardson_minimal_pade_grid();
     return ret_code == SUCCESS ? EXIT_SUCCESS : EXIT_FAILURE;
 }

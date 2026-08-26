@@ -876,7 +876,8 @@ const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
 
     // Allocate memory
     contspec = malloc(3*M * sizeof(COMPLEX));
-    K = nse_discretization_degree(opts->discretization) * D;
+    K = nse_discretization_degree_with_pade(opts->discretization,
+            opts->pade_degree) * D;
     
     // In every case other than that of slow discretization with no bound states
     // memory has to be alloted for the bound states

@@ -16,8 +16,10 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018, 2020-2021; (KIT) 2025-2026.
 * Shrinivas Chimmalgi (TU Delft) 2020.
+* Igor Chekhovskoy (NSU, FRC ICT) 2026.
 */
 
+#include <math.h>
 #include <string.h>
 #include "mex.h"
 #ifndef SKIP_MATRIX_H
@@ -231,6 +233,43 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
             fnft_errwarn_setprintf(NULL);
 
+        } else if ( strcmp(str, "pade_degree") == 0 ) {
+
+            double value;
+
+            if ( k+1 == nrhs || mxIsComplex(prhs[k+1])
+                 || !mxIsDouble(prhs[k+1])
+                 || mxGetNumberOfElements(prhs[k+1]) != 1 ) {
+                snprintf(msg, sizeof msg, "'pade_degree' should be followed by a non-negative integer scalar.");
+                goto on_error;
+            }
+            value = mxGetScalar(prhs[k+1]);
+            if (!mxIsFinite(value) || value < 0.0 || value > 7.0
+                    || value != floor(value)) {
+                snprintf(msg, sizeof msg, "'pade_degree' should be followed by a non-negative integer scalar.");
+                goto on_error;
+            }
+            opts.pade_degree = (FNFT_UINT)value;
+            k++;
+
+        } else if ( strcmp(str, "pade_h") == 0 ) {
+
+            double value;
+
+            if ( k+1 == nrhs || mxIsComplex(prhs[k+1])
+                 || !mxIsDouble(prhs[k+1])
+                 || mxGetNumberOfElements(prhs[k+1]) != 1 ) {
+                snprintf(msg, sizeof msg, "'pade_h' should be followed by a non-negative real scalar.");
+                goto on_error;
+            }
+            value = mxGetScalar(prhs[k+1]);
+            if (!mxIsFinite(value) || value < 0.0) {
+                snprintf(msg, sizeof msg, "'pade_h' should be followed by a finite non-negative real scalar.");
+                goto on_error;
+            }
+            opts.pade_h = (FNFT_REAL)value;
+            k++;
+
         } else if ( strcmp(str, "discr_modal") == 0 ) {
 
             opts.discretization = fnft_nse_discretization_2SPLIT2_MODAL;
@@ -251,6 +290,32 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
             opts.discretization = fnft_nse_discretization_4SPLIT4B; upsampling_factor = 4;
 
+        } else if ( strcmp(str, "discr_FTES4_4A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_FTES4_4A;
+            upsampling_factor = 4;
+
+        } else if ( strcmp(str, "discr_FTES4_4B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_FTES4_4B;
+            upsampling_factor = 2;
+
+        } else if ( strcmp(str, "discr_FTES4SB") == 0
+                || strcmp(str, "discr_FTES4_suzuki") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_FTES4_suzuki;
+            upsampling_factor = 7;
+
+        } else if ( strcmp(str, "discr_FES4_PADE") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_FES4_PADE;
+            upsampling_factor = 1;
+
+        } else if ( strcmp(str, "discr_FES6_PADE") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_FES6_PADE;
+            upsampling_factor = 1;
+
         } else {
             snprintf(msg, sizeof msg, "%uth input has invalid value.",
                 (unsigned int)(k+1));
@@ -258,16 +323,57 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
     }
 
+    if (opts.discretization == fnft_nse_discretization_FES4_PADE) {
+        const FNFT_UINT degree = opts.pade_degree == 0 ? 2
+                : opts.pade_degree;
+        if (degree < 2 || degree > 7) {
+            snprintf(msg, sizeof msg, "FES4_PADE requires pade_degree between 2 and 7.");
+            goto on_error;
+        }
+        upsampling_factor = 2*degree;
+    } else if (opts.discretization
+            == fnft_nse_discretization_FES6_PADE) {
+        const FNFT_UINT degree = opts.pade_degree == 0 ? 3
+                : opts.pade_degree;
+        if (degree < 3 || degree > 7) {
+            snprintf(msg, sizeof msg, "FES6_PADE requires pade_degree between 3 and 7.");
+            goto on_error;
+        }
+        upsampling_factor = 6*degree;
+    }
+
     /* Allocate memory */
     
     q = mxMalloc(D * sizeof(double complex));
+    if (q == NULL) {
+        snprintf(msg, sizeof msg, "Out of memory.");
+        goto on_error;
+    }
     if (M > 0)
         sheet_indices = mxMalloc(M * sizeof(int));
     if (opts.localization != fnft_nsep_loc_NEWTON) { /* Not Newton */
-        K = (opts.points_per_spine)*upsampling_factor*D + 1;
+        if (upsampling_factor != 0 && D > (size_t)-1/upsampling_factor) {
+            snprintf(msg, sizeof msg, "Requested discretization is too large.");
+            goto on_error;
+        }
         M = upsampling_factor*D;
+        if (opts.points_per_spine != 0
+                && M > ((size_t)-1 - 1)/opts.points_per_spine) {
+            snprintf(msg, sizeof msg, "Requested localization grid is too large.");
+            goto on_error;
+        }
+        K = opts.points_per_spine*M + 1;
+        if (K > (size_t)-1/sizeof(double complex)
+                || M > (size_t)-1/sizeof(double complex)) {
+            snprintf(msg, sizeof msg, "Requested output is too large.");
+            goto on_error;
+        }
         main_spec = mxMalloc(K * sizeof(double complex));
         aux_spec = mxMalloc(M * sizeof(double complex));
+        if (main_spec == NULL || aux_spec == NULL) {
+            snprintf(msg, sizeof msg, "Out of memory.");
+            goto on_error;
+        }
     } else { /* Newton */
         if (K%opts.points_per_spine != 0) {
             snprintf(msg, sizeof msg, "The lengths of the first initial guess vector for Newton localization has to be a multiple of points_per_spine (=%u).",

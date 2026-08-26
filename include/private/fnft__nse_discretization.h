@@ -17,7 +17,7 @@
  * Sander Wahls (TU Delft) 2017.
  * Shrinivas Chimmalgi (TU Delft) 2017-2020.
  * Peter J. Prins (TU Delft) 2021.
- * Igor Chekhovskoy 2026.
+ * Igor Chekhovskoy (NSU, FRC ICT) 2026.
  */
 
 /**
@@ -50,6 +50,13 @@
  */
 FNFT_UINT fnft__nse_discretization_degree(fnft_nse_discretization_t
         nse_discretization);
+
+/**
+ * Returns the local polynomial degree after resolving requested_degree for a
+ * Padé family. For other discretizations requested_degree is ignored.
+ */
+FNFT_UINT fnft__nse_discretization_degree_with_pade(
+        fnft_nse_discretization_t discretization, FNFT_UINT requested_degree);
 
 /** Returns whether a discretization is one of the rational Padé families. */
 FNFT_INT fnft__nse_discretization_is_pade(
@@ -327,6 +334,7 @@ FNFT_INT fnft__nse_discretization_method_weights(FNFT_COMPLEX **qr_weights_ptr,
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define nse_discretization_degree(...) fnft__nse_discretization_degree(__VA_ARGS__)
+#define nse_discretization_degree_with_pade(...) fnft__nse_discretization_degree_with_pade(__VA_ARGS__)
 #define nse_discretization_is_pade(...) fnft__nse_discretization_is_pade(__VA_ARGS__)
 #define nse_discretization_pade_degree(...) fnft__nse_discretization_pade_degree(__VA_ARGS__)
 #define nse_discretization_effective_order(...) fnft__nse_discretization_effective_order(__VA_ARGS__)

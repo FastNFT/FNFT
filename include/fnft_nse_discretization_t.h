@@ -16,8 +16,8 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
-* Igor Chekhovskoy 2026.
-* Irina Vaseva 2026.
+* Igor Chekhovskoy (NSU, FRC ICT) 2026.
+* Irina Vaseva (FRC ICT, NSU) 2026.
 */
 
 /**
@@ -85,7 +85,8 @@
  * versions of TES4. The TES4 correction is from the Optics Express reference above;
  * the fourth-order 4A and 4B splittings are from the Prins and Wahls ICASSP 2018 reference.
  * They support the bound-state localization methods available for fast discretizations.\n
- * `fnft_nse_discretization_FTES4_suzuki` is the conservative fast TES4 scheme based on
+ * `fnft_nse_discretization_FTES4SB` (with the compatibility alias
+ * `fnft_nse_discretization_FTES4_suzuki`) is the conservative fast TES4 scheme based on
  * Suzuki factorization from S. Medvedev, I. Chekhovskoy, I. Vaseva and M. Fedoruk,
  * <a href="https://doi.org/10.1364/OL.387436">&quot;Conservative multi-exponential scheme
  * for solving the direct Zakharov-Shabat scattering problem,&quot;</a> Optics Letters 45(7),
@@ -108,9 +109,10 @@
  * reports continuous-spectrum experiments for Padé degrees 3--6 and finds
  * the direct Cayley variants less accurate than the slow and Chebyshev-based
  * variants. The representation is selected in \link fnft_nsev_opts_t
- * \endlink. Both representations are limited to the continuous spectrum.
- * Degree 7 is provided by the same general Padé mechanism, although the
- * article reports numerical experiments only for degrees 3--6.\n
+ * \endlink. Padé degrees 3--7 and discrete spectral data are supported;
+ * degree 7 follows from the same general diagonal Padé construction. Discrete
+ * spectral data are computed by ES8 after NEWTON localization or after initial
+ * guesses have been obtained by SUBSAMPLE_AND_REFINE.\n
  * `-2S` is from G. Strang,<a href="https://link.springer.com/content/pdf/10.1007/BF00281235.pdf">&quot;
  * Accurate partial difference methods I: Linear Cauchy problems,&quot;</a> 
  * in Archive for Rational Mechanics and Analysis, 12(1), 392-402, Jan 1963. It is also
@@ -146,9 +148,9 @@
  * `fnft_nse_discretization_4SPLIT4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4\n
  * `fnft_nse_discretization_FTES4_4A`: Order of base method = 4, Degree = 4, Order of accuracy of splitting-scheme = 4\n
  * `fnft_nse_discretization_FTES4_4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4\n
- * `fnft_nse_discretization_FTES4_suzuki`: Order of base method = 4, Degree = 7, Order of accuracy of splitting-scheme = 4
+ * `fnft_nse_discretization_FTES4SB`: Order of base method = 4, Degree = 7, Order of accuracy of splitting-scheme = 4\n
  * `fnft_nse_discretization_FES4_PADE`: Order of base method = 4, Padé degree = 2--7, Order of accuracy = 4\n
- * `fnft_nse_discretization_FES6_PADE`: Order of base method = 6, Padé degree = 3--7, Order of accuracy = 6
+ * `fnft_nse_discretization_FES6_PADE`: Order of base method = 6, Padé degree = 3--7, Order of accuracy = 6\n
  * `fnft_nse_discretization_CT4`: Non-polynomial slow method, order of accuracy = 4\n
  * `fnft_nse_discretization_ES6`: Non-polynomial slow method, order of accuracy = 6\n
  * `fnft_nse_discretization_ES8`: Non-polynomial slow method, order of accuracy = 8\n
@@ -191,6 +193,7 @@ typedef enum {
     fnft_nse_discretization_FTES4_4A,
     fnft_nse_discretization_FTES4_4B,
     fnft_nse_discretization_FTES4_suzuki,
+    fnft_nse_discretization_FTES4SB = fnft_nse_discretization_FTES4_suzuki,
     fnft_nse_discretization_FES4_PADE,
     fnft_nse_discretization_FES6_PADE,
     fnft_nse_discretization_CT4,
@@ -235,6 +238,7 @@ typedef enum {
 #define nse_discretization_FTES4_4A fnft_nse_discretization_FTES4_4A
 #define nse_discretization_FTES4_4B fnft_nse_discretization_FTES4_4B
 #define nse_discretization_FTES4_suzuki fnft_nse_discretization_FTES4_suzuki
+#define nse_discretization_FTES4SB fnft_nse_discretization_FTES4SB
 #define nse_discretization_FES4_PADE fnft_nse_discretization_FES4_PADE
 #define nse_discretization_FES6_PADE fnft_nse_discretization_FES6_PADE
 #define nse_discretization_FES8_PADE fnft_nse_discretization_FES8_PADE

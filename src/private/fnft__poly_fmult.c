@@ -17,7 +17,7 @@
  * Sander Wahls (TU Delft) 2017-2018, 2021, 2023.
  * Peter J Prins (TU Delft) 2020.
  * Lianne de Vries (TU Delft student) 2021.
- * Igor Chekhovskoy 2026.
+ * Igor Chekhovskoy (NSU, FRC ICT) 2026.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -143,6 +143,7 @@ static inline INT poly_rescale(const UINT d, COMPLEX * const p)
 INT fnft__poly_power_to_chebyshev(const UINT degree,
     COMPLEX const * const power, COMPLEX * const chebyshev)
 {
+    const UINT complex_max = ((UINT)-1)/sizeof(COMPLEX);
     COMPLEX *copy = NULL;
     COMPLEX const *source = power;
     REAL scale;
@@ -150,7 +151,7 @@ INT fnft__poly_power_to_chebyshev(const UINT degree,
 
     if (power == NULL || chebyshev == NULL)
         return E_INVALID_ARGUMENT(power);
-    if (degree == UINT_MAX)
+    if (degree >= complex_max)
         return E_INVALID_ARGUMENT(degree);
     if (power == chebyshev) {
         copy = malloc((degree + 1)*sizeof(COMPLEX));
@@ -623,8 +624,10 @@ static INT multiply_two_chebyshev(const UINT degree,
 INT fnft__poly_fmult_chebyshev(UINT * const d, UINT n,
     COMPLEX * const p, INT * const W_ptr)
 {
+    const UINT uint_max = (UINT)-1;
+    const UINT complex_max = uint_max/sizeof(COMPLEX);
     const UINT original_degree = d == NULL ? 0 : *d;
-    UINT degree, excess, i, j, length, max_degree;
+    UINT degree, excess, i, j, length, max_degree, padded_n;
     COMPLEX *first, *second, *product;
     COMPLEX *buffer0 = NULL, *buffer1 = NULL, *buffer2 = NULL;
     COMPLEX *laurent_first = NULL, *laurent_second = NULL;
@@ -635,18 +638,20 @@ INT fnft__poly_fmult_chebyshev(UINT * const d, UINT n,
 
     if (d == NULL || p == NULL || n == 0)
         return E_INVALID_ARGUMENT(p);
-    if (original_degree == UINT_MAX)
+    if (original_degree == uint_max)
         return E_INVALID_ARGUMENT(*d);
     if (n == 1) {
         if (W_ptr != NULL)
             *W_ptr = 0;
         return SUCCESS;
     }
-    if (n > UINT_MAX/2 + 1U)
+    if (n > uint_max/2 + 1U)
         return E_INVALID_ARGUMENT(n);
-    if (n > UINT_MAX/(original_degree + 1))
+    padded_n = misc_nextpowerof2(n);
+    if (padded_n == 0
+            || original_degree + 1 > complex_max/padded_n)
         return E_INVALID_ARGUMENT(n);
-    excess = misc_nextpowerof2(n) - n;
+    excess = padded_n - n;
     degree = original_degree;
     first = p + n*(degree + 1);
     for (i = 0; i < excess; i++) {
@@ -655,13 +660,13 @@ INT fnft__poly_fmult_chebyshev(UINT * const d, UINT n,
             first[j] = 0.0;
         first += degree + 1;
     }
-    n += excess;
-    if (degree != 0 && n > UINT_MAX/(2*degree))
-        return E_INVALID_ARGUMENT(n);
+    n = padded_n;
     max_degree = degree*n/2;
-    if (max_degree > (UINT_MAX - 1)/4)
+    if (max_degree > (complex_max - 1)/4)
         return E_INVALID_ARGUMENT(n);
     length = poly_fmult_two_polys_len(2*max_degree);
+    if (length == 0 || length > complex_max)
+        return E_INVALID_ARGUMENT(n);
     buffer0 = fft_wrapper_malloc(length*sizeof(COMPLEX));
     buffer1 = fft_wrapper_malloc(length*sizeof(COMPLEX));
     buffer2 = fft_wrapper_malloc(length*sizeof(COMPLEX));
@@ -753,6 +758,8 @@ static INT multiply_two_chebyshev2x2(const UINT degree,
 INT fnft__poly_fmult2x2_chebyshev(UINT * const d, UINT n,
     COMPLEX * const p, COMPLEX * const result, INT * const W_ptr)
 {
+    const UINT uint_max = (UINT)-1;
+    const UINT complex_max = uint_max/sizeof(COMPLEX);
     const UINT original_degree = d == NULL ? 0 : *d;
     UINT degree, excess, padded_n, max_degree, length, i, j;
     UINT first_offset, second_offset, product_offset;
@@ -767,19 +774,21 @@ INT fnft__poly_fmult2x2_chebyshev(UINT * const d, UINT n,
 
     if (d == NULL || p == NULL || result == NULL || n == 0)
         return E_INVALID_ARGUMENT(p);
-    if (original_degree == UINT_MAX)
+    if (original_degree == uint_max)
         return E_INVALID_ARGUMENT(*d);
     if (n == 1) {
+        if (original_degree + 1 > complex_max/4)
+            return E_INVALID_ARGUMENT(*d);
         memcpy(result, p, 4*(original_degree + 1)*sizeof(COMPLEX));
         if (W_ptr != NULL)
             *W_ptr = 0;
         return SUCCESS;
     }
-    if (n > UINT_MAX/2 + 1U)
+    if (n > uint_max/2 + 1U)
         return E_INVALID_ARGUMENT(n);
     padded_n = misc_nextpowerof2(n);
-    if (padded_n == 0 || (original_degree != 0
-            && padded_n > UINT_MAX/original_degree))
+    if (padded_n == 0 || padded_n > complex_max/4
+            || original_degree + 1 > complex_max/(4*padded_n))
         return E_INVALID_ARGUMENT(n);
     excess = padded_n - n;
     degree = original_degree;
@@ -813,11 +822,15 @@ INT fnft__poly_fmult2x2_chebyshev(UINT * const d, UINT n,
     }
     n = padded_n;
     max_degree = degree*n/2;
-    if (max_degree > (UINT_MAX - 4)/16) {
+    if (max_degree > (complex_max/4 - 1)/4) {
         ret_code = E_INVALID_ARGUMENT(n);
         goto leave_fun;
     }
     length = poly_fmult_two_polys_len(2*max_degree);
+    if (length == 0 || length > complex_max) {
+        ret_code = E_INVALID_ARGUMENT(n);
+        goto leave_fun;
+    }
     buffer0 = fft_wrapper_malloc(length*sizeof(COMPLEX));
     buffer1 = fft_wrapper_malloc(length*sizeof(COMPLEX));
     buffer2 = fft_wrapper_malloc(length*sizeof(COMPLEX));

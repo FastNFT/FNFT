@@ -15,7 +15,7 @@
 *
 * Contributors:
 * Sander Wahls (TU Delft) 2017-2018.
-* Igor Chekhovskoy 2026.
+* Igor Chekhovskoy (NSU, FRC ICT) 2026.
 */
 
 /**

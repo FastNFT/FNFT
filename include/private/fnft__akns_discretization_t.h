@@ -16,8 +16,8 @@
 * Contributors:
 * Shrinivas Chimmalgi (TU Delft) 2018-2020.
 * Peter J. Prins (TU Delft) 2021.
-* Igor Chekhovskoy 2026.
-* Irina Vaseva 2026.
+* Igor Chekhovskoy (NSU, FRC ICT) 2026.
+* Irina Vaseva (FRC ICT, NSU) 2026.
 */
 
 /**
@@ -123,7 +123,7 @@
  * `fnft__akns_discretization_4SPLIT4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4\n
  * `fnft__akns_discretization_FTES4_4A`: Order of base method = 4, Degree = 4, Order of accuracy of splitting-scheme = 4\n
  * `fnft__akns_discretization_FTES4_4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4\n
- * `fnft__akns_discretization_FTES4_suzuki`: Order of base method = 4, Degree = 7, Order of accuracy of splitting-scheme = 4
+ * `fnft__akns_discretization_FTES4_suzuki`: Order of base method = 4, Degree = 7, Order of accuracy of splitting-scheme = 4\n
  * `fnft__akns_discretization_CT4`: Non-polynomial slow method, order of accuracy = 4\n
  * `fnft__akns_discretization_ES6`: Non-polynomial slow method, order of accuracy = 6\n
  * `fnft__akns_discretization_ES8`: Non-polynomial slow method, order of accuracy = 8\n
@@ -169,6 +169,7 @@ typedef enum {
 	fnft__akns_discretization_FTES4_4B,
 	fnft__akns_discretization_4SPLIT6B,
 	fnft__akns_discretization_FTES4_suzuki,
+	fnft__akns_discretization_FTES4SB = fnft__akns_discretization_FTES4_suzuki,
 	fnft__akns_discretization_CT4,
 	fnft__akns_discretization_ES6,
 	fnft__akns_discretization_ES8,
@@ -228,6 +229,7 @@ typedef enum {
 #define akns_discretization_FTES4_4B fnft__akns_discretization_FTES4_4B
 #define akns_discretization_4SPLIT6B fnft__akns_discretization_4SPLIT6B
 #define akns_discretization_FTES4_suzuki fnft__akns_discretization_FTES4_suzuki
+#define akns_discretization_FTES4SB fnft__akns_discretization_FTES4SB
 #define akns_discretization_t fnft__akns_discretization_t
 #define akns_pde_KdV fnft__akns_pde_KdV
 #define akns_pde_NSE fnft__akns_pde_NSE

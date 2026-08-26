@@ -19,7 +19,7 @@
  * Shrinivas Chimmalgi (TU Delft) 2019-2020.
  * Peter J Prins (TU Delft) 2020.
  * Sander Wahls (KIT) 2023.
- * Igor Chekhovskoy 2026.
+ * Igor Chekhovskoy (NSU, FRC ICT) 2026.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -326,7 +326,7 @@ static inline INT gridsearch(const UINT D,
             W_ptr = &W;
         ret_code = akns_fscatter_pade(D_effective, q_preprocessed,
                 r_preprocessed, eps_t, method_order, pade_degree, h,
-                transfer_matrix, &deg, W_ptr, denominator,
+                1, transfer_matrix, &deg, W_ptr, denominator,
                 &denominator_degree, opts_ptr->normalization_flag
                 ? &denominator_exponent : NULL);
         CHECK_RETCODE(ret_code, release_mem);
@@ -355,7 +355,8 @@ static inline INT gridsearch(const UINT D,
     }
 
     // Will be required later for coordinate transforms
-    degree1step = nse_discretization_degree(opts_ptr->discretization);
+    degree1step = nse_discretization_degree_with_pade(
+            opts_ptr->discretization, opts_ptr->pade_degree);
     if (degree1step == NAN)
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
     if (nse_discretization_is_pade(opts_ptr->discretization)) {
@@ -753,7 +754,8 @@ static inline INT subsample_and_refine(const UINT D,
     CHECK_RETCODE(ret_code, release_mem);
 
     // Will be required later for coordinate transforms and filtering
-    degree1step = nse_discretization_degree(opts_ptr->discretization);
+    degree1step = nse_discretization_degree_with_pade(
+            opts_ptr->discretization, opts_ptr->pade_degree);
     if (degree1step == NAN)
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
     if (opts_ptr->discretization == nse_discretization_FTES4_suzuki)
@@ -981,7 +983,8 @@ static inline INT newton(const UINT D,
         refine_tol = opts_ptr->tol;
 
     // Will be required later for coordinate transforms and filtering
-    degree1step = nse_discretization_degree(opts_ptr->discretization);
+    degree1step = nse_discretization_degree_with_pade(
+            opts_ptr->discretization, opts_ptr->pade_degree);
     if (degree1step == NAN)
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
     if (opts_ptr->discretization == nse_discretization_FTES4_suzuki)

@@ -85,7 +85,11 @@ O(K D log<sup>2</sup>D), but evaluating them by Clenshaw's recurrence on the
 uniform spectral grid of `fnft_nsev` requires O(M K D) operations. Thus,
 without an optional nonuniform fast transform, this dependency-free path is
 not an end-to-end O(D log<sup>2</sup>D) algorithm when M is proportional to D.
-Discrete-spectrum requests remain unsupported.
+The Chebyshev representation is used only for continuous-spectrum polynomial
+evaluation. Bound states, norming constants and residues requested with
+`FES8_PADE` are computed through the slow `ES8` refinement path. `NEWTON`
+and `SUBSAMPLE_AND_REFINE` are supported; direct `FAST_EIGENVALUE`
+localization is not.
 
 ## Community Guidelines
 
@@ -98,8 +102,8 @@ Please use the [issue tracker](https://github.com/FastNFT/FNFT/issues) to report
 * Peter J. Prins, TU Delft
 * Marius Brehler, TU Dortmund
 * Lianne de Vries, student TU Delft
-* Igor Chekhovskoy
-* Irina Vaseva
+* Igor Chekhovskoy, NSU and FRC ICT
+* Irina Vaseva, FRC ICT and NSU
 
 ## License
 

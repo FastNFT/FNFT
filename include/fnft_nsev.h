@@ -18,7 +18,7 @@
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
 * Peter J Prins (TU Delft) 2020-2021.
 * Sander Wahls (KIT) 2023.
-* Igor Chekhovskoy 2026.
+* Igor Chekhovskoy (NSU, FRC ICT) 2026.
 */
 
 /**
@@ -235,7 +235,8 @@ typedef enum {
  *  FES8_PADE. Zero selects the family default (2 for FES4, 3 for FES6 and
  *  FES8). FES4 accepts degrees 2 through 7; FES6 and FES8 accept degrees 3
  *  through 7. For FES8, degree 3 has order six and degrees 4--7 have order
- *  eight; the cited preprint reports numerical experiments for degrees 3--6.
+ *  eight. All listed degrees are supported; the cited preprint reports
+ *  numerical experiments for degrees 3--6.
  *
  * @var fnft_nsev_opts_t::pade_h
  *  Positive scale \f$h\f$ of the map
@@ -248,16 +249,19 @@ typedef enum {
  *  value overrides these defaults. FES8 degrees 3--7 use the direct-Cayley
  *  implementation values 14.9, 19.4, 20.5, 21.1 and 21.8. The global
  *  power-basis representation of direct-Cayley FES8 can be ill-conditioned
- *  on fine grids; it is provided as a continuous-spectrum reference variant.
- *  Discrete-spectrum output is not supported for FES8_PADE.
+ *  on fine grids.
  *
  * @var fnft_nsev_opts_t::pade_representation
  *  Representation used to construct the Padé transfer matrix. The default is
  *  fnft_nsev_pade_representation_DIRECT_CAYLEY. The Chebyshev--Joukowski
- *  representation is currently supported only for the continuous spectrum
- *  with FES8_PADE. In that representation the map is derived exactly from the
- *  requested spectral interval: \f$c=\epsilon_t(\Xi_0+\Xi_1)/2\f$ and
+ *  representation is used for the continuous spectrum with FES8_PADE. In
+ *  that representation the map is derived exactly from the requested
+ *  spectral interval: \f$c=\epsilon_t(\Xi_0+\Xi_1)/2\f$ and
  *  \f$H=\epsilon_t(\Xi_1-\Xi_0)/2\f$. Consequently, pade_h must be zero.
+ *  Discrete spectral data are computed with the slow ES8 scheme. NEWTON uses
+ *  the supplied initial guesses directly. SUBSAMPLE_AND_REFINE obtains initial
+ *  guesses with 2SPLIT4B and then refines them with ES8. FAST_EIGENVALUE is not
+ *  available for FES8_PADE.
  */
 typedef struct {
     fnft_nsev_bsfilt_t bound_state_filtering;
@@ -368,14 +372,14 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *       - fnft_nse_discretization_FTES4_suzuki
  *       - fnft_nse_discretization_FES4_PADE
  *       - fnft_nse_discretization_FES6_PADE
+ *       - fnft_nse_discretization_FES8_PADE
  *
- *  FES8_PADE is a continuous-spectrum Padé family. Its default direct-Cayley
- *  global power-basis representation can lose accuracy as the polynomial
- *  degree grows, and requests for bound states, norming constants or residues
- *  are rejected. It can alternatively use the dependency-free
- *  Chebyshev--Joukowski representation. The latter builds coefficients in
- *  \f$O(KD\log^2D)\f$, but evaluating them on this routine's uniform
- *  \f$\Xi\f$ grid by Clenshaw's recurrence costs \f$O(MKD)\f$.
+ *  FES8_PADE can use either the direct-Cayley power-basis representation or
+ *  the Chebyshev--Joukowski representation for the continuous spectrum. The
+ *  latter builds coefficients in \f$O(KD\log^2D)\f$, but evaluating them on
+ *  this routine's uniform \f$\Xi\f$ grid by Clenshaw's recurrence costs
+ *  \f$O(MKD)\f$. Discrete spectral data are supported with the NEWTON and
+ *  SUBSAMPLE_AND_REFINE localization methods.
  *
  * The following discretizations use classical algorithms which have a computational
  * complexity of \f$ \mathcal{O}(D^2)\f$ for \f$ D\f$ point continuous spectrum given \f$ D\f$ samples:

@@ -18,7 +18,7 @@
 * Shrinivas Chimmalgi (TU Delft) 2017.
 * Peter J Prins (TU Delft) 2020.
 * Sander Wahls (KIT) 2023.
-* Igor Chekhovskoy 2026.
+* Igor Chekhovskoy (NSU, FRC ICT) 2026.
 */
 
 /**

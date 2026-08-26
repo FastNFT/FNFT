@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Igor Chekhovskoy 2026.
+ * Igor Chekhovskoy (NSU, FRC ICT) 2026.
  */
 
 /**
@@ -66,6 +66,8 @@ FNFT_UINT fnft__akns_fscatter_pade_den_numel(FNFT_UINT D,
  * @param[in] method_order Order of the exponential scheme (4, 6 or 8).
  * @param[in] pade_degree Degree of the diagonal Padé approximant.
  * @param[in] h Positive scale of the linear fractional map.
+ * @param[in] periodic_flag One makes derivative stencils wrap periodically;
+ *   zero makes samples outside the interval zero. Other values are invalid.
  * @param[out] numerator Numerator matrix polynomial buffer.
  * @param[out] numerator_degree Degree of each numerator entry.
  * @param[out] numerator_exponent Binary normalization exponent.
@@ -78,6 +80,7 @@ FNFT_INT fnft__akns_fscatter_pade(const FNFT_UINT D,
         FNFT_COMPLEX const * const q, FNFT_COMPLEX const * const r,
         const FNFT_REAL eps_t, const FNFT_UINT method_order,
         const FNFT_UINT pade_degree, const FNFT_REAL h,
+        const FNFT_INT periodic_flag,
         FNFT_COMPLEX * const numerator,
         FNFT_UINT * const numerator_degree,
         FNFT_INT * const numerator_exponent,
@@ -92,12 +95,14 @@ FNFT_INT fnft__akns_fscatter_pade(const FNFT_UINT D,
  * \f$\zeta=c+Hx\f$. The returned numerator and denominator coefficients are
  * in ascending Chebyshev order. Their product trees require
  * \f$O(KD\log^2D)\f$ operations, where \f$K=10s\f$ and \f$s\f$ is the Padé
- * degree.
+ * degree. periodic_flag accepts zero for zero extension and one for periodic
+ * wrapping; other values are invalid.
  */
 FNFT_INT fnft__akns_fscatter_pade_chebyshev(const FNFT_UINT D,
         FNFT_COMPLEX const * const q, FNFT_COMPLEX const * const r,
         const FNFT_REAL eps_t, const FNFT_UINT pade_degree,
-        const FNFT_REAL c, const FNFT_REAL H, FNFT_COMPLEX * const numerator,
+        const FNFT_REAL c, const FNFT_REAL H,
+        const FNFT_INT periodic_flag, FNFT_COMPLEX * const numerator,
         FNFT_UINT * const numerator_degree,
         FNFT_INT * const numerator_exponent,
         FNFT_COMPLEX * const denominator,

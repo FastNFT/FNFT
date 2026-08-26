@@ -17,7 +17,7 @@
 * Sander Wahls (TU Delft) 2017.
 * Shrinivas Chimmalgi (TU Delft) 2017-2020.
 * Peter J Prins (TU Delft) 2020.
-* Igor Chekhovskoy 2026.
+* Igor Chekhovskoy (NSU, FRC ICT) 2026.
 */
 #define FNFT_ENABLE_SHORT_NAMES
 
@@ -31,20 +31,39 @@
 UINT fnft__nse_discretization_degree(nse_discretization_t
         nse_discretization)
 {
+    return fnft__nse_discretization_degree_with_pade(nse_discretization, 0);
+}
+
+UINT fnft__nse_discretization_degree_with_pade(
+        const nse_discretization_t nse_discretization,
+        const UINT requested_degree)
+{
     akns_discretization_t akns_discretization = 0;
     INT ret_code;
     UINT degree1step = 0;
-    if (nse_discretization == nse_discretization_FES4_PADE)
-        return 4;
-    if (nse_discretization == nse_discretization_FES6_PADE)
-        return 18;
-    if (nse_discretization == nse_discretization_FES8_PADE)
-        return 30;
-    ret_code = nse_discretization_to_akns_discretization(nse_discretization, &akns_discretization);
+
+    if (fnft__nse_discretization_is_pade(nse_discretization)) {
+        const UINT pade_degree = fnft__nse_discretization_pade_degree(
+                nse_discretization, requested_degree);
+        const UINT method_order = fnft__nse_discretization_method_order(
+                nse_discretization);
+
+        if (pade_degree == 0)
+            return 0;
+        if (method_order == 4)
+            return 2*pade_degree;
+        if (method_order == 6)
+            return 6*pade_degree;
+        if (method_order == 8)
+            return 10*pade_degree;
+        return 0;
+    }
+    ret_code = nse_discretization_to_akns_discretization(nse_discretization,
+            &akns_discretization);
     CHECK_RETCODE(ret_code, leave_fun);
     degree1step = akns_discretization_degree(akns_discretization);
-    leave_fun:
-        return degree1step;
+leave_fun:
+    return degree1step;
 }
 
 INT fnft__nse_discretization_is_pade(

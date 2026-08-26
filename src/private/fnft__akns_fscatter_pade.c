@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
- * Igor Chekhovskoy 2026.
+ * Igor Chekhovskoy (NSU, FRC ICT) 2026.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -139,15 +139,43 @@ static void constant_derivative_matrix(const COMPLEX q_value,
     matrix->entry[2].coefficient[0] = r_value;
 }
 
+static COMPLEX stencil_sample(const UINT D, const UINT index,
+        COMPLEX const * const values, const INT offset,
+        const INT periodic_flag)
+{
+    UINT distance, sample_index;
+
+    if (offset < 0) {
+        distance = (UINT)(-offset);
+        if (index >= distance)
+            return values[index - distance];
+        if (!periodic_flag)
+            return 0.0;
+        sample_index = D - (distance - index);
+    } else {
+        distance = (UINT)offset;
+        if (index < D - distance)
+            return values[index + distance];
+        if (!periodic_flag)
+            return 0.0;
+        sample_index = index - (D - distance);
+    }
+    return values[sample_index];
+}
+
 static void build_z_polynomial(const UINT D, const UINT index,
         COMPLEX const * const q, COMPLEX const * const r,
         const REAL eps_t, const UINT method_order,
-        small_matrix_t * const z_matrix)
+        const INT periodic_flag, small_matrix_t * const z_matrix)
 {
-    const UINT im1 = (index + D - 1) % D;
-    const UINT ip1 = (index + 1) % D;
-    const UINT im2 = (index + D - 2) % D;
-    const UINT ip2 = (index + 2) % D;
+    const COMPLEX qm1 = stencil_sample(D, index, q, -1, periodic_flag);
+    const COMPLEX qp1 = stencil_sample(D, index, q, 1, periodic_flag);
+    const COMPLEX rm1 = stencil_sample(D, index, r, -1, periodic_flag);
+    const COMPLEX rp1 = stencil_sample(D, index, r, 1, periodic_flag);
+    const COMPLEX qm2 = stencil_sample(D, index, q, -2, periodic_flag);
+    const COMPLEX qp2 = stencil_sample(D, index, q, 2, periodic_flag);
+    const COMPLEX rm2 = stencil_sample(D, index, r, -2, periodic_flag);
+    const COMPLEX rp2 = stencil_sample(D, index, r, 2, periodic_flag);
     small_matrix_t a0, d1, d2, comm;
 
     constant_derivative_matrix(eps_t*q[index], eps_t*r[index], &a0);
@@ -157,10 +185,10 @@ static void build_z_polynomial(const UINT D, const UINT index,
     a0.entry[3].coefficient[1] = I;
 
     if (method_order == 4) {
-        constant_derivative_matrix(eps_t*(q[ip1] - q[im1])/2.0,
-                eps_t*(r[ip1] - r[im1])/2.0, &d1);
-        constant_derivative_matrix(eps_t*(q[ip1] - 2.0*q[index] + q[im1]),
-                eps_t*(r[ip1] - 2.0*r[index] + r[im1]), &d2);
+        constant_derivative_matrix(eps_t*(qp1 - qm1)/2.0,
+                eps_t*(rp1 - rm1)/2.0, &d1);
+        constant_derivative_matrix(eps_t*(qp1 - 2.0*q[index] + qm1),
+                eps_t*(rp1 - 2.0*r[index] + rm1), &d2);
         small_matrix_commutator(&d1, &a0, &comm);
 
         *z_matrix = a0;
@@ -168,10 +196,10 @@ static void build_z_polynomial(const UINT D, const UINT index,
         small_matrix_add_scaled(z_matrix, &comm, 1.0/12.0);
     } else if (method_order == 6) {
         const COMPLEX q_samples[5] = {
-            q[im2], q[im1], q[index], q[ip1], q[ip2]
+            qm2, qm1, q[index], qp1, qp2
         };
         const COMPLEX r_samples[5] = {
-            r[im2], r[im1], r[index], r[ip1], r[ip2]
+            rm2, rm1, r[index], rp1, rp2
         };
         fnft__akns_es6_stencil_t qs, rs;
         small_matrix_t d1_low, d2_low, d3, d4;
@@ -211,13 +239,19 @@ static void build_z_polynomial(const UINT D, const UINT index,
         small_matrix_commutator(&t2, &a0, &term);
         small_matrix_add_scaled(z_matrix, &term, 1.0/240.0);
     } else {
-        const UINT im3 = (index + D - 3) % D;
-        const UINT ip3 = (index + 3) % D;
+        const COMPLEX qm3 = stencil_sample(D, index, q, -3,
+                periodic_flag);
+        const COMPLEX qp3 = stencil_sample(D, index, q, 3,
+                periodic_flag);
+        const COMPLEX rm3 = stencil_sample(D, index, r, -3,
+                periodic_flag);
+        const COMPLEX rp3 = stencil_sample(D, index, r, 3,
+                periodic_flag);
         const COMPLEX q_samples[7] = {
-            q[im3], q[im2], q[im1], q[index], q[ip1], q[ip2], q[ip3]
+            qm3, qm2, qm1, q[index], qp1, qp2, qp3
         };
         const COMPLEX r_samples[7] = {
-            r[im3], r[im2], r[im1], r[index], r[ip1], r[ip2], r[ip3]
+            rm3, rm2, rm1, r[index], rp1, rp2, rp3
         };
         fnft__akns_es8_stencil_t qs, rs;
         COMPLEX q_values[7], r_values[7], coefficients[24];
@@ -431,7 +465,7 @@ static void build_pade_transition(
 static void build_local_transition(const UINT D, const UINT index,
         COMPLEX const * const q, COMPLEX const * const r,
         const REAL eps_t, const UINT method_order,
-        const UINT pade_degree, const REAL h,
+        const UINT pade_degree, const REAL h, const INT periodic_flag,
         COMPLEX numerator[4][LOCAL_MAX_DEGREE + 1],
         COMPLEX denominator_polynomial[LOCAL_MAX_DEGREE + 1])
 {
@@ -442,7 +476,8 @@ static void build_local_transition(const UINT D, const UINT index,
     COMPLEX transformed[Z_MAX_DEGREE + 1];
     UINT i, j;
 
-    build_z_polynomial(D, index, q, r, eps_t, method_order, &z_matrix);
+    build_z_polynomial(D, index, q, r, eps_t, method_order, periodic_flag,
+            &z_matrix);
     for (i = 0; i < 4; i++) {
         transform_z_to_w(&z_matrix.entry[i], z_degree, h, transformed);
         polynomial_zero(x[i]);
@@ -472,6 +507,7 @@ static void transform_z_to_affine_x(
 static INT build_local_transition_chebyshev(const UINT D, const UINT index,
         COMPLEX const * const q, COMPLEX const * const r,
         const REAL eps_t, const UINT pade_degree, const REAL c, const REAL H,
+        const INT periodic_flag,
         COMPLEX numerator[4][LOCAL_MAX_DEGREE + 1],
         COMPLEX denominator[LOCAL_MAX_DEGREE + 1])
 {
@@ -482,7 +518,7 @@ static INT build_local_transition_chebyshev(const UINT D, const UINT index,
     UINT component;
     INT ret_code;
 
-    build_z_polynomial(D, index, q, r, eps_t, 8, &z_matrix);
+    build_z_polynomial(D, index, q, r, eps_t, 8, periodic_flag, &z_matrix);
     for (component = 0; component < 4; component++)
         transform_z_to_affine_x(&z_matrix.entry[component], c, H,
                 x[component]);
@@ -530,7 +566,7 @@ static UINT checked_numel(const UINT D, const UINT degree,
         return 0;
     padded_D = misc_nextpowerof2(D);
     if (padded_D == 0 || coefficient_count == 0
-            || padded_D > UINT_MAX/coefficient_count)
+            || padded_D > (UINT)-1/coefficient_count)
         return 0;
     return coefficient_count*padded_D;
 }
@@ -557,7 +593,8 @@ UINT akns_fscatter_pade_den_numel(const UINT D, const UINT method_order,
 
 INT akns_fscatter_pade(const UINT D, COMPLEX const * const q,
         COMPLEX const * const r, const REAL eps_t, const UINT method_order,
-        const UINT pade_degree, const REAL h, COMPLEX * const numerator,
+        const UINT pade_degree, const REAL h, const INT periodic_flag,
+        COMPLEX * const numerator,
         UINT * const numerator_degree, INT * const numerator_exponent,
         COMPLEX * const denominator, UINT * const denominator_degree,
         INT * const denominator_exponent)
@@ -581,6 +618,8 @@ INT akns_fscatter_pade(const UINT D, COMPLEX const * const q,
         return E_INVALID_ARGUMENT(pade_degree);
     if (!(h > 0.0) || h == INFINITY)
         return E_INVALID_ARGUMENT(h);
+    if (periodic_flag != 0 && periodic_flag != 1)
+        return E_INVALID_ARGUMENT(periodic_flag);
     if (numerator == NULL || numerator_degree == NULL
             || denominator == NULL || denominator_degree == NULL)
         return E_INVALID_ARGUMENT(numerator);
@@ -601,7 +640,7 @@ INT akns_fscatter_pade(const UINT D, COMPLEX const * const q,
 
     for (i = 0; i < D; i++) {
         build_local_transition(D, i, q, r, eps_t, method_order, pade_degree,
-                h, local_numerator, local_denominator);
+                h, periodic_flag, local_numerator, local_denominator);
         for (component = 0; component < 4; component++) {
             COMPLEX * const destination = local_matrices
                     + component*D*(degree + 1)
@@ -636,6 +675,7 @@ release_mem:
 INT akns_fscatter_pade_chebyshev(const UINT D,
         COMPLEX const * const q, COMPLEX const * const r, const REAL eps_t,
         const UINT pade_degree, const REAL c, const REAL H,
+        const INT periodic_flag,
         COMPLEX * const numerator, UINT * const numerator_degree,
         INT * const numerator_exponent, COMPLEX * const denominator,
         UINT * const denominator_degree, INT * const denominator_exponent)
@@ -659,6 +699,8 @@ INT akns_fscatter_pade_chebyshev(const UINT D,
         return E_INVALID_ARGUMENT(pade_degree);
     if (!(H > 0.0) || H == INFINITY || c != c || FABS(c) == INFINITY)
         return E_INVALID_ARGUMENT(H);
+    if (periodic_flag != 0 && periodic_flag != 1)
+        return E_INVALID_ARGUMENT(periodic_flag);
     if (numerator == NULL || numerator_degree == NULL
             || denominator == NULL || denominator_degree == NULL)
         return E_INVALID_ARGUMENT(numerator);
@@ -675,7 +717,8 @@ INT akns_fscatter_pade_chebyshev(const UINT D,
 
     for (i = 0; i < D; i++) {
         ret_code = build_local_transition_chebyshev(D, i, q, r, eps_t,
-                pade_degree, c, H, local_numerator, local_denominator);
+                pade_degree, c, H, periodic_flag, local_numerator,
+                local_denominator);
         if (ret_code != SUCCESS)
             goto release_mem;
         for (component = 0; component < 4; component++) {
