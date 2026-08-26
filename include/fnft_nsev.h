@@ -18,6 +18,7 @@
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
 * Peter J Prins (TU Delft) 2020-2021.
 * Sander Wahls (KIT) 2023.
+* Igor Chekhovskoy (NSU, FRC ICT) 2026.
 */
 
 /**
@@ -138,6 +139,26 @@ typedef enum {
 } fnft_nsev_cstype_t;
 
 /**
+ * Enum that specifies the representation used to build Padé transfer
+ * matrices. Used in \link fnft_nsev_opts_t \endlink.\n \n
+ * @ingroup data_types
+ * fnft_nsev_pade_representation_DIRECT_CAYLEY: Use the Cayley map and a
+ * power-basis transfer matrix. This is the default and is supported by all
+ * Padé discretizations.\n \n
+ * fnft_nsev_pade_representation_CHEBYSHEV_JOUKOWSKI: For FES8_PADE, use
+ * \f$\zeta=c+Hx\f$, \f$x=(w+w^{-1})/2\f$ and represent the transfer matrix
+ * in Chebyshev polynomials. The coefficient product tree has complexity
+ * \f$O(KD\log^2 D)\f$, where \f$K\f$ is the local polynomial degree. On the
+ * uniform spectral grid required by \link fnft_nsev \endlink, dependency-free
+ * Clenshaw evaluation has complexity \f$O(MKD)\f$; therefore this option does
+ * not provide end-to-end \f$O(D\log^2 D)\f$ complexity when \f$M\sim D\f$.
+ */
+typedef enum {
+    fnft_nsev_pade_representation_DIRECT_CAYLEY,
+    fnft_nsev_pade_representation_CHEBYSHEV_JOUKOWSKI
+} fnft_nsev_pade_representation_t;
+
+/**
  * @struct fnft_nsev_opts_t
  * @brief Stores additional options for the routine \link fnft_nsev \endlink.
  * @ingroup fnft
@@ -208,6 +229,39 @@ typedef enum {
  *  manual filtering: \n
  *  bounding_box[0] <= real(lambda) <= bounding_box[1] \n
  *  bounding_box[2] <= imag(lambda) <= bounding_box[3] \n
+ *
+ * @var fnft_nsev_opts_t::pade_degree
+ *  Degree of the diagonal Padé approximant for FES4_PADE, FES6_PADE and
+ *  FES8_PADE. Zero selects the family default (2 for FES4, 3 for FES6 and
+ *  FES8). FES4 accepts degrees 2 through 7; FES6 and FES8 accept degrees 3
+ *  through 7. For FES8, degree 3 has order six and degrees 4--7 have order
+ *  eight. All listed degrees are supported; the cited preprint reports
+ *  numerical experiments for degrees 3--6.
+ *
+ * @var fnft_nsev_opts_t::pade_h
+ *  Positive scale \f$h\f$ of the map
+ *  \f$w=(ih-\epsilon_t\lambda)/(ih+\epsilon_t\lambda)\f$ used by the Padé
+ *  schemes. Zero selects a degree-specific default. For FES6, degrees 3 and
+ *  4 use the empirically optimized values 11 and 15 reported in the cited
+ *  J. Comput. Phys. article. For compatibility with the original
+ *  implementation, FES6 degrees 5--7 use 19.4, 23.2 and 26.9, while FES4
+ *  degrees 2--7 use \f$\sqrt{12}\f$, 4.9, 5, 7.5, 9.34 and 9.34. A positive
+ *  value overrides these defaults. FES8 degrees 3--7 use the direct-Cayley
+ *  implementation values 14.9, 19.4, 20.5, 21.1 and 21.8. The global
+ *  power-basis representation of direct-Cayley FES8 can be ill-conditioned
+ *  on fine grids.
+ *
+ * @var fnft_nsev_opts_t::pade_representation
+ *  Representation used to construct the Padé transfer matrix. The default is
+ *  fnft_nsev_pade_representation_DIRECT_CAYLEY. The Chebyshev--Joukowski
+ *  representation is used for the continuous spectrum with FES8_PADE. In
+ *  that representation the map is derived exactly from the requested
+ *  spectral interval: \f$c=\epsilon_t(\Xi_0+\Xi_1)/2\f$ and
+ *  \f$H=\epsilon_t(\Xi_1-\Xi_0)/2\f$. Consequently, pade_h must be zero.
+ *  Discrete spectral data are computed with the slow ES8 scheme. NEWTON uses
+ *  the supplied initial guesses directly. SUBSAMPLE_AND_REFINE obtains initial
+ *  guesses with 2SPLIT4B and then refines them with ES8. FAST_EIGENVALUE is not
+ *  available for FES8_PADE.
  */
 typedef struct {
     fnft_nsev_bsfilt_t bound_state_filtering;
@@ -221,6 +275,9 @@ typedef struct {
     fnft_nse_discretization_t discretization;
     FNFT_UINT richardson_extrapolation_flag;
     FNFT_REAL bounding_box[4];
+    FNFT_UINT pade_degree;
+    FNFT_REAL pade_h;
+    fnft_nsev_pade_representation_t pade_representation;
 } fnft_nsev_opts_t;
 
 /**
@@ -238,6 +295,9 @@ typedef struct {
  *  discretization = fnft_nse_discretization_2SPLIT4B\n
  *  richardson_extrapolation_flag = 0\n
  *  bounding_box = {NAN, NAN, NAN, NAN}\n
+ *  pade_degree = 0\n
+ *  pade_h = 0.0\n
+ *  pade_representation = fnft_nsev_pade_representation_DIRECT_CAYLEY\n
  *
  * @ingroup fnft
  */
@@ -307,6 +367,19 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *       - fnft_nse_discretization_2SPLIT8B
  *       - fnft_nse_discretization_4SPLIT4A
  *       - fnft_nse_discretization_4SPLIT4B
+ *       - fnft_nse_discretization_FTES4_4A
+ *       - fnft_nse_discretization_FTES4_4B
+ *       - fnft_nse_discretization_FTES4_suzuki
+ *       - fnft_nse_discretization_FES4_PADE
+ *       - fnft_nse_discretization_FES6_PADE
+ *       - fnft_nse_discretization_FES8_PADE
+ *
+ *  FES8_PADE can use either the direct-Cayley power-basis representation or
+ *  the Chebyshev--Joukowski representation for the continuous spectrum. The
+ *  latter builds coefficients in \f$O(KD\log^2D)\f$, but evaluating them on
+ *  this routine's uniform \f$\Xi\f$ grid by Clenshaw's recurrence costs
+ *  \f$O(MKD)\f$. Discrete spectral data are supported with the NEWTON and
+ *  SUBSAMPLE_AND_REFINE localization methods.
  *
  * The following discretizations use classical algorithms which have a computational
  * complexity of \f$ \mathcal{O}(D^2)\f$ for \f$ D\f$ point continuous spectrum given \f$ D\f$ samples:
@@ -317,6 +390,9 @@ FNFT_UINT fnft_nsev_max_K(const FNFT_UINT D,
  *       - fnft_nse_discretization_CF6_4
  *       - fnft_nse_discretization_ES4
  *       - fnft_nse_discretization_TES4
+ *       - fnft_nse_discretization_CT4
+ *       - fnft_nse_discretization_ES6
+ *       - fnft_nse_discretization_ES8
  *
  * The accuray of the computed quantities for a given signal depends primarily on the number of samples \f$ D\f$ and the numerical method. When the exact spectrum is
  * is know, the accuracy can be quantified by defining a suitable error. The error usually decreases with increasing \f$ D\f$ assuming everthing else remains the same.
@@ -404,6 +480,8 @@ FNFT_INT fnft_nsev(const FNFT_UINT D, FNFT_COMPLEX const * const q,
 #define nsev_cstype_REFLECTION_COEFFICIENT fnft_nsev_cstype_REFLECTION_COEFFICIENT
 #define nsev_cstype_AB fnft_nsev_cstype_AB
 #define nsev_cstype_BOTH fnft_nsev_cstype_BOTH
+#define nsev_pade_representation_DIRECT_CAYLEY fnft_nsev_pade_representation_DIRECT_CAYLEY
+#define nsev_pade_representation_CHEBYSHEV_JOUKOWSKI fnft_nsev_pade_representation_CHEBYSHEV_JOUKOWSKI
 #endif
 
 #endif

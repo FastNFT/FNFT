@@ -16,6 +16,8 @@
 * Contributors:
 * Sander Wahls (TU Delft) 2017.
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
+* Igor Chekhovskoy (NSU, FRC ICT) 2026.
+* Irina Vaseva (FRC ICT, NSU) 2026.
 */
 
 /**
@@ -44,6 +46,23 @@
  * methods from Medvedev, Vaseva, Chekhovskoy and  Fedoruk
  * <a href="https://doi.org/10.1364/OE.377140">&quot;
  * Exponential fourth order schemes for direct Zakharov-Shabat problem,&quot;</a> Optics Express, vol. 28, pp. 20--39, 2020.\n
+ * `fnft_nse_discretization_CT4` is the conservative fourth-order method from
+ * S. Medvedev, I. Vaseva, I. Chekhovskoy and M. Fedoruk,
+ * <a href="https://doi.org/10.1364/OL.44.002264">&quot;Numerical algorithm with
+ * fourth-order accuracy for the direct Zakharov-Shabat problem,&quot;</a> Optics
+ * Letters 44(9), 2264--2267 (2019).\n
+ * `fnft_nse_discretization_ES6` is the slow sixth-order exponential scheme
+ * from S. Medvedev, I. Chekhovskoy, I. Vaseva and M. Fedoruk,
+ * <a href="https://doi.org/10.1016/j.jcp.2021.110764">&quot;Fast sixth-order
+ * algorithm based on the generalized Cayley transform for the Zakharov-Shabat
+ * system associated with nonlinear Schrodinger equation,&quot;</a> J. Comput. Phys.
+ * 448, 110764 (2022).\n
+ * `fnft_nse_discretization_ES8` is the slow eighth-order exponential scheme
+ * from S. Medvedev, I. Chekhovskoy, I. Vaseva and M. Fedoruk,
+ * <a href="https://doi.org/10.48550/arXiv.2608.11892">&quot;Fast Eighth-Order
+ * Padé Schemes Based on Chebyshev Polynomials for the Direct
+ * Zakharov-Shabat Problem,&quot;</a> arXiv:2608.11892v1 [math.NA], preprint
+ * (2026).\n
  * All above discretizations only support Newton method based bound states
  * localization (see fnft_nsev_bsloc_NEWTON of type \link fnft_nsev_bsloc_t \endlink) in \link fnft_nsev \endlink. \n 
  * The exponential spliting schemes, defined in
@@ -62,6 +81,38 @@
  * Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot;
  * </a>Proc. ICASSP 2018, pp. 4524-4528. `B` type of splitting are the same as `A` with the positions of the 
  * two terms in the splitting interchanged. `S` is for splittings not mentioned in above reference.\n
+ * `fnft_nse_discretization_FTES4_4A` and `fnft_nse_discretization_FTES4_4B` are fast
+ * versions of TES4. The TES4 correction is from the Optics Express reference above;
+ * the fourth-order 4A and 4B splittings are from the Prins and Wahls ICASSP 2018 reference.
+ * They support the bound-state localization methods available for fast discretizations.\n
+ * `fnft_nse_discretization_FTES4SB` (with the compatibility alias
+ * `fnft_nse_discretization_FTES4_suzuki`) is the conservative fast TES4 scheme based on
+ * Suzuki factorization from S. Medvedev, I. Chekhovskoy, I. Vaseva and M. Fedoruk,
+ * <a href="https://doi.org/10.1364/OL.387436">&quot;Conservative multi-exponential scheme
+ * for solving the direct Zakharov-Shabat scattering problem,&quot;</a> Optics Letters 45(7),
+ * 2082-2085 (2020).\n
+ * `fnft_nse_discretization_FES4_PADE` and `fnft_nse_discretization_FES6_PADE`
+ * are fast fourth- and sixth-order exponential schemes based on diagonal Padé
+ * approximants from S. Medvedev, I. Chekhovskoy, I. Vaseva and M. Fedoruk,
+ * <a href="https://doi.org/10.1016/j.jcp.2021.110764">&quot;Fast sixth-order
+ * algorithm based on the generalized Cayley transform for the Zakharov-Shabat
+ * system associated with nonlinear Schrodinger equation,&quot;</a> J. Comput. Phys.
+ * 448, 110764 (2022). Their Padé degree and
+ * linear-fractional-map scale are selected through the corresponding options
+ * structure.\n
+ * `fnft_nse_discretization_FES8_PADE` is the Padé family based on
+ * the eighth-order exponential scheme from S. Medvedev, I. Chekhovskoy,
+ * I. Vaseva and M. Fedoruk,
+ * <a href="https://doi.org/10.48550/arXiv.2608.11892">&quot;Fast Eighth-Order
+ * Padé Schemes Based on Chebyshev Polynomials for the Direct Zakharov-Shabat
+ * Problem,&quot;</a> arXiv:2608.11892v1 [math.NA], preprint (2026). The article
+ * reports continuous-spectrum experiments for Padé degrees 3--6 and finds
+ * the direct Cayley variants less accurate than the slow and Chebyshev-based
+ * variants. The representation is selected in \link fnft_nsev_opts_t
+ * \endlink. Padé degrees 3--7 and discrete spectral data are supported;
+ * degree 7 follows from the same general diagonal Padé construction. Discrete
+ * spectral data are computed by ES8 after NEWTON localization or after initial
+ * guesses have been obtained by SUBSAMPLE_AND_REFINE.\n
  * `-2S` is from G. Strang,<a href="https://link.springer.com/content/pdf/10.1007/BF00281235.pdf">&quot;
  * Accurate partial difference methods I: Linear Cauchy problems,&quot;</a> 
  * in Archive for Rational Mechanics and Analysis, 12(1), 392-402, Jan 1963. It is also
@@ -94,7 +145,16 @@
  * `fnft_nse_discretization_2SPLIT8A`: Order of base method = 2, Degree = 24, Order of accuracy of splitting-scheme = 8\n
  * `fnft_nse_discretization_2SPLIT8B`: Order of base method = 2, Degree = 12, Order of accuracy of splitting-scheme = 8\n
  * `fnft_nse_discretization_4SPLIT4A`: Order of base method = 4, Degree = 4, Order of accuracy of splitting-scheme = 4\n
- * `fnft_nse_discretization_4SPLIT4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4
+ * `fnft_nse_discretization_4SPLIT4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4\n
+ * `fnft_nse_discretization_FTES4_4A`: Order of base method = 4, Degree = 4, Order of accuracy of splitting-scheme = 4\n
+ * `fnft_nse_discretization_FTES4_4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4\n
+ * `fnft_nse_discretization_FTES4SB`: Order of base method = 4, Degree = 7, Order of accuracy of splitting-scheme = 4\n
+ * `fnft_nse_discretization_FES4_PADE`: Order of base method = 4, Padé degree = 2--7, Order of accuracy = 4\n
+ * `fnft_nse_discretization_FES6_PADE`: Order of base method = 6, Padé degree = 3--7, Order of accuracy = 6\n
+ * `fnft_nse_discretization_CT4`: Non-polynomial slow method, order of accuracy = 4\n
+ * `fnft_nse_discretization_ES6`: Non-polynomial slow method, order of accuracy = 6\n
+ * `fnft_nse_discretization_ES8`: Non-polynomial slow method, order of accuracy = 8\n
+ * `fnft_nse_discretization_FES8_PADE`: Eighth-order base method, Padé degree = 3--7, polynomial degree = 10 times the Padé degree, order of accuracy = 6 for degree 3 and 8 for degrees 4--7\n
  *
  * Used in \link fnft_nsev_opts_t \endlink, \link fnft_nsep_opts_t \endlink
  *  and \link fnft_nsev_inverse_opts_t \endlink.
@@ -129,7 +189,17 @@ typedef enum {
     fnft_nse_discretization_CF5_3,
     fnft_nse_discretization_CF6_4,
     fnft_nse_discretization_ES4,
-    fnft_nse_discretization_TES4
+    fnft_nse_discretization_TES4,
+    fnft_nse_discretization_FTES4_4A,
+    fnft_nse_discretization_FTES4_4B,
+    fnft_nse_discretization_FTES4_suzuki,
+    fnft_nse_discretization_FTES4SB = fnft_nse_discretization_FTES4_suzuki,
+    fnft_nse_discretization_FES4_PADE,
+    fnft_nse_discretization_FES6_PADE,
+    fnft_nse_discretization_CT4,
+    fnft_nse_discretization_ES6,
+    fnft_nse_discretization_ES8,
+    fnft_nse_discretization_FES8_PADE
 } fnft_nse_discretization_t;
 
 #ifdef FNFT_ENABLE_SHORT_NAMES
@@ -162,6 +232,16 @@ typedef enum {
 #define nse_discretization_CF6_4 fnft_nse_discretization_CF6_4
 #define nse_discretization_ES4 fnft_nse_discretization_ES4
 #define nse_discretization_TES4 fnft_nse_discretization_TES4
+#define nse_discretization_CT4 fnft_nse_discretization_CT4
+#define nse_discretization_ES6 fnft_nse_discretization_ES6
+#define nse_discretization_ES8 fnft_nse_discretization_ES8
+#define nse_discretization_FTES4_4A fnft_nse_discretization_FTES4_4A
+#define nse_discretization_FTES4_4B fnft_nse_discretization_FTES4_4B
+#define nse_discretization_FTES4_suzuki fnft_nse_discretization_FTES4_suzuki
+#define nse_discretization_FTES4SB fnft_nse_discretization_FTES4SB
+#define nse_discretization_FES4_PADE fnft_nse_discretization_FES4_PADE
+#define nse_discretization_FES6_PADE fnft_nse_discretization_FES6_PADE
+#define nse_discretization_FES8_PADE fnft_nse_discretization_FES8_PADE
 
 
 #endif

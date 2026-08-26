@@ -76,6 +76,21 @@ Please follow the instructions in the file [INSTALL.md](INSTALL.md).
 
 Please read the file [Getting-Started.md](Getting-Started.md).
 
+The `FES8_PADE` discretization includes direct-Cayley and dependency-free
+Chebyshev--Joukowski representations for the continuous spectrum. The global
+power-basis polynomials of the direct-Cayley representation can become
+ill-conditioned on fine grids, as discussed in the cited arXiv preprint. The
+Chebyshev representation builds its coefficients in
+O(K D log<sup>2</sup>D), but evaluating them by Clenshaw's recurrence on the
+uniform spectral grid of `fnft_nsev` requires O(M K D) operations. Thus,
+without an optional nonuniform fast transform, this dependency-free path is
+not an end-to-end O(D log<sup>2</sup>D) algorithm when M is proportional to D.
+The Chebyshev representation is used only for continuous-spectrum polynomial
+evaluation. Bound states, norming constants and residues requested with
+`FES8_PADE` are computed through the slow `ES8` refinement path. `NEWTON`
+and `SUBSAMPLE_AND_REFINE` are supported; direct `FAST_EIGENVALUE`
+localization is not.
+
 ## Community Guidelines
 
 Please use the [issue tracker](https://github.com/FastNFT/FNFT/issues) to report any problems with the software. If you want to contribute to the development of FNFT, please [email](mailto:s.wahls##at##tudelft.nl) Sander Wahls.
@@ -87,6 +102,8 @@ Please use the [issue tracker](https://github.com/FastNFT/FNFT/issues) to report
 * Peter J. Prins, TU Delft
 * Marius Brehler, TU Dortmund
 * Lianne de Vries, student TU Delft
+* Igor Chekhovskoy, NSU and FRC ICT
+* Irina Vaseva, FRC ICT and NSU
 
 ## License
 
@@ -121,7 +138,11 @@ The algorithms in FNFT utilize ideas from the following references. More informa
 - J. Skaar, L. Wang and T. Erdogan, ["On the synthesis of fiber Bragg gratings by layer peeling"](https://doi.org/10.1109/3.903065), IEEE Journal of Quantum Electronics, vol. 37, no. 2, pp. 165--173, Feb. 2001.
 - S. Chimmalgi, P. J. Prins and S. Wahls, ["Fast Nonlinear Fourier Transform Algorithms Using Higher Order Exponential Integrators"](https://doi.org/10.1109/ACCESS.2019.2945480), IEEE Access, vol. 7, pp. 145161--145176, Oct. 2019.
 - P. J. Prins and S. Wahls, ["Soliton Phase Shift Calculation for the Korteweg–De Vries Equation"](https://doi.org/10.1109/ACCESS.2019.2932256), IEEE Access, vol. 7, pp. 122914--122930, July 2019.
+- S. Medvedev, I. Vaseva, I. Chekhovskoy and M. Fedoruk, ["Numerical algorithm with fourth-order accuracy for the direct Zakharov-Shabat problem"](https://doi.org/10.1364/OL.44.002264), Optics Letters, vol. 44, no. 9, pp. 2264--2267, 2019.
 - S. Medvedev, I. Vaseva, I. Chekhovskoy and M. Fedoruk, ["Exponential fourth order schemes for direct Zakharov-Shabat problem"](https://doi.org/10.1364/OE.377140), Optics Express, vol. 28, pp. 20--39, 2020.
+- S. Medvedev, I. Chekhovskoy, I. Vaseva and M. Fedoruk, ["Conservative multi-exponential scheme for solving the direct Zakharov–Shabat scattering problem"](https://doi.org/10.1364/OL.387436), Optics Letters, vol. 45, no. 7, pp. 2082--2085, 2020.
+- S. Medvedev, I. Chekhovskoy, I. Vaseva and M. Fedoruk, ["Fast sixth-order algorithm based on the generalized Cayley transform for the Zakharov-Shabat system associated with nonlinear Schrodinger equation"](https://doi.org/10.1016/j.jcp.2021.110764), Journal of Computational Physics, vol. 448, 110764, 2022.
+- S. Medvedev, I. Chekhovskoy, I. Vaseva and M. Fedoruk, ["Fast Eighth-Order Padé Schemes Based on Chebyshev Polynomials for the Direct Zakharov-Shabat Problem"](https://doi.org/10.48550/arXiv.2608.11892), arXiv:2608.11892v1 [math.NA], preprint, 2026.
 - J. Mertsching, ["Quasiperiodie Solutions of the Nonlinear Schroedinger Equation"](https://doi.org/10.1002/prop.2190350704), Fortschritte der Physik, vol. 35, pp. 519--536, 1987.
 - L. de Vries, ["Fast Numerical Nonlinear Fourier Transform Algorithms for the Manakov Equation"](http://resolver.tudelft.nl/uuid:0276e693-3408-4472-9749-b754c2114183"), Master thesis, TU Delft, 2021.
 - A. R. Osborne and L. Bergamasco, ["The solitons of Zabusky and Kruskal revisited: Perspective in terms of the periodic spectral transform"](https://doi.org/10.1016/0167-2789(86)90160-0), Physica D, vol. 18, pp. 26--46, 1986.

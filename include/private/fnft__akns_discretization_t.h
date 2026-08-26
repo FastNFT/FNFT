@@ -16,6 +16,8 @@
 * Contributors:
 * Shrinivas Chimmalgi (TU Delft) 2018-2020.
 * Peter J. Prins (TU Delft) 2021.
+* Igor Chekhovskoy (NSU, FRC ICT) 2026.
+* Irina Vaseva (FRC ICT, NSU) 2026.
 */
 
 /**
@@ -45,7 +47,31 @@
  * methods from Medvedev, Vaseva, Chekhovskoy and  Fedoruk
  * <a href="https://doi.org/10.1364/OE.377140">&quot;
  * Exponential fourth order schemes for direct Zakharov-Shabat problem,&quot;</a> Optics Express, vol. 28, pp. 20--39, 2020.\n
- * All above discretizations are supported by \link fnft__akns_scatter.h \endlink.\n 
+ * `fnft__akns_discretization_CT4` is the conservative fourth-order method from
+ * S. Medvedev, I. Vaseva, I. Chekhovskoy and M. Fedoruk,
+ * <a href="https://doi.org/10.1364/OL.44.002264">&quot;Numerical algorithm with
+ * fourth-order accuracy for the direct Zakharov-Shabat problem,&quot;</a> Optics
+ * Letters 44(9), 2264--2267 (2019).\n
+ * `fnft__akns_discretization_ES6` is the slow sixth-order exponential scheme
+ * from S. Medvedev, I. Chekhovskoy, I. Vaseva and M. Fedoruk,
+ * <a href="https://doi.org/10.1016/j.jcp.2021.110764">&quot;Fast sixth-order
+ * algorithm based on the generalized Cayley transform for the Zakharov-Shabat
+ * system associated with nonlinear Schrodinger equation,&quot;</a> J. Comput. Phys.
+ * 448, 110764 (2022).\n
+ * `fnft__akns_discretization_ES8` is the slow eighth-order exponential scheme
+ * from S. Medvedev, I. Chekhovskoy, I. Vaseva and M. Fedoruk,
+ * <a href="https://doi.org/10.48550/arXiv.2608.11892">&quot;Fast Eighth-Order
+ * Padé Schemes Based on Chebyshev Polynomials for the Direct
+ * Zakharov-Shabat Problem,&quot;</a> arXiv:2608.11892v1 [math.NA], preprint
+ * (2026).\n
+ * `fnft__akns_discretization_FES8_PADE` denotes its Padé family with degrees
+ * 3--7. The local numerator and denominator degrees are
+ * 10 times the Padé degree. The degree-3 method has order six; degrees 4--7
+ * have order eight. Direct Cayley and Chebyshev--Joukowski representations
+ * are provided for continuous-spectrum calculations.\n
+ * All above discretizations except `fnft__akns_discretization_FES8_PADE` are
+ * supported by \link fnft__akns_scatter.h \endlink. The Padé family is
+ * handled by \link fnft__akns_fscatter_pade.h \endlink.\n
  * The exponential spliting schemes, defined in
  * Prins and Wahls, <a href="https://doi.org/10.1109/ICASSP.2018.8461708">&quot;
  * Higher order exponential splittings for the fast non-linear Fourier transform of the KdV equation,&quot;
@@ -94,10 +120,19 @@
  * `fnft__akns_discretization_2SPLIT8A`: Order of base method = 2, Degree = 24, Order of accuracy of splitting-scheme = 8\n
  * `fnft__akns_discretization_2SPLIT8B`: Order of base method = 2, Degree = 12, Order of accuracy of splitting-scheme = 8\n
  * `fnft__akns_discretization_4SPLIT4A`: Order of base method = 4, Degree = 4, Order of accuracy of splitting-scheme = 4\n
- * `fnft__akns_discretization_4SPLIT4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4
+ * `fnft__akns_discretization_4SPLIT4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4\n
+ * `fnft__akns_discretization_FTES4_4A`: Order of base method = 4, Degree = 4, Order of accuracy of splitting-scheme = 4\n
+ * `fnft__akns_discretization_FTES4_4B`: Order of base method = 4, Degree = 2, Order of accuracy of splitting-scheme = 4\n
+ * `fnft__akns_discretization_FTES4_suzuki`: Order of base method = 4, Degree = 7, Order of accuracy of splitting-scheme = 4\n
+ * `fnft__akns_discretization_CT4`: Non-polynomial slow method, order of accuracy = 4\n
+ * `fnft__akns_discretization_ES6`: Non-polynomial slow method, order of accuracy = 6\n
+ * `fnft__akns_discretization_ES8`: Non-polynomial slow method, order of accuracy = 8\n
+ * `fnft__akns_discretization_FES8_PADE`: Padé family, local degree = 30 by default, order of accuracy = 6 for Padé degree 3 and 8 for degrees 4--7\n
  *
- * Used in \link fnft__akns_fscatter.h \endlink and
- * \link fnft__akns_scatter.h \endlink.
+ * The generic discretizations are used in \link fnft__akns_fscatter.h
+ * \endlink and \link fnft__akns_scatter.h \endlink. The
+ * `fnft__akns_discretization_FES8_PADE` enumerator is used only in
+ * \link fnft__akns_fscatter_pade.h \endlink.
  *
  * @ingroup data_types
  */
@@ -130,9 +165,15 @@ typedef enum {
     fnft__akns_discretization_CF6_4,
     fnft__akns_discretization_ES4,  
     fnft__akns_discretization_TES4,
-	fnft__akns_discretization_FTES4_4A,		// TODO: added all discretization after this one. Needed, or should this be put in manakov_discretization?
+	fnft__akns_discretization_FTES4_4A,
 	fnft__akns_discretization_FTES4_4B,
-	fnft__akns_discretization_4SPLIT6B
+	fnft__akns_discretization_4SPLIT6B,
+	fnft__akns_discretization_FTES4_suzuki,
+	fnft__akns_discretization_FTES4SB = fnft__akns_discretization_FTES4_suzuki,
+	fnft__akns_discretization_CT4,
+	fnft__akns_discretization_ES6,
+	fnft__akns_discretization_ES8,
+	fnft__akns_discretization_FES8_PADE
 } fnft__akns_discretization_t;
 
 /**
@@ -180,9 +221,15 @@ typedef enum {
 #define akns_discretization_CF6_4 fnft__akns_discretization_CF6_4
 #define akns_discretization_ES4 fnft__akns_discretization_ES4
 #define akns_discretization_TES4 fnft__akns_discretization_TES4
+#define akns_discretization_CT4 fnft__akns_discretization_CT4
+#define akns_discretization_ES6 fnft__akns_discretization_ES6
+#define akns_discretization_ES8 fnft__akns_discretization_ES8
+#define akns_discretization_FES8_PADE fnft__akns_discretization_FES8_PADE
 #define akns_discretization_FTES4_4A fnft__akns_discretization_FTES4_4A
 #define akns_discretization_FTES4_4B fnft__akns_discretization_FTES4_4B
 #define akns_discretization_4SPLIT6B fnft__akns_discretization_4SPLIT6B
+#define akns_discretization_FTES4_suzuki fnft__akns_discretization_FTES4_suzuki
+#define akns_discretization_FTES4SB fnft__akns_discretization_FTES4SB
 #define akns_discretization_t fnft__akns_discretization_t
 #define akns_pde_KdV fnft__akns_pde_KdV
 #define akns_pde_NSE fnft__akns_pde_NSE

@@ -18,8 +18,10 @@
 * Shrinivas Chimmalgi (TU Delft) 2019-2020.
 * Peter J. Prins (2021).
 * Sander Wahls (KIT) 2023, 2025.
+* Igor Chekhovskoy (NSU, FRC ICT) 2026.
 */
 
+#include <math.h>
 #include <string.h>
 #include "mex.h"
 #ifndef SKIP_MATRIX_H
@@ -265,6 +267,53 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "quiet") == 0 ) {
 
             fnft_errwarn_setprintf(NULL);
+
+        } else if ( strcmp(str, "pade_degree") == 0 ) {
+
+            double value;
+
+            if ( k+1 == nrhs || mxIsComplex(prhs[k+1])
+                 || !mxIsDouble(prhs[k+1])
+                 || mxGetNumberOfElements(prhs[k+1]) != 1 ) {
+                snprintf(msg, sizeof msg, "'pade_degree' should be followed by a non-negative integer scalar.");
+                goto on_error;
+            }
+            value = mxGetScalar(prhs[k+1]);
+            if (!mxIsFinite(value) || value < 0.0 || value > 7.0
+                    || value != floor(value)) {
+                snprintf(msg, sizeof msg, "'pade_degree' should be followed by a non-negative integer scalar.");
+                goto on_error;
+            }
+            opts.pade_degree = (FNFT_UINT)value;
+            k++;
+
+        } else if ( strcmp(str, "pade_h") == 0 ) {
+
+            double value;
+
+            if ( k+1 == nrhs || mxIsComplex(prhs[k+1])
+                 || !mxIsDouble(prhs[k+1])
+                 || mxGetNumberOfElements(prhs[k+1]) != 1 ) {
+                snprintf(msg, sizeof msg, "'pade_h' should be followed by a non-negative real scalar.");
+                goto on_error;
+            }
+            value = mxGetScalar(prhs[k+1]);
+            if (!mxIsFinite(value) || value < 0.0) {
+                snprintf(msg, sizeof msg, "'pade_h' should be followed by a finite non-negative real scalar.");
+                goto on_error;
+            }
+            opts.pade_h = (FNFT_REAL)value;
+            k++;
+
+        } else if ( strcmp(str, "pade_direct") == 0 ) {
+
+            opts.pade_representation =
+                    fnft_nsev_pade_representation_DIRECT_CAYLEY;
+
+        } else if ( strcmp(str, "pade_chebyshev") == 0 ) {
+
+            opts.pade_representation =
+                    fnft_nsev_pade_representation_CHEBYSHEV_JOUKOWSKI;
         
         // Fast discretizations
         } else if ( strcmp(str, "discr_modal") == 0 ) {
@@ -351,6 +400,31 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
             opts.discretization = fnft_nse_discretization_4SPLIT4B;
 
+        } else if ( strcmp(str, "discr_FTES4_4A") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_FTES4_4A;
+
+        } else if ( strcmp(str, "discr_FTES4_4B") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_FTES4_4B;
+
+        } else if ( strcmp(str, "discr_FTES4SB") == 0
+                || strcmp(str, "discr_FTES4_suzuki") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_FTES4_suzuki;
+
+        } else if ( strcmp(str, "discr_FES4_PADE") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_FES4_PADE;
+
+        } else if ( strcmp(str, "discr_FES6_PADE") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_FES6_PADE;
+
+        } else if ( strcmp(str, "discr_FES8_PADE") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_FES8_PADE;
+
         // Slow discretizations
         } else if ( strcmp(str, "discr_BO") == 0 ) {
             
@@ -379,12 +453,38 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         } else if ( strcmp(str, "discr_TES4") == 0 ) {
             
             opts.discretization = fnft_nse_discretization_TES4;
+
+        } else if ( strcmp(str, "discr_CT4") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_CT4;
+
+        } else if ( strcmp(str, "discr_ES6") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_ES6;
+
+        } else if ( strcmp(str, "discr_ES8") == 0 ) {
+
+            opts.discretization = fnft_nse_discretization_ES8;
             
         } else {
             snprintf(msg, sizeof msg, "%uth input has invalid value.", 
                 (unsigned int)(k+1));
             goto on_error;
         }
+    }
+
+    if (opts.discretization == fnft_nse_discretization_FES4_PADE
+            && opts.pade_degree != 0
+            && (opts.pade_degree < 2 || opts.pade_degree > 7)) {
+        snprintf(msg, sizeof msg, "FES4_PADE requires pade_degree between 2 and 7.");
+        goto on_error;
+    }
+    if ((opts.discretization == fnft_nse_discretization_FES6_PADE
+            || opts.discretization == fnft_nse_discretization_FES8_PADE)
+            && opts.pade_degree != 0
+            && (opts.pade_degree < 3 || opts.pade_degree > 7)) {
+        snprintf(msg, sizeof msg, "FES6_PADE and FES8_PADE require pade_degree between 3 and 7.");
+        goto on_error;
     }
     
     /* Allocate memory */
