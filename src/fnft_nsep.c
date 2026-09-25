@@ -19,11 +19,13 @@
  * Shrinivas Chimmalgi (TU Delft) 2019-2020.
  * Peter J Prins (TU Delft) 2020.
  * Sander Wahls (KIT) 2023.
+ * Igor Chekhovskoy (NSU, FRC ICT) 2026.
  */
 
 #define FNFT_ENABLE_SHORT_NAMES
 
 #include "fnft_nsep.h"
+#include "fnft__akns_fscatter_pade.h"
 
 static fnft_nsep_opts_t default_opts = {
     .localization = fnft_nsep_loc_SUBSAMPLE_AND_REFINE,
@@ -38,7 +40,9 @@ static fnft_nsep_opts_t default_opts = {
     .floquet_range = {-1, 1},
     .points_per_spine = 2,
     .Dsub = 0, // => the algorithm chooses Dsub automatically
-    .tol = -1 // negative tol => the algorithm chooses tol automatically
+    .tol = -1, // negative tol => the algorithm chooses tol automatically
+    .pade_degree = 0,
+    .pade_h = 0.0
 };
 
 static const UINT oversampling_factor = 32;
@@ -90,6 +94,13 @@ static inline INT gridsearch(const UINT D,
 static inline void update_bounding_box_if_auto(const REAL eps_t,
         REAL map_coeff, fnft_nsep_opts_t * const opts_ptr);
 
+static inline void refine_polynomial_roots(const UINT degree,
+        COMPLEX const * const coefficients, UINT * const count,
+        COMPLEX * const roots);
+
+static inline void normalize_polynomial(const UINT degree,
+        COMPLEX * const coefficients);
+
 // Main routine.
 INT fnft_nsep(const UINT D, COMPLEX const * const q,
         REAL const * const T, REAL const phase_shift, UINT * const K_ptr,
@@ -124,6 +135,12 @@ INT fnft_nsep(const UINT D, COMPLEX const * const q,
         return E_NOT_YET_IMPLEMENTED(sheet_indices, Pass sheet_indices="NULL".);
     if (opts_ptr == NULL)
         opts_ptr = &default_opts;
+    if (opts_ptr->discretization == nse_discretization_FES8_PADE)
+        return E_NOT_YET_IMPLEMENTED(opts_ptr->discretization,
+                Use fnft_nsev for the continuous spectrum.);
+    if (nse_discretization_is_pade(opts_ptr->discretization)
+            && opts_ptr->localization != fnft_nsep_loc_GRIDSEARCH)
+        return E_INVALID_ARGUMENT(opts_ptr->localization);
     if (opts_ptr->filtering != fnft_nsep_filt_NONE && main_spec == NULL && aux_spec != NULL)
         return E_INVALID_ARGUMENT(main_spec. Filtering of the auxiliary spectrum is not possible if the main spectrum is not computed.);
 
@@ -246,12 +263,13 @@ static inline INT gridsearch(const UINT D,
         const INT kappa, fnft_nsep_opts_t * opts_ptr, INT warn_flags[2])
 {
     COMPLEX * transfer_matrix = NULL;
+    COMPLEX * denominator = NULL;
     COMPLEX * p = NULL;
     COMPLEX * roots = NULL;
     REAL degree1step, map_coeff;
     REAL PHI[2] = { 0.0, 2.0*PI };
-    UINT deg;
-    INT W = 0, *W_ptr = NULL;
+    UINT deg, denominator_degree = 0;
+    INT W = 0, denominator_exponent = 0, *W_ptr = NULL;
     UINT K, K_filtered;
     UINT M = 0;
     UINT i, upsampling_factor, D_effective;// upsampling_factor*D gives the effective number of samples
@@ -281,32 +299,79 @@ static inline INT gridsearch(const UINT D,
     CHECK_RETCODE(ret_code, release_mem);
 
     // Allocate memory for the transfer matrix
-    i = nse_fscatter_numel(D_effective, opts_ptr->discretization);
+    if (nse_discretization_is_pade(opts_ptr->discretization)) {
+        const UINT pade_degree = nse_discretization_pade_degree(
+                opts_ptr->discretization, opts_ptr->pade_degree);
+        const UINT method_order = nse_discretization_method_order(
+                opts_ptr->discretization);
+        const REAL h = nse_discretization_pade_h(opts_ptr->discretization,
+                pade_degree, opts_ptr->pade_h);
+        const UINT numerator_numel = akns_fscatter_pade_numel(D_effective,
+                method_order, pade_degree);
+        const UINT denominator_numel = akns_fscatter_pade_den_numel(
+                D_effective, method_order, pade_degree);
+
+        if (pade_degree == 0 || h <= 0.0 || numerator_numel == 0
+                || denominator_numel == 0) {
+            ret_code = E_INVALID_ARGUMENT(opts_ptr->pade_degree);
+            goto release_mem;
+        }
+        transfer_matrix = malloc(numerator_numel*sizeof(COMPLEX));
+        denominator = malloc(denominator_numel*sizeof(COMPLEX));
+        if (transfer_matrix == NULL || denominator == NULL) {
+            ret_code = E_NOMEM;
+            goto release_mem;
+        }
+        if (opts_ptr->normalization_flag)
+            W_ptr = &W;
+        ret_code = akns_fscatter_pade(D_effective, q_preprocessed,
+                r_preprocessed, eps_t, method_order, pade_degree, h,
+                1, transfer_matrix, &deg, W_ptr, denominator,
+                &denominator_degree, opts_ptr->normalization_flag
+                ? &denominator_exponent : NULL);
+        CHECK_RETCODE(ret_code, release_mem);
+        i = numerator_numel;
+    } else {
+        i = nse_fscatter_numel(D_effective, opts_ptr->discretization);
+    }
     if (i == 0) { // since Dsub>=2, this means unknown discretization
         ret_code = E_INVALID_ARGUMENT(opts_ptr->discretization);
         goto release_mem;
     }
-    transfer_matrix = malloc(i*sizeof(COMPLEX));
-    if (transfer_matrix == NULL) {
-        ret_code = E_NOMEM;
-        goto release_mem;
+    if (!nse_discretization_is_pade(opts_ptr->discretization)) {
+        transfer_matrix = malloc(i*sizeof(COMPLEX));
+        if (transfer_matrix == NULL) {
+            ret_code = E_NOMEM;
+            goto release_mem;
+        }
+
+        // Compute the transfer matrix
+        if (opts_ptr->normalization_flag)
+            W_ptr = &W;
+        ret_code = nse_fscatter(D_effective, q_preprocessed, r_preprocessed,
+                eps_t, transfer_matrix, &deg, W_ptr,
+                opts_ptr->discretization);
+        CHECK_RETCODE(ret_code, release_mem);
     }
 
-    // Compute the transfer matrix
-    if (opts_ptr->normalization_flag)
-        W_ptr = &W;
-    ret_code = nse_fscatter(D_effective, q_preprocessed, r_preprocessed, eps_t, transfer_matrix, &deg,
-            W_ptr, opts_ptr->discretization);
-    CHECK_RETCODE(ret_code, release_mem);
-
     // Will be required later for coordinate transforms
-    degree1step = nse_discretization_degree(opts_ptr->discretization);
+    degree1step = nse_discretization_degree_with_pade(
+            opts_ptr->discretization, opts_ptr->pade_degree);
     if (degree1step == NAN)
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
-    map_coeff = 2/degree1step;
+    if (nse_discretization_is_pade(opts_ptr->discretization)) {
+        map_coeff = 0.0;
+        PHI[0] = 0.0;
+        PHI[1] = 2.0*PI;
+    } else if (opts_ptr->discretization == nse_discretization_FTES4_suzuki)
+        map_coeff = 2.0/3.0;
+    else
+        map_coeff = 2/degree1step;
     update_bounding_box_if_auto(eps_t, map_coeff, opts_ptr);
-    PHI[0] = map_coeff*eps_t*opts_ptr->bounding_box[0];
-    PHI[1] = map_coeff*eps_t*opts_ptr->bounding_box[1];
+    if (!nse_discretization_is_pade(opts_ptr->discretization)) {
+        PHI[0] = map_coeff*eps_t*opts_ptr->bounding_box[0];
+        PHI[1] = map_coeff*eps_t*opts_ptr->bounding_box[1];
+    }
     if (PHI[0] > PHI[1]) {
         REAL tmp = PHI[0];
         PHI[0] = PHI[1];
@@ -334,15 +399,31 @@ static inline INT gridsearch(const UINT D,
         }
 
         // First, determine p(z) for the positive sign (+)
-        for (i=0; i<=deg; i++)
-            p[i] = transfer_matrix[i] + CONJ(transfer_matrix[deg-i]);
-        p[deg/2] += 2.0 * POW(2.0, -W); // the pow arises because
-        // nse_fscatter rescales
+        if (nse_discretization_is_pade(opts_ptr->discretization)) {
+            const REAL denominator_scale = ldexp(2.0,
+                    denominator_exponent - W);
+            for (i = 0; i <= deg; i++)
+                p[i] = transfer_matrix[i]
+                        + transfer_matrix[3*(deg + 1) + i]
+                        + denominator_scale*denominator[i];
+            normalize_polynomial(deg, p);
+        } else {
+            for (i=0; i<=deg; i++)
+                p[i] = transfer_matrix[i] + CONJ(transfer_matrix[deg-i]);
+            p[deg/2] += 2.0 * POW(2.0, -W); // the pow arises because
+            // nse_fscatter rescales
+        }
 
         // Find the roots of p(z)
         K = oversampling_factor*deg;
         ret_code = poly_roots_fftgridsearch(deg, p, &K, PHI, roots);
         CHECK_RETCODE(ret_code, release_mem);
+
+        if (nse_discretization_is_pade(opts_ptr->discretization)) {
+            refine_polynomial_roots(deg, p, &K, roots);
+            ret_code = misc_merge(&K, roots, 4.0*SQRT(EPSILON));
+            CHECK_RETCODE(ret_code, release_mem);
+        }
 
         if (K > deg) {
             ret_code = E_OTHER("Found more roots than memory is available.");
@@ -350,7 +431,16 @@ static inline INT gridsearch(const UINT D,
         }
 
         // Coordinate transform (from discrete-time to continuous-time domain)
-        ret_code = nse_discretization_z_to_lambda(K, eps_t, roots, opts_ptr->discretization);
+        if (nse_discretization_is_pade(opts_ptr->discretization)) {
+            const UINT pade_degree = nse_discretization_pade_degree(
+                    opts_ptr->discretization, opts_ptr->pade_degree);
+            const REAL h = nse_discretization_pade_h(
+                    opts_ptr->discretization, pade_degree, opts_ptr->pade_h);
+            ret_code = nse_discretization_pade_z_to_lambda(K, eps_t,
+                    roots, h);
+        } else
+            ret_code = nse_discretization_z_to_lambda(K, eps_t, roots,
+                    opts_ptr->discretization);
         CHECK_RETCODE(ret_code, release_mem);
 
         // Filter the roots
@@ -370,7 +460,16 @@ static inline INT gridsearch(const UINT D,
         memcpy(main_spec, roots, K * sizeof(COMPLEX));
 
         // Second, determine p(z) for the negative sign (-)
-        p[deg/2] -= 4.0 * POW(2.0, -W);
+        if (nse_discretization_is_pade(opts_ptr->discretization)) {
+            const REAL denominator_scale = ldexp(2.0,
+                    denominator_exponent - W);
+            for (i = 0; i <= deg; i++)
+                p[i] = transfer_matrix[i]
+                        + transfer_matrix[3*(deg + 1) + i]
+                        - denominator_scale*denominator[i];
+            normalize_polynomial(deg, p);
+        } else
+            p[deg/2] -= 4.0 * POW(2.0, -W);
 
 
         // Find the roots of the new p(z)
@@ -379,13 +478,28 @@ static inline INT gridsearch(const UINT D,
                 roots);
         CHECK_RETCODE(ret_code, release_mem);
 
+        if (nse_discretization_is_pade(opts_ptr->discretization)) {
+            refine_polynomial_roots(deg, p, &K_filtered, roots);
+            ret_code = misc_merge(&K_filtered, roots, 4.0*SQRT(EPSILON));
+            CHECK_RETCODE(ret_code, release_mem);
+        }
+
         if (K_filtered > deg) {
             ret_code = E_OTHER("Found more roots than memory is available.");
             goto release_mem;
         }
 
         // Coordinate transform of the new roots
-        ret_code = nse_discretization_z_to_lambda(K_filtered, eps_t, roots, opts_ptr->discretization);
+        if (nse_discretization_is_pade(opts_ptr->discretization)) {
+            const UINT pade_degree = nse_discretization_pade_degree(
+                    opts_ptr->discretization, opts_ptr->pade_degree);
+            const REAL h = nse_discretization_pade_h(
+                    opts_ptr->discretization, pade_degree, opts_ptr->pade_h);
+            ret_code = nse_discretization_pade_z_to_lambda(K_filtered,
+                    eps_t, roots, h);
+        } else
+            ret_code = nse_discretization_z_to_lambda(K_filtered, eps_t,
+                    roots, opts_ptr->discretization);
         CHECK_RETCODE(ret_code, release_mem);
 
         // Filter the new roots
@@ -416,12 +530,30 @@ static inline INT gridsearch(const UINT D,
     if (aux_spec != NULL) {
 
         M = oversampling_factor*deg;
+        if (nse_discretization_is_pade(opts_ptr->discretization))
+            normalize_polynomial(deg, transfer_matrix + (deg + 1));
         ret_code = poly_roots_fftgridsearch(deg, transfer_matrix+(deg+1), &M,
                 PHI, roots);
         CHECK_RETCODE(ret_code, release_mem);
 
+        if (nse_discretization_is_pade(opts_ptr->discretization)) {
+            refine_polynomial_roots(deg, transfer_matrix + (deg + 1), &M,
+                    roots);
+            ret_code = misc_merge(&M, roots, 4.0*SQRT(EPSILON));
+            CHECK_RETCODE(ret_code, release_mem);
+        }
+
         // Coordinate transform (from discrete-time to continuous-time domain)
-        ret_code = nse_discretization_z_to_lambda(M, eps_t, roots, opts_ptr->discretization);
+        if (nse_discretization_is_pade(opts_ptr->discretization)) {
+            const UINT pade_degree = nse_discretization_pade_degree(
+                    opts_ptr->discretization, opts_ptr->pade_degree);
+            const REAL h = nse_discretization_pade_h(
+                    opts_ptr->discretization, pade_degree, opts_ptr->pade_h);
+            ret_code = nse_discretization_pade_z_to_lambda(M, eps_t, roots,
+                    h);
+        } else
+            ret_code = nse_discretization_z_to_lambda(M, eps_t, roots,
+                    opts_ptr->discretization);
         CHECK_RETCODE(ret_code, release_mem);
 
         // Filter the roots
@@ -447,12 +579,74 @@ static inline INT gridsearch(const UINT D,
 
     release_mem:
         free(transfer_matrix);
+        free(denominator);
         free(p);
         free(roots);
         free(q_preprocessed);
         free(r_preprocessed);
 
         return ret_code;
+}
+
+static inline void refine_polynomial_roots(const UINT degree,
+        COMPLEX const * const coefficients, UINT * const count,
+        COMPLEX * const roots)
+{
+    const UINT input_count = *count;
+    UINT i, iteration, j, output_count = 0;
+
+    for (i = 0; i < input_count; i++) {
+        INT converged = 0;
+
+        for (iteration = 0; iteration < 32; iteration++) {
+            COMPLEX value = coefficients[0];
+            COMPLEX derivative = 0.0;
+            COMPLEX increment;
+
+            for (j = 1; j <= degree; j++) {
+                derivative = derivative*roots[i] + value;
+                value = value*roots[i] + coefficients[j];
+            }
+            if (derivative == 0.0)
+                break;
+            increment = value/derivative;
+            roots[i] -= increment;
+            if (CABS(increment) <= SQRT(EPSILON)
+                    *(1.0 + CABS(roots[i]))) {
+                converged = 1;
+                break;
+            }
+        }
+        if (converged) {
+            COMPLEX value = coefficients[0];
+            REAL scale = CABS(coefficients[0]);
+
+            for (j = 1; j <= degree; j++) {
+                scale = scale*CABS(roots[i]) + CABS(coefficients[j]);
+                value = value*roots[i] + coefficients[j];
+            }
+            if (CABS(value) <= 64.0*(degree + 1)*EPSILON*scale)
+                roots[output_count++] = roots[i];
+        }
+    }
+    *count = output_count;
+}
+
+static inline void normalize_polynomial(const UINT degree,
+        COMPLEX * const coefficients)
+{
+    REAL scale = 0.0;
+    UINT i;
+
+    for (i = 0; i <= degree; i++) {
+        const REAL value = CABS(coefficients[i]);
+        if (scale < value)
+            scale = value;
+    }
+    if (scale == 0.0)
+        return;
+    for (i = 0; i <= degree; i++)
+        coefficients[i] /= scale;
 }
 
 // Auxiliary function: Finds initial guesses for the main and auxiliary spectrum
@@ -560,10 +754,14 @@ static inline INT subsample_and_refine(const UINT D,
     CHECK_RETCODE(ret_code, release_mem);
 
     // Will be required later for coordinate transforms and filtering
-    degree1step = nse_discretization_degree(opts_ptr->discretization);
+    degree1step = nse_discretization_degree_with_pade(
+            opts_ptr->discretization, opts_ptr->pade_degree);
     if (degree1step == NAN)
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
-    map_coeff = 2/degree1step;
+    if (opts_ptr->discretization == nse_discretization_FTES4_suzuki)
+        map_coeff = 2.0/3.0;
+    else
+        map_coeff = 2/degree1step;
     update_bounding_box_if_auto(eps_t_sub, map_coeff, opts_ptr);
     tol_im = opts_ptr->bounding_box[3] - opts_ptr->bounding_box[2];
     tol_im /= oversampling_factor*(D - 1);
@@ -785,10 +983,14 @@ static inline INT newton(const UINT D,
         refine_tol = opts_ptr->tol;
 
     // Will be required later for coordinate transforms and filtering
-    degree1step = nse_discretization_degree(opts_ptr->discretization);
+    degree1step = nse_discretization_degree_with_pade(
+            opts_ptr->discretization, opts_ptr->pade_degree);
     if (degree1step == NAN)
         return E_INVALID_ARGUMENT(opts_ptr->discretization);
-    map_coeff = 2/degree1step;
+    if (opts_ptr->discretization == nse_discretization_FTES4_suzuki)
+        map_coeff = 2.0/3.0;
+    else
+        map_coeff = 2/degree1step;
     update_bounding_box_if_auto(eps_t, map_coeff, opts_ptr);
     tol_im = opts_ptr->bounding_box[1] - opts_ptr->bounding_box[0];
     tol_im /= oversampling_factor*(D - 1);

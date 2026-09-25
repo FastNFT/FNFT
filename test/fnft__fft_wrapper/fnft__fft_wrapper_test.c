@@ -50,8 +50,10 @@ static INT fft_wrapper_test()
     CHECK_RETCODE(ret_code, leave_fun);
 
     REAL err = misc_rel_err(fft_length, out, out_exact);
-    if (err > 100*EPSILON)
-		return E_TEST_FAILED;
+    if (err > 100*EPSILON) {
+        ret_code = E_TEST_FAILED;
+        goto leave_fun;
+    }
 
     for (i=0; i<fft_length; i++)
         in[i] = out_exact[i] / fft_length;
@@ -63,13 +65,16 @@ static INT fft_wrapper_test()
     CHECK_RETCODE(ret_code, leave_fun);
 
     err = misc_rel_err(fft_length, out, in_exact);
-    if (err > 100*EPSILON)
-		return E_TEST_FAILED;
+    if (err > 100*EPSILON) {
+        ret_code = E_TEST_FAILED;
+        goto leave_fun;
+    }
 
 leave_fun:
-    fft_wrapper_destroy_plan(&plan);
-    free(in);
-    free(out);
+    if (plan != fft_wrapper_safe_plan_init())
+        fft_wrapper_destroy_plan(&plan);
+    fft_wrapper_free(in);
+    fft_wrapper_free(out);
     return ret_code;
 }
 

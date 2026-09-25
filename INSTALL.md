@@ -58,6 +58,24 @@ To uninstall FNFT, run the commands
 
 ### Customization
 
+For fast Padé continuous-spectrum evaluation, install the double-precision
+[NFFT3](https://github.com/NFFT/nfft) and FFTW3 libraries and headers, then
+configure with `-DENABLE_NFFT=ON`. To use FFTW for the product tree as well,
+configure with both options:
+
+    cmake .. -DENABLE_FFTW=ON -DENABLE_NFFT=ON
+
+NFFT3 evaluates the Padé polynomials on the mapped nonuniform unit-circle
+nodes. It does not change signal differentiation or the discretization.
+Without NFFT3, the original Horner/Clenshaw fallback remains available, but
+its evaluation cost is O(MD) for fixed Padé degree.
+If library discovery fails, set `NFFT3_INCLUDE`, `NFFT3_LIB`,
+`FFTW3_INCLUDE`, and `FFTW3_LIB` to the matching header directories and
+libraries. On Windows, use libraries matching the compiler architecture and
+make their DLLs (and any OpenMP runtime required by NFFT3) available on PATH.
+The configure-time link check reports missing or incompatible dependencies.
+
+
 * FNFT can make use of the [FFTW ("Fastest Fourier Transform in the West")](http://www.fftw.org) library if available. This can result in a noticable speed up. In order to activate FFTW, pass the parameter `-DENABLE_FFTW=ON` to cmake.
 * FNFT by default uses machine-specific optimizations, which might be problematic when the library is to be run on another machine. Pass the parameter `-DMACHINE_SPECIFIC_OPIMIZATION=OFF` to cmake to turn them off.
 * During a system-wide installation, FNFT is by default installed in `/usr/local` on Unix-like systems. To change this directory, e.g., to `/usr`, pass the parameter `-DCMAKE_INSTALL_PREFIX=/usr` to cmake.

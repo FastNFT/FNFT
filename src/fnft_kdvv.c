@@ -562,6 +562,9 @@ static inline INT kdvv_compute_boundstates(
                 // to skip those.
                 for (i = 0; i < D; i+=3)
                     bound_squared = bound_squared > (REAL)CREAL(q[i]) ? bound_squared : (REAL)CREAL(q[i]);
+                if (opts->discretization == kdv_discretization_ES4
+                        || opts->discretization == kdv_discretization_ES4_VANILLA)
+                    bound_squared /= eps_t; // ES samples contain eps_t*q.
                 // Apply a safety factor, because the effective maximum may be higher due to interpolation
                 break;
             default:

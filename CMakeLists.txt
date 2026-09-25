@@ -36,6 +36,7 @@ option(WITH_MATLAB "Build the Matlab interface" ON)
 option(MACHINE_SPECIFIC_OPTIMIZATION "Activate optimizations specific for this machine" ON)
 option(ADDRESS_SANITIZER "Enable address sanitzer for known compilers" OFF)
 option(ENABLE_FFTW "Use FFTW if it is available" OFF)
+option(ENABLE_NFFT "Use NFFT3 for nonequispaced polynomial evaluation" OFF)
 option(BUILD_TESTS "Build tests" ON)
 
 # check for complex.h
@@ -69,7 +70,8 @@ if (NOT HAVE___THREAD)
 endif()
 
 # check if FFTW3 is available
-find_library(FFTW3_LIB fftw3)
+set(HAVE_FFTW3 0)
+find_library(FFTW3_LIB NAMES fftw3 fftw3-3 libfftw3-3)
 find_path(FFTW3_INCLUDE fftw3.h)
 if (FFTW3_LIB AND FFTW3_INCLUDE)
     if (ENABLE_FFTW)
@@ -86,6 +88,50 @@ else()
         set(FFTW3_INCLUDE "")
         message("++ FFTW3 NOT found. Using Kiss FFT instead.")
     endif()
+endif()
+
+# check if NFFT3 is available
+set(HAVE_NFFT3 0)
+if (ENABLE_NFFT)
+    if (NOT FFTW3_LIB OR NOT FFTW3_INCLUDE)
+        message(FATAL_ERROR "NFFT3 requires FFTW3. Set FFTW3_LIB and FFTW3_INCLUDE or use -DENABLE_NFFT=OFF.")
+    endif()
+    find_library(NFFT3_LIB NAMES nfft3 nfft3_threads nfft3_threads-4 libnfft3_threads-4)
+    find_path(NFFT3_INCLUDE nfft3.h)
+    if (NOT NFFT3_LIB OR NOT NFFT3_INCLUDE)
+        message(FATAL_ERROR "NFFT3 NOT found. Set NFFT3_LIB and NFFT3_INCLUDE or use -DENABLE_NFFT=OFF.")
+    endif()
+
+    include(CMakePushCheckState)
+    cmake_push_check_state(RESET)
+    set(CMAKE_REQUIRED_INCLUDES "${NFFT3_INCLUDE}" "${FFTW3_INCLUDE}")
+    set(CMAKE_REQUIRED_LIBRARIES "${FFTW3_LIB}" "${NFFT3_LIB}" "${FFTW3_LIB}" ${LIBM})
+    unset(FNFT_NFFT3_LINKS CACHE)
+    check_c_source_compiles("#include <complex.h>
+#include <nfft3.h>
+int main(void) {
+    nfft_plan p;
+    int N = 4, n = 64;
+    nfft_init_guru(&p, 1, &N, 1, &n, 12,
+        PRE_PHI_HUT | PRE_PSI | MALLOC_X | MALLOC_F_HAT | MALLOC_F |
+        FFTW_INIT | FFT_OUT_OF_PLACE, FFTW_ESTIMATE | FFTW_DESTROY_INPUT);
+    p.x[0] = 0.0;
+    if (nfft_check(&p) == 0) {
+        nfft_precompute_one_psi(&p);
+        nfft_trafo(&p);
+    }
+    nfft_finalize(&p);
+    return 0;
+}" FNFT_NFFT3_LINKS)
+    cmake_pop_check_state()
+    if (NOT FNFT_NFFT3_LINKS)
+        message(FATAL_ERROR "NFFT3/FFTW3 headers and libraries cannot be linked. Check architecture and library dependencies in CMake's configure log.")
+    endif()
+    message("++ NFFT3 found and enabled. Run cmake with \"-DENABLE_NFFT=OFF\" to disable.")
+    set(HAVE_NFFT3 1)
+else()
+    set(NFFT3_LIB "")
+    set(NFFT3_INCLUDE "")
 endif()
 
 # header files
@@ -145,6 +191,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/private)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/3rd_party/kiss_fft)
 include_directories(${FFTW3_INCLUDE})
+include_directories(${NFFT3_INCLUDE})
 
 # configure Fortran support
 enable_language(Fortran)
@@ -174,7 +221,7 @@ file(GLOB_RECURSE TEST_SOURCES "test/*_test*.c")
 
 # generate shared library
 add_library(fnft SHARED ${SOURCES} ${PRIVATE_SOURCES} ${KISS_FFT_SOURCES} ${EISCOR_SOURCES})
-target_link_libraries(fnft ${FFTW3_LIB})
+target_link_libraries(fnft ${FFTW3_LIB} ${NFFT3_LIB} ${FFTW3_LIB} ${LIBM})
 file(GLOB PUBLIC_HEADERS "include/*.h")
 set_target_properties(fnft PROPERTIES VERSION ${FNFT_VERSION} SOVERSION ${FNFT_VERSION_MAJOR} LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib" PUBLIC_HEADER "${PUBLIC_HEADERS}")
 
@@ -183,20 +230,23 @@ install(TARGETS fnft LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include R
 
 # generate examples
 foreach (srcfile ${EXAMPLE_SOURCES})
-  get_filename_component(example ${srcfile} NAME_WE)
-  add_executable(${example} ${srcfile})
-    target_link_libraries(${example} fnft ${LIBM} ${FFTW3_LIB})
+  get_filename_component(example "${srcfile}" NAME_WE)
+  add_executable(${example} "${srcfile}")
+    target_link_libraries(${example} fnft ${FFTW3_LIB} ${NFFT3_LIB} ${FFTW3_LIB} ${LIBM})
   set_target_properties(${example} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/examples")
 endforeach()
 
 # generate tests
 if (BUILD_TESTS)
   foreach (srcfile ${TEST_SOURCES})
-    get_filename_component(dir ${srcfile} DIRECTORY)
-    get_filename_component(test ${srcfile} NAME_WE)
-    add_executable(${test} ${srcfile})
-      target_link_libraries(${test} fnft ${LIBM} ${FFTW3_LIB})
+    get_filename_component(dir "${srcfile}" DIRECTORY)
+    get_filename_component(test "${srcfile}" NAME_WE)
+    add_executable(${test} "${srcfile}")
+      target_link_libraries(${test} fnft ${FFTW3_LIB} ${NFFT3_LIB} ${FFTW3_LIB} ${LIBM})
     add_test(NAME ${test} COMMAND ${test})
+    if (test STREQUAL "fnft__poly_eval_nfft_test")
+      set_tests_properties(${test} PROPERTIES SKIP_RETURN_CODE 77)
+    endif()
     set_target_properties(${test} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${dir}")
   endforeach()
 endif()
@@ -216,8 +266,8 @@ if (WITH_MATLAB)
   if (Matlab_FOUND)
     file(GLOB MEX_SOURCES "matlab/mex_*.c")
     foreach (srcfile ${MEX_SOURCES})
-      get_filename_component(mexfile ${srcfile} NAME_WE)
-      matlab_add_mex(NAME ${mexfile} SRC ${srcfile} LINK_TO fnft ${LIBM} ${FFTW3_LIB})
+      get_filename_component(mexfile "${srcfile}" NAME_WE)
+      matlab_add_mex(NAME ${mexfile} SRC "${srcfile}" LINK_TO fnft ${FFTW3_LIB} ${NFFT3_LIB} ${FFTW3_LIB} ${LIBM})
       set_target_properties(${mexfile} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/matlab" COMPILE_FLAGS "-fvisibility=default")
       target_compile_options(${mexfile} PRIVATE -DMEX_DOUBLE_HANDLE)
       # -DMEX_DOUBLE_HANDLE avoids the new complex interleaved API

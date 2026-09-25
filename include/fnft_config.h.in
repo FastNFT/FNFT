@@ -32,6 +32,7 @@
 #cmakedefine HAVE___THREAD 1
 #cmakedefine DEBUG 1
 #cmakedefine HAVE_FFTW3 1
+#cmakedefine HAVE_NFFT3 1
 #cmakedefine HAVE_PRAGMA_GCC_OPTIMIZE_OFAST 1
 
 #endif

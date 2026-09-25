@@ -17,6 +17,7 @@
 * Sander Wahls (TU Delft) 2017-2018.
 * Peter J Prins (TU Delft) 2017-2020.
 * Shrinivas Chimmalgi (TU Delft) 2018.
+* Igor Chekhovskoy (NSU, FRC ICT) 2026.
 */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -51,6 +52,100 @@ static inline void akns_fscatter_zero_freq_scatter_matrix(COMPLEX * const M,
     M[0] = CCOS(Delta);
     M[2] = r * del;
     M[1] = q * del;
+}
+
+/**
+ * Applies the two TES4 correction exponentials to one polynomial scattering
+ * matrix. Neighboring samples are interpreted periodically, as in the fast
+ * TES4 construction.
+ */
+static inline void akns_fscatter_tes4_correction(const UINT D, const UINT i,
+                                                 COMPLEX const * const q,
+                                                 COMPLEX const * const r,
+                                                 const REAL eps_t, const UINT deg,
+                                                 COMPLEX * const p11,
+                                                 COMPLEX * const p12,
+                                                 COMPLEX * const p21,
+                                                 COMPLEX * const p22)
+{
+    const UINT ip = (i + 1) % D;
+    const UINT im = (i + D - 1) % D;
+    const COMPLEX dq = (q[ip] - q[im])/24.0;
+    const COMPLEX d2q = (q[im] - 2.0*q[i] + q[ip])/48.0;
+    const COMPLEX dr = (r[ip] - r[im])/24.0;
+    const COMPLEX d2r = (r[im] - 2.0*r[i] + r[ip])/48.0;
+    COMPLEX e_plus[3], e_minus[3];
+    UINT j;
+
+    akns_fscatter_zero_freq_scatter_matrix(e_plus, eps_t, d2q + dq, d2r + dr);
+    akns_fscatter_zero_freq_scatter_matrix(e_minus, eps_t, d2q - dq, d2r - dr);
+
+    for (j = 0; j <= deg; j++) {
+        const COMPLEX t11 = e_plus[0]*p11[j] + e_plus[1]*p21[j];
+        const COMPLEX t12 = e_plus[0]*p12[j] + e_plus[1]*p22[j];
+        const COMPLEX t21 = e_plus[2]*p11[j] + e_plus[0]*p21[j];
+        const COMPLEX t22 = e_plus[2]*p12[j] + e_plus[0]*p22[j];
+
+        p11[j] = t11*e_minus[0] + t12*e_minus[2];
+        p12[j] = t11*e_minus[1] + t12*e_minus[0];
+        p21[j] = t21*e_minus[0] + t22*e_minus[2];
+        p22[j] = t21*e_minus[1] + t22*e_minus[0];
+    }
+}
+
+enum { akns_fscatter_suzuki_degree = 7 };
+
+/**
+ * Multiplies a 2x2 matrix polynomial from the right by a zero-frequency
+ * scattering matrix. Coefficients are stored in ascending order.
+ */
+static inline void akns_fscatter_suzuki_mult_B(
+        COMPLEX p[4][akns_fscatter_suzuki_degree + 1], const UINT degree,
+        COMPLEX const B[3])
+{
+    UINT j;
+
+    for (j = 0; j <= degree; j++) {
+        const COMPLEX p11 = p[0][j];
+        const COMPLEX p12 = p[1][j];
+        const COMPLEX p21 = p[2][j];
+        const COMPLEX p22 = p[3][j];
+
+        p[0][j] = p11*B[0] + p12*B[2];
+        p[1][j] = p11*B[1] + p12*B[0];
+        p[2][j] = p21*B[0] + p22*B[2];
+        p[3][j] = p21*B[1] + p22*B[0];
+    }
+}
+
+/**
+ * Multiplies a 2x2 matrix polynomial from the right by
+ * diag(z^shift_1,z^shift_2). Coefficients are stored in ascending order.
+ */
+static inline UINT akns_fscatter_suzuki_mult_A(
+        COMPLEX p[4][akns_fscatter_suzuki_degree + 1], const UINT degree,
+        const UINT shift_1, const UINT shift_2)
+{
+    UINT j;
+
+    for (j = degree + shift_1 + 1; j-- > shift_1;) {
+        p[0][j] = p[0][j - shift_1];
+        p[2][j] = p[2][j - shift_1];
+    }
+    for (j = 0; j < shift_1; j++) {
+        p[0][j] = 0.0;
+        p[2][j] = 0.0;
+    }
+    for (j = degree + shift_2 + 1; j-- > shift_2;) {
+        p[1][j] = p[1][j - shift_2];
+        p[3][j] = p[3][j - shift_2];
+    }
+    for (j = 0; j < shift_2; j++) {
+        p[1][j] = 0.0;
+        p[3][j] = 0.0;
+    }
+
+    return degree + (shift_1 > shift_2 ? shift_1 : shift_2);
 }
 /**
  * Fast computation of polynomial approximation of the combined scattering
@@ -356,6 +451,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
         case akns_discretization_4SPLIT4A:
             eps_t /= 2.0;
             // fall through
+        case akns_discretization_FTES4_4A:
         case akns_discretization_2SPLIT4A:
 
             e_2B = &e_Bstorage[0];
@@ -388,6 +484,10 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p22[3] = 0.0;
                 p22[4] = 0.0;
 
+                if (discretization == akns_discretization_FTES4_4A)
+                    akns_fscatter_tes4_correction(D, i, q, r, eps_t, deg,
+                                                   p11, p12, p21, p22);
+
                 p11 += deg + 1;
                 p21 += deg + 1;
                 p12 += deg + 1;
@@ -399,6 +499,7 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
         case akns_discretization_4SPLIT4B:
             eps_t /= 2.0;
             // fall through
+        case akns_discretization_FTES4_4B:
         case akns_discretization_2SPLIT4B:
 
             e_0_5B = &e_Bstorage[0];
@@ -423,6 +524,10 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
                 p22[1] = p11[1];
                 p22[2] = p11[0];
 
+                if (discretization == akns_discretization_FTES4_4B)
+                    akns_fscatter_tes4_correction(D, i, q, r, eps_t, deg,
+                                                   p11, p12, p21, p22);
+
                 p11 += deg + 1;
                 p21 += deg + 1;
                 p12 += deg + 1;
@@ -430,6 +535,58 @@ INT akns_fscatter(const UINT D, COMPLEX const * const q, COMPLEX const * const r
             }
 
             break;
+
+        case akns_discretization_FTES4_suzuki: {
+            COMPLEX *e_7_48B = &e_Bstorage[0];
+            COMPLEX *e_3_8B = &e_Bstorage[3];
+            COMPLEX *e_m1_48B = &e_Bstorage[6];
+            COMPLEX sp[4][akns_fscatter_suzuki_degree + 1];
+            UINT degree, j;
+
+            for (i=D; i-->0;) {
+                akns_fscatter_zero_freq_scatter_matrix(e_7_48B,
+                        7.0*eps_t/48.0, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_3_8B,
+                        3.0*eps_t/8.0, q[i], r[i]);
+                akns_fscatter_zero_freq_scatter_matrix(e_m1_48B,
+                        -eps_t/48.0, q[i], r[i]);
+
+                for (n = 0; n < 4; n++)
+                    for (j = 0; j <= deg; j++)
+                        sp[n][j] = 0.0;
+                sp[0][0] = 1.0;
+                sp[3][0] = 1.0;
+                degree = 0;
+
+                akns_fscatter_suzuki_mult_B(sp, degree, e_7_48B);
+                degree = akns_fscatter_suzuki_mult_A(sp, degree, 0, 1);
+                akns_fscatter_suzuki_mult_B(sp, degree, e_3_8B);
+                degree = akns_fscatter_suzuki_mult_A(sp, degree, 1, 0);
+                akns_fscatter_suzuki_mult_B(sp, degree, e_m1_48B);
+                degree = akns_fscatter_suzuki_mult_A(sp, degree, 0, 3);
+                akns_fscatter_suzuki_mult_B(sp, degree, e_m1_48B);
+                degree = akns_fscatter_suzuki_mult_A(sp, degree, 1, 0);
+                akns_fscatter_suzuki_mult_B(sp, degree, e_3_8B);
+                degree = akns_fscatter_suzuki_mult_A(sp, degree, 0, 1);
+                akns_fscatter_suzuki_mult_B(sp, degree, e_7_48B);
+
+                for (j = 0; j <= deg; j++) {
+                    p11[j] = sp[0][deg - j];
+                    p12[j] = sp[1][deg - j];
+                    p21[j] = sp[2][deg - j];
+                    p22[j] = sp[3][deg - j];
+                }
+                akns_fscatter_tes4_correction(D, i, q, r, eps_t, deg,
+                                               p11, p12, p21, p22);
+
+                p11 += deg + 1;
+                p21 += deg + 1;
+                p12 += deg + 1;
+                p22 += deg + 1;
+            }
+
+            break;
+        }
 
         case akns_discretization_2SPLIT5A:
 

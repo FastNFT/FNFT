@@ -19,6 +19,7 @@
 * Marius Brehler (TU Dortmund) 2018.
 * Peter J Prins (TU Delft) 2020.
 * Sander Wahls (KIT) 2023.
+* Igor Chekhovskoy (NSU, FRC ICT) 2026.
 */
 
 #define FNFT_ENABLE_SHORT_NAMES
@@ -34,7 +35,7 @@
  * result where S11' is the derivative of S11 w.r.t to lambda.
  * Result should be preallocated with size 4*K or 8*K accordingly.
  */
-INT nse_scatter_matrix(UINT const D,
+static INT nse_scatter_matrix_impl(UINT const D,
                        COMPLEX const * const q,
                        COMPLEX const * const r,
                        REAL const eps_t,
@@ -44,6 +45,7 @@ INT nse_scatter_matrix(UINT const D,
                        COMPLEX * const result,
                        INT * const W,
                        nse_discretization_t const discretization,
+                       UINT const pade_degree,
                        UINT const derivative_flag)
 {
     INT ret_code = SUCCESS;
@@ -74,17 +76,95 @@ INT nse_scatter_matrix(UINT const D,
 
     // Call akns_scatter_bound_states
     UINT vanilla_flag = 0; // Ignored value for NSE
-    ret_code = akns_scatter_matrix(D, q, r, eps_t, K, lambda, result, W,
-            akns_discretization, akns_pde_NSE, vanilla_flag, derivative_flag);
+    if (pade_degree == 0)
+        ret_code = akns_scatter_matrix(D,q,r,eps_t,K,lambda,result,W,
+                akns_discretization,akns_pde_NSE,vanilla_flag,
+                derivative_flag);
+    else
+        ret_code = akns_scatter_matrix_pade(D,q,r,eps_t,K,lambda,result,W,
+                akns_discretization,akns_pde_NSE,vanilla_flag,pade_degree,
+                derivative_flag);
     CHECK_RETCODE(ret_code, leave_fun);
 
 leave_fun:
     return ret_code;
 }
 
+INT nse_scatter_matrix(UINT const D,
+                       COMPLEX const * const q,
+                       COMPLEX const * const r,
+                       REAL const eps_t,
+                       INT const kappa,
+                       UINT const K,
+                       COMPLEX const * const lambda,
+                       COMPLEX * const result,
+                       INT * const W,
+                       nse_discretization_t const discretization,
+                       UINT const derivative_flag)
+{
+    return nse_scatter_matrix_impl(D,q,r,eps_t,kappa,K,lambda,result,W,
+            discretization,0,derivative_flag);
+}
+
+INT nse_scatter_matrix_pade(UINT const D,
+                       COMPLEX const * const q,
+                       COMPLEX const * const r,
+                       REAL const eps_t,
+                       INT const kappa,
+                       UINT const K,
+                       COMPLEX const * const lambda,
+                       COMPLEX * const result,
+                       INT * const W,
+                       nse_discretization_t const discretization,
+                       UINT const pade_degree,
+                       UINT const derivative_flag)
+{
+    if (pade_degree == 0)
+        return E_INVALID_ARGUMENT(pade_degree);
+    return nse_scatter_matrix_impl(D,q,r,eps_t,kappa,K,lambda,result,W,
+            discretization,pade_degree,derivative_flag);
+}
+
 /**
  * Returns the a, a_prime and b computed using the chosen scheme.
  */
+static INT nse_scatter_bound_states_impl(UINT const D,
+                             COMPLEX const * const q,
+                             COMPLEX const * const r,
+                             REAL const * const T,
+                             UINT const K,
+                             COMPLEX * const bound_states,
+                             COMPLEX * const a_vals,
+                             COMPLEX * const aprime_vals,
+                             COMPLEX * const b,
+                             INT * const Ws,
+                             nse_discretization_t const discretization,
+                             UINT const pade_degree,
+                             UINT const skip_b_flag)
+{
+    INT ret_code = SUCCESS;
+
+    // Fetch the AKNS discretizations corresponding to the NSE discretization
+    akns_discretization_t akns_discretization;
+    ret_code = nse_discretization_to_akns_discretization(discretization, &akns_discretization);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+    // Call akns_scatter_bound_states
+    UINT vanilla_flag = 0; // Ignored value for NSE
+    if (pade_degree == 0)
+        ret_code = akns_scatter_bound_states(D,q,r,T,K,bound_states,a_vals,
+                aprime_vals,b,Ws,akns_discretization,akns_pde_NSE,
+                vanilla_flag,skip_b_flag);
+    else
+        ret_code = akns_scatter_bound_states_pade(D,q,r,T,K,bound_states,
+                a_vals,aprime_vals,b,Ws,akns_discretization,akns_pde_NSE,
+                vanilla_flag,pade_degree,skip_b_flag);
+    CHECK_RETCODE(ret_code, leave_fun);
+
+leave_fun:
+    return ret_code;
+}
+
 INT nse_scatter_bound_states(UINT const D,
                              COMPLEX const * const q,
                              COMPLEX const * const r,
@@ -98,18 +178,26 @@ INT nse_scatter_bound_states(UINT const D,
                              nse_discretization_t const discretization,
                              UINT const skip_b_flag)
 {
-    INT ret_code = SUCCESS;
+    return nse_scatter_bound_states_impl(D,q,r,T,K,bound_states,a_vals,
+            aprime_vals,b,Ws,discretization,0,skip_b_flag);
+}
 
-    // Fetch the AKNS discretizations corresponding to the NSE discretization
-    akns_discretization_t akns_discretization;
-    ret_code = nse_discretization_to_akns_discretization(discretization, &akns_discretization);
-    CHECK_RETCODE(ret_code, leave_fun);
-
-    // Call akns_scatter_bound_states
-    UINT vanilla_flag = 0; // Ignored value for NSE
-    ret_code = akns_scatter_bound_states(D, q, r, T, K, bound_states, a_vals, aprime_vals, b, Ws, akns_discretization, akns_pde_NSE, vanilla_flag, skip_b_flag);
-    CHECK_RETCODE(ret_code, leave_fun);
-
-leave_fun:
-    return ret_code;
+INT nse_scatter_bound_states_pade(UINT const D,
+                             COMPLEX const * const q,
+                             COMPLEX const * const r,
+                             REAL const * const T,
+                             UINT const K,
+                             COMPLEX * const bound_states,
+                             COMPLEX * const a_vals,
+                             COMPLEX * const aprime_vals,
+                             COMPLEX * const b,
+                             INT * const Ws,
+                             nse_discretization_t const discretization,
+                             UINT const pade_degree,
+                             UINT const skip_b_flag)
+{
+    if (pade_degree == 0)
+        return E_INVALID_ARGUMENT(pade_degree);
+    return nse_scatter_bound_states_impl(D,q,r,T,K,bound_states,a_vals,
+            aprime_vals,b,Ws,discretization,pade_degree,skip_b_flag);
 }

@@ -18,6 +18,7 @@
 * Shrinivas Chimmalgi (TU Delft) 2017.
 * Peter J Prins (TU Delft) 2020.
 * Sander Wahls (KIT) 2023.
+* Igor Chekhovskoy (NSU, FRC ICT) 2026.
 */
 
 /**
@@ -45,6 +46,7 @@
  *      - Boffetta and Osborne, <a href="https://doi.org/10.1016/0021-9991(92)90370-E">&quot; Computation of the direct scattering transform for the nonlinear Schroedinger  equation,&quot;</a> J. Comput. Phys. 102(2), 1992.
  *      - Chimmalgi, Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2945480">&quot; Fast Nonlinear Fourier Transform Algorithms Using Higher Order Exponential Integrators,&quot;</a> IEEE Access 7, 2019.
  *      - Medvedev, Vaseva, Chekhovskoy and  Fedoruk, <a href="https://doi.org/10.1364/OE.377140">&quot; Exponential fourth order schemes for direct Zakharov-Shabat problem,&quot;</a> Optics Express, vol. 28, pp. 20--39, 2020.
+ *      - Medvedev, Vaseva, Chekhovskoy and Fedoruk, <a href="https://doi.org/10.1364/OL.44.002264">&quot;Numerical algorithm with fourth-order accuracy for the direct Zakharov-Shabat problem,&quot;</a> Optics Letters 44(9), 2264--2267, 2019.
  *      - Prins and Wahls, <a href="https://doi.org/10.1109/ACCESS.2019.2932256">&quot; Soliton Phase Shift Calculation for the Korteweg–De Vries Equation,&quot;</a> IEEE Access, vol. 7, pp. 122914--122930, July 2019.
  *
  *
@@ -91,6 +93,27 @@ FNFT_INT fnft__nse_scatter_bound_states(FNFT_UINT const D,
                                         FNFT_COMPLEX * const b,
                                         FNFT_INT * const Ws,
                                         fnft_nse_discretization_t const discretization,
+                                        FNFT_UINT const skip_b_flag);
+
+/**
+ * @brief Padé variant of \link fnft__nse_scatter_bound_states \endlink for
+ * ES4/ES6/ES8.
+ *
+ * @param[in] pade_degree Degree of the diagonal Padé approximant, from 1
+ * through 7.
+ */
+FNFT_INT fnft__nse_scatter_bound_states_pade(FNFT_UINT const D,
+                                        FNFT_COMPLEX const * const q,
+                                        FNFT_COMPLEX const * const r,
+                                        FNFT_REAL const * const T,
+                                        FNFT_UINT const K,
+                                        FNFT_COMPLEX * const bound_states,
+                                        FNFT_COMPLEX * const a_vals,
+                                        FNFT_COMPLEX * const aprime_vals,
+                                        FNFT_COMPLEX * const b,
+                                        FNFT_INT * const Ws,
+                                        fnft_nse_discretization_t const discretization,
+                                        FNFT_UINT const pade_degree,
                                         FNFT_UINT const skip_b_flag);
 
 /**
@@ -145,9 +168,31 @@ FNFT_INT fnft__nse_scatter_matrix(const FNFT_UINT D,
         fnft_nse_discretization_t const discretization,
         const FNFT_UINT derivative_flag);
 
+/**
+ * @brief Padé variant of \link fnft__nse_scatter_matrix \endlink for
+ * ES4/ES6/ES8.
+ *
+ * @param[in] pade_degree Degree of the diagonal Padé approximant, from 1
+ * through 7.
+ */
+FNFT_INT fnft__nse_scatter_matrix_pade(const FNFT_UINT D,
+        FNFT_COMPLEX const * const q,
+        FNFT_COMPLEX const * const r,
+        const FNFT_REAL eps_t,
+        const FNFT_INT kappa,
+        const FNFT_UINT K,
+        FNFT_COMPLEX const * const lambda,
+        FNFT_COMPLEX * const result,
+        FNFT_INT * const W,
+        fnft_nse_discretization_t const discretization,
+        const FNFT_UINT pade_degree,
+        const FNFT_UINT derivative_flag);
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define nse_scatter_bound_states(...) fnft__nse_scatter_bound_states(__VA_ARGS__)
+#define nse_scatter_bound_states_pade(...) fnft__nse_scatter_bound_states_pade(__VA_ARGS__)
 #define nse_scatter_matrix(...) fnft__nse_scatter_matrix(__VA_ARGS__)
+#define nse_scatter_matrix_pade(...) fnft__nse_scatter_matrix_pade(__VA_ARGS__)
 #endif
 
 #endif

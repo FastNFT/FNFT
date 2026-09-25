@@ -18,6 +18,7 @@
 * Shrinivas Chimmalgi (TU Delft) 2017-2020.
 * Peter J. Prins (TU Delft) 2021.
 * Sander Wahls (KIT), 2023.
+* Igor Chekhovskoy (NSU, FRC ICT) 2026.
 */
 
 /**
@@ -30,10 +31,83 @@
 #define FNFT__AKNS_SCATTER_H
 
 #include "fnft__akns_discretization.h"
+#include <float.h>
 #include <stdio.h>
 #include <string.h> // for memcpy
 #include "fnft__errwarn.h"
 #include "fnft__misc.h"// for square_matrix_mult
+#if defined(__INTEL_COMPILER) || defined(__INTEL_LLVM_COMPILER)
+#include <mathimf.h>
+#endif
+
+/* Internal exact ES scalar kernel. It is inline so the production scatterer
+ * and its direct numerical oracle exercise one implementation without adding
+ * an exported private symbol. */
+static inline void fnft__akns_scatter_exact_scalar_pair(
+        FNFT_COMPLEX const root, FNFT_COMPLEX * const f,
+        FNFT_COMPLEX * const g)
+{
+    const FNFT_REAL root_real = FNFT_CREAL(root);
+    const FNFT_REAL root_imag = FNFT_CIMAG(root);
+    const FNFT_REAL safe_real_limit = FNFT_LOG(DBL_MAX)-8.0;
+
+    if (isfinite(root_real) && isfinite(root_imag)
+            && FNFT_FABS(root_real) <= safe_real_limit) {
+        FNFT_REAL sin_imag, cos_imag, sinh_real, cosh_real;
+#if defined(__INTEL_COMPILER) || defined(__INTEL_LLVM_COMPILER)
+        sincos(root_imag,&sin_imag,&cos_imag);
+        sinhcosh(root_real,&sinh_real,&cosh_real);
+#else
+#if defined(__MINGW32__) && defined(__GNUC__) && !defined(__clang__)
+        /* MinGW's paired function uses x87 argument reduction. Restrict
+         * it to small arguments and retain libm's full-range functions. */
+        if (FNFT_FABS(root_imag) <= 1.0) {
+            __builtin_sincos(root_imag,&sin_imag,&cos_imag);
+        } else
+#endif
+        {
+            sin_imag = FNFT_SIN(root_imag);
+            cos_imag = FNFT_COS(root_imag);
+        }
+        /* Both hyperbolic functions share one exponential. Using expm1
+         * retains relative accuracy near zero; the product below avoids
+         * squaring an exponentially large intermediate value. */
+        const FNFT_REAL em1 = expm1(FNFT_FABS(root_real));
+        const FNFT_REAL ratio = em1/(1.0+em1);
+        sinh_real = copysign(0.5*(em1+ratio),root_real);
+        cosh_real = 1.0+0.5*em1*ratio;
+#endif
+        const FNFT_COMPLEX f_candidate = cosh_real*cos_imag
+                +(FNFT_COMPLEX)I*(sinh_real*sin_imag);
+        FNFT_COMPLEX g_candidate;
+
+        if (root_real == 0.0 && root_imag != 0.0) {
+            /* Reuse sin/cos, but retain the signed zeros of
+             * sin(i*root)/(i*root) on the imaginary axis. */
+            const FNFT_COMPLEX rotated = (FNFT_COMPLEX)I*root;
+            const FNFT_REAL parts[2] = {
+                -sin_imag,cos_imag*FNFT_CIMAG(rotated)
+            };
+            FNFT_COMPLEX numerator;
+            memcpy(&numerator,parts,sizeof(numerator));
+            g_candidate = numerator/rotated;
+        } else {
+            g_candidate = (sinh_real*cos_imag
+                    +(FNFT_COMPLEX)I*(cosh_real*sin_imag))/root;
+        }
+
+        if (isfinite(FNFT_CREAL(f_candidate))
+                && isfinite(FNFT_CIMAG(f_candidate))
+                && isfinite(FNFT_CREAL(g_candidate))
+                && isfinite(FNFT_CIMAG(g_candidate))) {
+            *f = f_candidate;
+            *g = g_candidate;
+            return;
+        }
+    }
+    *f = FNFT_CCOSH(root);
+    *g = fnft__misc_CSINC((FNFT_COMPLEX)I*root);
+}
 
 
 /**
@@ -89,6 +163,46 @@ FNFT_INT fnft__akns_scatter_matrix(FNFT_UINT const D,
                                    fnft__akns_pde_t const PDE,
                                    FNFT_UINT const vanilla_flag,
                                    FNFT_UINT const derivative_flag);
+
+/**
+ * @brief Padé variant of \link fnft__akns_scatter_matrix \endlink for
+ * ES4/ES6/ES8.
+ *
+ * @param[in] pade_degree Degree of the diagonal Padé approximant, from 1
+ * through 7.
+ */
+FNFT_INT fnft__akns_scatter_matrix_pade(FNFT_UINT const D,
+                                   FNFT_COMPLEX const * const q,
+                                   FNFT_COMPLEX const * const r,
+                                   FNFT_REAL const eps_t,
+                                   FNFT_UINT const K,
+                                   FNFT_COMPLEX const * const lambda,
+                                   FNFT_COMPLEX * const result,
+                                   FNFT_INT * const W,
+                                   fnft__akns_discretization_t discretization,
+                                   fnft__akns_pde_t const PDE,
+                                   FNFT_UINT const vanilla_flag,
+                                   FNFT_UINT const pade_degree,
+                                   FNFT_UINT const derivative_flag);
+
+/**
+ * @brief Computes the first column of a slow ES scattering matrix.
+ *
+ * This internal routine is restricted to the NSE reduction, real spectral
+ * points and ES4/ES6/ES8. The Padé degree is zero for the exact exponential
+ * and between one and seven for a diagonal Padé approximation.
+ */
+FNFT_INT fnft__akns_scatter_matrix_first_column(FNFT_UINT const D,
+                                   FNFT_COMPLEX const * const q,
+                                   FNFT_COMPLEX const * const r,
+                                   FNFT_REAL const eps_t,
+                                   FNFT_UINT const K,
+                                   FNFT_COMPLEX const * const lambda,
+                                   FNFT_COMPLEX * const H11,
+                                   FNFT_COMPLEX * const H21,
+                                   FNFT_INT * const W,
+                                   fnft__akns_discretization_t discretization,
+                                   FNFT_UINT const pade_degree);
 
 
 /**
@@ -156,8 +270,35 @@ FNFT_INT akns_scatter_bound_states(FNFT_UINT const D,
                                    FNFT_UINT const vanilla_flag,
                                    FNFT_UINT const skip_b_flag);
 
+/**
+ * @brief Padé variant of \link akns_scatter_bound_states \endlink for
+ * ES4/ES6/ES8.
+ *
+ * @param[in] pade_degree Degree of the diagonal Padé approximant, from 1
+ * through 7.
+ */
+FNFT_INT fnft__akns_scatter_bound_states_pade(FNFT_UINT const D,
+                                   FNFT_COMPLEX const * const q,
+                                   FNFT_COMPLEX const * const r,
+                                   FNFT_REAL const *const T,
+                                   FNFT_UINT const K,
+                                   FNFT_COMPLEX const * const bound_states,
+                                   FNFT_COMPLEX * const a_vals,
+                                   FNFT_COMPLEX * const aprime_vals,
+                                   FNFT_COMPLEX * const b_vals,
+                                   FNFT_INT * Ws,
+                                   fnft__akns_discretization_t const discretization,
+                                   fnft__akns_pde_t const PDE,
+                                   FNFT_UINT const vanilla_flag,
+                                   FNFT_UINT const pade_degree,
+                                   FNFT_UINT const skip_b_flag);
+
 #ifdef FNFT_ENABLE_SHORT_NAMES
 #define akns_scatter_matrix(...) fnft__akns_scatter_matrix(__VA_ARGS__)
+#define akns_scatter_matrix_pade(...) fnft__akns_scatter_matrix_pade(__VA_ARGS__)
+#define akns_scatter_matrix_first_column(...) \
+    fnft__akns_scatter_matrix_first_column(__VA_ARGS__)
+#define akns_scatter_bound_states_pade(...) fnft__akns_scatter_bound_states_pade(__VA_ARGS__)
 #endif
 
 #endif

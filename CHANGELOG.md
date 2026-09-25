@@ -1,5 +1,19 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- Added the CT4, ES6 and ES8 slow discretizations and fast TES4 and Padé discretizations for the NSE routines.
+- Added Padé degrees up to seven and the Chebyshev/Joukowski representation for FES8_PADE.
+- Updated the Matlab routines mex_fnft_nsev and mex_fnft_nsep with all new discretizations supported by the corresponding C interfaces and the Padé options.
+
+### Fixed
+
+- Separated periodic and zero-extended boundary stencils in the Padé fast-scattering routines.
+- Enabled discrete-spectrum refinement for the fast Padé families through the corresponding slow schemes.
+- Made the reported local polynomial degree depend on the selected Padé degree.
+
 ## [0.5.0]
 
 ### Added

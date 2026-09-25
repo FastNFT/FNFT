@@ -876,7 +876,8 @@ const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
 
     // Allocate memory
     contspec = malloc(3*M * sizeof(COMPLEX));
-    K = nse_discretization_degree(opts->discretization) * D;
+    K = nse_discretization_degree_with_pade(opts->discretization,
+            opts->pade_degree) * D;
     
     // In every case other than that of slow discretization with no bound states
     // memory has to be alloted for the bound states
@@ -884,7 +885,8 @@ const REAL error_bounds[6], fnft_nsev_opts_t * const opts) {
         if (K == 0 && K_exact != 0)
             K = K_exact;        
 #ifdef DEBUG
-        printf("K = %ld, K_exact = %ld\n",K,K_exact);
+        printf("K = %lu, K_exact = %lu\n",
+                (unsigned long)K,(unsigned long)K_exact);
 #endif
         bound_states = malloc(K * sizeof(COMPLEX));
         normconsts_and_residues = malloc(2*D * sizeof(COMPLEX));

@@ -323,7 +323,8 @@ fnft_nsep_opts_t * opts_ptr) {
         default_opts = fnft_nsep_default_opts();
         opts_ptr = &default_opts;
     }
-    K = 2*nse_discretization_degree(opts_ptr->discretization)*D + 1;
+    K = 2*nse_discretization_degree_with_pade(
+            opts_ptr->discretization, opts_ptr->pade_degree)*D + 1;
     M = K;
     mainspec = malloc(K * sizeof(COMPLEX));
     auxspec = malloc(M * sizeof(COMPLEX));
